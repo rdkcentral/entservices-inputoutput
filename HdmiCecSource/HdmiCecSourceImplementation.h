@@ -319,18 +319,18 @@ namespace WPEFramework {
                 std::list<Exchange::IHdmiCecSource::INotification*> _hdmiCecSourceNotifications;
 
         public:
-            uint32_t SetEnabled(bool enabled, bool isPersist);
-            uint32_t GetEnabled(bool &enabled);
-            uint32_t SetOTPEnabled(bool enabled);
-            uint32_t GetOTPEnabled(bool &otpEnabled);
-            uint32_t SetOSDName(const string name);
-            uint32_t GetOSDName(string &name);
-            uint32_t SetVendorId(const string vendorId);
-            uint32_t GetVendorId(string &vendorId);
-            uint32_t PerformOTPAction();
-            uint32_t SendStandbyMessage();
-            uint32_t SendKeyPressEvent(const int logicalAddress, int keyCode);
-            uint32_t GetActiveSourceStatus(bool &isActiveSource);
+            uint32_t SetEnabled(bool &enabled, bool &success);
+            uint32_t GetEnabled(bool &enabled, bool &success);
+            uint32_t SetOTPEnabled(bool &enabled, bool &success);
+            uint32_t GetOTPEnabled(bool &enabled, bool &success);
+            uint32_t SetOSDName(const string &name, bool &success);
+            uint32_t GetOSDName(string &name, bool &success);
+            uint32_t SetVendorId(const string &vendorid, bool &success);
+            uint32_t GetVendorId(string &vendorid, bool &success);
+            uint32_t PerformOTPAction(bool &success);
+            uint32_t SendStandbyMessage(bool &success);
+            uint32_t SendKeyPressEvent(const int &logicalAddress, int keyCode, bool &success);
+            uint32_t GetActiveSourceStatus(bool &isActiveSource, bool &success);
 
 
         };

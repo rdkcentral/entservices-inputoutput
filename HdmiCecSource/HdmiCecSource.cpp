@@ -37,17 +37,6 @@
 #include "UtilssyncPersistFile.h"
 #include "UtilsSearchRDKProfile.h"
 
-#define HDMICECSOURCE_METHOD_SET_ENABLED "setEnabled"
-#define HDMICECSOURCE_METHOD_GET_ENABLED "getEnabled"
-#define HDMICECSOURCE_METHOD_OTP_SET_ENABLED "setOTPEnabled"
-#define HDMICECSOURCE_METHOD_OTP_GET_ENABLED "getOTPEnabled"
-#define HDMICECSOURCE_METHOD_SET_OSD_NAME "setOSDName"
-#define HDMICECSOURCE_METHOD_GET_OSD_NAME "getOSDName"
-#define HDMICECSOURCE_METHOD_SET_VENDOR_ID "setVendorId"
-#define HDMICECSOURCE_METHOD_GET_VENDOR_ID "getVendorId"
-#define HDMICECSOURCE_METHOD_PERFORM_OTP_ACTION "performOTPAction"
-#define HDMICECSOURCE_METHOD_SEND_STANDBY_MESSAGE "sendStandbyMessage"
-#define HDMICECSOURCE_METHOD_GET_ACTIVE_SOURCE_STATUS "getActiveSourceStatus"
 #define HDMICECSOURCE_METHOD_SEND_KEY_PRESS         "sendKeyPressEvent"
 #define HDMICEC_EVENT_ON_DEVICES_CHANGED "onDevicesChanged"
 #define HDMICEC_EVENT_ON_HDMI_HOT_PLUG "onHdmiHotPlug"
@@ -116,13 +105,9 @@ namespace WPEFramework
         static int libcecInitStatus = 0;
 
         HdmiCecSource::HdmiCecSource()
-        : PluginHost::JSONRPC(),cecEnableStatus(false),smConnection(nullptr), m_sendKeyEventThreadRun(false)
-        , _pwrMgrNotification(*this)
-        , _registeredEventHandlers(false)
+        : PluginHost::JSONRPC(),
         {
             LOGWARN("ctor");
-            _engine = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
-            _communicatorClient = Core::ProxyType<RPC::CommunicatorClient>::Create(Core::NodeId("/tmp/communicator"), Core::ProxyType<Core::IIPCServer>(_engine));
         }
 
         HdmiCecSource::~HdmiCecSource()
@@ -134,8 +119,6 @@ namespace WPEFramework
         {
            LOGWARN("Initlaizing CEC_2");
            uint32_t res = Core::ERROR_GENERAL;
-           PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
-           PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
 
            profileType = searchRdkProfile();
 
@@ -147,98 +130,21 @@ namespace WPEFramework
 
            string msg;
            HdmiCecSource::_instance = this;
-           smConnection = NULL;
-           cecEnableStatus = false;
            _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
 
            if(nullptr != _hdmiCecSource)
-           {
+            {
+                _hdmiCecSource->Configure();
                 _hdmiCecSource->Register(&_hdmiCecSourceNotification);
-              }
-              else
-              {
+                msg = "HdmiCecSource plugin is available";
+                LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
+            }
+            else
+            {
                 msg = "HdmiCecSource plugin is not available";
-                LOGERR("HdmiCecSource plugin is not available. Failed to activate HdmiCecSource Plugin");
+                LOGINFO("HdmiCecSource plugin is not available. Failed to activate HdmiCecSource Plugin");
                 return msg;
-           }
-           Register(HDMICECSOURCE_METHOD_SET_ENABLED, &HdmiCecSource::setEnabledWrapper, this);
-           Register(HDMICECSOURCE_METHOD_GET_ENABLED, &HdmiCecSource::getEnabledWrapper, this);
-           Register(HDMICECSOURCE_METHOD_OTP_SET_ENABLED, &HdmiCecSource::setOTPEnabledWrapper, this);
-           Register(HDMICECSOURCE_METHOD_OTP_GET_ENABLED, &HdmiCecSource::getOTPEnabledWrapper, this);
-           Register(HDMICECSOURCE_METHOD_SET_OSD_NAME, &HdmiCecSource::setOSDNameWrapper, this);
-           Register(HDMICECSOURCE_METHOD_GET_OSD_NAME, &HdmiCecSource::getOSDNameWrapper, this);
-           Register(HDMICECSOURCE_METHOD_SET_VENDOR_ID, &HdmiCecSource::setVendorIdWrapper, this);
-           Register(HDMICECSOURCE_METHOD_GET_VENDOR_ID, &HdmiCecSource::getVendorIdWrapper, this);
-           Register(HDMICECSOURCE_METHOD_PERFORM_OTP_ACTION, &HdmiCecSource::performOTPActionWrapper, this);
-           Register(HDMICECSOURCE_METHOD_SEND_STANDBY_MESSAGE, &HdmiCecSource::sendStandbyMessageWrapper, this);
-           Register(HDMICECSOURCE_METHOD_GET_ACTIVE_SOURCE_STATUS, &HdmiCecSource::getActiveSourceStatusWrapper, this);
-           Register(HDMICECSOURCE_METHOD_SEND_KEY_PRESS,&HdmiCecSource::sendRemoteKeyPressWrapper,this);
-           Register("getDeviceList", &HdmiCecSource::getDeviceList, this);
-           if (Utils::IARM::init()) {
-
-
-               //Initialize cecEnableStatus to false in ctor
-               cecEnableStatus = false;
-
-               logicalAddressDeviceType = "None";
-               logicalAddress = 0xFF;
-
-               //CEC plugin functionalities will only work if CECmgr is available. If plugin Initialize failure upper layer will call dtor directly.
-               InitializeIARM();
-               InitializePowerManager();
-
-               // load persistence setting
-               loadSettings();
-
-               try
-               {
-                   //TODO(MROLLINS) this is probably per process so we either need to be running in our own process or be carefull no other plugin is calling it
-                   device::Manager::Initialize();
-                   std::string strVideoPort = device::Host::getInstance().getDefaultVideoPortName();
-                   device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(strVideoPort.c_str());
-                   if (vPort.isDisplayConnected())
-                   {
-                       std::vector<uint8_t> edidVec;
-                       vPort.getDisplay().getEDIDBytes(edidVec);
-                       //Set LG vendor id if connected with LG TV
-                       if(edidVec.at(8) == 0x1E && edidVec.at(9) == 0x6D)
-                       {
-                           isLGTvConnected = true;
-                       }
-                       LOGINFO("manufacturer byte from edid :%x: %x  isLGTvConnected :%d",edidVec.at(8),edidVec.at(9),isLGTvConnected);
-                   }
-                }
-                catch(...)
-                {
-                    LOGWARN("Exception in getting edid info .\r\n");
-                }
-
-                // get power state:
-                ASSERT (_powerManagerPlugin);
-                if (_powerManagerPlugin){
-                    res = _powerManagerPlugin->GetPowerState(pwrStateCur, pwrStatePrev);
-                    if (Core::ERROR_NONE == res)
-                    {
-                        powerState = (pwrStateCur == WPEFramework::Exchange::IPowerManager::POWER_STATE_ON)?0:1 ;
-                        LOGINFO("Current state is PowerManagerPlugin: (%d) powerState :%d \n",pwrStateCur,powerState);
-                    }
-                }
-
-                if (cecSettingEnabled)
-                {
-                   try
-                   {
-                       CECEnable();
-                   }
-                   catch(...)
-                   {
-                       LOGWARN("Exception while enabling CEC settings .\r\n");
-                   }
-                }
-           } else {
-               msg = "IARM bus is not available";
-               LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
-           }
+            }
 
            // On success return empty, to indicate there is no error text.
            return msg;
@@ -280,7 +186,6 @@ namespace WPEFramework
            isDeviceActiveSource = false;
            HdmiCecSource::_instance->sendActiveSourceEvent();
            HdmiCecSource::_instance = nullptr;
-           smConnection = NULL;
 
            DeinitializeIARM();
         }
@@ -321,180 +226,6 @@ namespace WPEFramework
            params["logicalAddress"] = JsonValue(logicalAddress);
            sendNotify(HDMICEC_EVENT_ON_STANDBY_MSG_RECEIVED, params);
        }
-
-       uint32_t HdmiCecSource::setEnabledWrapper(const JsonObject& parameters, JsonObject& response)
-       {
-           LOGINFOMETHOD();
-
-            bool enabled = false;
-
-            if (parameters.HasLabel("enabled"))
-            {
-                getBoolParameter("enabled", enabled);
-            }
-            else
-            {
-                returnResponse(false);
-            }
-
-            HdmiCecSource::_hdmiCecSource->SetEnabled(enabled,true);
-            returnResponse(true);
-       }
-
-       uint32_t HdmiCecSource::getEnabledWrapper(const JsonObject& parameters, JsonObject& response)
-       {
-            bool enabled;
-            HdmiCecSource::_hdmiCecSource->GetEnabled(&enabled);
-            response["enabled"] = enabled;
-            returnResponse(true);
-       }
-       uint32_t HdmiCecSource::setOTPEnabledWrapper(const JsonObject& parameters, JsonObject& response)
-       {
-           LOGINFOMETHOD();
-
-            bool enabled = false;
-
-            if (parameters.HasLabel("enabled"))
-            {
-                getBoolParameter("enabled", enabled);
-            }
-            else
-            {
-                returnResponse(false);
-            }
-
-            HdmiCecSource::_hdmiCecSource->SetOTPEnabled(enabled);
-            returnResponse(true);
-       }
-
-       uint32_t HdmiCecSource::getOTPEnabledWrapper(const JsonObject& parameters, JsonObject& response)
-       {
-            bool enabled;
-            HdmiCecSource::_hdmiCecSource->GetOTPEnabled(&enabled);
-            response["enabled"] = enabled;
-            returnResponse(true);
-       }
-
-       uint32_t HdmiCecSource::setOSDNameWrapper(const JsonObject& parameters, JsonObject& response)
-       {
-           LOGINFOMETHOD();
-
-            if (parameters.HasLabel("name"))
-            {
-                std::string osd = parameters["name"].String();
-                LOGINFO("setOSDNameWrapper osdName: %s",osd.c_str());
-                HdmiCecSource::_hdmiCecSource->SetOSDName(osd);          
-            }
-            else
-            {
-                returnResponse(false);
-            }
-            returnResponse(true);
-        }
-
-        uint32_t HdmiCecSource::getOSDNameWrapper(const JsonObject& parameters, JsonObject& response)
-        {
-            std::string osdName;
-            HdmiCecSource::_hdmiCecSource->GetOSDName(&osdName);
-            response["name"] = osdName;
-            LOGINFO("getOSDNameWrapper osdName : %s \n",osdName.c_str());
-            returnResponse(true);
-        }
-
-        uint32_t HdmiCecSource::setVendorIdWrapper(const JsonObject& parameters, JsonObject& response)
-        {
-            LOGINFOMETHOD();
-
-            if (parameters.HasLabel("vendorid"))
-            {
-                std::string id = parameters["vendorid"].String();
-
-                LOGINFO("setVendorIdWrapper vendorId: %s",id.c_str());
-                HdmiCecSource::_hdmiCecSource->SetVendorId(id);
-            }
-            else
-            {
-                returnResponse(false);
-            }
-            returnResponse(true);
-        }
-
-        uint32_t HdmiCecSource::getVendorIdWrapper(const JsonObject& parameters, JsonObject& response)
-        {
-            std::string vendorId;
-            HdmiCecSource::_hdmiCecSource->GetVendorId(&vendorId);
-            response["vendorid"] = vendorId.toString();
-            returnResponse(true);
-        }
-
-
-        uint32_t HdmiCecSource::performOTPActionWrapper(const JsonObject& parameters, JsonObject& response)
-        {
-            if(HdmiCecSource::_hdmiCecSource->PerformOTPAction() == Core::ERROR_NONE)
-            {
-                returnResponse(true);
-            }
-            else
-            {
-                returnResponse(false);
-            }
-        }
-
-        uint32_t HdmiCecSource::sendStandbyMessageWrapper(const JsonObject& parameters, JsonObject& response)
-       {
-	        if(HdmiCecSource::_hdmiCecSource->SendStandbyMessage() == Core::ERROR_NONE)
-	        { 
-                    returnResponse(true);
-	        }  
-	        else
-	        {
-	            returnResponse(false);
-	        } 
-       }
-
-       
-	   uint32_t HdmiCecSource::sendRemoteKeyPressWrapper(const JsonObject& parameters, JsonObject& response)
-		{
-            returnIfParamNotFound(parameters, "logicalAddress");
-			returnIfParamNotFound(parameters, "keyCode");
-			string logicalAddress = parameters["logicalAddress"].String();
-			string keyCode = parameters["keyCode"].String();
-            HdmiCecSource::_hdmiCecSource->sendRemoteKeyPress(logicalAddress, keyCode);
-			
-		}
-
-        uint32_t HdmiCecSource::GetActiveSourceStatusWrapper(const JsonObject& parameters, JsonObject& response)
-        {
-            bool isActiveSource;
-            HdmiCecSource::_hdmiCecSource->GetActiveSourceStatus(&isActiveSource);
-            response["isActiveSource"] = isActiveSource;
-            returnResponse(true);
-        }
-
-        uint32_t HdmiCecSource::getDeviceList(const JsonObject& parameters, JsonObject& response)
-        {
-            Exchange::IHdmiCecSource::IHdmiCecSourceDeviceListIterator* devices = nullptr;
-            uint32_t result = HdmiCecSource::_hdmiCecSource->getDeviceList(devices);
-            if (result == Core::ERROR_NONE && devices != nullptr)
-            {
-                JsonArray deviceArray;
-                while (devices->Next())
-                {
-                    Exchange::HdmiCecSourceDevices device;
-                    devices->Current(device);
-                
-                    JsonObject deviceJson;
-                    deviceJson["logicalAddress"] = device.logicalAddress;
-                    deviceJson["osdName"] = device.osdName;
-                    deviceJson["vendorID"] = device.vendorID;
-                
-                    deviceArray.Add(deviceJson);
-                }
-                response["devices"] = deviceArray;
-                devices->Release();
-            }
-            returnResponse(result);
-        }
 
     } // namespace Plugin
 } // namespace WPEFramework

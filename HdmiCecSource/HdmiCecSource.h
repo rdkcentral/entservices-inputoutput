@@ -98,7 +98,7 @@ namespace WPEFramework {
                                 void OnActiveSourceStatusUpdated(const bool isActiveSource) override;
                                 void standbyMessageReceived(const int8_t logicalAddress) override;
 
-                    }
+                    };
 
             public:
                 // We do not allow this plugin to be copied !!
@@ -119,20 +119,6 @@ namespace WPEFramework {
 		        const string Initialize(PluginHost::IShell* service) override;
                 void Deinitialize(PluginHost::IShell* service) override;
                 //Begin methods
-                uint32_t setEnabledWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t getEnabledWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t setOTPEnabledWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t getOTPEnabledWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t setOSDNameWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t getOSDNameWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t setVendorIdWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t getVendorIdWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t performOTPActionWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t sendStandbyMessageWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t getDeviceList (const JsonObject& parameters, JsonObject& response);
-                uint32_t GetActiveSourceStatusWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t sendRemoteKeyPressWrapper(const JsonObject& parameters, JsonObject& response);
-                uint32_t sendKeyPressEventWrapper(const JsonObject& parameters, JsonObject& response);
 
             private:
                 void Deactivated(RPC::IRemoteConnection* connection);
