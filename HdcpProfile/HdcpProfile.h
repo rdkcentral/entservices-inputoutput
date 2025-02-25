@@ -46,8 +46,6 @@ namespace WPEFramework {
             // We do not allow this plugin to be copied !!
             HdcpProfile(const HdcpProfile&) = delete;
             HdcpProfile& operator=(const HdcpProfile&) = delete;
-            Core::ProxyType<RPC::InvokeServerType<1, 0, 4> > _engine;
-            Core::ProxyType<RPC::CommunicatorClient> _communicatorClient;
             static PowerManagerInterfaceRef _powerManagerPlugin;
 
             void InitializeIARM();
@@ -55,7 +53,7 @@ namespace WPEFramework {
 
             void RegisterAll();
             void UnregisterAll();
-            void InitializePowerManager();
+            void InitializePowerManager(PluginHost::IShell * service);
 
             //Begin methods
             uint32_t getHDCPStatusWrapper(const JsonObject& parameters, JsonObject& response);

@@ -687,16 +687,14 @@ namespace WPEFramework
         , _registeredEventHandlers(false)
        {
            LOGWARN("Initlaizing HdmiCecSink");
-           _engine = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
-           _communicatorClient = Core::ProxyType<RPC::CommunicatorClient>::Create(Core::NodeId("/tmp/communicator"), Core::ProxyType<Core::IIPCServer>(_engine));
        }
 
        HdmiCecSink::~HdmiCecSink()
        {
        }
-       const std::string HdmiCecSink::Initialize(PluginHost::IShell * /* service */)
+       const std::string HdmiCecSink::Initialize(PluginHost::IShell *service)
        {
-            InitializePowerManager();
+            InitializePowerManager(service);
 		   profileType = searchRdkProfile();
 
 		   if (profileType == STB || profileType == NOT_FOUND)
@@ -826,17 +824,6 @@ namespace WPEFramework
            {
                _powerManagerPlugin.Reset();
            }
-           LOGINFO("Disconnect from the COM-RPC socket\n");
-           // Disconnect from the COM-RPC socket
-           if (_communicatorClient.IsValid())
-           {
-               _communicatorClient->Close(RPC::CommunicationTimeOut);
-               _communicatorClient.Release();
-           }
-           if(_engine.IsValid())
-           {
-               _engine.Release();
-           }
            _registeredEventHandlers = false;
 
 		profileType = searchRdkProfile();
@@ -910,11 +897,10 @@ namespace WPEFramework
             }
        }
 
-        void HdmiCecSink::InitializePowerManager()
+        void HdmiCecSink::InitializePowerManager(PluginHost::IShell *service)
         {
-            _powerManagerPlugin = PowerManagerInterfaceBuilder(_communicatorClient, _T("org.rdk.PowerManager"))
-                                    .withTimeout(3000)
-                                    .withVersion(~0)
+            _powerManagerPlugin = PowerManagerInterfaceBuilder(_T("org.rdk.PowerManager"))
+                                    .withIShell(service)
                                     .createInterface();
             registerEventHandlers();
         }

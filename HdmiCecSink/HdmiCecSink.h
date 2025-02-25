@@ -646,7 +646,7 @@ private:
 			uint32_t getAudioDeviceConnectedStatusWrapper(const JsonObject& parameters, JsonObject& response);
                         uint32_t requestAudioDevicePowerStatusWrapper(const JsonObject& parameters, JsonObject& response);
                         uint32_t setLatencyInfoWrapper(const JsonObject& parameters, JsonObject& response);
-            void InitializePowerManager();
+            void InitializePowerManager(PluginHost::IShell *service);
 			//End methods
             std::string logicalAddressDeviceType;
             bool cecSettingEnabled;
@@ -690,8 +690,6 @@ private:
 			std::vector<uint8_t> m_connectedDevices;
             HdmiCecSinkProcessor *msgProcessor;
             HdmiCecSinkFrameListener *msgFrameListener;
-            Core::ProxyType<RPC::InvokeServerType<1, 0, 4> > _engine;
-            Core::ProxyType<RPC::CommunicatorClient> _communicatorClient;
             PowerManagerInterfaceRef _powerManagerPlugin;
             Core::Sink<PowerManagerNotification> _pwrMgrNotification;
             bool _registeredEventHandlers;

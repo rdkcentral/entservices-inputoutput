@@ -77,8 +77,6 @@ namespace WPEFramework
         : PluginHost::JSONRPC()
         {
             RegisterAll();
-            _engine = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
-            _communicatorClient = Core::ProxyType<RPC::CommunicatorClient>::Create(Core::NodeId("/tmp/communicator"), Core::ProxyType<Core::IIPCServer>(_engine));
         }
 
         HdcpProfile::~HdcpProfile()
@@ -86,11 +84,11 @@ namespace WPEFramework
             UnregisterAll();
         }
 
-        const string HdcpProfile::Initialize(PluginHost::IShell * /* service */)
+        const string HdcpProfile::Initialize(PluginHost::IShell *service)
         {
             HdcpProfile::_instance = this;
             InitializeIARM();
-            InitializePowerManager();
+            InitializePowerManager(service);
             try
             {
                 device::Manager::Initialize();
@@ -109,27 +107,16 @@ namespace WPEFramework
                 _powerManagerPlugin.Reset();
             }
 
-            LOGINFO("Disconnect from the COM-RPC socket\n");
-
-            // Disconnect from the COM-RPC socket
-            if (_communicatorClient.IsValid()) {
-                _communicatorClient->Close(RPC::CommunicationTimeOut);
-                _communicatorClient.Release();
-            }
-            if (_engine.IsValid()) {
-                _engine.Release();
-            }
             HdcpProfile::_instance = nullptr;
             // No need to run device::Manager::DeInitialize for individual plugin. As it is a singleton instance
             // and shared among all wpeframework plugins
             DeinitializeIARM();
         }
 
-        void HdcpProfile::InitializePowerManager()
+        void HdcpProfile::InitializePowerManager(PluginHost::IShell *service)
         {
-            _powerManagerPlugin = PowerManagerInterfaceBuilder(_communicatorClient, _T("org.rdk.PowerManager"))
-                                    .withTimeout(3000)
-                                    .withVersion(~0)
+            _powerManagerPlugin = PowerManagerInterfaceBuilder(_T("org.rdk.PowerManager"))
+                                    .withIShell(service)
                                     .createInterface();
         }
 
