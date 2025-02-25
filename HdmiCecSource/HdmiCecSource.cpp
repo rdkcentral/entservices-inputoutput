@@ -115,7 +115,7 @@ namespace WPEFramework
             LOGWARN("dtor");
         }
 
-        const string HdmiCecSource::Initialize(PluginHost::IShell* /* service */)
+        const string HdmiCecSource::Initialize(PluginHost::IShell *service)
         {
            LOGWARN("Initlaizing CEC_2");
            uint32_t res = Core::ERROR_GENERAL;
@@ -134,7 +134,7 @@ namespace WPEFramework
 
            if(nullptr != _hdmiCecSource)
             {
-                _hdmiCecSource->Configure();
+                _hdmiCecSource->Configure(service);
                 _hdmiCecSource->Register(&_hdmiCecSourceNotification);
                 msg = "HdmiCecSource plugin is available";
                 LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
@@ -157,17 +157,6 @@ namespace WPEFramework
            if(_powerManagerPlugin)
            {
                _powerManagerPlugin.Reset();
-           }
-           LOGINFO("Disconnect from the COM-RPC socket\n");
-           // Disconnect from the COM-RPC socket
-           if (_communicatorClient.IsValid())
-           {
-               _communicatorClient->Close(RPC::CommunicationTimeOut);
-               _communicatorClient.Release();
-           }
-           if(_engine.IsValid())
-           {
-               _engine.Release();
            }
            _registeredEventHandlers = false;
 

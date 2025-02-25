@@ -390,8 +390,6 @@ namespace WPEFramework
     , _registeredEventHandlers(false)
     {
         LOGWARN("ctor");
-        _engine = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
-        _communicatorClient = Core::ProxyType<RPC::CommunicatorClient>::Create(Core::NodeId("/tmp/communicator"), Core::ProxyType<Core::IIPCServer>(_engine));
         HdmiCecSourceImplementation::_instance = this;
     }
 
@@ -420,7 +418,7 @@ namespace WPEFramework
 
             //CEC plugin functionalities will only work if CECmgr is available. If plugin Initialize failure upper layer will call dtor directly.
             InitializeIARM();
-            InitializePowerManager();
+            InitializePowerManager(service);
 
             // load persistence setting
             loadSettings();
@@ -697,9 +695,8 @@ namespace WPEFramework
         void HdmiCecSourceImplementation::InitializePowerManager()
         {
             LOGINFO("Connect the COM-RPC socket\n");
-            _powerManagerPlugin = PowerManagerInterfaceBuilder(_communicatorClient, _T("org.rdk.PowerManager"))
-                                    .withTimeout(3000)
-                                    .withVersion(~0)
+            _powerManagerPlugin = PowerManagerInterfaceBuilder(_T("org.rdk.PowerManager"))
+                                    .withIShell(service)
                                     .createInterface();
             registerEventHandlers();
         }
