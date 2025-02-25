@@ -784,6 +784,7 @@ namespace WPEFramework
             if (WPEFramework::Exchange::IPowerManager::POWER_STATE_ON == newState)
             {
                 powerState = 0;
+                HdmiCecSource::_instance->getLogicalAddress(); // get the updated LA after wakeup
             }
             else
                 powerState = 1;
@@ -1310,6 +1311,8 @@ namespace WPEFramework
                 {
                     logicalAddress = addr;
                     logicalAddressDeviceType = logicalAddrDeviceType;
+                    if(smConnection)
+                        smConnection->setSource(logicalAddress); //update initiator LA
                 }
             }
             catch (const std::exception& e)
