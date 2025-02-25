@@ -130,7 +130,7 @@ namespace WPEFramework
              else
                  isDeviceActiveSource = false;
              LOGINFO("ActiveSource isDeviceActiveSource status :%d \n", isDeviceActiveSource);
-             HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
+             HdmiCecSource::_instance->OnActiveSourceStatusUpdated();
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
        void HdmiCecSourceProcessor::process (const InActiveSource &msg, const Header &header)
@@ -270,7 +270,7 @@ namespace WPEFramework
              else
                  isDeviceActiveSource = false;
              LOGINFO("physical_addr : %s isDeviceActiveSource :%d \n",physical_addr.toString().c_str(),isDeviceActiveSource);
-             HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
+             HdmiCecSource::_instance->OnActiveSourceStatusUpdated();
        }
        void HdmiCecSourceProcessor::process (const RoutingInformation &msg, const Header &header)
        {
@@ -281,7 +281,7 @@ namespace WPEFramework
              else
                  isDeviceActiveSource = false;
              LOGINFO("physical_addr : %s isDeviceActiveSource :%d \n",physical_addr.toString().c_str(),isDeviceActiveSource);
-             HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
+             HdmiCecSource::_instance->OnActiveSourceStatusUpdated();
        }
        void HdmiCecSourceProcessor::process (const SetStreamPath &msg, const Header &header)
        {
@@ -292,7 +292,7 @@ namespace WPEFramework
              else
                  isDeviceActiveSource = false;
              LOGINFO("physical_addr : %s isDeviceActiveSource :%d \n",physical_addr.toString().c_str(),isDeviceActiveSource);
-             HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
+             HdmiCecSource::_instance->OnActiveSourceStatusUpdated();
 
        }
        void HdmiCecSourceProcessor::process (const GetMenuLanguage &msg, const Header &header)
@@ -397,10 +397,12 @@ namespace WPEFramework
     {
          LOGWARN("dtor");
          HdmiCecSourceImplementation::_instance = nullptr;
-         if(_engine.IsValid())
+
+           if(_powerManagerPlugin)
            {
-               _engine.Release();
+               _powerManagerPlugin.Reset();
            }
+           _registeredEventHandlers = false;
     }
 
     HdmiCecSourceImplimentation::Configure(PluginHost::IShell* service)

@@ -118,7 +118,6 @@ namespace WPEFramework
         const string HdmiCecSource::Initialize(PluginHost::IShell *service)
         {
            LOGWARN("Initlaizing CEC_2");
-           uint32_t res = Core::ERROR_GENERAL;
 
            profileType = searchRdkProfile();
 
@@ -131,11 +130,12 @@ namespace WPEFramework
            string msg;
            HdmiCecSource::_instance = this;
            _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
+           _service->Register(&_notification);
 
            if(nullptr != _hdmiCecSource)
             {
                 _hdmiCecSource->Configure(service);
-                _hdmiCecSource->Register(&_hdmiCecSourceNotification);
+                _hdmiCecSource->Register(&_notification);
                 msg = "HdmiCecSource plugin is available";
                 LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
             }
@@ -154,11 +154,7 @@ namespace WPEFramework
         void HdmiCecSource::Deinitialize(PluginHost::IShell* /* service */)
         {
            LOGWARN("Deinitialize CEC_2");
-           if(_powerManagerPlugin)
-           {
-               _powerManagerPlugin.Reset();
-           }
-           _registeredEventHandlers = false;
+           
 
            profileType = searchRdkProfile();
 
@@ -168,12 +164,12 @@ namespace WPEFramework
                 return ;
            }
 
-           if(true == getEnabled())
+           if(true == HdmiCecSource::_hdmiCecSource->getEnabled())
            {
                HdmiCecSource::_hdmiCecSource->SetEnabled(false,false);
            }
            isDeviceActiveSource = false;
-           HdmiCecSource::_instance->sendActiveSourceEvent();
+           HdmiCecSource::_instance->OnActiveSourceStatusUpdated();
            HdmiCecSource::_instance = nullptr;
 
            DeinitializeIARM();
@@ -187,11 +183,11 @@ namespace WPEFramework
 		sendNotify(eventString[HDMICECSOURCE_EVENT_DEVICE_INFO_UPDATED], params);
 	}
 
-    void HdmiCecSource::sendActiveSourceEvent()
+    void HdmiCecSource::OnActiveSourceStatusUpdated()
        {
            JsonObject params;
            params["status"] = isDeviceActiveSource;
-           LOGWARN(" sendActiveSourceEvent isDeviceActiveSource: %d ",isDeviceActiveSource);
+           LOGWARN(" OnActiveSourceStatusUpdated isDeviceActiveSource: %d ",isDeviceActiveSource);
            sendNotify(eventString[HDMICECSOURCE_EVENT_ACTIVE_SOURCE_STATUS_UPDATED], params);
        }
 

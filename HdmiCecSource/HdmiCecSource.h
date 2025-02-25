@@ -96,7 +96,9 @@ namespace WPEFramework {
                                 void OnDeviceRemoved(const uint8_t logicalAddress) override;
                                 void OnDeviceInfoUpdated(const int logicalAddress) override;
                                 void OnActiveSourceStatusUpdated(const bool isActiveSource) override;
-                                void standbyMessageReceived(const int8_t logicalAddress) override;
+                                void StandbyMessageReceived(const int8_t logicalAddress) override;
+                                void SendKeyReleasedMsgEvent(const int8_t logicalAddress) override;
+                                void SendKeyPressMsgEvent(const int8_t logicalAddress, const int32_t keyCode) override;
 
                     };
 
@@ -104,6 +106,7 @@ namespace WPEFramework {
                 // We do not allow this plugin to be copied !!
                 HdmiCecSource(const HdmiCecSource&) = delete;
                 HdmiCecSource& operator=(const HdmiCecSource&) = delete;
+                static HdmiCecSource* _instance;
 
                 HdmiCecSource();
                 virtual ~HdmiCecSource();
@@ -126,6 +129,7 @@ namespace WPEFramework {
             private:
                 PluginHost::IShell* _service{};
                 Exchange::IHdmiCecSource* _hdmiCecSource;
+                Core::Sink<Notification> _notification;
         };
 	} // namespace Plugin
 } // namespace WPEFramework
