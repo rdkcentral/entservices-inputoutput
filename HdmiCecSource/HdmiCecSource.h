@@ -157,11 +157,11 @@ namespace WPEFramework {
                 : PluginHost::IPlugin()
                 , PluginHost::JSONRPC()
                 , _connectionId(0)
-                , _authService(nullptr)
+                , _hdmiCecSource(nullptr)
                 , _notification(this)
                 , _service(nullptr)
                 {
-                    
+
                 }
                 virtual ~HdmiCecSource();
 

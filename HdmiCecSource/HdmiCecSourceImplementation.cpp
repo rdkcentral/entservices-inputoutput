@@ -403,6 +403,8 @@ namespace WPEFramework
                _powerManagerPlugin.Reset();
            }
            _registeredEventHandlers = false;
+
+           DeinitializeIARM();
     }
 
     HdmiCecSourceImplimentation::Configure(PluginHost::IShell* service)

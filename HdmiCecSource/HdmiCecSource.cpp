@@ -104,12 +104,6 @@ namespace WPEFramework
         HdmiCecSource* HdmiCecSource::_instance = nullptr;
         static int libcecInitStatus = 0;
 
-        HdmiCecSource::HdmiCecSource()
-        : PluginHost::JSONRPC(),
-        {
-            LOGWARN("ctor");
-        }
-
         HdmiCecSource::~HdmiCecSource()
         {
             LOGWARN("dtor");
@@ -166,7 +160,7 @@ namespace WPEFramework
 
            bool enabled = false;
            bool ret = false;
-           HdmiCecSourceLL_hdmiCecSource->GetEnabled(&enabled,&ret);
+           HdmiCecSource::_hdmiCecSource->GetEnabled(&enabled,&ret);
 
            if(ret && enabled)
            {
@@ -175,8 +169,6 @@ namespace WPEFramework
            }
            isDeviceActiveSource = false;
            HdmiCecSource::_notification.OnActiveSourceStatusUpdated();
-
-           HdmiCecSource::_hdmiCecSource->DeinitializeIARM();
 
            HdmiCecSource::_instance = nullptr;
         }
