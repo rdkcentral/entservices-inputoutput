@@ -329,6 +329,7 @@ namespace WPEFramework {
             uint32_t SendStandbyMessage(bool &success);
             uint32_t SendKeyPressEvent(const int &logicalAddress, int keyCode, bool &success);
             uint32_t GetActiveSourceStatus(bool &isActiveSource, bool &success);
+            uint32_t Configure(PluginHost::IShell*) override;
 
 
         };

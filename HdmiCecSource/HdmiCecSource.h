@@ -126,12 +126,12 @@ namespace WPEFramework {
                                     params["logicalAddress"] = logicalAddress;
                                     _parent.Notify(_T("standbyMessageReceived"), params);
                                 }
-                                void SendKeyReleasedMsgEvent(const int8_t logicalAddress) override
+                                void SendKeyReleaseMsgEvent(const int8_t logicalAddress) override
                                 {
-                                    LOGINFO("SendKeyReleasedMsgEvent");
+                                    LOGINFO("SendKeyReleaseMsgEvent");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
-                                    _parent.Notify(_T("sendKeyReleasedMsgEvent"), params);
+                                    _parent.Notify(_T("SendKeyReleaseMsgEvent"), params);
                                 }
                                 void SendKeyPressMsgEvent(const int8_t logicalAddress, const int32_t keyCode) override
                                 {
@@ -153,7 +153,16 @@ namespace WPEFramework {
                 HdmiCecSource& operator=(const HdmiCecSource&) = delete;
                 static HdmiCecSource* _instance;
 
-                HdmiCecSource();
+                HdmiCecSource()
+                : PluginHost::IPlugin()
+                , PluginHost::JSONRPC()
+                , _connectionId(0)
+                , _authService(nullptr)
+                , _notification(this)
+                , _service(nullptr)
+                {
+                    
+                }
                 virtual ~HdmiCecSource();
 
                 BEGIN_INTERFACE_MAP(HdmiCecSource)
@@ -175,6 +184,7 @@ namespace WPEFramework {
                 PluginHost::IShell* _service{};
                 Exchange::IHdmiCecSource* _hdmiCecSource;
                 Core::Sink<Notification> _notification;
+                uint32_t _connectionId;
         };
 	} // namespace Plugin
 } // namespace WPEFramework
