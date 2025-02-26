@@ -92,10 +92,11 @@ namespace WPEFramework {
                                 void Activated(RPC::IRemoteConnection*) override;
                                 void Deactivated(RPC::IRemoteConnection *connection) override;
 
-                                void OnDeviceAdded() override
+                                void OnDeviceAdded(const uint8_t logicalAddress) override
                                 {
                                     LOGINFO("OnDeviceAdded");
                                     JsonObject params;
+                                    params["logicalAddress"] = logicalAddress;
                                     _parent.Notify(_T("onDeviceAdded"), params);
                                 }
                                 void OnDeviceRemoved(const uint8_t logicalAddress) override
@@ -105,14 +106,14 @@ namespace WPEFramework {
                                     params["logicalAddress"] = logicalAddress;
                                     _parent.Notify(_T("onDeviceRemoved"), params);
                                 }
-                                void OnDeviceInfoUpdated(const int logicalAddress) override
+                                void OnDeviceInfoUpdated(const uint8_t logicalAddress) override
                                 {
                                     LOGINFO("OnDeviceInfoUpdated");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
                                     _parent.Notify(_T("onDeviceInfoUpdated"), params);
                                 }
-                                void OnActiveSourceStatusUpdated(const bool isActiveSource) override
+                                void OnActiveSourceStatusUpdated(const bool status) override
                                 {
                                     LOGINFO("OnActiveSourceStatusUpdated");
                                     JsonObject params;
@@ -156,10 +157,10 @@ namespace WPEFramework {
                 HdmiCecSource()
                 : PluginHost::IPlugin()
                 , PluginHost::JSONRPC()
-                , _connectionId(0)
-                , _hdmiCecSource(nullptr)
-                , _notification(this)
                 , _service(nullptr)
+                , _notification(this)
+                , _hdmiCecSource(nullptr)
+                , _connectionId(0)
                 {
 
                 }

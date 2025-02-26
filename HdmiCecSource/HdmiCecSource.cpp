@@ -160,15 +160,15 @@ namespace WPEFramework
 
            bool enabled = false;
            bool ret = false;
-           HdmiCecSource::_hdmiCecSource->GetEnabled(&enabled,&ret);
+           HdmiCecSource::_hdmiCecSource->GetEnabled(enabled,ret);
 
            if(ret && enabled)
            {
-                enabled = false;
-                HdmiCecSource::_hdmiCecSource->SetEnabled(false,enabled);
+                ret = false;
+                HdmiCecSource::_hdmiCecSource->SetEnabled(false,ret);
            }
            isDeviceActiveSource = false;
-           HdmiCecSource::_notification.OnActiveSourceStatusUpdated();
+           HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
 
            HdmiCecSource::_instance = nullptr;
         }
