@@ -164,53 +164,18 @@ namespace WPEFramework
                 return ;
            }
 
-           if(true == HdmiCecSource::_hdmiCecSource->getEnabled())
+           if(true == HdmiCecSource::_hdmiCecSource->GetEnabled())
            {
-               HdmiCecSource::_hdmiCecSource->SetEnabled(false,false);
+                bool enabled = false;
+                HdmiCecSource::_hdmiCecSource->SetEnabled(false,enabled);
            }
            isDeviceActiveSource = false;
-           HdmiCecSource::_instance->OnActiveSourceStatusUpdated();
+           HdmiCecSource::_notification->OnActiveSourceStatusUpdated();
+
+           HdmiCecSource::_instance->DeinitializeIARM();
+
            HdmiCecSource::_instance = nullptr;
-
-           DeinitializeIARM();
         }
-
-    void  HdmiCecSource::sendDeviceUpdateInfo(const int logicalAddress)
-	{
-		JsonObject params;
-		params["logicalAddress"] = JsonValue(logicalAddress);
-		LOGINFO("Device info updated notification send: for logical address:%d\r\n", logicalAddress);
-		sendNotify(eventString[HDMICECSOURCE_EVENT_DEVICE_INFO_UPDATED], params);
-	}
-
-    void HdmiCecSource::OnActiveSourceStatusUpdated()
-       {
-           JsonObject params;
-           params["status"] = isDeviceActiveSource;
-           LOGWARN(" OnActiveSourceStatusUpdated isDeviceActiveSource: %d ",isDeviceActiveSource);
-           sendNotify(eventString[HDMICECSOURCE_EVENT_ACTIVE_SOURCE_STATUS_UPDATED], params);
-       }
-
-       void HdmiCecSource::SendKeyPressMsgEvent(const int logicalAddress,const int keyCode)
-       {
-           JsonObject params;
-           params["logicalAddress"] = JsonValue(logicalAddress);
-           params["keyCode"] = JsonValue(keyCode);
-           sendNotify(HDMICEC_EVENT_ON_KEYPRESS_MSG_RECEIVED, params);
-       }
-       void HdmiCecSource::SendKeyReleaseMsgEvent(const int logicalAddress)
-       {
-           JsonObject params;
-           params["logicalAddress"] = JsonValue(logicalAddress);
-           sendNotify(HDMICEC_EVENT_ON_KEYRELEASE_MSG_RECEIVED, params);
-       }
-
-    void HdmiCecSource::SendStandbyMsgEvent(const int logicalAddress)
-       {
-           JsonObject params;
-           params["logicalAddress"] = JsonValue(logicalAddress);
-           sendNotify(HDMICEC_EVENT_ON_STANDBY_MSG_RECEIVED, params);
-       }
 
     } // namespace Plugin
 } // namespace WPEFramework

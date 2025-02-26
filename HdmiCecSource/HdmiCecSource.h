@@ -92,13 +92,58 @@ namespace WPEFramework {
                                 void Activated(RPC::IRemoteConnection*) override;
                                 void Deactivated(RPC::IRemoteConnection *connection) override;
 
-                                void OnDeviceAdded() override;
-                                void OnDeviceRemoved(const uint8_t logicalAddress) override;
-                                void OnDeviceInfoUpdated(const int logicalAddress) override;
-                                void OnActiveSourceStatusUpdated(const bool isActiveSource) override;
-                                void StandbyMessageReceived(const int8_t logicalAddress) override;
-                                void SendKeyReleasedMsgEvent(const int8_t logicalAddress) override;
-                                void SendKeyPressMsgEvent(const int8_t logicalAddress, const int32_t keyCode) override;
+                                void OnDeviceAdded() override
+                                {
+                                    LOGINFO("OnDeviceAdded");
+                                    JsonObject params;
+                                    _parent.Notify(_T("onDeviceAdded"), params);
+                                }
+                                void OnDeviceRemoved(const uint8_t logicalAddress) override
+                                {
+                                    LOGINFO("OnDeviceRemoved");
+                                    JsonObject params;
+                                    params["logicalAddress"] = logicalAddress;
+                                    _parent.Notify(_T("onDeviceRemoved"), params);
+                                }
+                                void OnDeviceInfoUpdated(const int logicalAddress) override
+                                {
+                                    LOGINFO("OnDeviceInfoUpdated");
+                                    JsonObject params;
+                                    params["logicalAddress"] = logicalAddress;
+                                    _parent.Notify(_T("onDeviceInfoUpdated"), params);
+                                }
+                                void OnActiveSourceStatusUpdated(const bool isActiveSource) override
+                                {
+                                    LOGINFO("OnActiveSourceStatusUpdated");
+                                    JsonObject params;
+                                    params["isActiveSource"] = isActiveSource;
+                                    _parent.Notify(_T("onActiveSourceStatusUpdated"), params);
+                                }
+                                void StandbyMessageReceived(const int8_t logicalAddress) override
+                                {
+                                    LOGINFO("StandbyMessageReceived");
+                                    JsonObject params;
+                                    params["logicalAddress"] = logicalAddress;
+                                    _parent.Notify(_T("standbyMessageReceived"), params);
+                                }
+                                void SendKeyReleasedMsgEvent(const int8_t logicalAddress) override
+                                {
+                                    LOGINFO("SendKeyReleasedMsgEvent");
+                                    JsonObject params;
+                                    params["logicalAddress"] = logicalAddress;
+                                    _parent.Notify(_T("sendKeyReleasedMsgEvent"), params);
+                                }
+                                void SendKeyPressMsgEvent(const int8_t logicalAddress, const int32_t keyCode) override
+                                {
+                                    LOGINFO("SendKeyPressMsgEvent");
+                                    JsonObject params;
+                                    params["logicalAddress"] = logicalAddress;
+                                    params["keyCode"] = keyCode;
+                                    _parent.Notify(_T("sendKeyPressMsgEvent"), params);
+                                }
+
+                            private:
+                                HdmiCecSource &_parent;
 
                     };
 
