@@ -117,7 +117,7 @@ namespace WPEFramework {
                                 {
                                     LOGINFO("OnActiveSourceStatusUpdated");
                                     JsonObject params;
-                                    params["isActiveSource"] = isActiveSource;
+                                    params["isActiveSource"] = status;
                                     _parent.Notify(_T("onActiveSourceStatusUpdated"), params);
                                 }
                                 void StandbyMessageReceived(const int8_t logicalAddress) override
@@ -183,8 +183,8 @@ namespace WPEFramework {
 
             private:
                 PluginHost::IShell* _service{};
-                Exchange::IHdmiCecSource* _hdmiCecSource;
                 Core::Sink<Notification> _notification;
+                Exchange::IHdmiCecSource* _hdmiCecSource;
                 uint32_t _connectionId;
         };
 	} // namespace Plugin
