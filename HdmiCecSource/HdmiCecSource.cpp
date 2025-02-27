@@ -112,9 +112,11 @@ namespace WPEFramework
            }
 
            string msg;
+           _service = service;
+           _service->AddRef();
+           _service->Register(&_notification);
            HdmiCecSource::_instance = this;
            _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
-           _service->Register(&_notification);
 
            if(nullptr != _hdmiCecSource)
             {
