@@ -56,13 +56,6 @@ enum {
     HDMICECSOURCE_EVENT_ACTIVE_SOURCE_STATUS_UPDATED,
 };
 
-static const char *eventString[] = {
-	"onDeviceAdded",
-	"onDeviceRemoved",
-	"onDeviceInfoUpdated",
-        "onActiveSourceStatusUpdated"
-};
-
 #define CEC_SETTING_ENABLED_FILE "/opt/persistent/ds/cecData_2.json"
 #define CEC_SETTING_ENABLED "cecEnabled"
 #define CEC_SETTING_OTP_ENABLED "cecOTPEnabled"
@@ -73,10 +66,8 @@ static std::vector<uint8_t> defaultVendorId = {0x00,0x19,0xFB};
 static VendorID lgVendorId = {0x00,0xE0,0x91};
 static PhysicalAddress physical_addr = {0x0F,0x0F,0x0F,0x0F};
 static LogicalAddress logicalAddress = 0xF;
-static int32_t powerState = 1;
 static PowerStatus tvPowerState = 1;
 static bool isDeviceActiveSource = false;
-static bool isLGTvConnected = false;
 
 using namespace WPEFramework;
 
@@ -102,7 +93,6 @@ namespace WPEFramework
         SERVICE_REGISTRATION(HdmiCecSource, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 
         HdmiCecSource* HdmiCecSource::_instance = nullptr;
-        static int libcecInitStatus = 0;
 
         HdmiCecSource::~HdmiCecSource()
         {
