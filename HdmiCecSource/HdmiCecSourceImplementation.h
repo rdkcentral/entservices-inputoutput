@@ -169,7 +169,7 @@ namespace WPEFramework {
 		// As the registration/unregistration of notifications is realized by the class PluginHost::JSONRPC,
 		// this class exposes a public method called, Notify(), using this methods, all subscribed clients
 		// will receive a JSONRPC message as a notification, in case this method is called.
-        class HdmiCecSourceImplementation : public Exchange::IHdmiCecSource, public Exchange:IConfiguration{
+        class HdmiCecSourceImplementation : public Exchange::IHdmiCecSource, public Exchange::IConfiguration{
 		enum {
 				VOLUME_UP     = 0x41,
 				VOLUME_DOWN   = 0x42,
