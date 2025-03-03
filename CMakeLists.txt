@@ -44,6 +44,10 @@ if(PLUGIN_AVOUTPUT)
     add_subdirectory(AVOutput)
 endif()
 
+if(PLUGIN_HDMICEC2)
+    add_subdirectory(HdmiCec_2)
+endif()
+
 if(PLUGIN_HDMICECSOURCE)
     add_subdirectory(HdmiCecSource)
 endif()
@@ -58,6 +62,10 @@ endif()
 
 if(PLUGIN_HDMIINPUT)
     add_subdirectory(HdmiInput)
+endif()
+
+if(PLUGIN_COMPOSITEINPUT)
+	add_subdirectory(CompositeInput)
 endif()
 
 if(WPEFRAMEWORK_CREATE_IPKG_TARGETS)
