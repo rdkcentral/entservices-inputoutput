@@ -196,8 +196,6 @@ namespace WPEFramework {
         public:
             HdmiCecSourceImplementation();
             virtual ~HdmiCecSourceImplementation();
-            virtual const string Initialize(PluginHost::IShell* service) override;
-            virtual void Deinitialize(PluginHost::IShell* service) override;
             void onPowerModeChanged(const PowerState &currentState, const PowerState &newState);
             void registerEventHandlers();
             static HdmiCecSourceImplementation* _instance;
@@ -254,6 +252,9 @@ namespace WPEFramework {
                 BEGIN_INTERFACE_MAP(PowerManagerNotification)
                 INTERFACE_ENTRY(Exchange::IPowerManager::INotification)
                 END_INTERFACE_MAP
+
+            private:
+                HdmiCecSourceImplementation& _parent;
         
             };
             // We do not allow this plugin to be copied !!
@@ -312,7 +313,6 @@ namespace WPEFramework {
             Core::Sink<PowerManagerNotification> _pwrMgrNotification;
             bool _registeredEventHandlers;
             private:
-                HdmiCecSourceImplementation& _parent;
                 mutable Core::CriticalSection _adminLock;
                 std::list<Exchange::IHdmiCecSource::INotification*> _hdmiCecSourceNotifications;
 
