@@ -385,7 +385,7 @@ namespace WPEFramework
 //=========================================== HdmiCecSourceImplementation =========================================
 
     HdmiCecSourceImplementation::HdmiCecSourceImplementation()
-    : PluginHost::JSONRPC(),cecEnableStatus(false),smConnection(nullptr), m_sendKeyEventThreadRun(false)
+    : cecEnableStatus(false),smConnection(nullptr), m_sendKeyEventThreadRun(false)
     , _pwrMgrNotification(*this)
     , _registeredEventHandlers(false)
     {
@@ -641,7 +641,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
 		}
 
-        uint32_t HdmiCecSourceImplementation::SendKeyPressEvent(const int logicalAddress, int keyCode, bool &success)
+        uint32_t HdmiCecSourceImplementation::SendKeyPressEvent(const int &logicalAddress, int &keyCode, bool &success)
 		{
 			SendKeyInfo keyInfo;
 			try {
@@ -1219,7 +1219,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetVendorId((const string &vendorid), bool &success)
+        uint32_t HdmiCecSourceImplementation::SetVendorId(const string &vendorid, bool &success)
         {
             LOGINFO("SetVendorId :%s ",vendorid.c_str());
             unsigned int vendorIdInt = 0;
