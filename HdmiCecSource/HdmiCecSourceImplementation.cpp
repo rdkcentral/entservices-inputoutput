@@ -68,21 +68,6 @@
 #define CEC_SETTING_OSD_NAME "cecOSDName"
 #define CEC_SETTING_VENDOR_ID "cecVendorId"
 
-
-enum {
-	HDMICECSOURCE_EVENT_DEVICE_ADDED=0,
-	HDMICECSOURCE_EVENT_DEVICE_REMOVED,
-	HDMICECSOURCE_EVENT_DEVICE_INFO_UPDATED,
-    HDMICECSOURCE_EVENT_ACTIVE_SOURCE_STATUS_UPDATED,
-};
-
-static const char *eventString[] = {
-	"onDeviceAdded",
-	"onDeviceRemoved",
-	"onDeviceInfoUpdated",
-        "onActiveSourceStatusUpdated"
-};
-
 static std::vector<uint8_t> defaultVendorId = {0x00,0x19,0xFB};
 static VendorID appVendorId = {defaultVendorId.at(0),defaultVendorId.at(1),defaultVendorId.at(2)};
 static VendorID lgVendorId = {0x00,0xE0,0x91};
@@ -145,7 +130,7 @@ namespace WPEFramework
              else
                  isDeviceActiveSource = false;
              LOGINFO("ActiveSource isDeviceActiveSource status :%d \n", isDeviceActiveSource);
-             HdmiCecSourceImplementation::_instance->OnActiveSourceStatusUpdated();
+             HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
        void HdmiCecSourceProcessor::process (const InActiveSource &msg, const Header &header)
@@ -285,7 +270,7 @@ namespace WPEFramework
              else
                  isDeviceActiveSource = false;
              LOGINFO("physical_addr : %s isDeviceActiveSource :%d \n",physical_addr.toString().c_str(),isDeviceActiveSource);
-             HdmiCecSourceImplementation::_instance->OnActiveSourceStatusUpdated();
+             HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
        }
        void HdmiCecSourceProcessor::process (const RoutingInformation &msg, const Header &header)
        {
@@ -296,7 +281,7 @@ namespace WPEFramework
              else
                  isDeviceActiveSource = false;
              LOGINFO("physical_addr : %s isDeviceActiveSource :%d \n",physical_addr.toString().c_str(),isDeviceActiveSource);
-             HdmiCecSourceImplementation::_instance->OnActiveSourceStatusUpdated();
+             HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
        }
        void HdmiCecSourceProcessor::process (const SetStreamPath &msg, const Header &header)
        {
@@ -307,7 +292,7 @@ namespace WPEFramework
              else
                  isDeviceActiveSource = false;
              LOGINFO("physical_addr : %s isDeviceActiveSource :%d \n",physical_addr.toString().c_str(),isDeviceActiveSource);
-             HdmiCecSourceImplementation::_instance->OnActiveSourceStatusUpdated();
+             HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
 
        }
        void HdmiCecSourceProcessor::process (const GetMenuLanguage &msg, const Header &header)
@@ -685,7 +670,7 @@ namespace WPEFramework
 
          }
 
-       uint32_t HdmiCecSourceImplementation::SendStandbyMessage(bool success)
+       uint32_t HdmiCecSourceImplementation::SendStandbyMessage(bool &success)
        {
             bool ret = false;
 
@@ -720,7 +705,7 @@ namespace WPEFramework
             }
        }
 
-        void HdmiCecSourceImplementation::InitializePowerManager()
+        void HdmiCecSourceImplementation::InitializePowerManager(PluginHost::IShell *service)
         {
             LOGINFO("Connect the COM-RPC socket\n");
             _powerManagerPlugin = PowerManagerInterfaceBuilder(_T("org.rdk.PowerManager"))
@@ -1211,7 +1196,7 @@ namespace WPEFramework
 
         uint32_t HdmiCecSourceImplementation::GetOSDName(std::string &name, bool &success)
         {
-            osdName = name.toString();
+            osdName = name.c_str();
             LOGINFO("GetOSDName :%s ",name.c_str());
             success = true;
             return Core::ERROR_NONE;
@@ -1221,7 +1206,7 @@ namespace WPEFramework
         {
             LOGINFO("SetOSDName :%s ",name.c_str());
             osdName = name.c_str();
-            Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_OSD_NAME, JsonValue(osd.c_str()));
+            Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_OSD_NAME, JsonValue(name.c_str()));
             success = true;
             return Core::ERROR_NONE;
         }
@@ -1234,7 +1219,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetVendorId(const std::string vendorid, bool &success)
+        uint32_t HdmiCecSourceImplementation::SetVendorId((const string &vendorid), bool &success)
         {
             LOGINFO("SetVendorId :%s ",vendorid.c_str());
             unsigned int vendorIdInt = 0;
@@ -1296,7 +1281,7 @@ namespace WPEFramework
             }
         }
 
-        uint32_t HdmiCecSourceImplementation::getDeviceList (Exchange::IHdmiCecSourceDeviceListIterator *&devices)
+        uint32_t HdmiCecSourceImplementation::getDeviceList (IHdmiCecSource::IHdmiCecSourceDeviceListIterator *&deviceList)
         {   //sample servicemanager response:
 		    LOGINFOMETHOD();
             std::vector<Exchange::HdmiCecSourceDevices> localDevices;
@@ -1324,7 +1309,7 @@ namespace WPEFramework
 		    	LOGERR("Exception in api");
 		    	success = false;
 		    }
-            devices = (Core::Service<RPC::IteratorType<Exchange::IHdmiCecSource::IHdmiCecSourceDeviceListIterator>>::Create<Exchange::IHdmiCecSource::IHdmiCecSourceDeviceListIterator>(localDevices));
+            deviceList = (Core::Service<RPC::IteratorType<Exchange::IHdmiCecSource::IHdmiCecSourceDeviceListIterator>>::Create<Exchange::IHdmiCecSource::IHdmiCecSourceDeviceListIterator>(localDevices));
 		    returnResponse(success);
 	    }
 
@@ -1585,7 +1570,7 @@ namespace WPEFramework
 	}
 
 
-    void  HdmiCecSource::sendDeviceUpdateInfo(const int logicalAddress)
+    void  HdmiCecSourceImplementation::sendDeviceUpdateInfo(const int logicalAddress)
 	{
 		LOGINFO("Device info updated notification send: for logical address:%d\r\n", logicalAddress);
         std::list<Exchange::IHdmiCecSource::INotification*>::const_iterator index(_hdmiCecSourceNotifications.begin());
@@ -1595,7 +1580,7 @@ namespace WPEFramework
         }
 	}
 
-    void HdmiCecSource::sendActiveSourceEvent()
+    void HdmiCecSourceImplementation::sendActiveSourceEvent()
        {
            LOGWARN(" sendActiveSourceEvent isDeviceActiveSource: %d ",isDeviceActiveSource);
            std::list<Exchange::IHdmiCecSource::INotification*>::const_iterator index(_hdmiCecSourceNotifications.begin());
@@ -1605,7 +1590,7 @@ namespace WPEFramework
            }
        }
 
-    void HdmiCecSource::SendStandbyMsgEvent(const int logicalAddress)
+    void HdmiCecSourceImplementation::SendStandbyMsgEvent(const int logicalAddress)
        {
            std::list<Exchange::IHdmiCecSource::INotification*>::const_iterator index(_hdmiCecSourceNotifications.begin());
            while (index != _hdmiCecSourceNotifications.end()) {
@@ -1614,7 +1599,7 @@ namespace WPEFramework
            }
        }
 
-    void HdmiCecSource::SendKeyReleaseMsgEvent(const int logicalAddress)
+    void HdmiCecSourceImplementation::SendKeyReleaseMsgEvent(const int logicalAddress)
        {
            std::list<Exchange::IHdmiCecSource::INotification*>::const_iterator index(_hdmiCecSourceNotifications.begin());
            while (index != _hdmiCecSourceNotifications.end()) {
@@ -1623,7 +1608,7 @@ namespace WPEFramework
            }
        }
 
-    void HdmiCecSource::SendKeyPressMsgEvent(const int logicalAddress,const int keyCode)
+    void HdmiCecSourceImplementation::SendKeyPressMsgEvent(const int logicalAddress,const int keyCode)
        {
            std::list<Exchange::IHdmiCecSource::INotification*>::const_iterator index(_hdmiCecSourceNotifications.begin());
               while (index != _hdmiCecSourceNotifications.end()) {

@@ -221,9 +221,9 @@ namespace WPEFramework {
                    int keyCode;
                 }SendKeyInfo;
             BEGIN_INTERFACE_MAP(HdmiCecSourceImplementation)
-            INTERFACE_ENTRY(PluginHost::IPlugin)
-            INTERFACE_ENTRY(PluginHost::IDispatcher)
+                INTERFACE_ENTRY(Exchange::IAuthService)
             END_INTERFACE_MAP
+
 
         private:
             class PowerManagerNotification : public Exchange::IPowerManager::INotification {
@@ -329,7 +329,10 @@ namespace WPEFramework {
             uint32_t SendStandbyMessage(bool &success);
             uint32_t SendKeyPressEvent(const int &logicalAddress, int keyCode, bool &success);
             uint32_t GetActiveSourceStatus(bool &isActiveSource, bool &success);
+            uint32_t GetDeviceList(IHdmiCecSource::HdmiCecSourceDeviceListIterator *&deviceList, bool &success);
             uint32_t Configure(PluginHost::IShell*) override;
+            uint32_t Register(IHdmiCecSource::INotification *notification) override;
+            uint32_t Unregister(IHdmiCecSource::INotification *notification) override;
 
 
         };
