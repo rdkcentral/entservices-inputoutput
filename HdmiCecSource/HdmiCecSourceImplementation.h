@@ -41,6 +41,7 @@
 
 #include <interfaces/IPowerManager.h>
 #include "PowerManagerInterface.h"
+#include <interfaces/IHdmiCecSource.h>
 
 using namespace WPEFramework;
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
@@ -169,7 +170,7 @@ namespace WPEFramework {
 		// As the registration/unregistration of notifications is realized by the class PluginHost::JSONRPC,
 		// this class exposes a public method called, Notify(), using this methods, all subscribed clients
 		// will receive a JSONRPC message as a notification, in case this method is called.
-        class HdmiCecSourceImplementation : public Exchange::IHdmiCecSource, public Exchange::IConfiguration{
+        class HdmiCecSourceImplementation : public Exchange::IHdmiCecSource {
 		enum {
 				VOLUME_UP     = 0x41,
 				VOLUME_DOWN   = 0x42,
@@ -197,7 +198,6 @@ namespace WPEFramework {
             virtual ~HdmiCecSourceImplementation();
             virtual const string Initialize(PluginHost::IShell* service) override;
             virtual void Deinitialize(PluginHost::IShell* service) override;
-            virtual string Information() const override { return {}; }
             void onPowerModeChanged(const PowerState &currentState, const PowerState &newState);
             void registerEventHandlers();
             static HdmiCecSourceImplementation* _instance;
