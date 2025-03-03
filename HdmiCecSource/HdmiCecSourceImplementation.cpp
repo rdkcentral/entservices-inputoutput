@@ -572,7 +572,9 @@ namespace WPEFramework
 	    uint32_t HdmiCecSourceImplementation::sendKeyPressEvent(const int logicalAddress, int keyCode)
 		{
 			if(!(_instance->smConnection))
+            {
                  return Core::ERROR_GENERAL;
+            }
 		    LOGINFO(" SendKeyPressEvent logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
 			switch(keyCode)
                    {
@@ -1281,7 +1283,7 @@ namespace WPEFramework
             }
         }
 
-        uint32_t HdmiCecSourceImplementation::getDeviceList (IHdmiCecSource::IHdmiCecSourceDeviceListIterator *&deviceList)
+        uint32_t HdmiCecSourceImplementation::getDeviceList (IHdmiCecSource::IHdmiCecSourceDeviceListIterator *&deviceList, bool &success /* @out */)
         {   //sample servicemanager response:
 		    LOGINFOMETHOD();
             std::vector<Exchange::HdmiCecSourceDevices> localDevices;
@@ -1290,7 +1292,7 @@ namespace WPEFramework
 		    //Trigger CEC device poll here
 		    pthread_cond_signal(&(_instance->m_condSig));
 
-		    bool success = true;
+		    success = true;
 		    LOGINFO("getDeviceListWrapper  m_numberOfDevices :%d \n", HdmiCecSourceImplementation::_instance->m_numberOfDevices);
 		    try
 		    {
@@ -1310,7 +1312,7 @@ namespace WPEFramework
 		    	success = false;
 		    }
             deviceList = (Core::Service<RPC::IteratorType<Exchange::IHdmiCecSource::IHdmiCecSourceDeviceListIterator>>::Create<Exchange::IHdmiCecSource::IHdmiCecSourceDeviceListIterator>(localDevices));
-		    returnResponse(success);
+            return Core::ERROR_NONE;
 	    }
 
 	bool HdmiCecSourceImplementation::pingDeviceUpdateList (int idev)
@@ -1603,7 +1605,7 @@ namespace WPEFramework
        {
            std::list<Exchange::IHdmiCecSource::INotification*>::const_iterator index(_hdmiCecSourceNotifications.begin());
            while (index != _hdmiCecSourceNotifications.end()) {
-               (*index)->OnKeyReleaseMsgReceived(logicalAddress);
+               (*index)->SendKeyReleaseMsgEvent(logicalAddress);
                index++;
            }
        }
@@ -1612,7 +1614,7 @@ namespace WPEFramework
        {
            std::list<Exchange::IHdmiCecSource::INotification*>::const_iterator index(_hdmiCecSourceNotifications.begin());
               while (index != _hdmiCecSourceNotifications.end()) {
-                (*index)->OnKeyPressMsgReceived(logicalAddress,keyCode);
+                (*index)->SendKeyPressMsgEvent(logicalAddress,keyCode);
                 index++;
               }
        }
