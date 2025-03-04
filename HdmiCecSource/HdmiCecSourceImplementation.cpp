@@ -413,6 +413,8 @@ namespace WPEFramework
         ASSERT(service != nullptr);
         PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
         PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
+        uint32_t res = Core::ERROR_GENERAL;
+        string msg;
         if (Utils::IARM::init()) {
             //Initialize cecEnableStatus to false in ctor
             cecEnableStatus = false;
@@ -475,7 +477,6 @@ namespace WPEFramework
             msg = "IARM bus is not available";
             LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
         }
-        _powerManagerPlugin = service->QueryInterface<PowerManagerInterface>();
         ASSERT(_powerManagerPlugin);
         registerEventHandlers();
         return Core::ERROR_NONE;
@@ -643,12 +644,12 @@ namespace WPEFramework
             return Core::ERROR_NONE;
 		}
 
-        uint32_t HdmiCecSourceImplementation::SendKeyPressEvent(const int &logicalAddress, int &keyCode, bool &success)
+        uint32_t HdmiCecSourceImplementation::SendKeyPressEvent(const int &logicalAddress,const int &keyCode, bool &success)
 		{
 			SendKeyInfo keyInfo;
 			try {
-               keyInfo.logicalAddr = std::stoi(logicalAddress);
-               keyInfo.keyCode     = std::stoi(keyCode);
+               keyInfo.logicalAddr = logicalAddress;
+               keyInfo.keyCode     = keyCode;
             } catch (const std::invalid_argument& e) {
                std::cerr << "Invalid input: " << e.what() << std::endl;
                success = false;
@@ -1229,7 +1230,7 @@ namespace WPEFramework
             unsigned int vendorIdInt = 0;
             try
             {
-                vendorIdInt = std::stoi(vendorid,NULL,16);
+                vendorIdInt = stoi(vendorid,NULL,16);
             }
             catch (...)
             {
