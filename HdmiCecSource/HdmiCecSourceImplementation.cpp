@@ -407,7 +407,7 @@ namespace WPEFramework
            DeinitializeIARM();
     }
 
-    HdmiCecSourceImplementation::Configure(PluginHost::IShell* service)
+    uint32_t HdmiCecSourceImplementation::Configure(PluginHost::IShell* service)
     {
         LOGINFO("Configure");
         ASSERT(service != nullptr);
@@ -493,7 +493,7 @@ namespace WPEFramework
 
     }
 
-    void HdmiCecSourceImplementation::Register(Exchange::IHdmiCecSource::INotification* notification)
+    void HdmiCecSourceImplementation::Register(IHdmiCecSource::INotification* notification)
     {
 
         LOGINFO("Register");
@@ -647,8 +647,8 @@ namespace WPEFramework
 		{
 			SendKeyInfo keyInfo;
 			try {
-               keyInfo.logicalAddr = stoi(logicalAddress);
-               keyInfo.keyCode     = stoi(keyCode);
+               keyInfo.logicalAddr = std::stoi(logicalAddress);
+               keyInfo.keyCode     = std::stoi(keyCode);
             } catch (const std::invalid_argument& e) {
                std::cerr << "Invalid input: " << e.what() << std::endl;
                success = false;
@@ -667,7 +667,9 @@ namespace WPEFramework
 		 {
 	            LOGINFO(" sendKeyReleaseEvent logicalAddress 0x%x \n",logicalAddress);
                     if(!(_instance->smConnection))
+                    {
                         return;
+                    }
 		        _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlReleased()), 100);
 
          }
@@ -1227,7 +1229,7 @@ namespace WPEFramework
             unsigned int vendorIdInt = 0;
             try
             {
-                vendorIdInt = stoi(vendorid,NULL,16);
+                vendorIdInt = std::stoi(vendorid,NULL,16);
             }
             catch (...)
             {
@@ -1283,7 +1285,7 @@ namespace WPEFramework
             }
         }
 
-        uint32_t HdmiCecSourceImplementation::getDeviceList (IHdmiCecSource::IHdmiCecSourceDeviceListIterator *&deviceList, bool &success /* @out */)
+        uint32_t HdmiCecSourceImplementation::getDeviceList (Exchange::IHdmiCecSource::IHdmiCecSourceDeviceListIterator *&deviceList, bool &success /* @out */)
         {   //sample servicemanager response:
 		    LOGINFOMETHOD();
             std::vector<Exchange::HdmiCecSourceDevices> localDevices;
@@ -1596,7 +1598,7 @@ namespace WPEFramework
        {
            std::list<Exchange::IHdmiCecSource::INotification*>::const_iterator index(_hdmiCecSourceNotifications.begin());
            while (index != _hdmiCecSourceNotifications.end()) {
-              (*index)->OnStandbyMsgReceived(logicalAddress);
+              (*index)->StandbyMessageReceived(logicalAddress);
               index++;
            }
        }
