@@ -317,19 +317,19 @@ namespace WPEFramework {
                 std::list<Exchange::IHdmiCecSource::INotification*> _hdmiCecSourceNotifications;
 
         public:
-            uint32_t SetEnabled(bool &enabled, bool &success);
-            uint32_t GetEnabled(bool &enabled, bool &success);
-            uint32_t SetOTPEnabled(bool &enabled, bool &success);
-            uint32_t GetOTPEnabled(bool &enabled, bool &success);
-            uint32_t SetOSDName(const string &name, bool &success);
-            uint32_t GetOSDName(string &name, bool &success);
-            uint32_t SetVendorId(const string &vendorid, bool &success);
-            uint32_t GetVendorId(string &vendorid, bool &success);
-            uint32_t PerformOTPAction(bool &success);
-            uint32_t SendStandbyMessage(bool &success);
-            uint32_t SendKeyPressEvent(const int &logicalAddress, int &keyCode, bool &success);
-            uint32_t GetActiveSourceStatus(bool &isActiveSource, bool &success);
-            uint32_t GetDeviceList(Exchange::IHdmiCecSource::IHdmiCecSourceDeviceListIterator*& deviceList, bool &success);
+            uint32_t SetEnabled(bool &enabled, bool &success) override;
+            uint32_t GetEnabled(bool &enabled, bool &success) override;
+            uint32_t SetOTPEnabled(bool &enabled, bool &success) override;
+            uint32_t GetOTPEnabled(bool &enabled, bool &success) override;
+            uint32_t SetOSDName(const string &name, bool &success) override;
+            uint32_t GetOSDName(string &name, bool &success) override;
+            uint32_t SetVendorId(const string &vendorid, bool &success) override;
+            uint32_t GetVendorId(string &vendorid, bool &success) override;
+            uint32_t PerformOTPAction(bool &success) override;
+            uint32_t SendStandbyMessage(bool &success) override;
+            uint32_t SendKeyPressEvent(const int &logicalAddress,const int &keyCode, bool &success) override;
+            uint32_t GetActiveSourceStatus(bool &isActiveSource, bool &success) override;
+            uint32_t GetDeviceList(IHdmiCecSource::IHdmiCecSourceDeviceListIterator*& deviceList, bool &success) override;
             uint32_t Configure(PluginHost::IShell* service) override;
             uint32_t Register(IHdmiCecSource::INotification *notification) override;
             uint32_t Unregister(IHdmiCecSource::INotification *notification) override;

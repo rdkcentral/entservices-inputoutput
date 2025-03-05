@@ -494,7 +494,7 @@ namespace WPEFramework
 
     }
 
-    void HdmiCecSourceImplementation::Register(IHdmiCecSource::INotification* notification)
+    uint32_t HdmiCecSourceImplementation::Register(IHdmiCecSource::INotification* notification)
     {
 
         LOGINFO("Register");
@@ -508,6 +508,26 @@ namespace WPEFramework
             else
             {
                 LOGERR("Same notification is registered already");
+            }
+            _adminLock.Unlock();
+        }
+    }
+
+
+    uint32_t HdmiCecSourceImplementation::Unregister(IHdmiCecSource::INotification* notification)
+    {
+        LOGINFO("Unregister");
+        if(notification != nullptr){
+            _adminLock.Lock();
+            std::list<Exchange::IHdmiCecSource::INotification*>::iterator index = std::find(_hdmiCecSourceNotifications.begin(), _hdmiCecSourceNotifications.end(), notification);
+            if(index != _hdmiCecSourceNotifications.end())
+            {
+                (*index)->Release();
+                _hdmiCecSourceNotifications.erase(index);
+            }
+            else
+            {
+                LOGERR("Notification is not registered");
             }
             _adminLock.Unlock();
         }
@@ -1286,7 +1306,7 @@ namespace WPEFramework
             }
         }
 
-        uint32_t HdmiCecSourceImplementation::getDeviceList (Exchange::IHdmiCecSource::IHdmiCecSourceDeviceListIterator *&deviceList, bool &success /* @out */)
+        uint32_t HdmiCecSourceImplementation::getDeviceList (IHdmiCecSource::IHdmiCecSourceDeviceListIterator *&deviceList, bool &success /* @out */)
         {   //sample servicemanager response:
 		    LOGINFOMETHOD();
             std::vector<Exchange::HdmiCecSourceDevices> localDevices;
