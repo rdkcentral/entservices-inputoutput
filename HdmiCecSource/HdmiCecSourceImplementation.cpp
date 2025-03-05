@@ -511,6 +511,8 @@ namespace WPEFramework
             }
             _adminLock.Unlock();
         }
+
+        return Core::ERROR_NONE;
     }
 
 
@@ -531,6 +533,8 @@ namespace WPEFramework
             }
             _adminLock.Unlock();
         }
+
+        return Core::ERROR_NONE;
     }
 
     void HdmiCecSourceImplementation::addDevice(const int logicalAddress) {
@@ -664,7 +668,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
 		}
 
-        uint32_t HdmiCecSourceImplementation::SendKeyPressEvent(const int &logicalAddress,const int &keyCode, bool &success)
+        uint32_t HdmiCecSourceImplementation::SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, bool &success)
 		{
 			SendKeyInfo keyInfo;
 			try {
@@ -1306,7 +1310,7 @@ namespace WPEFramework
             }
         }
 
-        uint32_t HdmiCecSourceImplementation::getDeviceList (IHdmiCecSource::IHdmiCecSourceDeviceListIterator *&deviceList, bool &success /* @out */)
+        uint32_t HdmiCecSourceImplementation::getDeviceList (IHdmiCecSourceDeviceListIterator *&deviceList, bool &success /* @out */)
         {   //sample servicemanager response:
 		    LOGINFOMETHOD();
             std::vector<Exchange::HdmiCecSourceDevices> localDevices;
