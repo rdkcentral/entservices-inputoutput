@@ -1312,9 +1312,8 @@ namespace WPEFramework
 
         uint32_t HdmiCecSourceImplementation::GetDeviceList(IHdmiCecSourceDeviceListIterator*& deviceList, bool &success)
         {   //sample servicemanager response:
-		    LOGINFOMETHOD();
-            std::vector<Exchange::HdmiCecSourceDevices> localDevices;
-            Exchange::HdmiCecSourceDevices actual_hdmicecdevices = {0};
+            std::vector<Exchange::IHdmiCecSource::HdmiCecSourceDevices> localDevices;
+            Exchange::IHdmiCecSource::HdmiCecSourceDevices actual_hdmicecdevices = {0};
 
 		    //Trigger CEC device poll here
 		    pthread_cond_signal(&(_instance->m_condSig));
