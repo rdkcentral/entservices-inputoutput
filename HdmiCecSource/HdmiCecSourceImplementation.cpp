@@ -1310,7 +1310,7 @@ namespace WPEFramework
             }
         }
 
-        uint32_t HdmiCecSourceImplementation::getDeviceList (IHdmiCecSourceDeviceListIterator *&deviceList, bool &success /* @out */)
+        uint32_t HdmiCecSourceImplementation::GetDeviceList(IHdmiCecSourceDeviceListIterator*& deviceList, bool &success)
         {   //sample servicemanager response:
 		    LOGINFOMETHOD();
             std::vector<Exchange::HdmiCecSourceDevices> localDevices;
