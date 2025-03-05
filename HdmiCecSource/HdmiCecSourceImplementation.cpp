@@ -954,7 +954,7 @@ namespace WPEFramework
             return cecSettingEnabled;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetEnabled(bool &enabled, bool &success)
+        uint32_t HdmiCecSourceImplementation::SetEnabled(const bool &enabled, bool &success)
         {
            LOGINFO("Entered SetEnabled ");
 
@@ -975,7 +975,7 @@ namespace WPEFramework
            return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetOTPEnabled(bool &enabled, bool &success)
+        uint32_t HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, bool &success)
         {
            if (cecOTPSettingEnabled != enabled)
            {

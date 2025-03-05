@@ -317,9 +317,9 @@ namespace WPEFramework {
                 std::list<Exchange::IHdmiCecSource::INotification*> _hdmiCecSourceNotifications;
 
         public:
-            uint32_t SetEnabled(bool &enabled, bool &success) override;
+            uint32_t SetEnabled(const bool &enabled, bool &success) override;
             uint32_t GetEnabled(bool &enabled, bool &success) override;
-            uint32_t SetOTPEnabled(bool &enabled, bool &success) override;
+            uint32_t SetOTPEnabled(const bool &enabled, bool &success) override;
             uint32_t GetOTPEnabled(bool &enabled, bool &success) override;
             uint32_t SetOSDName(const string &name, bool &success) override;
             uint32_t GetOSDName(string &name, bool &success) override;
