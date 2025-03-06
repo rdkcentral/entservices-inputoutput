@@ -92,49 +92,49 @@ namespace WPEFramework {
                                 void Activated(RPC::IRemoteConnection*) override;
                                 void Deactivated(RPC::IRemoteConnection *connection) override;
 
-                                void onDeviceAdded(const int logicalAddress) override
+                                void OnDeviceAdded(const int logicalAddress) override
                                 {
                                     LOGINFO("OnDeviceAdded");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
                                     _parent.Notify(_T("onDeviceAdded"), params);
                                 }
-                                void onDeviceRemoved(const int logicalAddress) override
+                                void OnDeviceRemoved(const int logicalAddress) override
                                 {
                                     LOGINFO("OnDeviceRemoved");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
                                     _parent.Notify(_T("onDeviceRemoved"), params);
                                 }
-                                void onDeviceInfoUpdated(const int logicalAddress) override
+                                void OnDeviceInfoUpdated(const int logicalAddress) override
                                 {
                                     LOGINFO("OnDeviceInfoUpdated");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
                                     _parent.Notify(_T("onDeviceInfoUpdated"), params);
                                 }
-                                void onActiveSourceStatusUpdated(const bool status) override
+                                void OnActiveSourceStatusUpdated(const bool status) override
                                 {
                                     LOGINFO("OnActiveSourceStatusUpdated");
                                     JsonObject params;
                                     params["isActiveSource"] = status;
                                     _parent.Notify(_T("onActiveSourceStatusUpdated"), params);
                                 }
-                                void standbyMessageReceived(const int logicalAddress) override
+                                void StandbyMessageReceived(const int logicalAddress) override
                                 {
                                     LOGINFO("StandbyMessageReceived");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
                                     _parent.Notify(_T("standbyMessageReceived"), params);
                                 }
-                                void sendKeyReleaseMsgEvent(const int logicalAddress) override
+                                void SendKeyReleaseMsgEvent(const int logicalAddress) override
                                 {
                                     LOGINFO("SendKeyReleaseMsgEvent");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
                                     _parent.Notify(_T("SendKeyReleaseMsgEvent"), params);
                                 }
-                                void sendKeyPressMsgEvent(const int logicalAddress, const int keyCode) override
+                                void SendKeyPressMsgEvent(const int logicalAddress, const int keyCode) override
                                 {
                                     LOGINFO("SendKeyPressMsgEvent");
                                     JsonObject params;
