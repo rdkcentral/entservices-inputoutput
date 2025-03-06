@@ -164,7 +164,9 @@ namespace WPEFramework {
                 {
 
                 }
-                virtual ~HdmiCecSource();
+                virtual ~HdmiCecSource()
+                {
+                }
 
                 BEGIN_INTERFACE_MAP(HdmiCecSource)
                 INTERFACE_ENTRY(PluginHost::IPlugin)
