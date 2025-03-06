@@ -87,11 +87,6 @@ namespace WPEFramework
 
         HdmiCecSource* HdmiCecSource::_instance = nullptr;
 
-        HdmiCecSource::~HdmiCecSource()
-        {
-            LOGWARN("dtor");
-        }
-
         const string HdmiCecSource::Initialize(PluginHost::IShell *service)
         {
            LOGWARN("Initlaizing CEC_2");

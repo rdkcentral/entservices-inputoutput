@@ -166,6 +166,7 @@ namespace WPEFramework {
                 }
                 virtual ~HdmiCecSource()
                 {
+                    
                 }
 
                 BEGIN_INTERFACE_MAP(HdmiCecSource)
