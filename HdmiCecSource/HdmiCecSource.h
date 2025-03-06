@@ -166,7 +166,7 @@ namespace WPEFramework {
                 }
                 virtual ~HdmiCecSource()
                 {
-                    
+
                 }
 
                 BEGIN_INTERFACE_MAP(HdmiCecSource)
@@ -179,6 +179,7 @@ namespace WPEFramework {
                 // -------------------------------------------------------------------------------------------------------
 		        const string Initialize(PluginHost::IShell* service) override;
                 void Deinitialize(PluginHost::IShell* service) override;
+                string Information() const override;
                 //Begin methods
 
             private:

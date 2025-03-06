@@ -153,5 +153,10 @@ namespace WPEFramework
            HdmiCecSource::_instance = nullptr;
         }
 
+        string HdmiCecSource::Information() const
+        {
+            return(string());
+        }
+
     } // namespace Plugin
 } // namespace WPEFramework
