@@ -23,13 +23,6 @@
 #include <mutex>
 #include <condition_variable>
 
-#include "ccec/FrameListener.hpp"
-#include "ccec/Connection.hpp"
-#include "libIARM.h"
-#include "ccec/Assert.hpp"
-#include "ccec/Messages.hpp"
-#include "ccec/MessageDecoder.hpp"
-#include "ccec/MessageProcessor.hpp"
 #include <thread>
 
 #undef Assert // this define from Connection.hpp conflicts with WPEFramework
