@@ -19,9 +19,6 @@
 
 #include "HdmiCecSource.h"
 
-#include "manager.hpp"
-#include "websocket/URL.h"
-
 #include "UtilsIarm.h"
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
