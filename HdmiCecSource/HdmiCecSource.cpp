@@ -19,9 +19,6 @@
 
 #include "HdmiCecSource.h"
 
-#include "dsMgr.h"
-#include "dsDisplay.h"
-#include "videoOutputPort.hpp"
 #include "manager.hpp"
 #include "websocket/URL.h"
 
