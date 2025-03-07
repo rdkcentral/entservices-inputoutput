@@ -19,6 +19,18 @@
 
 #include "HdmiCecSource.h"
 
+#include "ccec/Connection.hpp"
+#include "ccec/CECFrame.hpp"
+#include "ccec/MessageEncoder.hpp"
+#include "host.hpp"
+#include "ccec/host/RDK.hpp"
+
+#include "dsMgr.h"
+#include "dsDisplay.h"
+#include "videoOutputPort.hpp"
+#include "manager.hpp"
+#include "websocket/URL.h"
+
 #include "UtilsIarm.h"
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
