@@ -19,18 +19,6 @@
 
 #include "HdmiCecSource.h"
 
-#include "ccec/Connection.hpp"
-#include "ccec/CECFrame.hpp"
-#include "ccec/MessageEncoder.hpp"
-#include "host.hpp"
-#include "ccec/host/RDK.hpp"
-
-#include "dsMgr.h"
-#include "dsDisplay.h"
-#include "videoOutputPort.hpp"
-#include "manager.hpp"
-#include "websocket/URL.h"
-
 #include "UtilsIarm.h"
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
@@ -53,13 +41,6 @@
 #define CEC_SETTING_OTP_ENABLED "cecOTPEnabled"
 #define CEC_SETTING_OSD_NAME "cecOSDName"
 #define CEC_SETTING_VENDOR_ID "cecVendorId"
-
-static std::vector<uint8_t> defaultVendorId = {0x00,0x19,0xFB};
-static VendorID lgVendorId = {0x00,0xE0,0x91};
-static PhysicalAddress physical_addr = {0x0F,0x0F,0x0F,0x0F};
-static LogicalAddress logicalAddress = 0xF;
-static PowerStatus tvPowerState = 1;
-static bool isDeviceActiveSource = false;
 
 using namespace WPEFramework;
 
@@ -146,7 +127,6 @@ namespace WPEFramework
                 ret = false;
                 HdmiCecSource::_hdmiCecSource->SetEnabled(false,ret);
            }
-           isDeviceActiveSource = false;
            HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
 
            HdmiCecSource::_instance = nullptr;
