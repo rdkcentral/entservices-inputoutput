@@ -721,7 +721,8 @@ namespace WPEFramework
             LOGINFO("Connect the COM-RPC socket\n");
             _powerManagerPlugin = PowerManagerInterfaceBuilder(_T("org.rdk.PowerManager"))
                                     .withIShell(service)
-                                    .withRetry(25)
+                                    .withRetryIntervalMS(200)
+                                    .withRetryCount(25)
                                     .createInterface();
             registerEventHandlers();
         }
