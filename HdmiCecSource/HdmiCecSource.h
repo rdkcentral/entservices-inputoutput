@@ -35,6 +35,8 @@
 #include <interfaces/IPowerManager.h>
 #include "PowerManagerInterface.h"
 #include <interfaces/IHdmiCecSource.h>
+#include <interfaces/json/JHdmiCecSource.h>
+#include <interfaces/json/JsonData_HdmiCecSource.h>
 
 using namespace WPEFramework;
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
