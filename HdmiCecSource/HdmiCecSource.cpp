@@ -90,7 +90,7 @@ namespace WPEFramework
             {
                 _hdmiCecSource->Configure(service);
                 _hdmiCecSource->Register(&_notification);
-                Exchange::JHdmiCecSource::Register(*this, _service);
+                Exchange::JHdmiCecSource::Register(*this, _hdmiCecSource);
                 msg = "HdmiCecSource plugin is available";
                 LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
             }
