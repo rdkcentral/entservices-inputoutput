@@ -23,6 +23,8 @@ set_source_files_properties(HdmiCecSource.cpp PROPERTIES COMPILE_FLAGS "-fexcept
 set_source_files_properties(HdmiCecSourceImplementation.cpp PROPERTIES COMPILE_FLAGS "-fexceptions")
 
 find_package(${NAMESPACE}Plugins REQUIRED)
+find_package(${NAMESPACE}Definitions REQUIRED)
+find_package(CompileSettingsDebug CONFIG REQUIRED)
 
 add_library(${MODULE_NAME} SHARED
         HdmiCecSource.cpp
@@ -50,9 +52,18 @@ target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${IARMBUS_INCLUDE_DI
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${CEC_INCLUDE_DIRS})
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${DS_INCLUDE_DIRS})
 
-target_link_libraries(${MODULE_NAME} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES})
+target_link_libraries(${MODULE_NAME}
+    PRIVATE
+        CompileSettingsDebug::CompileSettingsDebug
+        ${NAMESPACE}Plugins::${NAMESPACE}Plugins
+        ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
 
 target_link_libraries(${PLUGIN_IMPLEMENTATION} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${CEC_LIBRARIES} ${DS_LIBRARIES} )
+
+target_link_libraries(${PLUGIN_IMPLEMENTATION}
+    PRIVATE
+        CompileSettingsDebug::CompileSettingsDebug
+        ${NAMESPACE}Plugins::${NAMESPACE}Plugins)
 
 if (NOT RDK_SERVICES_L1_TEST)
     target_compile_options(${MODULE_NAME} PRIVATE -Wno-error=deprecated)
