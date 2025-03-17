@@ -32,15 +32,11 @@
 #include "UtilsBIT.h"
 #include "UtilsThreadRAII.h"
 
-#include <interfaces/IPowerManager.h>
-#include "PowerManagerInterface.h"
 #include <interfaces/IHdmiCecSource.h>
 #include <interfaces/json/JHdmiCecSource.h>
 #include <interfaces/json/JsonData_HdmiCecSource.h>
 
 using namespace WPEFramework;
-using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
-using ThermalTemperature = WPEFramework::Exchange::IPowerManager::ThermalTemperature;
 
 namespace WPEFramework {
 

@@ -45,14 +45,12 @@ find_package(IARMBus)
 find_package(CEC)
 
 target_include_directories(${MODULE_NAME} PRIVATE ${IARMBUS_INCLUDE_DIRS} ../helpers)
-target_include_directories(${MODULE_NAME} PRIVATE ${CEC_INCLUDE_DIRS})
-target_include_directories(${MODULE_NAME} PRIVATE ${DS_INCLUDE_DIRS})
 
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${IARMBUS_INCLUDE_DIRS} ../helpers)
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${CEC_INCLUDE_DIRS})
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${DS_INCLUDE_DIRS})
 
-target_link_libraries(${MODULE_NAME} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${CEC_LIBRARIES} ${DS_LIBRARIES} )
+target_link_libraries(${MODULE_NAME} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES})
 
 target_link_libraries(${PLUGIN_IMPLEMENTATION} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${CEC_LIBRARIES} ${DS_LIBRARIES} )
 

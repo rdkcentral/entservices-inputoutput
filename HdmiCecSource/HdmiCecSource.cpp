@@ -24,23 +24,9 @@
 #include "UtilssyncPersistFile.h"
 #include "UtilsSearchRDKProfile.h"
 
-#define HDMICECSOURCE_METHOD_SEND_KEY_PRESS         "sendKeyPressEvent"
-#define HDMICEC_EVENT_ON_DEVICES_CHANGED "onDevicesChanged"
-#define HDMICEC_EVENT_ON_HDMI_HOT_PLUG "onHdmiHotPlug"
-#define HDMICEC_EVENT_ON_STANDBY_MSG_RECEIVED "standbyMessageReceived"
-#define DEV_TYPE_TUNER 1
-#define HDMI_HOT_PLUG_EVENT_CONNECTED 0
-#define ABORT_REASON_ID 4
-
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 0
 #define API_VERSION_NUMBER_PATCH 8
-
-#define CEC_SETTING_ENABLED_FILE "/opt/persistent/ds/cecData_2.json"
-#define CEC_SETTING_ENABLED "cecEnabled"
-#define CEC_SETTING_OTP_ENABLED "cecOTPEnabled"
-#define CEC_SETTING_OSD_NAME "cecOSDName"
-#define CEC_SETTING_VENDOR_ID "cecVendorId"
 
 using namespace WPEFramework;
 
