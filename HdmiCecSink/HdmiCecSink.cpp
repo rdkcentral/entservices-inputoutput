@@ -23,6 +23,7 @@
 #include "ccec/CECFrame.hpp"
 #include "ccec/MessageEncoder.hpp"
 #include "host.hpp"
+#include "ccec/host/RDK.hpp"
 #include "UtilsgetRFCConfig.h"
 
 #include "dsMgr.h"
