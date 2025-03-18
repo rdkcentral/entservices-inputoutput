@@ -1310,7 +1310,7 @@ namespace WPEFramework
             }
         }
 
-        uint32_t HdmiCecSourceImplementation::GetDeviceList(IHdmiCecSourceDeviceListIterator*& deviceList, bool &success)
+        uint32_t HdmiCecSourceImplementation::GetDeviceList(uint32_t &numberofdevices, IHdmiCecSourceDeviceListIterator*& deviceList, bool &success)
         {   //sample servicemanager response:
             std::vector<Exchange::IHdmiCecSource::HdmiCecSourceDevices> localDevices;
             Exchange::IHdmiCecSource::HdmiCecSourceDevices actual_hdmicecdevices = {0};
@@ -1320,6 +1320,7 @@ namespace WPEFramework
 
 		    success = true;
 		    LOGINFO("getDeviceListWrapper  m_numberOfDevices :%d \n", HdmiCecSourceImplementation::_instance->m_numberOfDevices);
+            numberofdevices = HdmiCecSourceImplementation::_instance->m_numberOfDevices;
 		    try
 		    {
 		    	int i = 0;

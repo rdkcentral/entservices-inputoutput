@@ -143,7 +143,6 @@ namespace WPEFramework {
                 // We do not allow this plugin to be copied !!
                 HdmiCecSource(const HdmiCecSource&) = delete;
                 HdmiCecSource& operator=(const HdmiCecSource&) = delete;
-                static HdmiCecSource* _instance;
 
                 HdmiCecSource()
                 : PluginHost::IPlugin()

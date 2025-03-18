@@ -51,11 +51,9 @@ namespace WPEFramework
     {
         SERVICE_REGISTRATION(HdmiCecSource, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 
-        HdmiCecSource* HdmiCecSource::_instance = nullptr;
-
         const string HdmiCecSource::Initialize(PluginHost::IShell *service)
         {
-           LOGWARN("Initlaizing CEC_2");
+           LOGWARN("Initlaizing HdmiCecSource plugin \n");
 
            profileType = searchRdkProfile();
 
@@ -65,11 +63,17 @@ namespace WPEFramework
                 return (std::string("Not supported"));
            }
 
-           string msg;
+           string msg = "";
+
+           ASSERT(nullptr != service);
+           ASSERT(nullptr == _service);
+           ASSERT(nullptr == _hdmiCecSource);
+           ASSERT(0 == _connectionId);
+
+
            _service = service;
            _service->AddRef();
            _service->Register(&_notification);
-           HdmiCecSource::_instance = this;
            _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
 
            if(nullptr != _hdmiCecSource)
@@ -77,14 +81,17 @@ namespace WPEFramework
                 _hdmiCecSource->Configure(service);
                 _hdmiCecSource->Register(&_notification);
                 Exchange::JHdmiCecSource::Register(*this, _hdmiCecSource);
-                msg = "HdmiCecSource plugin is available";
                 LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
             }
             else
             {
                 msg = "HdmiCecSource plugin is not available";
                 LOGINFO("HdmiCecSource plugin is not available. Failed to activate HdmiCecSource Plugin");
-                return msg;
+            }
+
+            if (0 != msg.length())
+            {
+                Deinitialize(service);
             }
 
            // On success return empty, to indicate there is no error text.
@@ -92,9 +99,11 @@ namespace WPEFramework
         }
 
 
-        void HdmiCecSource::Deinitialize(PluginHost::IShell* /* service */)
+        void HdmiCecSource::Deinitialize(PluginHost::IShell* service)
         {
-           LOGWARN("Deinitialize CEC_2");
+           LOGWARN("Deinitialize HdmiCecSource plugin \n");
+
+           ASSERT(nullptr != service);
            
 
            profileType = searchRdkProfile();
@@ -116,12 +125,48 @@ namespace WPEFramework
            }
            HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
 
-           HdmiCecSource::_instance = nullptr;
+           if(nullptr != _hdmiCecSource)
+           {
+             _hdmiCecSource->Unregister(&_notification);
+             Exchange::JHdmiCecSource::Unregister(*this, _hdmiCecSource);
+             _hdmiCecSource->Release();
+             _hdmiCecSource = nullptr;
+
+             RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
+             if (connection != nullptr)
+             {
+                try{
+                    connection->Terminate();
+                }
+                catch(const std::exception& e)
+                {
+                    std::string errorMessage = "Failed to terminate connection: ";
+                    errorMessage += e.what();
+                    LOGWARN("%s",errorMessage.c_str());
+                }
+
+                connection->Release();
+             }
+           }
+
+           _connectionId = 0;
+           _service->Release();
+           _service = nullptr;
+           LOGINFO("HdmiCecSource plugin is deactivated. Successfully deactivated HdmiCecSource Plugin");
         }
 
         string HdmiCecSource::Information() const
         {
-            return(string());
+            return("This HdmiCecSource PLugin Facilitates the HDMI CEC Source Control");
+        }
+
+        void HdmiCecSource::Deactivated(RPC::IRemoteConnection* connection)
+        {
+            if (connection->Id() == _connectionId)
+            {
+                ASSERT(_service != nullptr);
+                Core::IWorkerPool::Instance().Submit(PluginHost::IShell::Job::Create(_service, PluginHost::IShell::DEACTIVATED, PluginHost::IShell::FAILURE));
+            }
         }
 
     } // namespace Plugin
