@@ -128,7 +128,7 @@ namespace WPEFramework
            if(nullptr != _hdmiCecSource)
            {
              _hdmiCecSource->Unregister(&_notification);
-             Exchange::JHdmiCecSource::Unregister(*this, _hdmiCecSource);
+             Exchange::JHdmiCecSource::Unregister(*this);
              _hdmiCecSource->Release();
              _hdmiCecSource = nullptr;
 
