@@ -329,7 +329,7 @@ namespace WPEFramework {
             uint32_t SendStandbyMessage(bool &success) override;
             uint32_t SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, bool &success) override;
             uint32_t GetActiveSourceStatus(bool &isActiveSource, bool &success) override;
-            uint32_t GetDeviceList(IHdmiCecSourceDeviceListIterator*& deviceList, bool &success) override;
+            uint32_t GetDeviceList(uint32_t &numberofdevices, IHdmiCecSourceDeviceListIterator*& deviceList, bool &success) override;
             uint32_t Configure(PluginHost::IShell* service) override;
             uint32_t Register(IHdmiCecSource::INotification *notification) override;
             uint32_t Unregister(IHdmiCecSource::INotification *notification) override;
