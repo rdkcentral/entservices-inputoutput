@@ -47,7 +47,7 @@ target_link_libraries(${MODULE_NAME}
         ${IARMBUS_LIBRARIES})        
 
 install(TARGETS ${MODULE_NAME}
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/${STORAGE_DIRECTORY}/plugins)
+    DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
 
 add_library(${PLUGIN_IMPLEMENTATION} SHARED
         HdmiCecSourceImplementation.cpp
@@ -80,6 +80,6 @@ endif ()
 
 
 install(TARGETS ${PLUGIN_IMPLEMENTATION}
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/${STORAGE_DIRECTORY}/plugins)
+    DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
 
 write_config(${PLUGIN_NAME})
