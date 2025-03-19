@@ -80,8 +80,14 @@ namespace WPEFramework {
                                 INTERFACE_ENTRY(RPC::IRemoteConnection::INotification)
                                 END_INTERFACE_MAP
 
-                                void Activated(RPC::IRemoteConnection*) override;
-                                void Deactivated(RPC::IRemoteConnection *connection) override;
+                                void Activated(RPC::IRemoteConnection*) override
+                                {
+                                }
+                            
+                                void Deactivated(RPC::IRemoteConnection *connection) override
+                                {
+                                   _parent.Deactivated(connection);
+                                }
 
                                 void OnDeviceAdded(const int logicalAddress) override
                                 {
@@ -89,41 +95,42 @@ namespace WPEFramework {
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
                                     _parent.Notify(_T("onDeviceAdded"), params);
+                                    Exchange::JHdmiCecSource::Event::OnDeviceAdded(_parent, logicalAddress);
                                 }
                                 void OnDeviceRemoved(const int logicalAddress) override
                                 {
                                     LOGINFO("OnDeviceRemoved");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
-                                    _parent.Notify(_T("onDeviceRemoved"), params);
+                                    Exchange::JHdmiCecSource::Event::OnDeviceRemoved(_parent, logicalAddress);
                                 }
                                 void OnDeviceInfoUpdated(const int logicalAddress) override
                                 {
                                     LOGINFO("OnDeviceInfoUpdated");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
-                                    _parent.Notify(_T("onDeviceInfoUpdated"), params);
+                                    Exchange::JHdmiCecSource::Event::OnDeviceInfoUpdated(_parent, logicalAddress);
                                 }
                                 void OnActiveSourceStatusUpdated(const bool status) override
                                 {
                                     LOGINFO("OnActiveSourceStatusUpdated");
                                     JsonObject params;
                                     params["isActiveSource"] = status;
-                                    _parent.Notify(_T("onActiveSourceStatusUpdated"), params);
+                                    Exchange::JHdmiCecSource::Event::OnActiveSourceStatusUpdated(_parent, status);
                                 }
                                 void StandbyMessageReceived(const int logicalAddress) override
                                 {
                                     LOGINFO("StandbyMessageReceived");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
-                                    _parent.Notify(_T("standbyMessageReceived"), params);
+                                    Exchange::JHdmiCecSource::Event::StandbyMessageReceived(_parent, logicalAddress);
                                 }
                                 void SendKeyReleaseMsgEvent(const int logicalAddress) override
                                 {
                                     LOGINFO("SendKeyReleaseMsgEvent");
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
-                                    _parent.Notify(_T("SendKeyReleaseMsgEvent"), params);
+                                    Exchange::JHdmiCecSource::Event::SendKeyReleaseMsgEvent(_parent, logicalAddress);
                                 }
                                 void SendKeyPressMsgEvent(const int logicalAddress, const int keyCode) override
                                 {
@@ -131,7 +138,7 @@ namespace WPEFramework {
                                     JsonObject params;
                                     params["logicalAddress"] = logicalAddress;
                                     params["keyCode"] = keyCode;
-                                    _parent.Notify(_T("sendKeyPressMsgEvent"), params);
+                                    Exchange::JHdmiCecSource::Event::SendKeyPressMsgEvent(_parent, logicalAddress, keyCode);
                                 }
 
                             private:
