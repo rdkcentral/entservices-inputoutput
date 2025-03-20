@@ -654,7 +654,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
 		}
 
-        uint32_t HdmiCecSourceImplementation::SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, bool &success)
+        uint32_t HdmiCecSourceImplementation::SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSucces &success)
 		{
 			SendKeyInfo keyInfo;
 			try {
@@ -662,7 +662,7 @@ namespace WPEFramework
                keyInfo.keyCode     = keyCode;
             } catch (const std::invalid_argument& e) {
                std::cerr << "Invalid input: " << e.what() << std::endl;
-               success = false;
+               success.success = false;
                return Core::ERROR_GENERAL;
             }
 			std::unique_lock<std::mutex> lk(m_sendKeyEventMutex);
@@ -670,7 +670,7 @@ namespace WPEFramework
             m_sendKeyEventThreadRun = true;
 			m_sendKeyCV.notify_one();
 			LOGINFO("Post send key press event to queue size:%d \n",(int)m_SendKeyQueue.size());
-            success = true;
+            success.success = true;
 			return Core::ERROR_NONE;
 		}
 
@@ -685,7 +685,7 @@ namespace WPEFramework
 
          }
 
-       uint32_t HdmiCecSourceImplementation::SendStandbyMessage(bool &success)
+       uint32_t HdmiCecSourceImplementation::SendStandbyMessage(HdmiCecSourceSucces &success)
        {
             bool ret = false;
 
@@ -711,11 +711,11 @@ namespace WPEFramework
 
             if(ret)
             {
-                success = true;
+                success.success = true;
                 return Core::ERROR_NONE;
             }
             else{
-                success = false;
+                success.success = false;
                 return Core::ERROR_GENERAL;
             }
        }
@@ -944,7 +944,7 @@ namespace WPEFramework
             return cecSettingEnabled;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetEnabled(const bool &enabled, bool &success)
+        uint32_t HdmiCecSourceImplementation::SetEnabled(const bool &enabled, HdmiCecSourceSucces &success)
         {
            LOGINFO("Entered SetEnabled ");
 
@@ -961,11 +961,11 @@ namespace WPEFramework
            {
                CECDisable();
            }
-           success = true;
+           success.success = true;
            return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, bool &success)
+        uint32_t HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, HdmiCecSourceSucces &success)
         {
            if (cecOTPSettingEnabled != enabled)
            {
@@ -973,7 +973,7 @@ namespace WPEFramework
                Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_OTP_ENABLED, JsonValue(enabled));
                cecOTPSettingEnabled = enabled;
            }
-           success = true;
+           success.success = true;
            return Core::ERROR_NONE;
         }
 
@@ -1211,18 +1211,18 @@ namespace WPEFramework
 
         uint32_t HdmiCecSourceImplementation::GetOSDName(std::string &name, bool &success)
         {
-            osdName = name.c_str();
+            name = osdName.toString();
             LOGINFO("GetOSDName :%s ",name.c_str());
             success = true;
             return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetOSDName(const std::string &name, bool &success)
+        uint32_t HdmiCecSourceImplementation::SetOSDName(const std::string &name, HdmiCecSourceSucces &success)
         {
             LOGINFO("SetOSDName :%s ",name.c_str());
             osdName = name.c_str();
             Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_OSD_NAME, JsonValue(name.c_str()));
-            success = true;
+            success.success = true;
             return Core::ERROR_NONE;
         }
 
@@ -1234,7 +1234,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetVendorId(const string &vendorid, bool &success)
+        uint32_t HdmiCecSourceImplementation::SetVendorId(const string &vendorid, HdmiCecSourceSucces &success)
         {
             LOGINFO("SetVendorId :%s ",vendorid.c_str());
             unsigned int vendorIdInt = 0;
@@ -1250,11 +1250,11 @@ namespace WPEFramework
             appVendorId = {(uint8_t)(vendorIdInt >> 16 & 0xff),(uint8_t)(vendorIdInt >> 8 & 0xff),(uint8_t) (vendorIdInt & 0xff)};
             Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_VENDOR_ID, JsonValue(vendorIdInt));
             LOGINFO("SetVendorId :%s ",appVendorId.toString().c_str());
-            success = true;
+            success.success = true;
             return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::PerformOTPAction(bool &success)
+        uint32_t HdmiCecSourceImplementation::PerformOTPAction(HdmiCecSourceSucces &success)
         {
             LOGINFO("PerformOTPAction ");
             bool ret = false; 
@@ -1288,10 +1288,10 @@ namespace WPEFramework
                 LOGWARN("cecEnableStatus=false");
 
             if (ret){
-                success = true;
+                success.success = true;
                 return Core::ERROR_NONE;
             } else {
-                success = false;
+                success.success = false;
                 return Core::ERROR_GENERAL;
             }
         }

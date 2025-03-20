@@ -317,17 +317,17 @@ namespace WPEFramework {
                 std::list<Exchange::IHdmiCecSource::INotification*> _hdmiCecSourceNotifications;
 
         public:
-            uint32_t SetEnabled(const bool &enabled, bool &success) override;
+            uint32_t SetEnabled(const bool &enabled, HdmiCecSourceSucces &success) override;
             uint32_t GetEnabled(bool &enabled, bool &success) override;
-            uint32_t SetOTPEnabled(const bool &enabled, bool &success) override;
+            uint32_t SetOTPEnabled(const bool &enabled, HdmiCecSourceSucces &success) override;
             uint32_t GetOTPEnabled(bool &enabled, bool &success) override;
-            uint32_t SetOSDName(const string &name, bool &success) override;
+            uint32_t SetOSDName(const string &name, HdmiCecSourceSucces &success) override;
             uint32_t GetOSDName(string &name, bool &success) override;
-            uint32_t SetVendorId(const string &vendorid, bool &success) override;
+            uint32_t SetVendorId(const string &vendorid, HdmiCecSourceSucces &success) override;
             uint32_t GetVendorId(string &vendorid, bool &success) override;
-            uint32_t PerformOTPAction(bool &success) override;
-            uint32_t SendStandbyMessage(bool &success) override;
-            uint32_t SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, bool &success) override;
+            uint32_t PerformOTPAction(HdmiCecSourceSucces &success) override;
+            uint32_t SendStandbyMessage(HdmiCecSourceSucces &success) override;
+            uint32_t SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSucces &success) override;
             uint32_t GetActiveSourceStatus(bool &isActiveSource, bool &success) override;
             uint32_t GetDeviceList(uint32_t &numberofdevices, IHdmiCecSourceDeviceListIterator*& deviceList, bool &success) override;
             uint32_t Configure(PluginHost::IShell* service) override;
