@@ -654,7 +654,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
 		}
 
-        uint32_t HdmiCecSourceImplementation::SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSucces &success)
+        uint32_t HdmiCecSourceImplementation::SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSuccess &success)
 		{
 			SendKeyInfo keyInfo;
 			try {
@@ -685,7 +685,7 @@ namespace WPEFramework
 
          }
 
-       uint32_t HdmiCecSourceImplementation::SendStandbyMessage(HdmiCecSourceSucces &success)
+       uint32_t HdmiCecSourceImplementation::SendStandbyMessage(HdmiCecSourceSuccess &success)
        {
             bool ret = false;
 
@@ -944,7 +944,7 @@ namespace WPEFramework
             return cecSettingEnabled;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetEnabled(const bool &enabled, HdmiCecSourceSucces &success)
+        uint32_t HdmiCecSourceImplementation::SetEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
         {
            LOGINFO("Entered SetEnabled ");
 
@@ -965,7 +965,7 @@ namespace WPEFramework
            return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, HdmiCecSourceSucces &success)
+        uint32_t HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
         {
            if (cecOTPSettingEnabled != enabled)
            {
@@ -1217,7 +1217,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetOSDName(const std::string &name, HdmiCecSourceSucces &success)
+        uint32_t HdmiCecSourceImplementation::SetOSDName(const std::string &name, HdmiCecSourceSuccess &success)
         {
             LOGINFO("SetOSDName :%s ",name.c_str());
             osdName = name.c_str();
@@ -1234,7 +1234,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::SetVendorId(const string &vendorid, HdmiCecSourceSucces &success)
+        uint32_t HdmiCecSourceImplementation::SetVendorId(const string &vendorid, HdmiCecSourceSuccess &success)
         {
             LOGINFO("SetVendorId :%s ",vendorid.c_str());
             unsigned int vendorIdInt = 0;
@@ -1254,7 +1254,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
         }
 
-        uint32_t HdmiCecSourceImplementation::PerformOTPAction(HdmiCecSourceSucces &success)
+        uint32_t HdmiCecSourceImplementation::PerformOTPAction(HdmiCecSourceSuccess &success)
         {
             LOGINFO("PerformOTPAction ");
             bool ret = false; 
