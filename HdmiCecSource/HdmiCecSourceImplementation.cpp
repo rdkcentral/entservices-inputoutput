@@ -474,7 +474,7 @@ namespace WPEFramework
     
         if(!_registeredEventHandlers && _powerManagerPlugin) {
             _registeredEventHandlers = true;
-            _powerManagerPlugin->Register(&_pwrMgrNotification);
+            _powerManagerPlugin->Register(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
         }
 
 
@@ -725,6 +725,8 @@ namespace WPEFramework
             LOGINFO("Connect the COM-RPC socket\n");
             _powerManagerPlugin = PowerManagerInterfaceBuilder(_T("org.rdk.PowerManager"))
                                     .withIShell(service)
+                                    .withRetryIntervalMS(200)
+                                    .withRetryCount(25)
                                     .createInterface();
             registerEventHandlers();
         }
