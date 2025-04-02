@@ -75,7 +75,7 @@ namespace WPEFramework
             _service = service;
             _service->AddRef();
             _service->Register(&_hdcpProfileNotification);
-            _hdcpProfile = _service->Root<Exchange::IHdcpProfile>(_connectionId, 5000, _T("HdcpProfile"));
+            _hdcpProfile = _service->Root<Exchange::IHdcpProfile>(_connectionId, 5000, _T("HdcpProfileImplementation"));
 
             if (nullptr != _hdcpProfile)
             {
