@@ -779,7 +779,7 @@ namespace WPEFramework
             }
        }
 
-       void HdmiCecSourceImplementation::onPowerModeChanged(const PowerState &currentState, const PowerState &newState)
+       void HdmiCecSourceImplementation::onPowerModeChanged(const PowerState currentState, const PowerState newState)
        {
             if(!HdmiCecSourceImplementation::_instance)
                 return;
