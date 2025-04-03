@@ -22,6 +22,19 @@
 #include "Module.h"
 #include <interfaces/Ids.h>
 #include <interfaces/IHdcpProfile.h>
+#include <interfaces/IPowerManager.h>
+#include "PowerManagerInterface.h"
+#include "videoOutputPort.hpp"
+#include "videoOutputPortConfig.hpp"
+#include "dsMgr.h"
+#include "manager.hpp"
+#include "host.hpp"
+// #include <interfaces/IConfiguration.h>
+#include <com/com.h>
+#include <core/core.h>
+#include <mutex>
+#include <vector>
+using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
 
 namespace WPEFramework
 {
@@ -29,6 +42,7 @@ namespace WPEFramework
     {
         
         class HdcpProfileImplementation : public Exchange::IHdcpProfile
+        // , public Exchange::IConfiguration
         {
         public:
             // We do not allow this plugin to be copied !!
@@ -40,9 +54,13 @@ namespace WPEFramework
             // We do not allow this plugin to be copied !!
             HdcpProfileImplementation(const HdcpProfileImplementation &) = delete;
             HdcpProfileImplementation &operator=(const HdcpProfileImplementation &) = delete;
-
+            //void InitializePowerManager(PluginHost::IShell *service);
+            // IConfiguration interface
+            // uint32_t Configure(PluginHost::IShell *service) override;
+            
             BEGIN_INTERFACE_MAP(HdcpProfileImplementation)
             INTERFACE_ENTRY(Exchange::IHdcpProfile)
+            // INTERFACE_ENTRY(Exchange::IConfiguration)
             END_INTERFACE_MAP
 
         public:
@@ -94,15 +112,18 @@ namespace WPEFramework
                 const Event _event;
                 const JsonObject _params;
             };
+            
 
         public:
             Core::hresult Register(Exchange::IHdcpProfile::INotification *notification) override;
             Core::hresult Unregister(Exchange::IHdcpProfile::INotification *notification) override;
 
-            Core::hresult GetHDCPStatus(HDCPStatus& hdcpstatus,Result &result) override;
-			Core::hresult GetSettopHDCPSupport(SupportedHdcpInfo& supportedHdcpInfo,Result &result) override;
+            Core::hresult GetHDCPStatus(HDCPStatus& hdcpstatus,bool& success) override;
+			Core::hresult GetSettopHDCPSupport(SupportedHdcpInfo& supportedHdcpInfo,bool& success) override;
 
         private:
+            mutable Core::CriticalSection _adminLock;
+            PluginHost::IShell *mShell;
             std::list<Exchange::IHdcpProfile::INotification *> _hdcpProfileNotification; // List of registered notifications
 
             void dispatchEvent(Event, const JsonObject &params);
@@ -111,5 +132,6 @@ namespace WPEFramework
         public:
             static HdcpProfileImplementation *_instance;
         };
+
     } // namespace Plugin
 } // namespace WPEFramework
