@@ -20,7 +20,6 @@
 #pragma once
 
 #include "Module.h"
-#include <interfaces/IHdcpProfile.h>
 #include <interfaces/json/JHdcpProfile.h>
 #include <interfaces/json/JsonData_HdcpProfile.h>
 #include <interfaces/IHdcpProfile.h> // Ensure this includes the definition of HDCPStatus
