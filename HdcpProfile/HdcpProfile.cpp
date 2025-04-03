@@ -71,12 +71,13 @@ namespace WPEFramework
             ASSERT(0 == _connectionId);
 
             SYSLOG(Logging::Startup, (_T("HdcpProfile::Initialize: PID=%u"), getpid()));
-
+            printf("HdcpProfile::Initialize: PID=%u", getpid());
             _service = service;
             _service->AddRef();
             _service->Register(&_hdcpProfileNotification);
+            printf("HdcpProfile::Initialize: Registering Notification");
             _hdcpProfile = _service->Root<Exchange::IHdcpProfile>(_connectionId, 5000, _T("HdcpProfileImplementation"));
-
+            printf("HdcpProfile::Initialize: _hdcpProfile = %p", _hdcpProfile);
             if (nullptr != _hdcpProfile)
             {
                 auto configConnection = _hdcpProfile->QueryInterface<Exchange::IConfiguration>();
@@ -88,7 +89,9 @@ namespace WPEFramework
                 // Register for notifications
                 _hdcpProfile->Register(&_hdcpProfileNotification);
                 // Invoking Plugin API register to wpeframework
+                SYSLOG(Logging::Startup, (_T("HdcpProfile::Initialize: HdcpProfile plugin initialised")));
                 Exchange::JHdcpProfile::Register(*this, _hdcpProfile);
+                SYSLOG(Logging::Startup, (_T("HdcpProfile::Initialize: HdcpProfile plugin initialised")));
             }
             else
             {
@@ -98,6 +101,7 @@ namespace WPEFramework
 
             if (0 != message.length())
             {
+                printf("HdcpProfile::Initialize: Failed to initialise HdcpProfile plugin");
                 Deinitialize(service);
             }
 
@@ -107,7 +111,7 @@ namespace WPEFramework
         void HdcpProfile::Deinitialize(PluginHost::IShell *service)
         {
             ASSERT(_service == service);
-
+            printf("HdcpProfile::Deinitialize: service = %p", service);
             SYSLOG(Logging::Shutdown, (string(_T("HdcpProfile::Deinitialize"))));
 
             // Make sure the Activated and Deactivated are no longer called before we start cleaning up..
