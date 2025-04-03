@@ -18,7 +18,7 @@
  **/
 
 #include "HdcpProfileImplementation.h"
-
+#include "PowerManagerInterface.h"
 #include "UtilsJsonRpc.h"
 
 #define API_VERSION_NUMBER_MAJOR 1
@@ -29,20 +29,24 @@ namespace WPEFramework
 {
     namespace Plugin
     {
-
         SERVICE_REGISTRATION(HdcpProfileImplementation, 1, 0);
         HdcpProfileImplementation *HdcpProfileImplementation::_instance = nullptr;
 
         HdcpProfileImplementation::HdcpProfileImplementation()
+        : _adminLock(), mShell(nullptr)
         {
             LOGINFO("Create HdcpProfileImplementation Instance");
+            printf("HdcpProfileImplementation::HdcpProfileImplementation: this = %p", this);
             HdcpProfileImplementation::_instance = this;
+            LOGINFO("HdcpProfileImplementation Instance created");
         }
 
         HdcpProfileImplementation::~HdcpProfileImplementation()
         {
             LOGINFO("Call HdcpProfileImplementation destructor\n");
-
+            printf("HdcpProfileImplementation::~HdcpProfileImplementation: this = %p", this);
+            HdcpProfileImplementation::_instance = nullptr;
+            mShell = nullptr;
             HdcpProfileImplementation::_instance = nullptr;
         }
 
@@ -53,7 +57,9 @@ namespace WPEFramework
         {
             ASSERT(nullptr != notification);
 
-            //_adminLock.Lock();
+            _adminLock.Lock();
+            printf("HdcpProfileImplementation::Register: notification = %p", notification);
+            LOGINFO("Register notification");
 
             // Make sure we can't register the same notification callback multiple times
             if (std::find(_hdcpProfileNotification.begin(), _hdcpProfileNotification.end(), notification) == _hdcpProfileNotification.end())
@@ -66,7 +72,7 @@ namespace WPEFramework
                 LOGERR("same notification is registered already");
             }
 
-         //   _adminLock.Unlock();
+           _adminLock.Unlock();
 
             return Core::ERROR_NONE;
         }
@@ -77,10 +83,10 @@ namespace WPEFramework
         Core::hresult HdcpProfileImplementation::Unregister(Exchange::IHdcpProfile::INotification *notification)
         {
             Core::hresult status = Core::ERROR_GENERAL;
-
+            printf("HdcpProfileImplementation::Unregister: notification = %p", notification);
             ASSERT(nullptr != notification);
 
-           // _adminLock.Lock();
+            _adminLock.Lock();
 
             // we just unregister one notification once
             auto itr = std::find(_hdcpProfileNotification.begin(), _hdcpProfileNotification.end(), notification);
@@ -96,11 +102,21 @@ namespace WPEFramework
                 LOGERR("notification not found");
             }
 
-          //  _adminLock.Unlock();
+            _adminLock.Unlock();
 
             return status;
         }
+        
+        // uint32_t HdcpProfileImplementation::Configure(PluginHost::IShell *shell)
+        // { 
+        //     LOGINFO("Configuring HdcpProfileImplementation");
+        //     ASSERT(shell != nullptr);
 
+        //     mShell = shell; 
+        //     mShell->AddRef();
+
+        //     return Core::ERROR_NONE;
+        // }
         void HdcpProfileImplementation::dispatchEvent(Event event, const JsonObject &params)
         {
             Core::IWorkerPool::Instance().Submit(Job::Create(this, event, params));
@@ -108,7 +124,7 @@ namespace WPEFramework
 
         void HdcpProfileImplementation::Dispatch(Event event, const JsonObject params)
         {
-            //_adminLock.Lock();
+            _adminLock.Lock();
 
             std::list<Exchange::IHdcpProfile::INotification *>::const_iterator index(_hdcpProfileNotification.begin());
 
@@ -117,7 +133,14 @@ namespace WPEFramework
 				case HDCPPROFILE_EVENT_DISPLAYCONNECTIONCHANGED:
 					while (index != _hdcpProfileNotification.end())
 					{
-                        HDCPStatus hdcpstatus; // Create an instance of HDCPStatus
+                        HDCPStatus hdcpstatus; 
+                        hdcpstatus.isConnected = params["isConnected"].Boolean();
+                        hdcpstatus.isHDCPCompliant = params["isHDCPCompliant"].Boolean();
+                        hdcpstatus.isHDCPEnabled = params["isHDCPEnabled"].Boolean();
+                        hdcpstatus.hdcpReason = params["hdcpReason"].Number();
+                        hdcpstatus.supportedHDCPVersion = params["supportedHDCPVersion"].String();
+                        hdcpstatus.receiverHDCPVersion = params["receiverHDCPVersion"].String();
+                        hdcpstatus.currentHDCPVersion = params["currentHDCPVersion"].String();
                         (*index)->OnDisplayConnectionChanged(hdcpstatus);
                         ++index;
 					}
@@ -127,18 +150,108 @@ namespace WPEFramework
                 LOGWARN("Event[%u] not handled", event);
                 break;
             }
-          //  _adminLock.Unlock();
+            _adminLock.Unlock();
         }
 
-        Core::hresult HdcpProfileImplementation::GetHDCPStatus(HDCPStatus& hdcpstatus,Result &result)
+        Core::hresult HdcpProfileImplementation::GetHDCPStatus(HDCPStatus& hdcpstatus,bool& success)
         {
-			result.success = true;
+            bool isConnected     = false;
+            bool isHDCPCompliant = false;
+            bool isHDCPEnabled   = true;
+            int eHDCPEnabledStatus   = dsHDCP_STATUS_UNPOWERED;
+            dsHdcpProtocolVersion_t hdcpProtocol = dsHDCP_VERSION_MAX;
+            dsHdcpProtocolVersion_t hdcpReceiverProtocol = dsHDCP_VERSION_MAX;
+            dsHdcpProtocolVersion_t hdcpCurrentProtocol = dsHDCP_VERSION_MAX;
+
+            try
+            {
+                std::string strVideoPort = device::Host::getInstance().getDefaultVideoPortName();
+                device::VideoOutputPort vPort = device::VideoOutputPortConfig::getInstance().getPort(strVideoPort.c_str());
+                isConnected        = vPort.isDisplayConnected();
+                hdcpProtocol       = (dsHdcpProtocolVersion_t)vPort.getHDCPProtocol();
+                eHDCPEnabledStatus = vPort.getHDCPStatus();
+                if(isConnected)
+                {
+                    isHDCPCompliant    = (eHDCPEnabledStatus == dsHDCP_STATUS_AUTHENTICATED);
+                    isHDCPEnabled      = vPort.isContentProtected();
+                    hdcpReceiverProtocol = (dsHdcpProtocolVersion_t)vPort.getHDCPReceiverProtocol();
+                    hdcpCurrentProtocol  = (dsHdcpProtocolVersion_t)vPort.getHDCPCurrentProtocol();
+                }
+                else
+                {
+                    isHDCPCompliant = false;
+                    isHDCPEnabled = false;
+                }
+            }
+            catch (const std::exception& e)
+            {
+                LOGWARN("DS exception caught from %s\r\n", __FUNCTION__);
+            }
+
+            hdcpstatus.isConnected = isConnected;
+            hdcpstatus.isHDCPCompliant = isHDCPCompliant;
+            hdcpstatus.isHDCPEnabled = isHDCPEnabled;
+            hdcpstatus.hdcpReason = eHDCPEnabledStatus;
+
+            if(hdcpProtocol == dsHDCP_VERSION_2X)
+            {
+                hdcpstatus.supportedHDCPVersion = "2.2";
+            }
+            else
+            {
+                hdcpstatus.supportedHDCPVersion = "1.4";
+            }
+
+            if(hdcpReceiverProtocol == dsHDCP_VERSION_2X)
+            {
+                hdcpstatus.receiverHDCPVersion = "2.2";
+            }
+            else
+            {
+                hdcpstatus.receiverHDCPVersion = "1.4";
+            }
+
+            if(hdcpCurrentProtocol == dsHDCP_VERSION_2X)
+            {
+                hdcpstatus.currentHDCPVersion = "2.2";
+            }
+            else
+            {
+                hdcpstatus.currentHDCPVersion = "1.4";
+            }
+            success = true;
             return Core::ERROR_NONE;
         }
 
-		Core::hresult HdcpProfileImplementation::GetSettopHDCPSupport( SupportedHdcpInfo& supportedHdcpInfo,Result &result)
+		Core::hresult HdcpProfileImplementation::GetSettopHDCPSupport( SupportedHdcpInfo& supportedHdcpInfo,bool& success)
         {
-			result.success = true;
+            dsHdcpProtocolVersion_t hdcpProtocol = dsHDCP_VERSION_MAX;
+
+            try
+            {
+                std::string strVideoPort = device::Host::getInstance().getDefaultVideoPortName();
+                device::VideoOutputPort vPort = device::VideoOutputPortConfig::getInstance().getPort(strVideoPort.c_str());
+                hdcpProtocol = (dsHdcpProtocolVersion_t)vPort.getHDCPProtocol();
+            }
+            catch (const std::exception& e)
+            {
+                LOGWARN("DS exception caught from %s\r\n", __FUNCTION__);
+            }
+
+            if(hdcpProtocol == dsHDCP_VERSION_2X)
+            {
+                supportedHdcpInfo.supportedHDCPVersion = "2.2";
+                LOGWARN("supportedHDCPVersion :2.2");
+            }
+            else
+            {
+                supportedHdcpInfo.supportedHDCPVersion = "1.4";
+                LOGWARN("supportedHDCPVersion :1.4");
+            }
+
+            supportedHdcpInfo.isHDCPSupported = true;
+
+			success = true;
             return Core::ERROR_NONE;
         }
        
