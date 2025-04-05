@@ -79,6 +79,8 @@ private:
     uint32_t getEdidVersionWrapper(const JsonObject& parameters, JsonObject& response);
     uint32_t setEdid2AllmSupportWrapper(const JsonObject& parameters, JsonObject& response);
     uint32_t getEdid2AllmSupportWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t setVRRSupportWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t getVRRSupportWrapper(const JsonObject& parameters, JsonObject& response);
     uint32_t startInput(const JsonObject& parameters, JsonObject& response);
     uint32_t stopInput(const JsonObject& parameters, JsonObject& response);
     uint32_t setVideoRectangleWrapper(const JsonObject& parameters, JsonObject& response);
@@ -97,6 +99,7 @@ private:
     int getEdidVersion(int iPort);
     bool setVideoRectangle(int x, int y, int width, int height, int type);
     bool getALLMStatus(int iPort);
+    bool getVRRStatus(int iPort);
 
     void AVInputHotplug(int input , int connect, int type);
     static void dsAVEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
