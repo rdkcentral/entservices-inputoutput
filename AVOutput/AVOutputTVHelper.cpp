@@ -672,7 +672,7 @@ namespace Plugin {
         }
         if (param == "PictureMode") {
             // Add extra accepted parameters
-            std::vector<std::string> extraModes = {"DVIQ", "Dark", "AIPQ", "Bright"};
+            std::vector<std::string> extraModes = {"IQ", "Dark", "AI PQ", "Bright"};
             info.rangeVector.insert(info.rangeVector.end(), extraModes.begin(), extraModes.end());
         }
 
@@ -1274,8 +1274,12 @@ namespace Plugin {
                                          convertVideoFormatToString(formatType)+"."+"PictureModeString";
 
                     err = getLocalParam(rfc_caller_id, tr181_param_name.c_str(), &param);
-                    if ( tr181Success == err ) {
+                    
+		    if ( tr181Success == err ) {
                         std::string local = param.value;
+			if (local == "Dark" || local == "Bright" || local == "IQ" || local =="AI PQ"){
+				local = "EnergySaving";
+			}
                         int pqmodeindex = (int)getPictureModeIndex(local);
 
                         tvError_t tv_err = SaveSourcePictureMode(sourceType, formatType, pqmodeindex);
@@ -2290,7 +2294,7 @@ namespace Plugin {
     }
 #define HAL_NOT_READY 1
 #if HAL_NOT_READY
-#define CAPABLITY_FILE_NAMEV2    "/opt/panel/pq_capabilities.json"
+#define CAPABLITY_FILE_NAMEV2    "/etc/pq_capabilities.json"
 // Ensure maps are defined
 typedef std::map<tvPQModeIndex_t, std::string> PqModeMap;
 typedef std::map<tvVideoFormatType_t, std::string> VideoFormatMap;
@@ -2298,9 +2302,11 @@ typedef std::map<tvVideoSrcType_t, std::string> VideoSrcMap;
 
 const std::map<int, std::string> AVOutputTV::pqModeMap = {
     {PQ_MODE_SPORTS, "Sports"},
+    {PQ_MODE_THEATER, "Theater"},
     {PQ_MODE_GAME, "Game"},
-    {PQ_MODE_DVIQ, "DV IQ"},
-    {PQ_MODE_DARK, "DV Dark"},
+    {PQ_MODE_DVIQ, "IQ"},
+    {PQ_MODE_DARK, "Dark"},
+    {PQ_MODE_BRIGHT, "Bright"},
     {PQ_MODE_AIPQ, "AI PQ"},
     {PQ_MODE_STANDARD, "Standard"},
     {PQ_MODE_VIVID, "Vivid"},

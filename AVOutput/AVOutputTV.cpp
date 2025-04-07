@@ -2994,7 +2994,7 @@ namespace Plugin {
             returnResponse(false);
         }
 
-        std::vector<std::string> extraModes = {"DVIQ", "Dark", "AIPQ", "Bright"};
+        std::vector<std::string> extraModes = {"IQ", "Dark", "AI PQ", "Bright"};
 
         // Check if value is in the list of four modes
         auto iter = std::find(extraModes.begin(), extraModes.end(), value);
@@ -3006,7 +3006,8 @@ namespace Plugin {
         if( isSetRequired("Current",inputInfo.source,inputInfo.format) ) {
             LOGINFO("Proceed with SetTVPictureMode\n");
             if (isDolbyPQmode) {
-                ret = SetTVPictureMode("EnergySaving");
+            	LOGINFO("PQ mode =%s\n",value.c_str());
+            	returnResponse(true);
             }
             else {
                 ret = SetTVPictureMode(value.c_str());
