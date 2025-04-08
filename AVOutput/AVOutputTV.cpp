@@ -3007,7 +3007,6 @@ namespace Plugin {
             LOGINFO("Proceed with SetTVPictureMode\n");
             if (isDolbyPQmode) {
             	LOGINFO("PQ mode =%s\n",value.c_str());
-            	returnResponse(true);
             }
             else {
                 ret = SetTVPictureMode(value.c_str());
