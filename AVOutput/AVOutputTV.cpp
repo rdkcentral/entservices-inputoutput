@@ -3009,7 +3009,7 @@ namespace Plugin {
             	LOGINFO("PQ mode =%s\n",value.c_str());
             }
             else {
-                ret = SetTVPictureMode(value.c_str());
+		LOGINFO("PQ mode =%s\n",value.c_str());
             }
          }
         if(ret != tvERROR_NONE) {
@@ -4471,7 +4471,7 @@ namespace Plugin {
         dolbyVisionIQDV.Add("HDMI2");
         dolbyVisionIQDV.Add("HDMI3");
         dolbyVisionIQ["DV"] = dolbyVisionIQDV;
-        context["Dolby Vision IQ"] = dolbyVisionIQ;
+        context["IQ"] = dolbyVisionIQ;
 
         result["context"] = context;
         response["result"] = result;
@@ -4798,7 +4798,7 @@ namespace Plugin {
         dolbyVisionIQDV.Add("HDMI2");
         dolbyVisionIQDV.Add("HDMI3");
         dolbyVisionIQ["DV"] = dolbyVisionIQDV;
-        context["Dolby Vision IQ"] = dolbyVisionIQ;
+        context["IQ"] = dolbyVisionIQ;
 
         result["context"] = context;
         response["result"] = result;
@@ -4956,7 +4956,7 @@ namespace Plugin {
         dolbyVisionIQDV.Add("HDMI2");
         dolbyVisionIQDV.Add("HDMI3");
         dolbyVisionIQ["DV"] = dolbyVisionIQDV;
-        context["Dolby Vision IQ"] = dolbyVisionIQ;
+        context["IQ"] = dolbyVisionIQ;
 
         result["context"] = context;
         response["result"] = result;
@@ -5114,7 +5114,7 @@ namespace Plugin {
         dolbyVisionIQDV.Add("HDMI2");
         dolbyVisionIQDV.Add("HDMI3");
         dolbyVisionIQ["DV"] = dolbyVisionIQDV;
-        context["Dolby Vision IQ"] = dolbyVisionIQ;
+        context["IQ"] = dolbyVisionIQ;
 
         result["context"] = context;
         response["result"] = result;
@@ -5274,7 +5274,7 @@ namespace Plugin {
         dolbyVisionIQDV.Add("HDMI2");
         dolbyVisionIQDV.Add("HDMI3");
         dolbyVisionIQ["DV"] = dolbyVisionIQDV;
-        context["Dolby Vision IQ"] = dolbyVisionIQ;
+        context["IQ"] = dolbyVisionIQ;
 
         result["context"] = context;
         response["result"] = result;
@@ -5436,7 +5436,7 @@ namespace Plugin {
         dolbyVisionIQDV.Add("HDMI2");
         dolbyVisionIQDV.Add("HDMI3");
         dolbyVisionIQ["DV"] = dolbyVisionIQDV;
-        context["Dolby Vision IQ"] = dolbyVisionIQ;
+        context["IQ"] = dolbyVisionIQ;
 
         result["context"] = context;
         response["result"] = result;
