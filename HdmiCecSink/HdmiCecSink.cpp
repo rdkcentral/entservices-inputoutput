@@ -930,7 +930,7 @@ namespace WPEFramework
             }
        }
 
-       void HdmiCecSink::onPowerModeChanged(const PowerState &currentState, const PowerState &newState)
+       void HdmiCecSink::onPowerModeChanged(const PowerState currentState, const PowerState newState)
        {
             if(!HdmiCecSink::_instance)
                 return;
