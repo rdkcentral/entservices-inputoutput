@@ -148,8 +148,79 @@ namespace WPEFramework
   	    HdmiInput::_instance = this;
 	    InitializeIARM();
 
-	    subscribeForTvMgrEvent("gameModeEvent");
-	    LOGINFO("Exiting HdmiInput::Initialize");
+        Exchange::IHdcpProfile* _remotStoreObject = nullptr;
+        _remotStoreObject = service->QueryInterfaceByCallsign<WPEFramework::Exchange::IHdcpProfile>("org.rdk.HdcpProfile");
+        // _remotStoreObject1 = service->QueryInterfaceByCallsign<WPEFramework::Exchange::ITelemetry>("org.rdk.Telemetry");
+        // _remotStoreObject2 = service->QueryInterfaceByCallsign<WPEFramework::Exchange::IScreenCapture>("org.rdk.ScreenCapture");
+        if (_remotStoreObject == nullptr) {
+            LOGINFO("Failed to get IHdcpProfile interface-%p", _remotStoreObject);
+        }
+        else
+        {
+            LOGINFO("Got IHdcpProfile interface-%p", _remotStoreObject);
+        }
+
+        Exchange::IHdcpProfile::HDCPStatus _hdcpstatus;
+        bool _success = false;
+        _remotStoreObject->GetHDCPStatus(_hdcpstatus, _success);
+        if (!_success) {
+            LOGINFO("getHDCPStatus failed");
+            _remotStoreObject->Release();
+            return "getHDCPStatus failed";
+        }
+
+        LOGINFO("getHDCPStatus: isConnected: %d isHDCPCompliant: %d isHDCPEnabled: %d hdcpReason: %d supportedHDCPVersion: %s receiverHDCPVersion: %s currentHDCPVersion: %s",
+            _hdcpstatus.isConnected, _hdcpstatus.isHDCPCompliant, _hdcpstatus.isHDCPEnabled, _hdcpstatus.hdcpReason,
+            _hdcpstatus.supportedHDCPVersion.c_str(), _hdcpstatus.receiverHDCPVersion.c_str(), _hdcpstatus.currentHDCPVersion.c_str());
+        
+        
+
+            string supportedHDCPVersion = "0";
+            bool isHDCPSupported = false;
+            bool success1 = false;
+            _remotStoreObject->GetSettopHDCPSupport(supportedHDCPVersion,isHDCPSupported, success1);
+            if (!success1) {
+                LOGINFO("getSettopHDCPSupport failed");
+                _remotStoreObject->Release();
+                return "getSettopHDCPSupport failed";
+            }
+            LOGINFO("getSettopHDCPSupport: supportedHDCPVersion: %s isHDCPSupported: %d",
+                supportedHDCPVersion.c_str() , isHDCPSupported);
+
+                Exchange::IScreenCapture* _remotStoreObject1 = nullptr;
+                _remotStoreObject1 = service->QueryInterfaceByCallsign<Exchange::IScreenCapture>("org.rdk.ScreenCapture");
+                if (_remotStoreObject1 == nullptr) {
+                    LOGINFO("Failed to get IScreenCapture interface-%p", _remotStoreObject1);
+                }
+                else
+                {
+                    LOGINFO("Got IScreenCapture interface-%p", _remotStoreObject1);
+                }
+                Exchange::IScreenCapture::Result result;
+                _remotStoreObject1->UploadScreenCapture("http://server/cgi-bin/upload.cgi","12345",result);
+                if (!result.success) {
+                    LOGINFO("UploadScreenCapture failed");
+                    _remotStoreObject1->Release();
+                    return "UploadScreenCapture failed";
+                }
+                LOGINFO("UploadScreenCapture: result: %d", result.success);
+
+                // Exchange::IHdcpProfile::INotification* notification = service->QueryInterfaceByCallsign<Exchange::IHdcpProfile::INotification>("org.rdk.HdcpProfile");
+                // if (notification == nullptr) {
+                //     LOGINFO("Failed to get notification interface");
+                //     _remotStoreObject->Release();
+                //     return "Failed to get notification interface";
+                // }
+                // else
+                // {
+                //     LOGINFO("Got notification interface-%p", notification);
+                // }
+               
+                // // Register the notification
+                // _remotStoreObject->Register(notification);  
+
+	    // subscribeForTvMgrEvent("gameModeEvent");
+	    // LOGINFO("Exiting HdmiInput::Initialize");
 	    return (string());
 	}
 

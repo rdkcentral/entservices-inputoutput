@@ -20,7 +20,9 @@
 #pragma once
 
 #include "libIBus.h"
-
+#include <interfaces/IHdcpProfile.h>
+#include <interfaces/ITelemetry.h>
+#include <interfaces/IScreenCapture.h>
 #include "Module.h"
 #include "dsTypes.h"
 
