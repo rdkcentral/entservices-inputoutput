@@ -22,6 +22,7 @@
 #include "Module.h"
 #include <interfaces/IHdcpProfile.h>
 #include <interfaces/IScreenCapture.h>
+#include <interfaces/IStore2.h>
 
 
 namespace WPEFramework {

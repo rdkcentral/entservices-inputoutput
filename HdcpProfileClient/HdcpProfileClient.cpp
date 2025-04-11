@@ -109,6 +109,37 @@ namespace WPEFramework {
                     supportedHDCPVersion.c_str(), isHDCPSupported);
 
 
+            Exchange::IStore2* _sharedStorage = nullptr;
+            _sharedStorage = m_service->QueryInterfaceByCallsign<Exchange::IStore2>("org.rdk.SharedStorage");
+            if(_sharedStorage == nullptr) {
+                LOGINFO("Failed to get IStore2 from SharedStorage");
+                return "Failed to get IStore2 from SharedStorage";
+            }
+            else {
+                uint32_t ttl = 500;
+                uint32_t setSharedResult = _sharedStorage->SetValue(Exchange::IStore2::ScopeType::DEVICE, "tns200", "tkey200", "tvalue200", ttl);
+
+                if(setSharedResult != Core::ERROR_NONE){
+                    LOGINFO("HdcpProfileClient: SharedStorage SetValue failed with code: %u", setSharedResult);
+                }
+                else {
+                    LOGINFO("HdcpProfileClient: SharedStorage SetValue succeeded");
+                }
+
+                string value;
+                uint32_t readTTL = 0;
+                uint32_t getSharedResult = _sharedStorage->GetValue(Exchange::IStore2::ScopeType::DEVICE, "tns200", "tkey200", value, readTTL);
+
+                if(getSharedResult != Core::ERROR_NONE){
+                    LOGINFO("HdcpProfileClient: SharedStorage GetValue failed with code: %u", getSharedResult);
+                }
+                else {
+                    LOGINFO("HdcpProfileClient: SharedStorage GetValue succeeded. Value = %s", value.c_str());
+                }
+
+                _sharedStorage->Release();
+            }
+
             Exchange::IScreenCapture* _remotStoreObject1 = nullptr;
             _remotStoreObject1 = m_service->QueryInterfaceByCallsign<Exchange::IScreenCapture>("org.rdk.ScreenCapture");
             if (_remotStoreObject1 == nullptr) {
