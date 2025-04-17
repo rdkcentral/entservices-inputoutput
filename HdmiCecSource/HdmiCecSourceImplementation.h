@@ -319,22 +319,22 @@ namespace WPEFramework {
                 std::list<Exchange::IHdmiCecSource::INotification*> _hdmiCecSourceNotifications;
 
         public:
-            uint32_t SetEnabled(const bool &enabled, HdmiCecSourceSuccess &success) override;
-            uint32_t GetEnabled(bool &enabled, bool &success) override;
-            uint32_t SetOTPEnabled(const bool &enabled, HdmiCecSourceSuccess &success) override;
-            uint32_t GetOTPEnabled(bool &enabled, bool &success) override;
-            uint32_t SetOSDName(const string &name, HdmiCecSourceSuccess &success) override;
-            uint32_t GetOSDName(string &name, bool &success) override;
-            uint32_t SetVendorId(const string &vendorid, HdmiCecSourceSuccess &success) override;
-            uint32_t GetVendorId(string &vendorid, bool &success) override;
-            uint32_t PerformOTPAction(HdmiCecSourceSuccess &success) override;
-            uint32_t SendStandbyMessage(HdmiCecSourceSuccess &success) override;
-            uint32_t SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSuccess &success) override;
-            uint32_t GetActiveSourceStatus(bool &isActiveSource, bool &success) override;
-            uint32_t GetDeviceList(uint32_t &numberofdevices, IHdmiCecSourceDeviceListIterator*& deviceList, bool &success) override;
-            uint32_t Configure(PluginHost::IShell* service) override;
-            uint32_t Register(Exchange::IHdmiCecSource::INotification *notification) override;
-            uint32_t Unregister(Exchange::IHdmiCecSource::INotification *notification) override;
+            Core::hresult SetEnabled(const bool &enabled, HdmiCecSourceSuccess &success) override;
+            Core::hresult GetEnabled(bool &enabled, bool &success) override;
+            Core::hresult SetOTPEnabled(const bool &enabled, HdmiCecSourceSuccess &success) override;
+            Core::hresult GetOTPEnabled(bool &enabled, bool &success) override;
+            Core::hresult SetOSDName(const string &name, HdmiCecSourceSuccess &success) override;
+            Core::hresult GetOSDName(string &name, bool &success) override;
+            Core::hresult SetVendorId(const string &vendorid, HdmiCecSourceSuccess &success) override;
+            Core::hresult GetVendorId(string &vendorid, bool &success) override;
+            Core::hresult PerformOTPAction(HdmiCecSourceSuccess &success) override;
+            Core::hresult SendStandbyMessage(HdmiCecSourceSuccess &success) override;
+            Core::hresult SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSuccess &success) override;
+            Core::hresult GetActiveSourceStatus(bool &isActiveSource, bool &success) override;
+            Core::hresult GetDeviceList(uint32_t &numberofdevices, IHdmiCecSourceDeviceListIterator*& deviceList, bool &success) override;
+            Core::hresult Configure(PluginHost::IShell* service) override;
+            Core::hresult Register(Exchange::IHdmiCecSource::INotification *notification) override;
+            Core::hresult Unregister(Exchange::IHdmiCecSource::INotification *notification) override;
 
 
         };
