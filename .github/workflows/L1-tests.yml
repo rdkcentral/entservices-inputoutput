@@ -1,10 +1,4 @@
-name: L1-tests
-
-on:
-  push:
-    branches: [ main, develop, 'sprint/**', 'release/**' ]
-  pull_request:
-    branches: [ main, develop, 'sprint/**', 'release/**' ]
+name: L1-testsx
 
 env:
   BUILD_TYPE: Debug
