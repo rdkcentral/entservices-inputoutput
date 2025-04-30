@@ -227,7 +227,7 @@ namespace WPEFramework
             }
             catch (const std::exception& e)
             {
-                LOGWARN("DS exception caught from %s\r\n", __FUNCTION__);
+                LOGWARN("DS exception caught from %s\r\n");
             }
 
             hdcpStatus["isConnected"] = isConnected;
