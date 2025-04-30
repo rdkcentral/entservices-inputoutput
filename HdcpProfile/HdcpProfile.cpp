@@ -32,6 +32,7 @@
 
 #include "UtilsSynchroIarm.hpp"
 
+
 #define HDMI_HOT_PLUG_EVENT_CONNECTED 0
 #define HDMI_HOT_PLUG_EVENT_DISCONNECTED 1
 
