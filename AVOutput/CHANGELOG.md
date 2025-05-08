@@ -14,9 +14,12 @@ All notable changes to this RDK Service will be documented in this file.
 
 * Changes in CHANGELOG should be updated when commits are added to the main or release branches. There should be one CHANGELOG entry per JIRA Ticket. This is not enforced on sprint branches since there could be multiple changes for the same JIRA ticket during development. 
 
-## [1.0.10] - 2025-02-17
-### Fixed
-ODM API removal changes phase 1 and Fixed PQ Mode Camel Case issue
+## [1.1.0] - 2025-03-14
+### Added
+
+## [1.0.10] - 2024-12-23
+### Added
+- ODM API removal changes phase 1
 
 ## [1.0.0] - 2025-02-17
 ### Added
