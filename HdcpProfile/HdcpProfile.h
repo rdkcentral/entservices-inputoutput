@@ -19,70 +19,95 @@
 
 #pragma once
 
-#include "libIBus.h"
-
 #include "Module.h"
-#include <interfaces/IPowerManager.h>
-#include "PowerManagerInterface.h"
+#include <interfaces/IHdcpProfile.h> 
+#include <interfaces/json/JsonData_HdcpProfile.h>
+#include <interfaces/json/JHdcpProfile.h>
+#include <interfaces/IConfiguration.h>
+#include "UtilsLogging.h"
+#include "tracing/Logging.h"
+
 
 namespace WPEFramework {
 
     namespace Plugin {
-		// This is a server for a JSONRPC communication channel.
-		// For a plugin to be capable to handle JSONRPC, inherit from PluginHost::JSONRPC.
-		// By inheriting from this class, the plugin realizes the interface PluginHost::IDispatcher.
-		// This realization of this interface implements, by default, the following methods on this plugin
-		// - exists
-		// - register
-		// - unregister
-		// Any other methood to be handled by this plugin  can be added can be added by using the
-		// templated methods Register on the PluginHost::JSONRPC class.
-		// As the registration/unregistration of notifications is realized by the class PluginHost::JSONRPC,
-		// this class exposes a public method called, Notify(), using this methods, all subscribed clients
-		// will receive a JSONRPC message as a notification, in case this method is called.
-        class HdcpProfile : public PluginHost::IPlugin, public PluginHost::JSONRPC {
-        private:
-
-            // We do not allow this plugin to be copied !!
-            HdcpProfile(const HdcpProfile&) = delete;
-            HdcpProfile& operator=(const HdcpProfile&) = delete;
-            static PowerManagerInterfaceRef _powerManagerPlugin;
-
-            void InitializeIARM();
-            void DeinitializeIARM();
-
-            void RegisterAll();
-            void UnregisterAll();
-            void InitializePowerManager(PluginHost::IShell * service);
-
-            //Begin methods
-            uint32_t getHDCPStatusWrapper(const JsonObject& parameters, JsonObject& response);
-            uint32_t getSettopHDCPSupportWrapper(const JsonObject& parameters, JsonObject& response);
-
-            //End methods
-
-            JsonObject getHDCPStatus();
-            void onHdmiOutputHotPlug(int connectStatus);
-            void onHdmiOutputHDCPStatusEvent(int);
-            void logHdcpStatus (const char *trigger, const JsonObject& status);
-            static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-
-        public:
-            HdcpProfile();
-            virtual ~HdcpProfile();
-            virtual const string Initialize(PluginHost::IShell* shell) override;
-            virtual void Deinitialize(PluginHost::IShell* service) override;
-            virtual string Information() const override { return {}; }
-
-            void terminate();
-
-            BEGIN_INTERFACE_MAP(HdcpProfile)
-            INTERFACE_ENTRY(PluginHost::IPlugin)
-            INTERFACE_ENTRY(PluginHost::IDispatcher)
-            END_INTERFACE_MAP
-
-            static HdcpProfile* _instance;
+		
+		class HdcpProfile : public PluginHost::IPlugin, public PluginHost::JSONRPC
+		{
+			private:
+            	class Notification : public RPC::IRemoteConnection::INotification, public Exchange::IHdcpProfile::INotification
+                {
+					private:
+			        	Notification() = delete;
+			            Notification(const Notification&) = delete;
+			            Notification& operator=(const Notification&) = delete;
+						
+					public:
+						explicit Notification(HdcpProfile *parent)
+							: _parent(*parent)
+						{
+							ASSERT(parent != nullptr);
+						}
+		
+						virtual ~Notification()
+						{
+						}
+					
+						BEGIN_INTERFACE_MAP(Notification)
+						INTERFACE_ENTRY(Exchange::IHdcpProfile::INotification)
+						INTERFACE_ENTRY(RPC::IRemoteConnection::INotification)
+						END_INTERFACE_MAP
+							
+						void Activated(RPC::IRemoteConnection *) override
+						{
+							LOGINFO("HdcpProfile Notification Activated");
+						}
+		
+						void Deactivated(RPC::IRemoteConnection *connection) override
+						{
+							LOGINFO("HdcpProfile Notification Deactivated");
+							_parent.Deactivated(connection);
+						}
+					
+						void OnDisplayConnectionChanged(const Exchange::IHdcpProfile::HDCPStatus hdcpstatus) override
+						{
+							LOGINFO("OnDisplayConnectionChanged: isConnected: %d isHDCPCompliant: %d isHDCPEnabled: %d hdcpReason: %d supportedHDCPVersion: %s receiverHDCPVersion: %s currentHDCPVersion: %s", hdcpstatus.isConnected, hdcpstatus.isHDCPCompliant, hdcpstatus.isHDCPEnabled, hdcpstatus.hdcpReason, hdcpstatus.supportedHDCPVersion.c_str(), hdcpstatus.receiverHDCPVersion.c_str(), hdcpstatus.currentHDCPVersion.c_str());
+							Exchange::JHdcpProfile::Event::OnDisplayConnectionChanged(_parent, hdcpstatus);
+						}
+		
+						private:
+							HdcpProfile &_parent;
+				};
+			
+			public:
+				HdcpProfile(const HdcpProfile &) = delete;
+				HdcpProfile &operator=(const HdcpProfile &) = delete;
+				
+				HdcpProfile();
+				virtual ~HdcpProfile();
+			
+				BEGIN_INTERFACE_MAP(HdcpProfile)
+				INTERFACE_ENTRY(PluginHost::IPlugin)
+				INTERFACE_ENTRY(PluginHost::IDispatcher)
+				INTERFACE_AGGREGATE(Exchange::IHdcpProfile, _hdcpProfile)
+				END_INTERFACE_MAP
+				
+				//  IPlugin methods
+				// -------------------------------------------------------------------------------------------------------
+				const string Initialize(PluginHost::IShell* service) override;
+				void Deinitialize(PluginHost::IShell* service) override;
+				string Information() const override;
+				
+				private:
+                	void Deactivated(RPC::IRemoteConnection* connection);
+			
+				private:
+					PluginHost::IShell *_service{};
+					uint32_t _connectionId{};
+					Exchange::IHdcpProfile *_hdcpProfile{};
+					Core::Sink<Notification> _hdcpProfileNotification;
+					Exchange::IConfiguration* configure;
         };
-	} // namespace Plugin
-} // namespace WPEFramework
 
+    } // namespace Plugin
+} // namespace WPEFramework
