@@ -73,7 +73,7 @@ namespace WPEFramework
             _service->AddRef();
             _service->Register(&_hdcpProfileNotification);
             _hdcpProfile = _service->Root<Exchange::IHdcpProfile>(_connectionId, 5000, _T("HdcpProfileImplementation"));
-
+		
             if (nullptr != _hdcpProfile)
             {
                 configure = _hdcpProfile->QueryInterface<Exchange::IConfiguration>();
@@ -126,7 +126,7 @@ namespace WPEFramework
                 
                 _hdcpProfile->Unregister(&_hdcpProfileNotification);
                 Exchange::JHdcpProfile::Unregister(*this);
-
+		configure->Release();
                 // Stop processing:
                 RPC::IRemoteConnection *connection = service->RemoteConnection(_connectionId);
                 VARIABLE_IS_NOT_USED uint32_t result = _hdcpProfile->Release();
