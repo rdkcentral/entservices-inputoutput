@@ -75,7 +75,7 @@ namespace WPEFramework
              SYSLOG(Logging::Startup, (_T("HdcpProfile::Initialize:Notification registeration completed: PID=%u"), getpid()));
 
             _hdcpProfile = _service->Root<Exchange::IHdcpProfile>(_connectionId, 5000, _T("HdcpProfileImplementation"));
-	    SYSLOG(Logging::Startup, (_T("_hdcpProfile = %p"), static_cast<void*>(_hdcpProfile)));
+		
             if (nullptr != _hdcpProfile)
             {
                 configure = _hdcpProfile->QueryInterface<Exchange::IConfiguration>();
