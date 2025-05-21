@@ -82,8 +82,10 @@
                  Job &operator=(const Job &) = delete;
                  ~Job()
                  {
+                     printf("Job destructor");
                      if (_hdcpProfileImplementation != nullptr)
                      {
+                         printf("Job destructor-hdcpProfileImpl-%p",_hdcpProfileImplementation);
                          _hdcpProfileImplementation->Release();
                      }
                  }
