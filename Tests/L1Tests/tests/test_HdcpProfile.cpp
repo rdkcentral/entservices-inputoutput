@@ -122,7 +122,7 @@ protected:
 
         dispatcher->Deactivate();
         dispatcher->Release();
-
+        
         Core::IWorkerPool::Assign(nullptr);
         workerPool.Release();
     
@@ -139,7 +139,6 @@ protected:
             delete p_iarmBusImplMock;
             p_iarmBusImplMock = nullptr;
         }
-        
     }
 };
 
