@@ -150,6 +150,7 @@ namespace WPEFramework
            }
 
            _connectionId = 0;
+           _service->Unregister(&_notification);
            _service->Release();
            _service = nullptr;
            LOGINFO("HdmiCecSource plugin is deactivated. Successfully deactivated HdmiCecSource Plugin");

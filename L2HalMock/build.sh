@@ -184,8 +184,7 @@ cp $SCRIPTS_DIR/patches/rdkservices/files/wdmp-c.h /usr/local/include/wdmp-c
 cd /usr/include/
 mkdir rdk
 cd /usr/include/rdk
-mkdir iarmmgrs-hal
-cp $WORKSPACE/deps/rdk/iarmmgrs/hal/include/pwrMgr.h /usr/include/rdk/iarmmgrs-hal
+
 
 sed -i 's/sendNotify/Notify/g' $RDK_DIR/HdmiCecSource/HdmiCecSource.cpp
 sed -i 's/sendNotify/Notify/g' $RDK_DIR/HdmiCecSink/HdmiCecSink.cpp

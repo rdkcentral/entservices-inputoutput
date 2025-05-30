@@ -61,6 +61,14 @@
          HdcpProfileImplementation::~HdcpProfileImplementation()
          {
              LOGINFO("Call HdcpProfileImplementation destructor\n");
+             if (_powerManagerPlugin) {
+                _powerManagerPlugin.Reset();
+             }
+             if(_service != nullptr)
+             {
+                _service->Release();
+             }
+             DeinitializeIARM();
              HdcpProfileImplementation::_instance = nullptr;
              mShell = nullptr;
          }

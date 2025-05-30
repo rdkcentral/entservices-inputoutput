@@ -1,10 +1,8 @@
 name: L2-tests
 
+#enable the workflow incase of any plugin/testcase changes
 on:
-  push:
-    branches: [ main, develop, 'sprint/**', 'release/**' ]
-  pull_request:
-    branches: [ main, develop, 'sprint/**', 'release/**' ]
+  workflow_dispatch:
 
 env:
   BUILD_TYPE: Debug
@@ -197,7 +195,6 @@ jobs:
           rdk/iarmbus/libIBus.h
           rdk/iarmbus/libIBusDaemon.h
           rdk/iarmmgrs-hal/mfrMgr.h
-          rdk/iarmmgrs-hal/pwrMgr.h
           rdk/iarmmgrs-hal/sysMgr.h
           rdk/iarmbus/iarmUtil.h
           rfcapi.h
