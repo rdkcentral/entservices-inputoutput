@@ -1,6 +1,7 @@
 name: L2-tests
 
 #enable the workflow incase of any plugin/testcase changes
+#Add "Tests/L2Tests" subdirectory in CMakeLists.txt, when enabling L2Tests
 on:
   workflow_dispatch:
 
