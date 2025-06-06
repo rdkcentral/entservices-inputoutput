@@ -60,7 +60,11 @@ namespace Plugin {
         const std::string Initialize(PluginHost::IShell* service);
         void Deinitialize(PluginHost::IShell* service);
         virtual string Information() const override { return {}; }
+#if ((THUNDER_VERSION >= 4) && (THUNDER_VERSION_MINOR == 4) &&  (THUNDER_VERSION_PATCH == 3))
+        virtual uint32_t AddRef() const {return 0; }
+#else
 	virtual void AddRef() const { }
+#endif
 	virtual uint32_t Release() const {return 0; }
         BEGIN_INTERFACE_MAP(AVOutput)
         INTERFACE_ENTRY(PluginHost::IPlugin)
