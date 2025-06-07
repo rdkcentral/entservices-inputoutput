@@ -48,6 +48,8 @@
 #define AVINPUT_METHOD_GET_EDID_VERSION "getEdidVersion"
 #define AVINPUT_METHOD_SET_EDID_ALLM_SUPPORT "setEdid2AllmSupport"
 #define AVINPUT_METHOD_GET_EDID_ALLM_SUPPORT "getEdid2AllmSupport"
+#define AVINPUT_METHOD_SET_VRR_SUPPORT "setVRRSupport"
+#define AVINPUT_METHOD_GET_VRR_SUPPORT "getVRRSupport"
 #define AVINPUT_METHOD_GET_HDMI_COMPATIBILITY_VERSION "getHdmiVersion"
 #define AVINPUT_METHOD_SET_MIXER_LEVELS "setMixerLevels"
 #define AVINPUT_METHOD_START_INPUT "startInput"
@@ -156,7 +158,11 @@ void AVInput::InitializeIARM()
             IARM_BUS_DSMGR_NAME,
             IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS,
             dsAVGameFeatureStatusEventHandler));
-        IARM_CHECK(IARM_Bus_RegisterEventHandler(
+	IARM_CHECK(IARM_Bus_RegisterEventHandler(
+            IARM_BUS_DSMGR_NAME,
+            IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS,
+            dsAVGameFeatureStatusEventHandler));
+	IARM_CHECK(IARM_Bus_RegisterEventHandler(
             IARM_BUS_DSMGR_NAME,
             IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG,
             dsAVEventHandler));
@@ -198,6 +204,9 @@ void AVInput::DeinitializeIARM()
         IARM_CHECK(IARM_Bus_RemoveEventHandler(
             IARM_BUS_DSMGR_NAME,
             IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS, dsAVGameFeatureStatusEventHandler));
+       IARM_CHECK(IARM_Bus_RemoveEventHandler(
+            IARM_BUS_DSMGR_NAME,
+            IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS, dsAVGameFeatureStatusEventHandler));
         IARM_CHECK(IARM_Bus_RemoveEventHandler(
             IARM_BUS_DSMGR_NAME,
             IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG, dsAVEventHandler));
@@ -231,6 +240,8 @@ void AVInput::RegisterAll()
     Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_MIXER_LEVELS), &AVInput::setMixerLevels, this);
     Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_EDID_ALLM_SUPPORT), &AVInput::setEdid2AllmSupportWrapper, this);
     Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_EDID_ALLM_SUPPORT), &AVInput::getEdid2AllmSupportWrapper, this);
+    Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_VRR_SUPPORT), &AVInput::setVRRSupportWrapper, this);
+    Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_VRR_SUPPORT), &AVInput::getVRRSupportWrapper, this);
     Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_HDMI_COMPATIBILITY_VERSION), &AVInput::getHdmiVersionWrapper, this);
     Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_START_INPUT), &AVInput::startInput, this);
     Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_STOP_INPUT), &AVInput::stopInput, this);
@@ -239,6 +250,7 @@ void AVInput::RegisterAll()
     Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GAME_FEATURE_STATUS), &AVInput::getGameFeatureStatusWrapper, this);
     m_primVolume = DEFAULT_PRIM_VOL_LEVEL;
     m_inputVolume = DEFAULT_INPUT_VOL_LEVEL;
+    m_currentVrrType = dsVRR_NONE;
 }
 
 void AVInput::UnregisterAll()
@@ -251,6 +263,8 @@ void AVInput::UnregisterAll()
     Unregister(_T(AVINPUT_METHOD_READ_EDID));
     Unregister(_T(AVINPUT_METHOD_READ_RAWSPD));
     Unregister(_T(AVINPUT_METHOD_READ_SPD));
+    Unregister(_T(AVINPUT_METHOD_SET_VRR_SUPPORT));
+    Unregister(_T(AVINPUT_METHOD_GET_VRR_SUPPORT));
     Unregister(_T(AVINPUT_METHOD_SET_EDID_VERSION));
     Unregister(_T(AVINPUT_METHOD_GET_EDID_VERSION));
     Unregister(_T(AVINPUT_METHOD_START_INPUT));
@@ -1001,6 +1015,28 @@ void AVInput::dsAVGameFeatureStatusEventHandler(const char *owner, IARM_EventId_
 
         AVInput::_instance->AVInputALLMChange(hdmi_in_port, allm_mode);
     }
+    if (IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS == eventId)
+    {
+       IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
+        int hdmi_in_port = eventData->data.hdmi_in_vrr_mode.port;
+        dsVRRType_t new_vrrType = eventData->data.hdmi_in_vrr_mode.vrr_type;
+        LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS  event  port: %d, VRR Type: %d", hdmi_in_port,new_vrrType);
+
+        if(new_vrrType == dsVRR_NONE)
+        {
+               if(AVInput::_instance->m_currentVrrType != dsVRR_NONE){
+                        AVInput::_instance->AVInputVRRChange(hdmi_in_port, AVInput::_instance->m_currentVrrType, false);
+                }
+        }
+       else
+       {
+              if(AVInput::_instance->m_currentVrrType != dsVRR_NONE){
+                      AVInput::_instance->AVInputVRRChange(hdmi_in_port, AVInput::_instance->m_currentVrrType, false);
+              }
+              AVInput::_instance->AVInputVRRChange(hdmi_in_port, new_vrrType, true);
+       }
+       AVInput::_instance->m_currentVrrType = new_vrrType;
+    }
 }
 
 void AVInput::AVInputALLMChange( int port , bool allm_mode)
@@ -1011,6 +1047,37 @@ void AVInput::AVInputALLMChange( int port , bool allm_mode)
     params["mode"] = allm_mode;
 
     sendNotify(AVINPUT_EVENT_ON_GAME_FEATURE_STATUS_CHANGED, params);
+}
+
+void AVInput::AVInputVRRChange( int port , dsVRRType_t vrr_type, bool vrr_mode)
+{
+    JsonObject params;
+    switch(vrr_type)
+    {
+           case dsVRR_HDMI_VRR:
+                params["id"] = port;
+                params["gameFeature"] = "VRR-HDMI";
+                params["mode"] = vrr_mode;
+                break;
+           case dsVRR_AMD_FREESYNC:
+                params["id"] = port;
+                params["gameFeature"] = "VRR-FREESYNC";
+                params["mode"] = vrr_mode;
+                break;
+           case dsVRR_AMD_FREESYNC_PREMIUM:
+                params["id"] = port;
+                params["gameFeature"] = "VRR-FREESYNC-PREMIUM";
+                params["mode"] = vrr_mode;
+                break;
+           case dsVRR_AMD_FREESYNC_PREMIUM_PRO:
+                params["id"] = port;
+                params["gameFeature"] = "VRR-FREESYNC-PREMIUM-PRO";
+                params["mode"] = vrr_mode;
+                break;
+           default:
+                break;
+    }
+       sendNotify(AVINPUT_EVENT_ON_GAME_FEATURE_STATUS_CHANGED, params);
 }
 
 uint32_t AVInput::getSupportedGameFeatures(const JsonObject& parameters, JsonObject& response)
@@ -1067,9 +1134,49 @@ uint32_t AVInput::getGameFeatureStatusWrapper(const JsonObject& parameters, Json
         LOGWARN("AVInput::getGameFeatureStatusWrapper ALLM MODE:%d", allm);
         response["mode"] = allm;
     }
+    else if(strcmp (sGameFeature.c_str(), "VRR-HDMI") == 0)
+    {
+       bool hdmi_vrr = false;
+       dsVRRType_t vrrType;
+       getVRRStatus(portId, &vrrType);
+       if(vrrType == dsVRR_HDMI_VRR)
+               hdmi_vrr = true;
+        LOGWARN("AVInput::getGameFeatureStatusWrapper HDMI VRR MODE:%d", hdmi_vrr);
+       response["mode"] = hdmi_vrr;
+    }
+    else if(strcmp (sGameFeature.c_str(), "VRR-FREESYNC") == 0)
+    {
+       bool freesync = false;
+       dsVRRType_t vrrType;
+       getVRRStatus(portId, &vrrType);
+       if(vrrType == dsVRR_AMD_FREESYNC)
+               freesync = true;
+        LOGWARN("AVInput::getGameFeatureStatusWrapper FREESYNC MODE:%d", freesync);
+       response["mode"] = freesync;
+    }
+    else if(strcmp (sGameFeature.c_str(), "VRR-FREESYNC-PREMIUM") == 0)
+    {
+       bool freesync_premium = false;
+       dsVRRType_t vrrType;
+       getVRRStatus(portId, &vrrType);
+       if(vrrType == dsVRR_AMD_FREESYNC_PREMIUM)
+               freesync_premium = true;
+        LOGWARN("AVInput::getGameFeatureStatusWrapper FREESYNC PREMIUM MODE:%d", freesync_premium);
+       response["mode"] = freesync_premium;
+    }
+    else if(strcmp (sGameFeature.c_str(), "VRR-FREESYNC-PREMIUM-PRO") == 0)
+    {
+       bool freesync_premium_pro = false;
+       dsVRRType_t vrrType;
+       getVRRStatus(portId, &vrrType);
+       if(vrrType == dsVRR_AMD_FREESYNC_PREMIUM_PRO)
+               freesync_premium_pro = true;
+        LOGWARN("AVInput::getGameFeatureStatusWrapper FREESYNC PREMIUM PRO MODE:%d", freesync_premium_pro);
+       response["mode"] = freesync_premium_pro;
+     }
     else
     {
-        LOGWARN("AVInput::getGameFeatureStatusWrapper Mode is not supported. Supported mode: ALLM");
+        LOGWARN("AVInput::getGameFeatureStatusWrapper Mode is not supported. Supported mode: ALLM, VRR-HDMI, VRR-FREESYNC-PREMIUM");
 	returnResponse(false);
     }
     returnResponse(true);
@@ -1089,6 +1196,21 @@ bool AVInput::getALLMStatus(int iPort)
         LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
     }
     return allm;
+}
+
+void AVInput::getVRRStatus(int iPort, dsVRRType_t *vrrType)
+{
+
+    try
+    {
+       device::HdmiInput::getInstance().getVRRStatus (iPort, vrrType);
+        LOGWARN("AVInput::getVRRStatus VRR TYPE: %d", *vrrType);
+    }
+    catch (const device::Exception& err)
+    {
+        LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
+    }
+
 }
 
 uint32_t AVInput::getRawSPDWrapper(const JsonObject& parameters, JsonObject& response)
@@ -1361,6 +1483,96 @@ uint32_t AVInput::getEdid2AllmSupportWrapper(const JsonObject& parameters, JsonO
 	{
 	    returnResponse(false);
 	}
+}
+
+bool AVInput::getVRRSupport(int portId,bool *vrrSupportValue)
+{
+       bool ret = true;
+        try
+        {
+               device::HdmiInput::getInstance().getVRRSupport (portId, vrrSupportValue);
+                LOGINFO("AVInput - getVRRSupport:%d", *vrrSupportValue);
+        }
+        catch (const device::Exception& err)
+        {
+                LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+                ret = false;
+        }
+        return ret;
+}
+
+uint32_t AVInput::getVRRSupportWrapper(const JsonObject& parameters, JsonObject& response)
+{
+       LOGINFOMETHOD();
+       string sPortId = parameters["portId"].String();
+
+       int portId = 0;
+       bool vrrSupport = true;
+       returnIfParamNotFound(parameters, "portId");
+
+       try {
+               portId = stoi(sPortId);
+       }catch (const std::exception& err) {
+               LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+               returnResponse(false);
+       }
+
+       bool result = getVRRSupport(portId, &vrrSupport);
+       if(result == true)
+       {
+            response["vrrSupport"] = vrrSupport;
+            returnResponse(true);
+       }
+       else
+       {
+           returnResponse(false);
+       }
+}
+
+bool AVInput::setVRRSupport(int portId, bool vrrSupport)
+{
+       bool ret = true;
+        try
+        {
+          device::HdmiInput::getInstance().setVRRSupport (portId, vrrSupport);
+           LOGWARN("AVInput -  vrrSupport:%d", vrrSupport);
+        }
+        catch (const device::Exception& err)
+        {
+                LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+                ret = false;
+        }
+       return ret;
+
+}
+
+uint32_t AVInput::setVRRSupportWrapper(const JsonObject& parameters, JsonObject& response)
+{
+       LOGINFOMETHOD();
+
+       returnIfParamNotFound(parameters, "portId");
+       returnIfParamNotFound(parameters, "vrrSupport");
+
+       int portId = 0;
+       string sPortId = parameters["portId"].String();
+       bool vrrSupport = parameters["vrrSupport"].Boolean();
+
+       try {
+               portId = stoi(sPortId);
+       }catch (const std::exception& err) {
+               LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+               returnResponse(false);
+       }
+
+       bool result = setVRRSupport(portId, vrrSupport);
+       if(result == true)
+       {
+          returnResponse(true);
+       }
+       else
+       {
+          returnResponse(false);
+       }
 }
 
 uint32_t AVInput::setEdidVersionWrapper(const JsonObject& parameters, JsonObject& response)
