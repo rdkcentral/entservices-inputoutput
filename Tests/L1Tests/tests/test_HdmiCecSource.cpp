@@ -989,7 +989,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, requestActiveSourceProccess){
     Header header;
     header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
 
-    RequestActiveSource requestActiveSource;
+    RequestActiveSourceMessage requestActiveSource;
 
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
