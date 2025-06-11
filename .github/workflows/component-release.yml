@@ -1,0 +1,47 @@
+name: Component Release
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Clone the project and start release
+        run: |
+          git clone https://github.com/${{ github.repository }} project
+          cd project
+          git fetch origin main:main
+          git flow init -d
+          
+          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          if [ -z "$LATEST_TAG" ]; then
+            RELEASE_VERSION="v1.0.0"
+          else
+            RELEASE_VERSION=$(echo $LATEST_TAG | awk -F. -v OFS=. '{$NF++;print}')
+          fi
+
+          git flow release start $RELEASE_VERSION
+          auto-changelog -v $RELEASE_VERSION
+          git add CHANGELOG.md
+          git commit -m "$RELEASE_VERSION release changelog updates"
+          git flow release publish
+
+      - name: Finish release and push
+        run: |
+          cd project
+          git flow release finish 1.0.0
+          git push origin main
+          git push origin --tags
+          git push origin develop
