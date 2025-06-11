@@ -29,7 +29,7 @@ jobs:
           git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} project
           cd project
           git fetch origin main:main
-          git flow init -d
+          git flow init -fd
           
           RELEASE_VERSION=$(grep -m 1 -oP '^## \\[\\K[^\\]]+' CHANGELOG.md)
 
