@@ -24,12 +24,12 @@ jobs:
           cd project
           git fetch origin main:main
           git flow init -d
-          
+
           LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
           if [ -z "$LATEST_TAG" ]; then
-            RELEASE_VERSION="v1.0.0"
+            RELEASE_VERSION="v1.0.0"
           else
-            RELEASE_VERSION=$(echo $LATEST_TAG | awk -F. -v OFS=. '{$NF++;print}')
+            RELEASE_VERSION=$(echo $LATEST_TAG | awk -F. -v OFS=. '{$NF++;print}')
           fi
 
           git flow release start $RELEASE_VERSION
@@ -41,7 +41,7 @@ jobs:
       - name: Finish release and push
         run: |
           cd project
-          git flow release finish 1.0.0
+          git flow release finish $RELEASE_VERSION
           git push origin main
           git push origin --tags
           git push origin develop
