@@ -48,7 +48,7 @@ jobs:
       - name: Finish release and push
         run: |
           cd project
-          git flow release finish $RELEASE_VERSION
+          git flow release finish -m "$RELEASE_VERSION release" $RELEASE_VERSION
           git push origin main
           git push origin --tags
           git push origin develop
