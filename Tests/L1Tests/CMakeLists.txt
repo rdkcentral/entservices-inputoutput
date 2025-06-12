@@ -19,7 +19,8 @@ cmake_minimum_required(VERSION 3.8)
 set(PLUGIN_NAME L1TestsIO)
 set(MODULE_NAME ${NAMESPACE}${PLUGIN_NAME})
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(${NAMESPACE}Plugins REQUIRED)
 
@@ -27,16 +28,7 @@ set (TEST_SRC
     tests/test_UtilsFile.cpp
 )
 
-include(FetchContent)
-FetchContent_Declare(
-        googletest
-        URL https://github.com/google/googletest/archive/e39786088138f2749d64e9e90e0f9902daa77c40.zip
-)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-FetchContent_MakeAvailable(googletest)
-
 set (TEST_LIB
-    gmock_main
     ${NAMESPACE}Plugins::${NAMESPACE}Plugins
 )
 
@@ -136,6 +128,12 @@ add_plugin_test_ex(PLUGIN_AVINPUT tests/test_AVInput.cpp "${AVINPUT_INC}" "${NAM
 
 add_library(${MODULE_NAME} SHARED ${TEST_SRC})
 
+set_source_files_properties(
+        tests/test_HdmiCec2.cpp
+        tests/test_HdmiCecSource.cpp
+        tests/test_HdmiCecSink.cpp
+        PROPERTIES COMPILE_FLAGS "-fexceptions")
+
 if (RDK_SERVICES_L1_TEST)
    find_library(TESTMOCKLIB_LIBRARIES NAMES L1TestMocklib)
    if (TESTMOCKLIB_LIBRARIES)
@@ -148,7 +146,7 @@ endif (RDK_SERVICES_L1_TEST)
 
 include_directories(${TEST_INC})
 
-target_link_directories(${MODULE_NAME} PUBLIC ${CMAKE_INSTALL_PREFIX}/lib/wpeframework/plugins)
+target_link_directories(${MODULE_NAME} PUBLIC ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib/wpeframework/plugins)
 
 target_link_libraries(${MODULE_NAME} ${TEST_LIB})
 

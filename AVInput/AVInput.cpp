@@ -868,7 +868,30 @@ void AVInput::AVInputVideoModeUpdate( int port , dsVideoPortResolution_t resolut
             params["frameRateN"] = 60000;
             params["frameRateD"] = 1001;
             break;
-
+	case dsVIDEO_FRAMERATE_100:
+            params["frameRateN"] = 100000;
+            params["frameRateD"] = 1000;
+            break;
+	case dsVIDEO_FRAMERATE_119dot88:
+            params["frameRateN"] = 120000;
+            params["frameRateD"] = 1001;
+            break;
+	case dsVIDEO_FRAMERATE_120:
+            params["frameRateN"] = 120000;
+            params["frameRateD"] = 1000;
+            break;
+	case dsVIDEO_FRAMERATE_200:
+            params["frameRateN"] = 200000;
+            params["frameRateD"] = 1000;
+            break;
+	case dsVIDEO_FRAMERATE_239dot76:
+            params["frameRateN"] = 240000;
+            params["frameRateD"] = 1001;
+            break;
+	case dsVIDEO_FRAMERATE_240:
+            params["frameRateN"] = 240000;
+            params["frameRateD"] = 100;
+            break;
         default:
             params["frameRateN"] = 60000;
             params["frameRateD"] = 1000;
