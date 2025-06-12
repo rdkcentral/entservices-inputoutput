@@ -2059,13 +2059,15 @@ namespace Plugin {
         std::string value;
 
         value = parameters.HasLabel("DimmingMode") ? parameters["DimmingMode"].String() : "";
-        returnIfParamNotFound(parameters,"DimmingMode");
+	LOGINFO("%s: DimmingMode [value]: %s\n", __FUNCTION__, value);
+	returnIfParamNotFound(parameters,"DimmingMode");
 
         if (validateInputParameter("DimmingMode",value) != 0) {
             LOGERR("%s: Range validation failed for DimmingMode\n", __FUNCTION__);
             returnResponse(false);
         }
         dimmingMode = getDimmingModeIndex(value);
+	LOGINFO("%s: dimmingMode : %d\n", __FUNCTION__, dimmingMode);
 
         if (parsingSetInputArgument(parameters, "DimmingMode",inputInfo) != 0) {
             LOGERR("%s: Failed to parse the input arguments \n", __FUNCTION__);

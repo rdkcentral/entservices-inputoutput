@@ -320,7 +320,7 @@ namespace Plugin {
     tvDimmingMode_t AVOutputTV::getDimmingModeIndex(std::string mode)
     {
         tvDimmingMode_t index = tvDimmingMode_MAX;
-
+	LOGINFO("mode =%s!!!\n",mode);
         if(mode.compare("Local") == 0 ) {
             index=tvDimmingMode_Local;
 	}
