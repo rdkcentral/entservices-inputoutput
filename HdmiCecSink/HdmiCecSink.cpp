@@ -2500,7 +2500,7 @@ namespace WPEFramework
 					m_audioStatusReceived = false;
 					m_audioStatusTimerStarted = false;
 					LOGINFO("Audio device removed, reset the audio status info.  m_isAudioStatusInfoUpdated :%d, m_audioStatusReceived :%d, m_audioStatusTimerStarted:%d ", m_isAudioStatusInfoUpdated,m_audioStatusReceived,m_audioStatusTimerStarted);
-                                        sendNotify(eventString[HDMICECSINK_EVENT_AUDIO_DEVICE_CONNECTED_STATUS], params)
+                                        sendNotify(eventString[HDMICECSINK_EVENT_AUDIO_DEVICE_CONNECTED_STATUS], params);
                                 }
 
 				_instance->deviceList[logicalAddress].m_isRequestRetry = 0;
