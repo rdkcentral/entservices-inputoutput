@@ -47,6 +47,8 @@ public:
 
     int m_primVolume;
     int m_inputVolume; //Player Volume
+
+    static dsVRRType_t m_currentVrrType;
 public:
     //   IPlugin methods
     // -------------------------------------------------------------------------------------------------------
@@ -79,6 +81,8 @@ private:
     uint32_t getEdidVersionWrapper(const JsonObject& parameters, JsonObject& response);
     uint32_t setEdid2AllmSupportWrapper(const JsonObject& parameters, JsonObject& response);
     uint32_t getEdid2AllmSupportWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t setVRRSupportWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t getVRRSupportWrapper(const JsonObject& parameters, JsonObject& response);
     uint32_t startInput(const JsonObject& parameters, JsonObject& response);
     uint32_t stopInput(const JsonObject& parameters, JsonObject& response);
     uint32_t setVideoRectangleWrapper(const JsonObject& parameters, JsonObject& response);
@@ -95,8 +99,11 @@ private:
     std::string getSPD(int iPort);
     int setEdidVersion(int iPort, int iEdidVer);
     int getEdidVersion(int iPort);
+    bool setVRRSupport(int portId, bool vrrSupport);
+    bool getVRRSupport(int portId, bool *vrrSupportValue);
     bool setVideoRectangle(int x, int y, int width, int height, int type);
     bool getALLMStatus(int iPort);
+    void getVRRStatus(int iPort, dsVRRType_t *vrrType);
 
     void AVInputHotplug(int input , int connect, int type);
     static void dsAVEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
@@ -111,6 +118,7 @@ private:
     static void dsAVVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
     void AVInputALLMChange( int port , bool allmMode);
+    void AVInputVRRChange( int port , dsVRRType_t vrr_type, bool vrr_mode);
     static void dsAVGameFeatureStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
     void hdmiInputAviContentTypeChange(int port, int content_type);
