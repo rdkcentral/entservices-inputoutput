@@ -72,6 +72,9 @@ TEST_F(AVInputTest, RegisteredMethods)
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("contentProtected")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEdid2AllmSupport")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEdid2AllmSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVRRSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVRRSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVRRFrameRate")));
 }
 
 TEST_F(AVInputTest, contentProtected)
@@ -111,3 +114,20 @@ TEST_F(AVInputDsTest, setEdid2AllmSupport)
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
+TEST_F(AVInputDsTest, getVRRSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"vrrSupport\":true,\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, setVRRSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, getVRRFrameRate)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"0\",\"currentVRRVideoFrameRate\":48.6}"), response));
+    EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":48.6,\"success\":true}"));
+}
