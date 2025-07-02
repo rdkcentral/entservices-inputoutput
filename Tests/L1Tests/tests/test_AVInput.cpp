@@ -76,7 +76,7 @@ protected:
     virtual ~AVInputDsTest() override
     {
         device::HdmiInput::setImpl(nullptr);
-        if (p_hdmiInputImplMock != nullptr) 
+        if (p_hdmiInputImplMock != nullptr)
         {
             delete p_hdmiInputImplMock;
             p_hdmiInputImplMock = nullptr;
