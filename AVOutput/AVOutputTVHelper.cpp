@@ -296,13 +296,13 @@ namespace Plugin {
     {
         tvDimmingMode_t index = tvDimmingMode_MAX;
 
-        if(mode.compare("local") == 0 ) {
+        if(mode.compare("Local") == 0 ) {
             index=tvDimmingMode_Local;
 	}
-        else if(mode.compare("fixed") == 0 ) {
+        else if(mode.compare("Fixed") == 0 ) {
             index=tvDimmingMode_Fixed;
 	}
-        else if(mode.compare("global") == 0 ) {
+        else if(mode.compare("Global") == 0 ) {
             index=tvDimmingMode_Global;
 	}
         else {
@@ -1886,6 +1886,7 @@ namespace Plugin {
     void AVOutputTV::getDimmingModeStringFromEnum(int value, std::string &toStore)
     {
         const char *dimmingmode_string[] = {
+
                     [tvDimmingMode_Fixed] = "Fixed",
                     [tvDimmingMode_Local] = "Local",
                     [tvDimmingMode_Global] = "Global",

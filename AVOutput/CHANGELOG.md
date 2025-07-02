@@ -17,6 +17,14 @@ All notable changes to this RDK Service will be documented in this file.
 ### Added
 - Advance PQ Params
 
+## [1.1.2] - 2025-07-01
+### Fixed
+- Phase2 ODM
+
+## [1.1.1] - 2025-06-26
+### Fixed
+- Fixed dimmingMode failures
+
 ## [1.1.0] - 2025-03-14
 ### Added
 
