@@ -64,7 +64,7 @@ protected:
     AVInputDsTest()
         : AVInputTest()
     {
-        p_hdmiInputImplMock = new NiceMock<HdmiInputImplMock>;
+        p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
         device::HdmiInput::setImpl(p_hdmiInputImplMock);
 
         p_compositeInputImplMock = new NiceMock<CompositeInputImplMock>;
@@ -76,7 +76,8 @@ protected:
     virtual ~AVInputDsTest() override
     {
         device::HdmiInput::setImpl(nullptr);
-        if (p_hdmiInputImplMock != nullptr) {
+        if (p_hdmiInputImplMock != nullptr) 
+        {
             delete p_hdmiInputImplMock;
             p_hdmiInputImplMock = nullptr;
         }
