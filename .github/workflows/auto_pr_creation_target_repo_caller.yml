@@ -9,7 +9,8 @@ jobs:
   call_auto_pr_workflow:
     #secrets:
       #RDKCM_RDKE: ${{ secrets.RDKCM_RDKE }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print placeholder instead of actual logic
-        run: echo "This is a placeholder for the actual logic."
+    uses: rdkcentral/build_tools_workflows/.github/workflows/auto_pr_creation_manifest.yml@RDKEMW-4778
+    #runs-on: ubuntu-latest
+    #steps:
+     # - name: Print placeholder instead of actual logic
+     #   run: echo "This is a placeholder for the actual logic."
