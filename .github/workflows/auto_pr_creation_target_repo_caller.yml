@@ -6,6 +6,11 @@ on:
       - topic/RDKEMW-4778
 
 jobs:
+  debug_check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Triggered"
+      
   call_auto_pr_workflow:
     #secrets:
       #RDKCM_RDKE: ${{ secrets.RDKCM_RDKE }}
