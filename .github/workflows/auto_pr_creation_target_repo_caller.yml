@@ -14,7 +14,7 @@ jobs:
   call_auto_pr_workflow:
     #secrets:
       #RDKCM_RDKE: ${{ secrets.RDKCM_RDKE }}
-    uses: rdkcentral/build_tools_workflows/.github/workflows/auto_pr_creation_manifest.yml@RDKEMW-4778
+    uses: rdkcentral/build_tools_workflows/.github/workflows/auto_pr_creation_meta.yml@RDKEMW-4778
     secrets:
       RDKCM_RDKE: ${{ secrets.RDKCM_RDKE }}
     #runs-on: ubuntu-latest
