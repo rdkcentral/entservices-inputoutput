@@ -22,6 +22,9 @@
 #include <fstream>
 #include <string>
 
+
+#include "HdmiCecSinkImplementation.h"
+#include "HdmiCecSinkMock.h"
 #include "HdmiCecSink.h"
 #include "FactoriesImplementation.h"
 #include "IarmBusMock.h"
