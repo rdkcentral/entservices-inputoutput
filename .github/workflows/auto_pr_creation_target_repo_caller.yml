@@ -7,8 +7,8 @@ on:
 
 jobs:
   call_auto_pr_workflow:
-    secrets:
-      RDKCM_RDKE: ${{ secrets.RDKCM_RDKE }}
+    #secrets:
+      #RDKCM_RDKE: ${{ secrets.RDKCM_RDKE }}
     runs-on: ubuntu-latest
     steps:
       - name: Print placeholder instead of actual logic
