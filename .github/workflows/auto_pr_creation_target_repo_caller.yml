@@ -1,0 +1,12 @@
+name: Auto PR Creation Caller
+
+on:
+  push:
+    branches:
+      - topic/RDKEMW-4778
+
+jobs:
+  call_auto_pr_workflow:
+    uses: ssitar583/build_tools_workflows/.github/workflows/auto_pr_creation_meta.yml@develop
+    secrets:
+      RDKCM_RDKE: ${{ secrets.RDKCM_RDKE }}
