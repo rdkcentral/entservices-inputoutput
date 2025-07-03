@@ -3551,6 +3551,7 @@ namespace WPEFramework
 
       void HdmiCecSinkImplementation::getHdmiArcPortID()
       {
+        sleep(1); // Sleep for a second to ensure the device is ready
         device::List<device::AudioOutputPort> aPorts = device::Host::getInstance().getAudioOutputPorts();
         for (size_t i = 0; i < aPorts.size(); i++)
         {
