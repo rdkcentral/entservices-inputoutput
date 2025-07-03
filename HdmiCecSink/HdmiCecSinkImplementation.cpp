@@ -3551,17 +3551,34 @@ namespace WPEFramework
 
       void HdmiCecSinkImplementation::getHdmiArcPortID()
       {
-         int err;
-         dsGetHDMIARCPortIdParam_t param;
-         err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
-                            (char *)IARM_BUS_DSMGR_API_dsGetHDMIARCPortId,
-                            (void *)&param,
-                            sizeof(param));
-          if (IARM_RESULT_SUCCESS == err)
-          {
-             LOGINFO("HDMI ARC port ID HdmiArcPortID=[%d] \n", param.portId);
-             HdmiArcPortID = param.portId;
-          }
+        device::List<device::AudioOutputPort> aPorts = device::Host::getInstance().getAudioOutputPorts();
+        for (size_t i = 0; i < aPorts.size(); i++)
+        {
+            device::AudioOutputPort &vPort = aPorts.at(i);
+            string portName  = vPort.getName();
+            if (portName == "HDMI_ARC0") {
+                int portId = -1;
+                vPort.getHdmiArcPortId(&portId);
+                if (portId >= 0) {
+                    HdmiArcPortID = portId;
+                    LOGINFO("HDMI ARC port ID HdmiArcPortID=[%d] \n", HdmiArcPortID);
+                }
+                else {
+                    LOGINFO("HDMI ARC port ID not found for port %s", portName.c_str());
+                }
+            }
+        }
+        //int err;
+        // dsGetHDMIARCPortIdParam_t param;
+        // err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
+        //                    (char *)IARM_BUS_DSMGR_API_dsGetHDMIARCPortId,
+        //                    (void *)&param,
+        //                    sizeof(param));
+        //if (IARM_RESULT_SUCCESS == err)
+        //  {
+        //     LOGINFO("HDMI ARC port ID HdmiArcPortID=[%d] \n", param.portId);
+        //     HdmiArcPortID = param.portId;
+        //  }
       }
 
       void HdmiCecSinkImplementation::getCecVersion()
