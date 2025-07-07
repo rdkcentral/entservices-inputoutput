@@ -21,10 +21,7 @@ set(MODULE_NAME ${NAMESPACE}${PLUGIN_NAME})
 set(THUNDER_PORT 9998)
 
 find_package(${NAMESPACE}Plugins REQUIRED)
-if(PLUGIN_DUMMY)
-    set(SRC_FILES ${SRC_FILES} tests/test_foo_IN.cpp)
-endif()
-# set(SRC_FILES tests/test_foo_IN.cpp)
+set(SRC_FILES tests/test_foo_IN.cpp)
 
 if(PLUGIN_AVOUTPUT)
     set(SRC_FILES ${SRC_FILES} tests/AVOutputTV_L2Test.cpp)
