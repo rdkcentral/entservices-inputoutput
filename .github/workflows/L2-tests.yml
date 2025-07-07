@@ -569,8 +569,6 @@ jobs:
           '*/Tests/headers/*'
           '*/Tests/mocks/*'
           '*/Tests/L2Tests/*'
-          '*/googlemock/*'
-          '*/googletest/*'
           '*/sqlite/*'
           -o filtered_coverage.info
           &&
