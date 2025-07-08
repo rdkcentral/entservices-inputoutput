@@ -3,7 +3,7 @@ name: Auto PR Creation Caller
 on:
   push:
     branches:
-      - topic/RDKEMW-4778 
+      - topic/RDKEMW-4778
 
 jobs:
   debug_check:
