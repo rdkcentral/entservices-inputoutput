@@ -9,7 +9,7 @@ jobs:
   debug_check:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Triggered"
+      - run: echo "Triggered" 
       
   call_auto_pr_workflow:
     #secrets:
