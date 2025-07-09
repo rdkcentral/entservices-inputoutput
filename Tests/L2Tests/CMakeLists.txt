@@ -21,6 +21,7 @@ set(MODULE_NAME ${NAMESPACE}${PLUGIN_NAME})
 set(THUNDER_PORT 9998)
 
 find_package(${NAMESPACE}Plugins REQUIRED)
+
 set(SRC_FILES tests/test_foo_IN.cpp)
 
 if(PLUGIN_AVOUTPUT)
