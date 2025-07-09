@@ -1,7 +1,8 @@
 name: Auto PR Creation Caller
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - test_develop
 
