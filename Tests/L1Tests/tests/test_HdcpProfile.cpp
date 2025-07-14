@@ -378,7 +378,6 @@ TEST_F(HDCPProfileDsTest, getSettopHDCPSupport_Hdcp_v2x)
                                                      "\\}")));
 }
 
-#if 0
 
 TEST_F(HDCPProfileEventIarmTest, onDisplayConnectionChanged)
 {
@@ -449,7 +448,6 @@ TEST_F(HDCPProfileEventIarmTest, onDisplayConnectionChanged)
     EVENT_UNSUBSCRIBE(0, _T("onDisplayConnectionChanged"), _T("client.events"), message);
 }
 
-#endif
 TEST_F(HDCPProfileEventIarmTest, onHdmiOutputHDCPStatusEvent)
 {
     ASSERT_TRUE(dsHdmiEventHandler != nullptr);
