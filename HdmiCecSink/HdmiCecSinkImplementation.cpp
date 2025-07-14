@@ -3555,17 +3555,17 @@ namespace WPEFramework
         int cap = 0;
 
         do{
-            int isRegistered = 0;
-            IARM_IsCallRegistered(IARM_BUS_DSMGR_NAME, (char *)IARM_BUS_DSMGR_API_dsGetHDMIARCPortId, &isRegistered);
-            if (isRegistered == 0)
+            int isConnected = 0;
+            IARM_Bus_IsConnected(IARM_BUS_DSMGR_NAME, &isConnected);
+            if (isConnected == 0)
             {
-                LOGERR("IARM_BUS_DSMGR_NAME is not registered, retrying...");
+                LOGERR("IARM_BUS_DSMGR_NAME is not connected, retrying...");
                 usleep(100000); // Sleep for 100ms before retrying
                 cap++;
             }
             else
             {
-                LOGINFO("IARM_BUS_DSMGR_NAME is registered");
+                LOGINFO("IARM_BUS_DSMGR_NAME is connected");
                 break;
             }
 
