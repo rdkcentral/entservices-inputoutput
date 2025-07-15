@@ -1,0 +1,177 @@
+/*
+ * If not stated otherwise in this file or this component's LICENSE file the
+ * following copyright and licenses apply:
+ *
+ * Copyright 2025 RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#pragma once
+
+#include "Module.h"
+#include <interfaces/Ids.h>
+#include <interfaces/IAVInput.h>
+
+#include <com/com.h>
+#include <core/core.h>
+
+namespace WPEFramework
+{
+    namespace Plugin
+    {
+        class AVInputImplementation : public Exchange::IAVInput
+        {
+        protected:
+            uint32_t endpoint_numberOfInputs(const JsonObject &parameters, JsonObject &response);
+            uint32_t endpoint_currentVideoMode(const JsonObject &parameters, JsonObject &response);
+            uint32_t endpoint_contentProtected(const JsonObject &parameters, JsonObject &response);
+
+        public:
+            // We do not allow this plugin to be copied !!
+            AVInputImplementation();
+            ~AVInputImplementation() override;
+
+            // We do not allow this plugin to be copied !!
+            AVInputImplementation(const AVInputImplementation &) = delete;
+            AVInputImplementation &operator=(const AVInputImplementation &) = delete;
+
+            BEGIN_INTERFACE_MAP(AVInputImplementation)
+            INTERFACE_ENTRY(Exchange::IAVInput)
+            END_INTERFACE_MAP
+
+        public:
+            enum Event
+            {
+                ON_AVINPUT_SIGNAL_CHANGED,
+                ON_AVINPUT_STATUS_CHANGED,
+                ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE,
+                ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE,
+                ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE
+            };
+
+            class EXTERNAL Job : public Core::IDispatch
+            {
+            protected:
+                Job(AVInputImplementation *avInputImplementation, Event event, JsonValue &params)
+                    : _avInputImplementation(avInputImplementation), _event(event), _params(params)
+                {
+                    if (_avInputImplementation != nullptr)
+                    {
+                        _avInputImplementation->AddRef();
+                    }
+                }
+
+            public:
+                Job() = delete;
+                Job(const Job &) = delete;
+                Job &operator=(const Job &) = delete;
+                ~Job()
+                {
+                    if (_avInputImplementation != nullptr)
+                    {
+                        _avInputImplementation->Release();
+                    }
+                }
+
+            public:
+                static Core::ProxyType<Core::IDispatch> Create(AVInputImplementation *avInputImplementation, Event event, JsonValue params)
+                {
+#ifndef USE_THUNDER_R4
+                    return (Core::proxy_cast<Core::IDispatch>(Core::ProxyType<Job>::Create(avInputImplementation, event, params)));
+#else
+                    return (Core::ProxyType<Core::IDispatch>(Core::ProxyType<Job>::Create(avInputImplementation, event, params)));
+#endif
+                }
+
+                virtual void Dispatch()
+                {
+                    _avInputImplementation->Dispatch(_event, _params);
+                }
+
+            private:
+                AVInputImplementation *_avInputImplementation;
+                const Event _event;
+                JsonValue _params;
+            };
+
+        public:
+            virtual Core::hresult Register(Exchange::IAVInput::INotification *notification) override;
+            virtual Core::hresult Unregister(Exchange::IAVInput::INotification *notification) override;
+
+            Core::hresult numberOfInputs(uint32_t &inputCount) override;
+            Core::hresult getInputDevices(InputDeviceType type, IInputDeviceIterator *&devices) override;
+            Core::hresult writeEDID(uint8_t id, const string &edid) override;
+            Core::hresult readEDID(string &edid) override;
+            Core::hresult getRawSPD(uint8_t id, string &spd) override;
+            Core::hresult getSPD(uint8_t id, string &spd) override;
+            Core::hresult setEdidVersion(uint8_t id, const string &version) override;
+            Core::hresult getEdidVersion(uint8_t id, string &version) override;
+            Core::hresult setEdid2AllmSupport(uint8_t id, const bool &allm) override;
+            Core::hresult getEdid2AllmSupport(uint8_t id, bool &allm) override;
+            Core::hresult setVRRSupport(uint8_t id, bool vrrSupport) override;
+            Core::hresult getVRRSupport(uint8_t id, bool &vrrSupport) override;
+            Core::hresult getVRRFrameRate(uint8_t id, double &vrrFrameRate) override;
+            Core::hresult getHdmiVersion(uint8_t id, string &hdmiVersion) override;
+            Core::hresult setMixerLevels(uint8_t id, const MixerLevels &levels) override;
+            Core::hresult startInput(uint8_t id, InputDeviceType type, bool audioMix, const VideoPlaneType &planeType, bool topMostPlane) override;
+            Core::hresult stopInput(InputDeviceType type) override;
+            Core::hresult setVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, InputDeviceType type) override;
+            Core::hresult currentVideoMode(string &currentVideoMode, string &message) override;
+            Core::hresult contentProtected(bool &isContentProtected) override;
+            Core::hresult getSupportedGameFeatures(IStringIterator *&features) override;
+            Core::hresult getGameFeatureStatus(uint8_t id, const string &feature, bool &mode) override;
+
+        private:
+            mutable Core::CriticalSection _adminLock;
+            PluginHost::IShell *_service;
+            std::list<Exchange::IAVInput::INotification *> _avInputNotification;
+
+            int getMostActiveDecoderStatus(); // <pca> TODO: Replace with private impl methods </pca>
+            void onDecoderStatusChange(int status);
+            int getConfig(const std::string &postData, std::list<ParamList> &paramListInfo);
+
+            void dispatchEvent(Event, const JsonValue &params);
+            void Dispatch(Event event, const JsonValue params);
+
+            static int numberOfInputs(bool &success);
+            static string currentVideoMode(bool &success);
+
+            // Begin methods
+            uint32_t getInputDevicesWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t writeEDIDWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t readEDIDWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t getRawSPDWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t getSPDWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t setEdidVersionWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t getEdidVersionWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t setEdid2AllmSupportWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t getEdid2AllmSupportWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t setVRRSupportWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t getVRRSupportWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t getVRRFrameRateWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t startInput(const JsonObject &parameters, JsonObject &response);
+            uint32_t stopInput(const JsonObject &parameters, JsonObject &response);
+            uint32_t setVideoRectangleWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t getSupportedGameFeatures(const JsonObject &parameters, JsonObject &response);
+            uint32_t getGameFeatureStatusWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t setMixerLevels(const JsonObject &parameters, JsonObject &response);
+            uint32_t getHdmiVersionWrapper(const JsonObject &parameters, JsonObject &response);
+
+        public:
+            static AVInputImplementation *_instance;
+
+            friend class Job;
+        };
+    } // namespace Plugin
+} // namespace WPEFramework
