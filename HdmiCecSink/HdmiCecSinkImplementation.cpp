@@ -3555,36 +3555,31 @@ namespace WPEFramework
         int cap = 0;
 
         do{
-            int isConnected = 0;
-            IARM_Bus_IsConnected(IARM_BUS_DSMGR_NAME, &isConnected);
-            if (isConnected == 0)
-            {
-                LOGINFO("IARM_BUS_DSMGR_NAME is not connected, retrying...");
+            int err;
+            dsGetHDMIARCPortIdParam_t param;
+            err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
+                                (char *)IARM_BUS_DSMGR_API_dsGetHDMIARCPortId,
+                                (void *)&param,
+                                sizeof(param));
+            if (IARM_RESULT_SUCCESS == err)
+              {
+                 LOGINFO("HDMI ARC port ID HdmiArcPortID=[%d] \n", param.portId);
+                 HdmiArcPortID = param.portId;
+                 cap = 10; // Exit the loop
+              }
+            else{
+                LOGINFO("Failed to get HDMI ARC port ID with error code %d", err);
                 usleep(100000); // Sleep for 100ms before retrying
                 cap++;
-            }
-            else
-            {
-                LOGINFO("IARM_BUS_DSMGR_NAME is connected");
-                break;
+                if (cap >= 10) {
+                    LOGERR("Failed to get HDMI ARC port ID after 10 attempts, exiting loop");
+                    break;
+                }
             }
 
         } while (cap < 10);
 
-        int err;
-        dsGetHDMIARCPortIdParam_t param;
-        err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
-                            (char *)IARM_BUS_DSMGR_API_dsGetHDMIARCPortId,
-                            (void *)&param,
-                            sizeof(param));
-        if (IARM_RESULT_SUCCESS == err)
-          {
-             LOGINFO("HDMI ARC port ID HdmiArcPortID=[%d] \n", param.portId);
-             HdmiArcPortID = param.portId;
-          }
-        else{
-            LOGINFO("Failed to get HDMI ARC port ID with error code %d", err);
-        }
+        
       }
 
       void HdmiCecSinkImplementation::getCecVersion()
