@@ -3559,7 +3559,7 @@ namespace WPEFramework
             IARM_Bus_IsConnected(IARM_BUS_DSMGR_NAME, &isConnected);
             if (isConnected == 0)
             {
-                LOGERR("IARM_BUS_DSMGR_NAME is not connected, retrying...");
+                LOGINFO("IARM_BUS_DSMGR_NAME is not connected, retrying...");
                 usleep(100000); // Sleep for 100ms before retrying
                 cap++;
             }
@@ -3582,6 +3582,9 @@ namespace WPEFramework
              LOGINFO("HDMI ARC port ID HdmiArcPortID=[%d] \n", param.portId);
              HdmiArcPortID = param.portId;
           }
+        else{
+            LOGINFO("Failed to get HDMI ARC port ID with error code %d", err);
+        }
       }
 
       void HdmiCecSinkImplementation::getCecVersion()
