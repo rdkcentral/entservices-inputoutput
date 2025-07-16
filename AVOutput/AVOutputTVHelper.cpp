@@ -1290,9 +1290,7 @@ namespace Plugin {
         if (m_dimmingModeStatus == tvERROR_OPERATION_NOT_SUPPORTED) {
             updateAVoutputTVParam("sync", "DimmingMode", info, PQ_PARAM_DIMMINGMODE, level);
         } else {
-#if !HAL_NOT_READY
             updateAVoutputTVParamV2("sync", "DimmingMode", paramJson, PQ_PARAM_DIMMINGMODE,level);
-#endif
         }
 
         // Backlight
@@ -1334,10 +1332,19 @@ namespace Plugin {
 
         //AspectRatio
         m_aspectRatioStatus = GetAspectRatioCaps(&m_aspectRatio, &m_numAspectRatio, &m_aspectRatioCaps);
+
         //LowLatencyState
         m_lowLatencyStateStatus = GetLowLatencyStateCaps(&m_maxlowLatencyState, &m_lowLatencyStateCaps);
+        if (m_lowLatencyStateStatus == tvERROR_OPERATION_NOT_SUPPORTED) {
+            updateAVoutputTVParam("sync", "LowLatencyState", info, PQ_PARAM_LOWLATENCY_STATE, level);
+        } else {
+            updateAVoutputTVParamV2("sync", "LowLatencyState", paramJson, PQ_PARAM_LOWLATENCY_STATE, level);
+        }
         // PrecisionDetail
         m_precisionDetailStatus = GetPrecisionDetailCaps(&m_maxPrecisionDetail, &m_precisionDetailCaps);
+        if (m_localContrastEnhancementStatus == tvERROR_NONE) {
+            updateAVoutputTVParamV2("sync", "PrecisionDetails", paramJson, PQ_PARAM_PRECISION_DETAIL, level);
+        }
         //PictureMode
         m_pictureModeStatus = GetTVPictureModeCaps(&m_pictureModes, &m_numPictureModes, &m_pictureModeCaps);
 
@@ -3307,79 +3314,52 @@ namespace Plugin {
                 case PQ_PARAM_ASPECT_RATIO:
                     ret |= SaveAspectRatio((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDisplayMode_t)level);
                     break;
-                    case PQ_PARAM_PRECISION_DETAIL:
-            #if HAL_NOT_READY
-            #else
+                case PQ_PARAM_PRECISION_DETAIL:
                     ret |= SetPrecisionDetail((tvVideoSrcType_t)paramIndex.sourceIndex,
                                             (tvPQModeIndex_t)paramIndex.pqmodeIndex,
                                             (tvVideoFormatType_t)paramIndex.formatIndex,
                                             level);
-            #endif
                     break;
 
                 case PQ_PARAM_LOCAL_CONTRAST_ENHANCEMENT:
-            #if HAL_NOT_READY
-            #else
-                #if ENABLE_PQ_PARAM
                     ret |= SetLocalContrastEnhancement((tvVideoSrcType_t)paramIndex.sourceIndex,
                                                     (tvPQModeIndex_t)paramIndex.pqmodeIndex,
                                                     (tvVideoFormatType_t)paramIndex.formatIndex,
                                                     level);
-                #endif
-            #endif
                     break;
 
                 case PQ_PARAM_MPEG_NOISE_REDUCTION:
-            #if HAL_NOT_READY
-            #else
-                #if ENABLE_PQ_PARAM
                     ret |= SetMPEGNoiseReduction((tvVideoSrcType_t)paramIndex.sourceIndex,
                                                 (tvPQModeIndex_t)paramIndex.pqmodeIndex,
                                                 (tvVideoFormatType_t)paramIndex.formatIndex,
                                                 level);
-                #endif
-            #endif
                     break;
 
                 case PQ_PARAM_DIGITAL_NOISE_REDUCTION:
-            #if HAL_NOT_READY
-            #else
-                #if ENABLE_PQ_PARAM
                     ret |= SetDigitalNoiseReduction((tvVideoSrcType_t)paramIndex.sourceIndex,
                                                     (tvPQModeIndex_t)paramIndex.pqmodeIndex,
                                                     (tvVideoFormatType_t)paramIndex.formatIndex,
                                                     level);
-                #endif
-            #endif
                     break;
 
                 case PQ_PARAM_AI_SUPER_RESOLUTION:
-            #if HAL_NOT_READY
-            #else
                     ret |= SetAISuperResolution((tvVideoSrcType_t)paramIndex.sourceIndex,
                                                 (tvPQModeIndex_t)paramIndex.pqmodeIndex,
                                                 (tvVideoFormatType_t)paramIndex.formatIndex,
                                                 level);
-            #endif
                     break;
 
                 case PQ_PARAM_MEMC:
-            #if HAL_NOT_READY
-            #else
                     ret |= SetMEMC((tvVideoSrcType_t)paramIndex.sourceIndex,
                                 (tvPQModeIndex_t)paramIndex.pqmodeIndex,
                                 (tvVideoFormatType_t)paramIndex.formatIndex,
                                 level);
-            #endif
                     break;
-            #if HAL_NOT_READY
-            #else
                 case PQ_PARAM_BACKLIGHT_MODE:
                     ret |= SaveBacklightMode((tvVideoSrcType_t)paramIndex.sourceIndex,
                                             (tvPQModeIndex_t)paramIndex.pqmodeIndex,
                                             (tvVideoFormatType_t)paramIndex.formatIndex,
                                             static_cast<tvBacklightMode_t>(level));
-            #endif
                     break;
                 case PQ_PARAM_HDR10_MODE:
                 case PQ_PARAM_HLG_MODE:
@@ -3405,8 +3385,9 @@ namespace Plugin {
         return ret;
     }
 
+#ifdef ENABLE_CAPS_SUPPORT_FROM_PLUGIN
 tvError_t AVOutputTV::ReadJsonFile(JsonObject& root) {
-    std::ifstream file(CAPABLITY_FILE_NAMEV2);
+    std::ifstream file(CAPABILITY_FILE_NAMEV2);
     if (!file.is_open()) {
         LOGWARN("AVOutputPlugins: %s: Unable to open file", __FUNCTION__);
         return tvERROR_GENERAL;
@@ -3469,6 +3450,7 @@ tvError_t AVOutputTV::ExtractContextCaps(const JsonObject& data, tvContextCaps_t
 
     return tvERROR_NONE;
 }
+
 template<typename EnumType>
 bool LookupEnum(const std::string& str, const std::map<int, std::string>& map, EnumType& outEnum) {
     for (const auto& entry : map) {
@@ -3891,7 +3873,6 @@ tvError_t AVOutputTV::GetCustom2PointWhiteBalanceCaps(int* min_gain, int* min_of
     return tvERROR_NONE;
 }
 
-#if HAL_NOT_READY
 tvError_t AVOutputTV::GetBacklightCaps(int* max_backlight, tvContextCaps_t** context_caps) {
     return GetCaps("Backlight", max_backlight, context_caps);
 }
