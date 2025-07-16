@@ -469,9 +469,8 @@ class AVOutputTV : public AVOutputBase {
 			int *max_offset, tvWBColor_t **color,
 			tvWBControl_t **control, size_t* num_color,
 			size_t* num_control, tvContextCaps_t ** context_caps);
-#define HAL_NOT_READY 0
-#if HAL_NOT_READY
-#define CAPABLITY_FILE_NAMEV2    "/opt/panel/pq_capabilities.json"
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
+#define CAPABILITY_FILE_NAMEV2    "/opt/panel/pq_capabilities.json"
 		tvError_t GetBacklightCaps(int *max_backlight, tvContextCaps_t **context_caps);
 		tvError_t GetBrightnessCaps(int *max_brightness, tvContextCaps_t **context_caps);
 		tvError_t GetContrastCaps(int* max_contrast, tvContextCaps_t** context_caps);
@@ -488,7 +487,7 @@ class AVOutputTV : public AVOutputBase {
 		tvError_t GetAISuperResolutionCaps(int* maxAISuperResolution, tvContextCaps_t** context_caps);
 		tvError_t GetMEMCCaps(int* maxMEMC, tvContextCaps_t** context_caps);
 #else
-#define CAPABLITY_FILE_NAMEV2    "/etc/pq_capabilities.json"
+#define CAPABILITY_FILE_NAMEV2    "/etc/pq_capabilities.json"
 #endif
 		uint32_t getPQCapabilityWithContext(
 			const std::function<tvError_t(tvContextCaps_t**, int*)>& getCapsFunc,

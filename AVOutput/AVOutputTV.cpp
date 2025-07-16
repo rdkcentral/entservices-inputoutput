@@ -868,7 +868,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getBacklightCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this]( tvContextCaps_t** context_caps, int* max_backlight) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetBacklightCaps(max_backlight, context_caps);
 #else
         return GetBacklightCaps(max_backlight, context_caps);
@@ -878,7 +878,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getBrightnessCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this]( tvContextCaps_t** context_caps, int* max_brightness) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetBrightnessCaps(max_brightness, context_caps);
 #else
         return GetBrightnessCaps(max_brightness, context_caps);
@@ -889,7 +889,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getContrastCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_contrast) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetContrastCaps(max_contrast, context_caps);
 #else
         return GetContrastCaps(max_contrast, context_caps);
@@ -900,7 +900,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getSharpnessCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_sharpness) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetSharpnessCaps(max_sharpness, context_caps);
 #else
         return GetSharpnessCaps(max_sharpness, context_caps);
@@ -911,7 +911,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getSaturationCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_saturation) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetSaturationCaps(max_saturation, context_caps);
 #else
         return GetSaturationCaps(max_saturation, context_caps);
@@ -922,7 +922,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getHueCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this]( tvContextCaps_t** context_caps, int* max_hue) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetHueCaps(max_hue, context_caps);
 #else
         return GetHueCaps(max_hue, context_caps);
@@ -933,7 +933,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getPrecisionDetailCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_precision) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetPrecisionDetailCaps(max_precision, context_caps);
 #else
         return GetPrecisionDetailCaps(max_precision, context_caps);
@@ -944,7 +944,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getLocalContrastEnhancementCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetLocalContrastEnhancementCaps(max_val, context_caps);
 #else
         return GetLocalContrastEnhancementCaps(max_val, context_caps);
@@ -955,7 +955,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getMPEGNoiseReductionCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetMPEGNoiseReductionCaps(max_val, context_caps);
 #else
         return GetMPEGNoiseReductionCaps(max_val, context_caps);
@@ -966,7 +966,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getDigitalNoiseReductionCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetDigitalNoiseReductionCaps(max_val, context_caps);
 #else
         return GetDigitalNoiseReductionCaps(max_val, context_caps);
@@ -977,7 +977,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getAISuperResolutionCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetAISuperResolutionCaps(max_val, context_caps);
 #else
         return GetAISuperResolutionCaps(max_val, context_caps);
@@ -1023,7 +1023,7 @@ namespace Plugin {
         }
         response["uiMatrixPositions"] = uiPosArray;
         response["context"] = parseContextCaps(context_caps);
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         // TODO:: Review cleanup once HAL is available, as memory will be allocated in HAL.
         delete[] ui_matrix_positions;
 #endif
@@ -1033,7 +1033,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getMEMCCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
             return this->GetMEMCCaps(max_val, context_caps);
 #else
             return GetMEMCCaps(max_val, context_caps);
@@ -1044,7 +1044,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getLowLatencyStateCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_latency) {
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         return this->GetLowLatencyStateCaps(max_latency, context_caps);
 #else
         return GetLowLatencyStateCaps(max_latency, context_caps);
@@ -1103,7 +1103,7 @@ namespace Plugin {
         response["options"] = optionsArray;
         response["context"] = parseContextCaps(context_caps);
 
-    #if HAL_NOT_READY
+    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         free(color_temp);
     #endif
 
@@ -1141,7 +1141,7 @@ namespace Plugin {
 
         response["context"] = parseContextCaps(context_caps);
 
-    #if HAL_NOT_READY
+    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         free(sdr_gamma);
     #endif
 
@@ -1172,7 +1172,7 @@ namespace Plugin {
 
         response["context"] = parseContextCaps(context_caps);
 
-    #if HAL_NOT_READY
+    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         free(dimming_mode);
     #endif
 
@@ -1194,7 +1194,7 @@ namespace Plugin {
 
         response["context"] = parseContextCaps(m_aspectRatioCaps);
 
-    #if HAL_NOT_READY
+    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         free(m_aspectRatio);
     #endif
 
@@ -1216,7 +1216,7 @@ namespace Plugin {
 
         response["context"] = parseContextCaps(m_pictureModeCaps);
 
-    #if HAL_NOT_READY
+    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         free(m_pictureModes);
     #endif
 
@@ -1248,7 +1248,7 @@ namespace Plugin {
 
         response["context"] = parseContextCaps(m_backlightModeCaps);
 
-    #if HAL_NOT_READY
+    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         // TODO: Review cleanup once HAL is available, as memory will be allocated in HAL.
         free(m_backlightModes);
     #endif
@@ -1288,7 +1288,7 @@ namespace Plugin {
         // Indicate success
         response["success"] = true;
 
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         // TODO: Clean up when HAL handles memory
         delete min_values;
         delete max_values;
@@ -1591,80 +1591,43 @@ namespace Plugin {
 
     uint32_t AVOutputTV::resetPrecisionDetail(const JsonObject& parameters, JsonObject& response)
     {
-    #if HAL_NOT_READY
-        bool success = false;
-    #else
         bool success = resetPQParamToDefault(parameters, "PrecisionDetail",
                                             PQ_PARAM_PRECISION_DETAIL, SetPrecisionDetail);
-    #endif
         returnResponse(success);
     }
 
     uint32_t AVOutputTV::resetLocalContrastEnhancement(const JsonObject& parameters, JsonObject& response)
     {
-    #if HAL_NOT_READY
-        bool success = false;
-    #else
-        #if ENABLE_PQ_PARAM
         bool success = resetPQParamToDefault(parameters, "LocalContrastEnhancement",
                                             PQ_PARAM_LOCAL_CONTRAST_ENHANCEMENT, SetLocalContrastEnhancement);
-        #else
-        bool success = true;
-        #endif
-    #endif
         returnResponse(success);
     }
 
     uint32_t AVOutputTV::resetMPEGNoiseReduction(const JsonObject& parameters, JsonObject& response)
     {
-    #if HAL_NOT_READY
-        bool success = false;
-    #else
-        #if ENABLE_PQ_PARAM
         bool success = resetPQParamToDefault(parameters, "MPEGNoiseReduction",
                                             PQ_PARAM_MPEG_NOISE_REDUCTION, SetMPEGNoiseReduction);
-        #else
-        bool success = true;
-        #endif
-    #endif
         returnResponse(success);
     }
 
     uint32_t AVOutputTV::resetDigitalNoiseReduction(const JsonObject& parameters, JsonObject& response)
     {
-    #if HAL_NOT_READY
-        bool success = false;
-    #else
-        #if ENABLE_PQ_PARAM
         bool success = resetPQParamToDefault(parameters, "DigitalNoiseReduction",
                                             PQ_PARAM_DIGITAL_NOISE_REDUCTION, SetDigitalNoiseReduction);
-        #else
-        bool success = true;
-        #endif
-
-    #endif
         returnResponse(success);
     }
 
     uint32_t AVOutputTV::resetMEMC(const JsonObject& parameters, JsonObject& response)
     {
-    #if HAL_NOT_READY
-        bool success = false;
-    #else
         bool success = resetPQParamToDefault(parameters, "MEMC",
                                             PQ_PARAM_MEMC, SetMEMC);
-    #endif
         returnResponse(success);
     }
 
     uint32_t AVOutputTV::resetAISuperResolution(const JsonObject& parameters, JsonObject& response)
     {
-#if HAL_NOT_READY
-        bool success= false;
-#else
         bool success= resetPQParamToDefault(parameters,"AISuperResolution",
                                         PQ_PARAM_AI_SUPER_RESOLUTION, SetAISuperResolution);
-#endif
         returnResponse(success);
     }
 
@@ -1805,14 +1768,11 @@ namespace Plugin {
         LOGINFO("currentPQMode: %d, currentFmt: %d, currentSrc: %d", currentPQMode, currentFmt, currentSrc);
 
         if (isSetRequiredForParam(parameters, tr181ParamName)) {
-    #if HAL_NOT_READY
-    #else
             tvError_t ret = halSetter(currentSrc, currentPQMode, currentFmt, value);
             if (ret != tvERROR_NONE) {
                 LOGERR("HAL setter failed for %s", inputParamName.c_str());
                 returnResponse(false);
             }
-    #endif
         }
 
         // Persist
@@ -1868,7 +1828,6 @@ namespace Plugin {
 
     uint32_t AVOutputTV::setLocalContrastEnhancement(const JsonObject& parameters, JsonObject& response)
     {
-#if ENABLE_PQ_PARAM
         return setContextPQParam(
             parameters, response,
             "localContrastEnhancement", "LocalContrastEnhancement",
@@ -1878,14 +1837,10 @@ namespace Plugin {
                 return SetLocalContrastEnhancement(src, mode, fmt, val);
             }
         );
-#else
-    returnResponse(true);
-#endif
     }
 
     uint32_t AVOutputTV::setMPEGNoiseReduction(const JsonObject& parameters, JsonObject& response)
     {
-#if ENABLE_PQ_PARAM
         return setContextPQParam(
             parameters, response,
             "mpegNoiseReduction", "MPEGNoiseReduction",
@@ -1895,14 +1850,10 @@ namespace Plugin {
                 return SetMPEGNoiseReduction(src, mode, fmt, val);
             }
         );
-#else
-    returnResponse(true);
-#endif
     }
 
     uint32_t AVOutputTV::setDigitalNoiseReduction(const JsonObject& parameters, JsonObject& response)
     {
-#if ENABLE_PQ_PARAM
         return setContextPQParam(
             parameters, response,
             "digitalNoiseReduction", "DigitalNoiseReduction",
@@ -1912,9 +1863,6 @@ namespace Plugin {
                 return SetDigitalNoiseReduction(src, mode, fmt, val);
             }
         );
-#else
-    returnResponse(true);
-#endif
     }
 
     uint32_t AVOutputTV::getBacklight(const JsonObject& parameters, JsonObject& response)
@@ -4430,7 +4378,7 @@ namespace Plugin {
             if (ctx.videoSrcType == currentSrc && ctx.videoFormatType == currentFmt) {
                 if (SetTVPictureMode(mode.c_str()) != tvERROR_NONE) {
                     LOGERR("SetTVPictureMode failed for mode: %s", mode.c_str());
-                    continue;
+                    return false;
                 }
             }
 //TODO:: Revisit this logic. Have to revert if HAL call fails.
@@ -5374,7 +5322,7 @@ namespace Plugin {
         }
         response["component"] = componentJson;
         response["context"] = parseContextCaps(context_caps);
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         // Clean up dynamic memory
         delete[] colorArray;
         delete[] componentArray;
@@ -5883,7 +5831,7 @@ namespace Plugin {
         response["color"] = colorJson;
         response["context"] = parseContextCaps(context_caps);
 
-#if HAL_NOT_READY
+#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
         delete[] colorArray;
         delete[] controlArray;
 #endif
