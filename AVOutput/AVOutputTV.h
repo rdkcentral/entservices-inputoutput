@@ -73,6 +73,7 @@
 #define STRING_COLORTEMPERATURE   "ColorTemperature."
 #define CREATE_DIRTY(__X__) (__X__+=STRING_DIRTY)
 #define CAPABLITY_FILE_NAME    "pq_capabilities.ini"
+#define CAPABILITY_FILE_NAMEV2    "/etc/pq_capabilities.json"
 
 
 class CIniFile
@@ -236,7 +237,7 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(getAutoBacklightModeCaps)
 		DECLARE_JSON_RPC_METHOD(getBacklightCapsV2)
 		DECLARE_JSON_RPC_METHOD(getBrightnessCapsV2)
-	    DECLARE_JSON_RPC_METHOD(getContrastCapsV2)
+		DECLARE_JSON_RPC_METHOD(getContrastCapsV2)
 		DECLARE_JSON_RPC_METHOD(getSharpnessCapsV2)
 		DECLARE_JSON_RPC_METHOD(getSaturationCapsV2)
 		DECLARE_JSON_RPC_METHOD(getHueCapsV2)
@@ -469,26 +470,7 @@ class AVOutputTV : public AVOutputBase {
 			int *max_offset, tvWBColor_t **color,
 			tvWBControl_t **control, size_t* num_color,
 			size_t* num_control, tvContextCaps_t ** context_caps);
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-#define CAPABILITY_FILE_NAMEV2    "/opt/panel/pq_capabilities.json"
-		tvError_t GetBacklightCaps(int *max_backlight, tvContextCaps_t **context_caps);
-		tvError_t GetBrightnessCaps(int *max_brightness, tvContextCaps_t **context_caps);
-		tvError_t GetContrastCaps(int* max_contrast, tvContextCaps_t** context_caps);
-		tvError_t GetSharpnessCaps(int *max_sharpness, tvContextCaps_t **context_caps);
-        tvError_t GetSaturationCaps(int* max_saturation, tvContextCaps_t** context_caps);
-		tvError_t GetHueCaps(int* max_hue, tvContextCaps_t** context_caps);
-		tvError_t GetPrecisionDetailCaps(int* max_precision, tvContextCaps_t** context_caps);
-		tvError_t GetLowLatencyStateCaps(int* max_latency, tvContextCaps_t ** context_caps);
-		tvError_t GetColorTemperatureCaps(tvColorTemp_t** color_temp, size_t* num_color_temp, tvContextCaps_t** context_caps);
-		tvError_t GetSdrGammaCaps(tvSdrGamma_t** sdr_gamma, size_t* num_sdr_gamma, tvContextCaps_t** context_caps);
-		tvError_t GetTVDimmingModeCaps(tvDimmingMode_t** dimming_mode, size_t* num_dimming_mode, tvContextCaps_t** context_caps);
-		tvError_t GetAspectRatioCaps(tvDisplayMode_t** aspect_ratio, size_t* num_aspect_ratio, tvContextCaps_t** context_caps);
-		tvError_t GetTVPictureModeCaps(tvPQModeIndex_t** mode, size_t* num_pic_modes, tvContextCaps_t** context_caps);
-		tvError_t GetAISuperResolutionCaps(int* maxAISuperResolution, tvContextCaps_t** context_caps);
-		tvError_t GetMEMCCaps(int* maxMEMC, tvContextCaps_t** context_caps);
-#else
-#define CAPABILITY_FILE_NAMEV2    "/etc/pq_capabilities.json"
-#endif
+
 		uint32_t getPQCapabilityWithContext(
 			const std::function<tvError_t(tvContextCaps_t**, int*)>& getCapsFunc,
 			const JsonObject& parameters,

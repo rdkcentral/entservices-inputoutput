@@ -868,120 +868,76 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getBacklightCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this]( tvContextCaps_t** context_caps, int* max_backlight) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetBacklightCaps(max_backlight, context_caps);
-#else
         return GetBacklightCaps(max_backlight, context_caps);
-#endif
         }, parameters, response);
     }
 
     uint32_t AVOutputTV::getBrightnessCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this]( tvContextCaps_t** context_caps, int* max_brightness) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetBrightnessCaps(max_brightness, context_caps);
-#else
         return GetBrightnessCaps(max_brightness, context_caps);
-#endif
         },
         parameters, response);
     }
 
     uint32_t AVOutputTV::getContrastCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_contrast) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetContrastCaps(max_contrast, context_caps);
-#else
         return GetContrastCaps(max_contrast, context_caps);
-#endif
         },
         parameters, response);
     }
 
     uint32_t AVOutputTV::getSharpnessCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_sharpness) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetSharpnessCaps(max_sharpness, context_caps);
-#else
         return GetSharpnessCaps(max_sharpness, context_caps);
-#endif
         },
         parameters, response);
     }
 
     uint32_t AVOutputTV::getSaturationCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_saturation) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetSaturationCaps(max_saturation, context_caps);
-#else
         return GetSaturationCaps(max_saturation, context_caps);
-#endif
         },
         parameters, response);
     }
 
     uint32_t AVOutputTV::getHueCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this]( tvContextCaps_t** context_caps, int* max_hue) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetHueCaps(max_hue, context_caps);
-#else
         return GetHueCaps(max_hue, context_caps);
-#endif
         },
         parameters, response);
     }
 
     uint32_t AVOutputTV::getPrecisionDetailCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_precision) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetPrecisionDetailCaps(max_precision, context_caps);
-#else
         return GetPrecisionDetailCaps(max_precision, context_caps);
-#endif
         },
         parameters, response);
     }
 
     uint32_t AVOutputTV::getLocalContrastEnhancementCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetLocalContrastEnhancementCaps(max_val, context_caps);
-#else
         return GetLocalContrastEnhancementCaps(max_val, context_caps);
-#endif
         },
         parameters, response);
     }
 
     uint32_t AVOutputTV::getMPEGNoiseReductionCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetMPEGNoiseReductionCaps(max_val, context_caps);
-#else
         return GetMPEGNoiseReductionCaps(max_val, context_caps);
-#endif
         },
         parameters, response);
     }
 
     uint32_t AVOutputTV::getDigitalNoiseReductionCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetDigitalNoiseReductionCaps(max_val, context_caps);
-#else
         return GetDigitalNoiseReductionCaps(max_val, context_caps);
-#endif
         },
         parameters, response);
     }
 
     uint32_t AVOutputTV::getAISuperResolutionCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetAISuperResolutionCaps(max_val, context_caps);
-#else
         return GetAISuperResolutionCaps(max_val, context_caps);
-#endif
         },
         parameters, response);
     }
@@ -1023,32 +979,20 @@ namespace Plugin {
         }
         response["uiMatrixPositions"] = uiPosArray;
         response["context"] = parseContextCaps(context_caps);
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        // TODO:: Review cleanup once HAL is available, as memory will be allocated in HAL.
-        delete[] ui_matrix_positions;
-#endif
         LOGINFO("Exit\n");
         returnResponse(true);
     }
 
     uint32_t AVOutputTV::getMEMCCaps(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-            return this->GetMEMCCaps(max_val, context_caps);
-#else
             return GetMEMCCaps(max_val, context_caps);
-#endif
         },
         parameters, response);
     }
 
     uint32_t AVOutputTV::getLowLatencyStateCapsV2(const JsonObject& parameters, JsonObject& response) {
         return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_latency) {
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        return this->GetLowLatencyStateCaps(max_latency, context_caps);
-#else
         return GetLowLatencyStateCaps(max_latency, context_caps);
-#endif
         },
         parameters, response);
     }
@@ -1103,9 +1047,6 @@ namespace Plugin {
         response["options"] = optionsArray;
         response["context"] = parseContextCaps(context_caps);
 
-    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        free(color_temp);
-    #endif
 
         returnResponse(true);
     }
@@ -1141,10 +1082,6 @@ namespace Plugin {
 
         response["context"] = parseContextCaps(context_caps);
 
-    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        free(sdr_gamma);
-    #endif
-
         returnResponse(true);
     }
 
@@ -1172,10 +1109,6 @@ namespace Plugin {
 
         response["context"] = parseContextCaps(context_caps);
 
-    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        free(dimming_mode);
-    #endif
-
         returnResponse(true);
     }
 
@@ -1194,10 +1127,6 @@ namespace Plugin {
 
         response["context"] = parseContextCaps(m_aspectRatioCaps);
 
-    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        free(m_aspectRatio);
-    #endif
-
         returnResponse(true);
     }
 
@@ -1215,10 +1144,6 @@ namespace Plugin {
         response["options"] = optionsArray;
 
         response["context"] = parseContextCaps(m_pictureModeCaps);
-
-    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        free(m_pictureModes);
-    #endif
 
         returnResponse(true);
     }
@@ -1247,11 +1172,6 @@ namespace Plugin {
         response["options"] = optionsArray;
 
         response["context"] = parseContextCaps(m_backlightModeCaps);
-
-    #if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        // TODO: Review cleanup once HAL is available, as memory will be allocated in HAL.
-        free(m_backlightModes);
-    #endif
 
         returnResponse(true);
     }
@@ -1287,12 +1207,6 @@ namespace Plugin {
 
         // Indicate success
         response["success"] = true;
-
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        // TODO: Clean up when HAL handles memory
-        delete min_values;
-        delete max_values;
-#endif
 
         returnResponse(true);
     }
@@ -5322,11 +5236,7 @@ namespace Plugin {
         }
         response["component"] = componentJson;
         response["context"] = parseContextCaps(context_caps);
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        // Clean up dynamic memory
-        delete[] colorArray;
-        delete[] componentArray;
-#endif
+
         LOGINFO("Exit: getCMSCapsV2");
         returnResponse(true);
     }
@@ -5831,10 +5741,6 @@ namespace Plugin {
         response["color"] = colorJson;
         response["context"] = parseContextCaps(context_caps);
 
-#if ENABLE_CAPS_SUPPORT_FROM_PLUGIN
-        delete[] colorArray;
-        delete[] controlArray;
-#endif
 
         LOGINFO("Exit: get2PointWBCapsV2");
         returnResponse(true);
