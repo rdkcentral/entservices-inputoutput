@@ -741,7 +741,7 @@ private:
         Core::hresult Register(Exchange::IHdmiCecSink::INotification *notification) override;
         Core::hresult Unregister(Exchange::IHdmiCecSink::INotification *notification) override;
         Core::hresult SetMenuLanguage(const string &language, HdmiCecSinkSuccess &success)  override;
-        Core::hresult requestAudioDevicePowerStatus(HdmiCecSinkSuccess &success) override;
+        Core::hresult RequestAudioDevicePowerStatus(HdmiCecSinkSuccess &success) override;
 
     private: 
         std::list<Exchange::IHdmiCecSink::INotification*> _hdmiCecSinkNotifications;
