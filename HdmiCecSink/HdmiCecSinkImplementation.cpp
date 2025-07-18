@@ -2205,31 +2205,36 @@ namespace WPEFramework
 
         }
 
-                void HdmiCecSinkImplementation::requestAudioDevicePowerStatus()
-                {
-                        if ( cecEnableStatus != true  )
-                        {
-                             LOGWARN("cec is disabled-> EnableCEC first");
-                             return;
-                        }
-
-                        if(!HdmiCecSinkImplementation::_instance)
-                                return;
-
-                        if(!(_instance->smConnection))
+        Core::hresult HdmiCecSinkImplementation::RequestAudioDevicePowerStatus(HdmiCecSinkSuccess &success)
+        {
+            if ( cecEnableStatus != true  )
             {
-                return;
+                 LOGWARN("[%s]cec is disabled-> EnableCEC first", __FUNCTION__);
+                 return Core::ERROR_GENERAL;
             }
-                        if ( _instance->m_logicalAddressAllocated == LogicalAddress::UNREGISTERED ){
-                                LOGERR("Logical Address NOT Allocated");
-                                return;
-                        }
-
-                        LOGINFO(" Send GiveDevicePowerStatus Message to Audio system in the network \n");
-                        _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM, MessageEncoder().encode(GiveDevicePowerStatus()), 500);
-
+            if(!HdmiCecSinkImplementation::_instance)
+            {
+                LOGWARN("[%s]HdmiCecSinkImplementation instance is NULL", __FUNCTION__);
+                success.success = false;
+                return  Core::ERROR_GENERAL;
+            }
+            if(!(_instance->smConnection))
+            {
+                LOGWARN("[%s]smConnection is NULL", __FUNCTION__);
+                success.success = false;
+                return  Core::ERROR_GENERAL;
+            }
+            if ( _instance->m_logicalAddressAllocated == LogicalAddress::UNREGISTERED ){
+                LOGWARN("[%s]Logical Address NOT Allocated", __FUNCTION__);
+                success.success = false;
+                return  Core::ERROR_GENERAL;
+            }
+            LOGINFO(" Send GiveDevicePowerStatus Message to Audio system in the network \n");
+            _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM, MessageEncoder().encode(GiveDevicePowerStatus()), 500);
             m_audioDevicePowerStatusRequested = true;
-                }
+            success.success = true;
+            return Core::ERROR_NONE;
+        }
 
         void HdmiCecSinkImplementation::sendFeatureAbort(const LogicalAddress logicalAddress, const OpCode feature, const AbortReason reason)
             {

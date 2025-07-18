@@ -562,7 +562,6 @@ private:
             void reportFeatureAbortEvent(const LogicalAddress logicalAddress, const OpCode feature, const AbortReason reason);
             void systemAudioModeRequest();
                         void SendStandbyMsgEvent(const int logicalAddress);
-                        void requestAudioDevicePowerStatus();
                         void reportAudioDevicePowerStatusInfo(const int logicalAddress, const int powerStatus);
             void updateCurrentLatency(int videoLatency, bool lowLatencyMode, int audioOutputCompensated, int audioOutputDelay);
             void setLatencyInfo();
@@ -742,6 +741,7 @@ private:
         Core::hresult Register(Exchange::IHdmiCecSink::INotification *notification) override;
         Core::hresult Unregister(Exchange::IHdmiCecSink::INotification *notification) override;
         Core::hresult SetMenuLanguage(const string &language, HdmiCecSinkSuccess &success)  override;
+        Core::hresult RequestAudioDevicePowerStatus(HdmiCecSinkSuccess &success) override;
 
     private: 
         std::list<Exchange::IHdmiCecSink::INotification*> _hdmiCecSinkNotifications;
