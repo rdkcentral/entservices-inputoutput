@@ -117,10 +117,8 @@ jobs:
           rm -rf rdkservices
           apt install libjsoncpp-dev
           #git clone -b topic/RDK-55408 https://${{secrets.HAL_EMULATOR_MANIFEST_USERNAME}}:${{ secrets.HAL_EMULATOR_MANIFEST_PASSWORD}}@github.com/rdk-e/entservices-inputoutput.git
-          git clone -b feature/RDK-55408 https://Kishoredarmaradje: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@github.com/rdkcentral/entservices-inputoutput.git
           cd entservices-inputoutput/L2HalMock
           #git clone -b peru https://${{secrets.HAL_EMULATOR_MANIFEST_USERNAME}}:${{ secrets.HAL_EMULATOR_MANIFEST_PASSWORD}}@github.com/rdk-e/FLASK-for-Hal-Mock.git
-          git clone -b peru https:///akrish905_comcast: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@github.com/rdk-e/FLASK-for-Hal-Mock.git
           cd FLASK-for-Hal-Mock
           mv peru.yaml ..
           #cp -r peru.yaml __w/rdkservices/rdkservices/rdkservices/L2HalMock
