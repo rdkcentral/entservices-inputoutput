@@ -12,7 +12,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.Fv
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -20,11 +20,26 @@
 #pragma once
 
 #include "Module.h"
+
+#include "UtilsJsonRpc.h"
+
+#include "hdmiIn.hpp"
+#include "compositeIn.hpp"
+#include "exception.hpp"
+#include "host.hpp"
+
+#include <vector>
+#include <algorithm>
+
 #include <interfaces/Ids.h>
 #include <interfaces/IAVInput.h>
 
 #include <com/com.h>
 #include <core/core.h>
+
+#define DEFAULT_PRIM_VOL_LEVEL 25
+#define MAX_PRIM_VOL_LEVEL 100
+#define DEFAULT_INPUT_VOL_LEVEL 100
 
 namespace WPEFramework
 {
@@ -110,7 +125,7 @@ namespace WPEFramework
             virtual Core::hresult Unregister(Exchange::IAVInput::INotification *notification) override;
 
             Core::hresult numberOfInputs(uint32_t &inputCount) override;
-            Core::hresult getInputDevices(InputDeviceType type, IInputDeviceIterator *&devices) override;
+            Core::hresult getInputDevices(int type, IInputDeviceIterator *&devices) override;
             Core::hresult writeEDID(uint8_t id, const string &edid) override;
             Core::hresult readEDID(string &edid) override;
             Core::hresult getRawSPD(uint8_t id, string &spd) override;
@@ -124,9 +139,9 @@ namespace WPEFramework
             Core::hresult getVRRFrameRate(uint8_t id, double &vrrFrameRate) override;
             Core::hresult getHdmiVersion(uint8_t id, string &hdmiVersion) override;
             Core::hresult setMixerLevels(uint8_t id, const MixerLevels &levels) override;
-            Core::hresult startInput(uint8_t id, InputDeviceType type, bool audioMix, const VideoPlaneType &planeType, bool topMostPlane) override;
-            Core::hresult stopInput(InputDeviceType type) override;
-            Core::hresult setVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, InputDeviceType type) override;
+            Core::hresult startInput(uint8_t id, int type, bool audioMix, const VideoPlaneType &planeType, bool topMostPlane) override;
+            Core::hresult stopInput(int type) override;
+            Core::hresult setVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t type) override;
             Core::hresult currentVideoMode(string &currentVideoMode, string &message) override;
             Core::hresult contentProtected(bool &isContentProtected) override;
             Core::hresult getSupportedGameFeatures(IStringIterator *&features) override;
@@ -136,10 +151,6 @@ namespace WPEFramework
             mutable Core::CriticalSection _adminLock;
             PluginHost::IShell *_service;
             std::list<Exchange::IAVInput::INotification *> _avInputNotification;
-
-            int getMostActiveDecoderStatus(); // <pca> TODO: Replace with private impl methods </pca>
-            void onDecoderStatusChange(int status);
-            int getConfig(const std::string &postData, std::list<ParamList> &paramListInfo);
 
             void dispatchEvent(Event, const JsonValue &params);
             void Dispatch(Event event, const JsonValue params);

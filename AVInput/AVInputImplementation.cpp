@@ -68,6 +68,7 @@ static bool isAudioBalanceSet = false;
 static int planeType = 0;
 
 using namespace std;
+
 int getTypeOfInput(string sType)
 {
     int iType = -1;
@@ -99,7 +100,7 @@ namespace WPEFramework
             _service = nullptr;
         }
 
-        Core::hresult AVInputImplementation::Register(Exchange::IAVInputImplementation::INotification *notification)
+        Core::hresult AVInputImplementation::Register(Exchange::IAVInput::INotification *notification)
         {
             ASSERT(nullptr != notification);
 
@@ -120,7 +121,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
         }
 
-        Core::hresult AVInputImplementation::Unregister(Exchange::IAVInputImplementation::INotification *notification)
+        Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::INotification *notification)
         {
             Core::hresult status = Core::ERROR_GENERAL;
 
@@ -154,49 +155,86 @@ namespace WPEFramework
         {
             _adminLock.Lock();
 
-            std::list<Exchange::IAVInputImplementation::INotification *>::const_iterator index(_avInputNotification.begin());
+            std::list<Exchange::IAVInput::INotification *>::const_iterator index(_avInputNotification.begin());
 
             switch (event) // <pca> TODO: Can probably refactor this using a function pointer </pca>
             {
             case ON_AVINPUT_SIGNAL_CHANGED:
+            {
+                uint8_t id = params.Object()["id"].Number();
+                string locator = params.Object()["locator"].String();
+                string status = params.Object()["signalStatus"].String();
+                InputSignalInfo inputSignalInfo = {id, locator, status};
+
                 while (index != _avInputNotification.end())
                 {
-                    (*index)->OnAVInputSignalChanged(params.String());
+                    (*index)->OnSignalChanged(inputSignalInfo);
                     ++index;
                 }
                 break;
+            }
             case ON_AVINPUT_STATUS_CHANGED:
+            {
+                uint8_t id = params.Object()["id"].Number();
+                string locator = params.Object()["locator"].String();
+                string status = params.Object()["signalStatus"].String();
+                InputSignalInfo inputSignalInfo = {id, locator, status};
+
                 while (index != _avInputNotification.end())
                 {
-                    (*index)->OnAVInputStatusChanged(params.String());
+                    (*index)->OnInputStatusChanged(inputSignalInfo);
                     ++index;
                 }
                 break;
+            }
             case ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE:
+            {
+                uint8_t id = params.Object()["id"].Number();
+                string locator = params.Object()["locator"].String();
+                uint32_t width = params.Object()["width"].Number();
+                uint32_t height = params.Object()["height"].Number();
+                bool progressive = params.Object()["progressive"].Boolean();
+                uint32_t frameRateN = params.Object()["frameRateN"].Number();
+                uint32_t frameRateD = params.Object()["frameRateD"].Number();
+                InputVideoMode videoMode = {id, locator, width, height, progressive, frameRateN, frameRateD};
+
                 while (index != _avInputNotification.end())
                 {
-                    (*index)->OnAVInputVideoStreamInfoUpdate(params.String());
+                    (*index)->videoStreamInfoUpdate(videoMode);
                     ++index;
                 }
                 break;
+            }
             case ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE:
+            {
+                uint8_t id = params.Object()["id"].Number();
+                string gameFeature = params.Object()["gameFeature"].String();
+                bool allmMode = params.Object()["allmMode"].Boolean();
+                GameFeatureStatus status = {id, gameFeature, allmMode};
+
                 while (index != _avInputNotification.end())
                 {
-                    (*index)->OnAVInputGameFeatureStatusUpdate(params.String());
+                    (*index)->gameFeatureStatusUpdate(status);
                     ++index;
                 }
                 break;
+            }
             case ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE:
+            {
+                int contentType = params.Number();
                 while (index != _avInputNotification.end())
                 {
-                    (*index)->OnAVInputAviContentTypeUpdate(params.String());
+                    (*index)->aviContentTypeUpdate(contentType);
                     ++index;
                 }
                 break;
+            }
 
             default:
+            {
                 LOGWARN("Event[%u] not handled", event);
                 break;
+            }
             }
             _adminLock.Unlock();
         }
@@ -461,8 +499,7 @@ namespace WPEFramework
                     returnResponse(false);
                 }
 
-                result = setVideoRectangle(x, y, w, h, t);
-                if (false == result)
+                if (Core::ERROR_NONE != setVideoRectangle(x, y, w, h, t))
                 {
                     LOGWARN("AVInputService::setVideoRectangle Failed");
                     returnResponse(false);
@@ -472,9 +509,32 @@ namespace WPEFramework
             returnResponse(false);
         }
 
-        bool AVInputImplementation::setVideoRectangle(int x, int y, int width, int height, int type)
+        // <pca>
+        // bool AVInputImplementation::setVideoRectangle(int x, int y, int width, int height, int type)
+        // {
+        //     bool ret = true;
+
+        //     try
+        //     {
+        //         if (type == HDMI)
+        //         {
+        //             device::HdmiInput::getInstance().scaleVideo(x, y, width, height);
+        //         }
+        //         else
+        //         {
+        //             device::CompositeInput::getInstance().scaleVideo(x, y, width, height);
+        //         }
+        //     }
+        //     catch (const device::Exception &err)
+        //     {
+        //         ret = false;
+        //     }
+
+        //     return ret;
+        // }
+        Core::hresult AVInputImplementation::setVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t type)
         {
-            bool ret = true;
+            Core::hresult ret = Core::ERROR_NONE;
 
             try
             {
@@ -489,11 +549,12 @@ namespace WPEFramework
             }
             catch (const device::Exception &err)
             {
-                ret = false;
+                ret = Core::ERROR_GENERAL;
             }
 
             return ret;
         }
+        // </pca>
 
         uint32_t AVInputImplementation::getInputDevicesWrapper(const JsonObject &parameters, JsonObject &response)
         {
