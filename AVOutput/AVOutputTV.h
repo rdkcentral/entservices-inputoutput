@@ -73,8 +73,6 @@
 #define STRING_COLORTEMPERATURE   "ColorTemperature."
 #define CREATE_DIRTY(__X__) (__X__+=STRING_DIRTY)
 #define CAPABLITY_FILE_NAME    "pq_capabilities.ini"
-#define CAPABILITY_FILE_NAMEV2    "/etc/pq_capabilities.json"
-
 
 class CIniFile
 {
@@ -438,38 +436,6 @@ class AVOutputTV : public AVOutputBase {
 		static bool reverseMapsInitialized;
 		static void initializeReverseMaps();
 		static const std::unordered_map<std::string, int> backlightModeReverseMap;
-
-		tvError_t ReadJsonFile(JsonObject& root);
-		tvError_t ExtractContextCaps(const JsonObject& data, tvContextCaps_t** context_caps);
-		tvError_t ExtractRangeInfo(const JsonObject& data, int* max_value);
-		std::vector<tvConfigContext_t> ParseContextCaps(const JsonObject& context);
-		tvContextCaps_t* AllocateContextCaps(const std::vector<tvConfigContext_t>& contexts);
-		tvError_t GetCaps(const std::string& key, int* max_value, tvContextCaps_t** context_caps);
-
-		tvError_t GetDVCalibrationCaps(tvDVCalibrationSettings_t **min_values, tvDVCalibrationSettings_t **max_values, tvContextCaps_t **context_caps);
-		tvError_t GetBacklightModeCaps(tvBacklightMode_t** backlight_mode, size_t* num_backlight_mode, tvContextCaps_t** context_caps);
-		tvError_t GetLocalContrastEnhancementCaps(int* maxLocalContrastEnhancement, tvContextCaps_t** context_caps);
-		tvError_t GetMPEGNoiseReductionCaps(int* maxMPEGNoiseReduction, tvContextCaps_t** context_caps);
-		tvError_t GetDigitalNoiseReductionCaps(int* maxDigitalNoiseReduction, tvContextCaps_t** context_caps);
-		tvError_t GetMultiPointWBCaps(int* num_hal_matrix_points,
-			int* rgb_min,
-			int* rgb_max,
-			int* num_ui_matrix_points,
-			double** ui_matrix_positions,
-			tvContextCaps_t** context_caps);
-		tvError_t GetCMSCaps(int* max_hue,
-			int* max_saturation,
-			int* max_luma,
-			tvDataComponentColor_t** color,
-			tvComponentType_t** component,
-			size_t* num_color,
-			size_t* num_component,
-			tvContextCaps_t** context_caps);
-		tvError_t GetCustom2PointWhiteBalanceCaps( int *min_gain,
-			int *min_offset, int *max_gain,
-			int *max_offset, tvWBColor_t **color,
-			tvWBControl_t **control, size_t* num_color,
-			size_t* num_control, tvContextCaps_t ** context_caps);
 
 		uint32_t getPQCapabilityWithContext(
 			const std::function<tvError_t(tvContextCaps_t**, int*)>& getCapsFunc,
