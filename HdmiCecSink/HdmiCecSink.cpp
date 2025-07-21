@@ -3531,15 +3531,25 @@ namespace WPEFramework
       {
          int err;
          dsGetHDMIARCPortIdParam_t param;
-         err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
-                            (char *)IARM_BUS_DSMGR_API_dsGetHDMIARCPortId,
-                            (void *)&param,
-                            sizeof(param));
-          if (IARM_RESULT_SUCCESS == err)
-          {
-             LOGINFO("HDMI ARC port ID HdmiArcPortID=[%d] \n", param.portId);
-             HdmiArcPortID = param.portId;
-          }
+         unsigned int retryCount = 1;
+         do {
+            usleep(50000); // Sleep for 50ms before retrying
+            param.portId = -1; // Initialize to an invalid port ID
+            err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
+                                (char *)IARM_BUS_DSMGR_API_dsGetHDMIARCPortId,
+                                (void *)&param,
+                                sizeof(param));
+            if (IARM_RESULT_SUCCESS == err)
+            {
+                LOGINFO("HDMI ARC port ID HdmiArcPortID[%d] on retry count[%d]", param.portId, retryCount);
+                HdmiArcPortID = param.portId;
+                break;
+            }
+            else
+            {
+                LOGWARN("IARM_Bus_Call failed with error[%d], retry count[%d]", err, retryCount);
+            }
+        } while(retryCount++ <= 4);
       }
 
       void HdmiCecSink::getCecVersion()
