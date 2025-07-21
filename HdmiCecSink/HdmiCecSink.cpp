@@ -3549,7 +3549,7 @@ namespace WPEFramework
             {
                 LOGWARN("IARM_Bus_Call failed with error[%d], retry count[%d]", err, retryCount);
             }
-        } while(retryCount++ <= 4);
+        } while(retryCount++ <= 6);
       }
 
       void HdmiCecSink::getCecVersion()
