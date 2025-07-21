@@ -1456,7 +1456,7 @@ namespace WPEFramework
                              break;
                          }
                     }
-                    actual_hdmicecdevices.powerStatus = hdmiPortNumber;
+                    actual_hdmicecdevices.portNumber = hdmiPortNumber;
                     localDevices.push_back(actual_hdmicecdevices);
                 }
             }
