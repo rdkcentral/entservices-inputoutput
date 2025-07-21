@@ -554,16 +554,50 @@ namespace WPEFramework
 
             return ret;
         }
-        // </pca>
 
+        // uint32_t AVInputImplementation::getInputDevicesWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     LOGINFOMETHOD();
+
+        //     if (parameters.HasLabel("typeOfInput"))
+        //     {
+        //         string sType = parameters["typeOfInput"].String();
+        //         int iType = 0;
+        //         try
+        //         {
+        //             iType = getTypeOfInput(sType);
+        //         }
+        //         catch (...)
+        //         {
+        //             LOGWARN("Invalid Arguments");
+        //             returnResponse(false);
+        //         }
+        //         response["devices"] = getInputDevices(iType);
+        //     }
+        //     else
+        //     {
+        //         JsonArray listHdmi = getInputDevices(HDMI);
+        //         JsonArray listComposite = getInputDevices(COMPOSITE);
+        //         for (int i = 0; i < listComposite.Length(); i++)
+        //         {
+        //             listHdmi.Add(listComposite.Get(i));
+        //         }
+        //         response["devices"] = listHdmi;
+        //     }
+        //     returnResponse(true);
+        // }
         uint32_t AVInputImplementation::getInputDevicesWrapper(const JsonObject &parameters, JsonObject &response)
         {
+            IInputDeviceIterator *devices = nullptr;
+            Core::hresult result;
+
             LOGINFOMETHOD();
 
             if (parameters.HasLabel("typeOfInput"))
             {
                 string sType = parameters["typeOfInput"].String();
                 int iType = 0;
+
                 try
                 {
                     iType = getTypeOfInput(sType);
@@ -573,20 +607,57 @@ namespace WPEFramework
                     LOGWARN("Invalid Arguments");
                     returnResponse(false);
                 }
-                response["devices"] = getInputDevices(iType);
+
+                result = getInputDevices(iType, devices);
             }
             else
             {
-                JsonArray listHdmi = getInputDevices(HDMI);
-                JsonArray listComposite = getInputDevices(COMPOSITE);
-                for (int i = 0; i < listComposite.Length(); i++)
+                IInputDeviceIterator *hdmiDevices = nullptr;
+
+                result = getInputDevices(HDMI, hdmiDevices);
+
+                if (Core::ERROR_NONE == result)
                 {
-                    listHdmi.Add(listComposite.Get(i));
+                    IInputDeviceIterator *compositeDevices = nullptr;
+                    result = getInputDevices(COMPOSITE, compositeDevices);
+
+                    if (Core::ERROR_NONE == result)
+                    {
+                        devices = Core::Service<RPC::IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(hdmiDevices, compositeDevices);
+
+                        hdmiDevices->Release();
+                        compositeDevices->Release();
+                    }
+                    else
+                    {
+                        hdmiDevices->Release();
+                    }
                 }
-                response["devices"] = listHdmi;
             }
-            returnResponse(true);
+
+            if (devices != nullptr && Core::ERROR_NONE == result)
+            {
+                JsonArray deviceArray;
+                InputDevice device;
+
+                devices->Reset(0);
+
+                while (devices->Next(device))
+                {
+                    JsonObject obj;
+                    obj["id"] = device.id;
+                    obj["locator"] = device.locator;
+                    obj["connected"] = device.connected;
+                    deviceArray.Add(obj);
+                }
+
+                response["devices"] = deviceArray;
+                devices->Release();
+            }
+
+            returnResponse(Core::ERROR_NONE == result);
         }
+        // </pca>
 
         uint32_t AVInputImplementation::writeEDIDWrapper(const JsonObject &parameters, JsonObject &response)
         {
@@ -611,6 +682,34 @@ namespace WPEFramework
             returnResponse(true);
         }
 
+        // <pca>
+        // uint32_t AVInputImplementation::readEDIDWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     LOGINFOMETHOD();
+
+        //     string sPortId = parameters["portId"].String();
+        //     int portId = 0;
+        //     try
+        //     {
+        //         portId = stoi(sPortId);
+        //     }
+        //     catch (...)
+        //     {
+        //         LOGWARN("Invalid Arguments");
+        //         returnResponse(false);
+        //     }
+
+        //     string edid = readEDID(portId);
+        //     if (edid.empty())
+        //     {
+        //         returnResponse(false);
+        //     }
+        //     else
+        //     {
+        //         response["EDID"] = edid;
+        //         returnResponse(true);
+        //     }
+        // }
         uint32_t AVInputImplementation::readEDIDWrapper(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
@@ -627,8 +726,10 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            string edid = readEDID(portId);
-            if (edid.empty())
+            string edid;
+
+            Core::hresult result = readEDID(portId, edid);
+            if (Core::ERROR_NONE != result || edid.empty())
             {
                 returnResponse(false);
             }
@@ -638,18 +739,68 @@ namespace WPEFramework
                 returnResponse(true);
             }
         }
+        // </pca>
 
-        JsonArray AVInputImplementation::getInputDevices(int iType)
+        // <pca>
+        // JsonArray AVInputImplementation::getInputDevices(int iType)
+        // {
+        //     JsonArray list;
+        //     try
+        //     {
+        //         int num = 0;
+        //         if (iType == HDMI)
+        //         {
+        //             num = device::HdmiInput::getInstance().getNumberOfInputs();
+        //         }
+        //         else if (iType == COMPOSITE)
+        //         {
+        //             num = device::CompositeInput::getInstance().getNumberOfInputs();
+        //         }
+        //         if (num > 0)
+        //         {
+        //             int i = 0;
+        //             for (i = 0; i < num; i++)
+        //             {
+        //                 // Input ID is aleays 0-indexed, continuous number starting 0
+        //                 JsonObject hash;
+        //                 hash["id"] = i;
+        //                 std::stringstream locator;
+        //                 if (iType == HDMI)
+        //                 {
+        //                     locator << "hdmiin://localhost/deviceid/" << i;
+        //                     hash["connected"] = device::HdmiInput::getInstance().isPortConnected(i);
+        //                 }
+        //                 else if (iType == COMPOSITE)
+        //                 {
+        //                     locator << "cvbsin://localhost/deviceid/" << i;
+        //                     hash["connected"] = device::CompositeInput::getInstance().isPortConnected(i);
+        //                 }
+        //                 hash["locator"] = locator.str();
+        //                 LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, hash["locator"].String().c_str(), hash["connected"].Boolean());
+        //                 list.Add(hash);
+        //             }
+        //         }
+        //     }
+        //     catch (const std::exception &e)
+        //     {
+        //         LOGWARN("AVInputService::getInputDevices Failed");
+        //     }
+        //     return list;
+        // }
+
+        Core::hresult getInputDevices(int type, IInputDeviceIterator *&devices)
         {
-            JsonArray list;
+            uint32_t result = Core::ERROR_NONE;
+            std::list<InputDevice> list;
+
             try
             {
                 int num = 0;
-                if (iType == HDMI)
+                if (type == HDMI)
                 {
                     num = device::HdmiInput::getInstance().getNumberOfInputs();
                 }
-                else if (iType == COMPOSITE)
+                else if (type == COMPOSITE)
                 {
                     num = device::CompositeInput::getInstance().getNumberOfInputs();
                 }
@@ -659,44 +810,78 @@ namespace WPEFramework
                     for (i = 0; i < num; i++)
                     {
                         // Input ID is aleays 0-indexed, continuous number starting 0
-                        JsonObject hash;
-                        hash["id"] = i;
+                        InputDevice inputDevice;
+
+                        inputDevice.id = i;
                         std::stringstream locator;
-                        if (iType == HDMI)
+                        if (type == HDMI)
                         {
                             locator << "hdmiin://localhost/deviceid/" << i;
-                            hash["connected"] = device::HdmiInput::getInstance().isPortConnected(i);
+                            inputDevice.connected = device::HdmiInput::getInstance().isPortConnected(i);
                         }
-                        else if (iType == COMPOSITE)
+                        else if (type == COMPOSITE)
                         {
                             locator << "cvbsin://localhost/deviceid/" << i;
-                            hash["connected"] = device::CompositeInput::getInstance().isPortConnected(i);
+                            inputDevice.connected = device::CompositeInput::getInstance().isPortConnected(i);
                         }
-                        hash["locator"] = locator.str();
-                        LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, hash["locator"].String().c_str(), hash["connected"].Boolean());
-                        list.Add(hash);
+                        inputDevice.locator = locator.str();
+                        LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, inputDevice.locator.c_str(), inputDevice.connected);
+                        list.push_back(inputDevice);
                     }
                 }
             }
             catch (const std::exception &e)
             {
                 LOGWARN("AVInputService::getInputDevices Failed");
+                result = Core::ERROR_GENERAL;
             }
-            return list;
+
+            devices = (Core::Service<IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(list));
+
+            return result;
         }
+        // </pca>
 
         void AVInputImplementation::writeEDID(int portId, std::string message)
         {
         }
 
-        std::string AVInputImplementation::readEDID(int iPort)
+        // <pca>
+        // std::string AVInputImplementation::readEDID(int iPort)
+        // {
+        //     vector<uint8_t> edidVec({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
+        //     string edidbase64 = "";
+        //     try
+        //     {
+        //         vector<uint8_t> edidVec2;
+        //         device::HdmiInput::getInstance().getEDIDBytesInfo(iPort, edidVec2);
+        //         edidVec = edidVec2; // edidVec must be "unknown" unless we successfully get to this line
+
+        //         // convert to base64
+        //         uint16_t size = min(edidVec.size(), (size_t)numeric_limits<uint16_t>::max());
+
+        //         LOGWARN("AVInputImplementation::readEDID size:%d edidVec.size:%zu", size, edidVec.size());
+        //         if (edidVec.size() > (size_t)numeric_limits<uint16_t>::max())
+        //         {
+        //             LOGERR("Size too large to use ToString base64 wpe api");
+        //             return edidbase64;
+        //         }
+        //         Core::ToString((uint8_t *)&edidVec[0], size, true, edidbase64);
+        //     }
+        //     catch (const device::Exception &err)
+        //     {
+        //         LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
+        //     }
+        //     return edidbase64;
+        // }
+        Core::hresult AVInputImplementation::readEDID(uint8_t id, const string &edid)
         {
             vector<uint8_t> edidVec({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
-            string edidbase64 = "";
+
             try
             {
                 vector<uint8_t> edidVec2;
-                device::HdmiInput::getInstance().getEDIDBytesInfo(iPort, edidVec2);
+                device::HdmiInput::getInstance().getEDIDBytesInfo(id, edidVec2);
                 edidVec = edidVec2; // edidVec must be "unknown" unless we successfully get to this line
 
                 // convert to base64
@@ -706,16 +891,19 @@ namespace WPEFramework
                 if (edidVec.size() > (size_t)numeric_limits<uint16_t>::max())
                 {
                     LOGERR("Size too large to use ToString base64 wpe api");
-                    return edidbase64;
+                    return Core::ERROR_GENERAL;
                 }
-                Core::ToString((uint8_t *)&edidVec[0], size, true, edidbase64);
+                Core::ToString((uint8_t *)&edidVec[0], size, true, edid);
             }
             catch (const device::Exception &err)
             {
-                LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
+                LOG_DEVICE_EXCEPTION1(std::to_string(id));
+                return Core::ERROR_GENERAL;
             }
-            return edidbase64;
+
+            return Core::ERROR_NONE;
         }
+        // </pca>
 
         /**
          * @brief This function is used to translate HDMI/COMPOSITE input hotplug to

@@ -127,7 +127,7 @@ namespace WPEFramework
             Core::hresult numberOfInputs(uint32_t &inputCount) override;
             Core::hresult getInputDevices(int type, IInputDeviceIterator *&devices) override;
             Core::hresult writeEDID(uint8_t id, const string &edid) override;
-            Core::hresult readEDID(string &edid) override;
+            Core::hresult readEDID(uint8_t id, string &edid) override;
             Core::hresult getRawSPD(uint8_t id, string &spd) override;
             Core::hresult getSPD(uint8_t id, string &spd) override;
             Core::hresult setEdidVersion(uint8_t id, const string &version) override;
