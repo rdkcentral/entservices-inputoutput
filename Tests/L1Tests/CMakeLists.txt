@@ -115,8 +115,7 @@ add_plugin_test_ex(PLUGIN_HDMICEC2 tests/test_HdmiCec2.cpp "../../HdmiCec_2" "${
 
 # PLUGIN_HDMICECSINK
 set (HDMICECSINK_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdmiCecSink ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
-set (HDMICECSINK_LIBS ${NAMESPACE}HdmiCecSink ${NAMESPACE}HdmiCecSinkImplementation)
-add_plugin_test_ex(PLUGIN_HDMICECSINK tests/test_HdmiCecSink.cpp "${HDMICECSINK_INC}" "${HDMICECSINK_LIBS}")
+add_plugin_test_ex(PLUGIN_HDMICECSINK tests/test_HdmiCecSink.cpp "${HDMICECSINK_INC}" "${NAMESPACE}HdmiCecSink")
 
 # PLUGIN_HDMICECSOURCE
 set (HDMICECSOURCE_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdmiCecSource ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
