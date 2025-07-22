@@ -1456,7 +1456,7 @@ namespace WPEFramework
                              break;
                          }
                     }
-                    actual_hdmicecdevices.portNumber = hdmiPortNumber;
+                    actual_hdmicecdevices.portNumber = std::to_string(hdmiPortNumber);
                     localDevices.push_back(actual_hdmicecdevices);
                 }
             }
