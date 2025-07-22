@@ -586,9 +586,30 @@ namespace WPEFramework
         //     }
         //     returnResponse(true);
         // }
+
+        JsonArray devicesToJson(Exchange::IAVInput::IInputDeviceIterator *devices)
+        {
+            JsonArray deviceArray;
+            if (devices != nullptr)
+            {
+                InputDevice device;
+                devices->Reset(0);
+
+                while (devices->Next(device))
+                {
+                    JsonObject obj;
+                    obj["id"] = device.id;
+                    obj["locator"] = device.locator;
+                    obj["connected"] = device.connected;
+                    deviceArray.Add(obj);
+                }
+            }
+            return deviceArray;
+        }
+
         uint32_t AVInputImplementation::getInputDevicesWrapper(const JsonObject &parameters, JsonObject &response)
         {
-            IInputDeviceIterator *devices = nullptr;
+            Exchange::IAVInput::IInputDeviceIterator *devices = nullptr;
             Core::hresult result;
 
             LOGINFOMETHOD();
@@ -612,18 +633,18 @@ namespace WPEFramework
             }
             else
             {
-                IInputDeviceIterator *hdmiDevices = nullptr;
+                Exchange::IAVInput::IInputDeviceIterator *hdmiDevices = nullptr;
 
                 result = getInputDevices(HDMI, hdmiDevices);
 
                 if (Core::ERROR_NONE == result)
                 {
-                    IInputDeviceIterator *compositeDevices = nullptr;
+                    Exchange::IAVInput::IInputDeviceIterator *compositeDevices = nullptr;
                     result = getInputDevices(COMPOSITE, compositeDevices);
 
                     if (Core::ERROR_NONE == result)
                     {
-                        devices = Core::Service<RPC::IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(hdmiDevices, compositeDevices);
+                        devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(hdmiDevices, compositeDevices);
 
                         hdmiDevices->Release();
                         compositeDevices->Release();
@@ -635,41 +656,71 @@ namespace WPEFramework
                 }
             }
 
+            // <pca>
+            // if (devices != nullptr && Core::ERROR_NONE == result)
+            // {
+            //     JsonArray deviceArray;
+            //     InputDevice device;
+
+            //     devices->Reset(0);
+
+            //     while (devices->Next(device))
+            //     {
+            //         JsonObject obj;
+            //         obj["id"] = device.id;
+            //         obj["locator"] = device.locator;
+            //         obj["connected"] = device.connected;
+            //         deviceArray.Add(obj);
+            //     }
+
+            //     response["devices"] = deviceArray;
+            //     devices->Release();
+            // }
             if (devices != nullptr && Core::ERROR_NONE == result)
             {
-                JsonArray deviceArray;
-                InputDevice device;
-
-                devices->Reset(0);
-
-                while (devices->Next(device))
-                {
-                    JsonObject obj;
-                    obj["id"] = device.id;
-                    obj["locator"] = device.locator;
-                    obj["connected"] = device.connected;
-                    deviceArray.Add(obj);
-                }
-
-                response["devices"] = deviceArray;
+                response["devices"] = devicesToJson(devices);
                 devices->Release();
             }
+            // </pca>
 
             returnResponse(Core::ERROR_NONE == result);
         }
         // </pca>
 
+        // <pca>
+        // uint32_t AVInputImplementation::writeEDIDWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     LOGINFOMETHOD();
+
+        //     string sPortId = parameters["portId"].String();
+        //     int portId = 0;
+        //     std::string message;
+
+        //     if (parameters.HasLabel("portId") && parameters.HasLabel("message"))
+        //     {
+        //         portId = stoi(sPortId);
+        //         message = parameters["message"].String();
+        //     }
+        //     else
+        //     {
+        //         LOGWARN("Required parameters are not passed");
+        //         returnResponse(false);
+        //     }
+
+        //     writeEDID(portId, message);
+        //     returnResponse(true);
+        // }
         uint32_t AVInputImplementation::writeEDIDWrapper(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
 
             string sPortId = parameters["portId"].String();
-            int portId = 0;
+            uint32_t portId = 0;
             std::string message;
 
             if (parameters.HasLabel("portId") && parameters.HasLabel("message"))
             {
-                portId = stoi(sPortId);
+                portId = stoul(sPortId);
                 message = parameters["message"].String();
             }
             else
@@ -678,9 +729,9 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            writeEDID(portId, message);
-            returnResponse(true);
+            returnResponse(Core::ERROR_NONE == writeEDID(portId, message));
         }
+        // </pca>
 
         // <pca>
         // uint32_t AVInputImplementation::readEDIDWrapper(const JsonObject &parameters, JsonObject &response)
@@ -788,7 +839,7 @@ namespace WPEFramework
         //     return list;
         // }
 
-        Core::hresult getInputDevices(int type, IInputDeviceIterator *&devices)
+        Core::hresult getInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices)
         {
             uint32_t result = Core::ERROR_NONE;
             std::list<InputDevice> list;
@@ -836,14 +887,16 @@ namespace WPEFramework
                 result = Core::ERROR_GENERAL;
             }
 
-            devices = (Core::Service<IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(list));
+            devices = (Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(list));
 
             return result;
         }
         // </pca>
 
-        void AVInputImplementation::writeEDID(int portId, std::string message)
+        Core::hresult writeEDID(uint8_t id, const string &edid)
         {
+            // TODO: This wasn't implemented in the original code, do we want to implement it?
+            return Core::ERROR_NONE;
         }
 
         // <pca>
@@ -874,7 +927,7 @@ namespace WPEFramework
         //     }
         //     return edidbase64;
         // }
-        Core::hresult AVInputImplementation::readEDID(uint8_t id, const string &edid)
+        Core::hresult readEDID(uint8_t id, string &edid)
         {
             vector<uint8_t> edidVec({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
 
@@ -912,14 +965,33 @@ namespace WPEFramework
          * @param[in] input Number of input port integer.
          * @param[in] connection status of input port integer.
          */
+        // <pca>
+        // void AVInputImplementation::AVInputHotplug(int input, int connect, int type)
+        // {
+        //     LOGWARN("AVInputHotplug [%d, %d, %d]", input, connect, type);
+
+        //     JsonObject params;
+        //     params["devices"] = getInputDevices(type);
+        //     sendNotify(AVINPUT_EVENT_ON_DEVICES_CHANGED, params);
+        // }
         void AVInputImplementation::AVInputHotplug(int input, int connect, int type)
         {
             LOGWARN("AVInputHotplug [%d, %d, %d]", input, connect, type);
 
+            Exchange::IAVInput::IInputDeviceIterator *devices;
+
+            Core::hresult result = getInputDevices(type, devices);
+            if (Core::ERROR_NONE != result)
+            {
+                LOGERR("AVInputHotplug [%d, %d, %d]: Failed to get devices", input, connect, type);
+                return;
+            }
+
             JsonObject params;
-            params["devices"] = getInputDevices(type);
-            sendNotify(AVINPUT_EVENT_ON_DEVICES_CHANGED, params);
+            params["devices"] = devicesToJson(devices);
+            dispatchEvent(ON_AVINPUT_STATUS_CHANGED, params);
         }
+        // </pca>
 
         /**
          * @brief This function is used to translate HDMI/COMPOSITE input signal change to
@@ -968,7 +1040,7 @@ namespace WPEFramework
                 params["signalStatus"] = "none";
                 break;
             }
-            sendNotify(AVINPUT_EVENT_ON_SIGNAL_CHANGED, params);
+            dispatchEvent(ON_AVINPUT_SIGNAL_CHANGED, params);
         }
 
         /**
@@ -1004,7 +1076,7 @@ namespace WPEFramework
                 params["status"] = "stopped";
             }
             params["plane"] = planeType;
-            sendNotify(AVINPUT_EVENT_ON_STATUS_CHANGED, params);
+            dispatchEvent(ON_AVINPUT_STATUS_CHANGED, params);
         }
 
         /**
@@ -1159,23 +1231,7 @@ namespace WPEFramework
                 break;
             }
 
-            sendNotify(AVINPUT_EVENT_ON_VIDEO_MODE_UPDATED, params);
-        }
-
-        void AVInputImplementation::dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-        {
-            if (!AVInputImplementation::_instance)
-                return;
-
-            if (IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE == eventId)
-            {
-                IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                int hdmi_in_port = eventData->data.hdmi_in_content_type.port;
-                int avi_content_type = eventData->data.hdmi_in_content_type.aviContentType;
-                LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE  event  port: %d, Content Type : %d", hdmi_in_port, avi_content_type);
-
-                AVInputImplementation::_instance->hdmiInputAviContentTypeChange(hdmi_in_port, avi_content_type);
-            }
+            dispatchEvent(ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE, params);
         }
 
         void AVInputImplementation::hdmiInputAviContentTypeChange(int port, int content_type)
@@ -1183,140 +1239,7 @@ namespace WPEFramework
             JsonObject params;
             params["id"] = port;
             params["aviContentType"] = content_type;
-            sendNotify(AVINPUT_EVENT_ON_AVI_CONTENT_TYPE_CHANGED, params);
-        }
-
-        void AVInputImplementation::dsAVEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-        {
-            if (!AVInputImplementation::_instance)
-                return;
-
-            IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-            if (IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG == eventId)
-            {
-                int hdmiin_hotplug_port = eventData->data.hdmi_in_connect.port;
-                int hdmiin_hotplug_conn = eventData->data.hdmi_in_connect.isPortConnected;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG  event data:%d", hdmiin_hotplug_port);
-                AVInputImplementation::_instance->AVInputHotplug(hdmiin_hotplug_port, hdmiin_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, HDMI);
-            }
-            else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG == eventId)
-            {
-                int compositein_hotplug_port = eventData->data.composite_in_connect.port;
-                int compositein_hotplug_conn = eventData->data.composite_in_connect.isPortConnected;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG  event data:%d", compositein_hotplug_port);
-                AVInputImplementation::_instance->AVInputHotplug(compositein_hotplug_port, compositein_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, COMPOSITE);
-            }
-        }
-
-        void AVInputImplementation::dsAVSignalStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-        {
-            if (!AVInputImplementation::_instance)
-                return;
-            IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-            if (IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS == eventId)
-            {
-                int hdmi_in_port = eventData->data.hdmi_in_sig_status.port;
-                int hdmi_in_signal_status = eventData->data.hdmi_in_sig_status.status;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS  event  port: %d, signal status: %d", hdmi_in_port, hdmi_in_signal_status);
-                AVInputImplementation::_instance->AVInputSignalChange(hdmi_in_port, hdmi_in_signal_status, HDMI);
-            }
-            else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS == eventId)
-            {
-                int composite_in_port = eventData->data.composite_in_sig_status.port;
-                int composite_in_signal_status = eventData->data.composite_in_sig_status.status;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS  event  port: %d, signal status: %d", composite_in_port, composite_in_signal_status);
-                AVInputImplementation::_instance->AVInputSignalChange(composite_in_port, composite_in_signal_status, COMPOSITE);
-            }
-        }
-
-        void AVInputImplementation::dsAVStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-        {
-            if (!AVInputImplementation::_instance)
-                return;
-            IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-            if (IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS == eventId)
-            {
-                int hdmi_in_port = eventData->data.hdmi_in_status.port;
-                bool hdmi_in_status = eventData->data.hdmi_in_status.isPresented;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS  event  port: %d, started: %d", hdmi_in_port, hdmi_in_status);
-                AVInputImplementation::_instance->AVInputStatusChange(hdmi_in_port, hdmi_in_status, HDMI);
-            }
-            else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS == eventId)
-            {
-                int composite_in_port = eventData->data.composite_in_status.port;
-                bool composite_in_status = eventData->data.composite_in_status.isPresented;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS  event  port: %d, started: %d", composite_in_port, composite_in_status);
-                AVInputImplementation::_instance->AVInputStatusChange(composite_in_port, composite_in_status, COMPOSITE);
-            }
-        }
-
-        void AVInputImplementation::dsAVVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-        {
-            if (!AVInputImplementation::_instance)
-                return;
-
-            if (IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE == eventId)
-            {
-                IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                int hdmi_in_port = eventData->data.hdmi_in_video_mode.port;
-                dsVideoPortResolution_t resolution = {};
-                resolution.pixelResolution = eventData->data.hdmi_in_video_mode.resolution.pixelResolution;
-                resolution.interlaced = eventData->data.hdmi_in_video_mode.resolution.interlaced;
-                resolution.frameRate = eventData->data.hdmi_in_video_mode.resolution.frameRate;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE  event  port: %d, pixelResolution: %d, interlaced : %d, frameRate: %d \n", hdmi_in_port, resolution.pixelResolution, resolution.interlaced, resolution.frameRate);
-                AVInputImplementation::_instance->AVInputVideoModeUpdate(hdmi_in_port, resolution, HDMI);
-            }
-            else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE == eventId)
-            {
-                IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                int composite_in_port = eventData->data.composite_in_video_mode.port;
-                dsVideoPortResolution_t resolution = {};
-                resolution.pixelResolution = eventData->data.composite_in_video_mode.resolution.pixelResolution;
-                resolution.interlaced = eventData->data.composite_in_video_mode.resolution.interlaced;
-                resolution.frameRate = eventData->data.composite_in_video_mode.resolution.frameRate;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE  event  port: %d, pixelResolution: %d, interlaced : %d, frameRate: %d \n", composite_in_port, resolution.pixelResolution, resolution.interlaced, resolution.frameRate);
-                AVInputImplementation::_instance->AVInputVideoModeUpdate(composite_in_port, resolution, COMPOSITE);
-            }
-        }
-
-        void AVInputImplementation::dsAVGameFeatureStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-        {
-            if (!AVInputImplementation::_instance)
-                return;
-
-            if (IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS == eventId)
-            {
-                IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                int hdmi_in_port = eventData->data.hdmi_in_allm_mode.port;
-                bool allm_mode = eventData->data.hdmi_in_allm_mode.allm_mode;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS  event  port: %d, ALLM Mode: %d", hdmi_in_port, allm_mode);
-
-                AVInputImplementation::_instance->AVInputALLMChange(hdmi_in_port, allm_mode);
-            }
-            if (IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS == eventId)
-            {
-                IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                int hdmi_in_port = eventData->data.hdmi_in_vrr_mode.port;
-                dsVRRType_t new_vrrType = eventData->data.hdmi_in_vrr_mode.vrr_type;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS  event  port: %d, VRR Type: %d", hdmi_in_port, new_vrrType);
-
-                if (new_vrrType == dsVRR_NONE)
-                {
-                    if (AVInputImplementation::_instance->m_currentVrrType != dsVRR_NONE)
-                    {
-                        AVInputImplementation::_instance->AVInputVRRChange(hdmi_in_port, AVInputImplementation::_instance->m_currentVrrType, false);
-                    }
-                }
-                else
-                {
-                    if (AVInputImplementation::_instance->m_currentVrrType != dsVRR_NONE)
-                    {
-                        AVInputImplementation::_instance->AVInputVRRChange(hdmi_in_port, AVInputImplementation::_instance->m_currentVrrType, false);
-                    }
-                    AVInputImplementation::_instance->AVInputVRRChange(hdmi_in_port, new_vrrType, true);
-                }
-                AVInputImplementation::_instance->m_currentVrrType = new_vrrType;
-            }
+            dispatchEvent(ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE, params);
         }
 
         void AVInputImplementation::AVInputALLMChange(int port, bool allm_mode)
@@ -1326,7 +1249,7 @@ namespace WPEFramework
             params["gameFeature"] = STR_ALLM;
             params["mode"] = allm_mode;
 
-            sendNotify(AVINPUT_EVENT_ON_GAME_FEATURE_STATUS_CHANGED, params);
+            dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
         }
 
         void AVInputImplementation::AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode)
@@ -1357,7 +1280,7 @@ namespace WPEFramework
             default:
                 break;
             }
-            sendNotify(AVINPUT_EVENT_ON_GAME_FEATURE_STATUS_CHANGED, params);
+            dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
         }
 
         uint32_t AVInputImplementation::getSupportedGameFeatures(const JsonObject &parameters, JsonObject &response)

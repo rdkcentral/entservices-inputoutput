@@ -125,7 +125,7 @@ namespace WPEFramework
             virtual Core::hresult Unregister(Exchange::IAVInput::INotification *notification) override;
 
             Core::hresult numberOfInputs(uint32_t &inputCount) override;
-            Core::hresult getInputDevices(int type, IInputDeviceIterator *&devices) override;
+            Core::hresult getInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices) override;
             Core::hresult writeEDID(uint8_t id, const string &edid) override;
             Core::hresult readEDID(uint8_t id, string &edid) override;
             Core::hresult getRawSPD(uint8_t id, string &spd) override;
@@ -151,6 +151,8 @@ namespace WPEFramework
             mutable Core::CriticalSection _adminLock;
             PluginHost::IShell *_service;
             std::list<Exchange::IAVInput::INotification *> _avInputNotification;
+            int m_primVolume;
+            int m_inputVolume; // Player Volume
 
             void dispatchEvent(Event, const JsonValue &params);
             void Dispatch(Event event, const JsonValue params);
@@ -178,6 +180,20 @@ namespace WPEFramework
             uint32_t getGameFeatureStatusWrapper(const JsonObject &parameters, JsonObject &response);
             uint32_t setMixerLevels(const JsonObject &parameters, JsonObject &response);
             uint32_t getHdmiVersionWrapper(const JsonObject &parameters, JsonObject &response);
+
+            void AVInputHotplug(int input, int connect, int type);
+            JsonArray devicesToJson(Exchange::IAVInput::IInputDeviceIterator *devices);
+            void AVInputSignalChange(int port, int signalStatus, int type);
+            void AVInputStatusChange(int port, bool isPresented, int type);
+            void AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type);
+            void hdmiInputAviContentTypeChange(int port, int content_type);
+            void AVInputALLMChange(int port, bool allm_mode);
+            void AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode);
+
+            bool getALLMStatus(int iPort);
+            bool getVRRStatus(int iPort, dsHdmiInVrrStatus_t *vrrStatus);
+            std::string getRawSPD(int iPort);
+            std::string getSPD(int iPort);
 
         public:
             static AVInputImplementation *_instance;
