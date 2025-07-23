@@ -160,6 +160,5 @@ namespace WPEFramework
                 Core::IWorkerPool::Instance().Submit(PluginHost::IShell::Job::Create(_service, PluginHost::IShell::DEACTIVATED, PluginHost::IShell::FAILURE));
             }
         }
-
     } // namespace Plugin
 } // namespace WPEFrameworklk
