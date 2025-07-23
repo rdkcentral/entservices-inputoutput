@@ -317,6 +317,61 @@ TEST_F(HdmiCecSinkTest, RegisteredMethods)
 
 }
 
+TEST_F(HdmiCecSinkDsTest, getDeviceList)
+{
+    // Mock the device list data
+    ON_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](const LogicalAddress& to, const CECFrame& frame, int timeout) {
+                EXPECT_LE(to.toInt(), LogicalAddress::BROADCAST);
+                EXPECT_GT(timeout, 0);
+            }));
+
+    // Set up expectations for the response
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T("{}"), response));
+
+    // Log the JSON response for debugging
+    LOGINFO("getDeviceList API response: %s", response.c_str());
+
+    // Response should be in JSON format
+    JsonObject responseObject;
+    EXPECT_TRUE(responseObject.FromString(response));
+
+    // Verify response structure
+    EXPECT_TRUE(responseObject.HasLabel("numberofdevices"));
+    EXPECT_TRUE(responseObject.HasLabel("deviceList"));
+    EXPECT_TRUE(responseObject.HasLabel("success"));
+    EXPECT_TRUE(responseObject["success"].Boolean());
+
+    // If there are devices in the list, verify their structure
+    if (responseObject["numberofdevices"].Number() > 0 && responseObject["deviceList"].IsArray()) {
+        JsonArray deviceArray = responseObject["deviceList"].Array();
+        for (int i = 0; i < deviceArray.Length(); i++) {
+            JsonObject device = deviceArray[i].Object();
+
+            // Check that all expected fields are present
+            EXPECT_TRUE(device.HasLabel("logicalAddress"));
+            EXPECT_TRUE(device.HasLabel("physicalAddress"));
+            EXPECT_TRUE(device.HasLabel("deviceType"));
+            EXPECT_TRUE(device.HasLabel("cecVersion"));
+            EXPECT_TRUE(device.HasLabel("osdName"));
+            EXPECT_TRUE(device.HasLabel("vendorID"));
+            EXPECT_TRUE(device.HasLabel("powerStatus"));
+            EXPECT_TRUE(device.HasLabel("portNumber"));
+
+            // Verify portNumber is not overwritten by powerStatus
+            // Power status should be a string like "STANDBY" or "ON"
+            std::string powerStatus = device["powerStatus"].String();
+            EXPECT_TRUE(powerStatus == "STANDBY" || powerStatus == "ON" || powerStatus == "STANDBY_TO_ON" || powerStatus == "ON_TO_STANDBY" || powerStatus.empty());
+
+            // Port number should be a string representation of a number (like "-1", "0", "1", etc.)
+            std::string portNumber = device["portNumber"].String();
+            // Either it's a number or it's empty
+            EXPECT_TRUE(portNumber.empty() || (portNumber[0] == '-' || (portNumber[0] >= '0' && portNumber[0] <= '9')));
+        }
+    }
+}
+
 TEST_F(HdmiCecSinkDsTest, setOSDNameParamMissing)
 {
 
