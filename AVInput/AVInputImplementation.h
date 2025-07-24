@@ -48,6 +48,7 @@ namespace WPEFramework
         class AVInputImplementation : public Exchange::IAVInput
         {
         protected:
+            // TODO: Why are these here and not following definitions of other JSON calls?
             uint32_t endpoint_numberOfInputs(const JsonObject &parameters, JsonObject &response);
             uint32_t endpoint_currentVideoMode(const JsonObject &parameters, JsonObject &response);
             uint32_t endpoint_contentProtected(const JsonObject &parameters, JsonObject &response);
@@ -124,28 +125,27 @@ namespace WPEFramework
             virtual Core::hresult Register(Exchange::IAVInput::INotification *notification) override;
             virtual Core::hresult Unregister(Exchange::IAVInput::INotification *notification) override;
 
-            Core::hresult numberOfInputs(uint32_t &inputCount) override;
-            Core::hresult getInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices) override;
-            Core::hresult writeEDID(uint8_t id, const string &edid) override;
-            Core::hresult readEDID(uint8_t id, string &edid) override;
-            Core::hresult getRawSPD(uint8_t id, string &spd) override;
-            Core::hresult getSPD(uint8_t id, string &spd) override;
-            Core::hresult setEdidVersion(uint8_t id, const string &version) override;
-            Core::hresult getEdidVersion(uint8_t id, string &version) override;
-            Core::hresult setEdid2AllmSupport(uint8_t id, const bool &allm) override;
-            Core::hresult getEdid2AllmSupport(uint8_t id, bool &allm) override;
-            Core::hresult setVRRSupport(uint8_t id, bool vrrSupport) override;
-            Core::hresult getVRRSupport(uint8_t id, bool &vrrSupport) override;
-            Core::hresult getVRRFrameRate(uint8_t id, double &vrrFrameRate) override;
-            Core::hresult getHdmiVersion(uint8_t id, string &hdmiVersion) override;
-            Core::hresult setMixerLevels(uint8_t id, const MixerLevels &levels) override;
-            Core::hresult startInput(uint8_t id, int type, bool audioMix, const VideoPlaneType &planeType, bool topMostPlane) override;
-            Core::hresult stopInput(int type) override;
-            Core::hresult setVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t type) override;
-            Core::hresult currentVideoMode(string &currentVideoMode, string &message) override;
-            Core::hresult contentProtected(bool &isContentProtected) override;
-            Core::hresult getSupportedGameFeatures(IStringIterator *&features) override;
-            Core::hresult getGameFeatureStatus(uint8_t id, const string &feature, bool &mode) override;
+            Core::hresult NumberOfInputs(uint32_t &inputCount) override;
+            Core::hresult GetInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices) override;
+            Core::hresult WriteEDID(int id, const string &edid) override;
+            Core::hresult ReadEDID(int id, string &edid) override;
+            Core::hresult GetRawSPD(int id, string &spd) override;
+            Core::hresult GetSPD(int id, string &spd) override;
+            Core::hresult SetEdidVersion(int id, const string &version) override;
+            Core::hresult GetEdidVersion(int id, string &version) override;
+            Core::hresult SetEdid2AllmSupport(int id, const bool &allm) override;
+            Core::hresult GetEdid2AllmSupport(int id, bool &allm) override;
+            Core::hresult SetVRRSupport(int id, bool vrrSupport) override;
+            Core::hresult GetVRRSupport(int id, bool &vrrSupport) override;
+            Core::hresult GetHdmiVersion(int id, string &hdmiVersion) override;
+            Core::hresult SetMixerLevels(int id, const MixerLevels &levels) override;
+            Core::hresult StartInput(int id, int type, bool audioMix, const VideoPlaneType &planeType, bool topMostPlane) override;
+            Core::hresult StopInput(int type) override;
+            Core::hresult SetVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t type) override;
+            Core::hresult CurrentVideoMode(string &currentVideoMode, string &message) override;
+            Core::hresult ContentProtected(bool &isContentProtected) override;
+            Core::hresult GetSupportedGameFeatures(IStringIterator *&features) override;
+            Core::hresult GetGameFeatureStatus(int id, const string &feature, bool &mode) override;
 
         private:
             mutable Core::CriticalSection _adminLock;
@@ -157,7 +157,6 @@ namespace WPEFramework
             void dispatchEvent(Event, const JsonValue &params);
             void Dispatch(Event event, const JsonValue params);
 
-            static int numberOfInputs(bool &success);
             static string currentVideoMode(bool &success);
 
             // Begin methods
@@ -173,15 +172,16 @@ namespace WPEFramework
             uint32_t setVRRSupportWrapper(const JsonObject &parameters, JsonObject &response);
             uint32_t getVRRSupportWrapper(const JsonObject &parameters, JsonObject &response);
             uint32_t getVRRFrameRateWrapper(const JsonObject &parameters, JsonObject &response);
-            uint32_t startInput(const JsonObject &parameters, JsonObject &response);
-            uint32_t stopInput(const JsonObject &parameters, JsonObject &response);
+            uint32_t StartInput(const JsonObject &parameters, JsonObject &response);
+            uint32_t StopInput(const JsonObject &parameters, JsonObject &response);
             uint32_t setVideoRectangleWrapper(const JsonObject &parameters, JsonObject &response);
-            uint32_t getSupportedGameFeatures(const JsonObject &parameters, JsonObject &response);
+            uint32_t GetSupportedGameFeatures(const JsonObject &parameters, JsonObject &response);
             uint32_t getGameFeatureStatusWrapper(const JsonObject &parameters, JsonObject &response);
-            uint32_t setMixerLevels(const JsonObject &parameters, JsonObject &response);
+            uint32_t SetMixerLevels(const JsonObject &parameters, JsonObject &response);
             uint32_t getHdmiVersionWrapper(const JsonObject &parameters, JsonObject &response);
 
             void AVInputHotplug(int input, int connect, int type);
+            Core::hresult getInputDevices(int type, std::list<WPEFramework::Exchange::IAVInput::InputDevice> devices);
             JsonArray devicesToJson(Exchange::IAVInput::IInputDeviceIterator *devices);
             void AVInputSignalChange(int port, int signalStatus, int type);
             void AVInputStatusChange(int port, bool isPresented, int type);
@@ -192,8 +192,7 @@ namespace WPEFramework
 
             bool getALLMStatus(int iPort);
             bool getVRRStatus(int iPort, dsHdmiInVrrStatus_t *vrrStatus);
-            std::string getRawSPD(int iPort);
-            std::string getSPD(int iPort);
+            std::string GetRawSPD(int iPort);
 
         public:
             static AVInputImplementation *_instance;

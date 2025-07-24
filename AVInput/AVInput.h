@@ -19,21 +19,19 @@
 
 #pragma once
 
+#include "Module.h"
 #include <interfaces/IAVInput.h>
 #include <interfaces/json/JAVInput.h>
 #include <interfaces/json/JsonData_AVInput.h>
-
-#include "Module.h"
 #include "UtilsLogging.h"
 #include "tracing/Logging.h"
+
 #include "dsMgr.h"
 #include "hdmiIn.hpp"
 #include "compositeIn.hpp"
-
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
 #include "host.hpp"
-
 #include "exception.hpp"
 #include <vector>
 #include <algorithm>

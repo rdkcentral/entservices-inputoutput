@@ -168,6 +168,7 @@ namespace WPEFramework
 
                 while (index != _avInputNotification.end())
                 {
+                    // <pca> YAH: Missing ID here </pca>
                     (*index)->OnSignalChanged(inputSignalInfo);
                     ++index;
                 }
@@ -252,35 +253,66 @@ namespace WPEFramework
             LOGINFO("%s: result json %s\n", __FUNCTION__, json.c_str());
         }
 
+        // <pca>
+        // uint32_t AVInputImplementation::endpoint_numberOfInputs(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     LOGINFOMETHOD();
+
+        //     bool success = false;
+
+        //     auto result = numberOfInputs(success);
+        //     if (success)
+        //     {
+        //         response[_T("numberOfInputs")] = result;
+        //     }
+
+        //     returnResponse(success);
+        // }
         uint32_t AVInputImplementation::endpoint_numberOfInputs(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
 
-            bool success = false;
+            uint32_t count;
+            Core::hresult ret = NumberOfInputs(count);
 
-            auto result = numberOfInputs(success);
-            if (success)
+            if (ret == Core::ERROR_NONE)
             {
-                response[_T("numberOfInputs")] = result;
+                response[_T("numberOfInputs")] = count;
             }
 
-            returnResponse(success);
+            returnResponse(ret == Core::ERROR_NONE);
         }
 
+        // uint32_t AVInputImplementation::endpoint_currentVideoMode(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     LOGINFOMETHOD();
+
+        //     bool success = false;
+
+        //     auto result = CurrentVideoMode(success);
+        //     if (success)
+        //     {
+        //         response[_T("currentVideoMode")] = result;
+        //     }
+
+        //     returnResponse(success);
+        // }
         uint32_t AVInputImplementation::endpoint_currentVideoMode(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
 
-            bool success = false;
+            string mode;
+            string message;
 
-            auto result = currentVideoMode(success);
-            if (success)
+            Core::hresult ret = CurrentVideoMode(mode, message);
+            if (ret == Core::ERROR_NONE)
             {
-                response[_T("currentVideoMode")] = result;
+                response[_T("currentVideoMode")] = mode;
             }
 
-            returnResponse(success);
+            returnResponse(ret == Core::ERROR_NONE);
         }
+        // </pca>
 
         uint32_t AVInputImplementation::endpoint_contentProtected(const JsonObject &parameters, JsonObject &response)
         {
@@ -292,43 +324,80 @@ namespace WPEFramework
             returnResponse(true);
         }
 
-        int AVInputImplementation::numberOfInputs(bool &success)
+        // <pca>
+        // int AVInputImplementation::numberOfInputs(bool &success)
+        // {
+        //     int result = 0;
+
+        //     try
+        //     {
+        //         result = device::HdmiInput::getInstance().getNumberOfInputs();
+        //         success = true;
+        //     }
+        //     catch (...)
+        //     {
+        //         LOGERR("Exception caught");
+        //         success = false;
+        //     }
+
+        //     return result;
+        // }
+        Core::hresult NumberOfInputs(uint32_t &inputCount)
         {
-            int result = 0;
+            Core::hresult ret = Core::ERROR_NONE;
 
             try
             {
-                result = device::HdmiInput::getInstance().getNumberOfInputs();
-                success = true;
+                inputCount = device::HdmiInput::getInstance().getNumberOfInputs();
             }
             catch (...)
             {
                 LOGERR("Exception caught");
-                success = false;
+                ret = Core::ERROR_GENERAL;
             }
 
-            return result;
+            return ret;
         }
+        // </pca>
 
-        string AVInputImplementation::currentVideoMode(bool &success)
+        // <pca>
+        // string AVInputImplementation::CurrentVideoMode(bool &success)
+        // {
+        //     string result;
+
+        //     try
+        //     {
+        //         result = device::HdmiInput::getInstance().getCurrentVideoMode();
+        //         success = true;
+        //     }
+        //     catch (...)
+        //     {
+        //         LOGERR("Exception caught");
+        //         success = false;
+        //     }
+
+        //     return result;
+        // }
+        Core::hresult AVInputImplementation::CurrentVideoMode(string &currentVideoMode, string &message)
         {
-            string result;
+            Core::hresult ret = Core::ERROR_NONE;
 
             try
             {
-                result = device::HdmiInput::getInstance().getCurrentVideoMode();
-                success = true;
+                currentVideoMode = device::HdmiInput::getInstance().getCurrentVideoMode();
+                // TODO: How is message set?
             }
             catch (...)
             {
                 LOGERR("Exception caught");
-                success = false;
+                ret = Core::ERROR_GENERAL;
             }
 
-            return result;
+            return ret;
         }
+        // </pca>
 
-        uint32_t AVInputImplementation::startInput(const JsonObject &parameters, JsonObject &response)
+        uint32_t AVInputImplementation::StartInput(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
 
@@ -388,7 +457,7 @@ namespace WPEFramework
             returnResponse(true);
         }
 
-        uint32_t AVInputImplementation::stopInput(const JsonObject &parameters, JsonObject &response)
+        uint32_t AVInputImplementation::StopInput(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
 
@@ -499,7 +568,7 @@ namespace WPEFramework
                     returnResponse(false);
                 }
 
-                if (Core::ERROR_NONE != setVideoRectangle(x, y, w, h, t))
+                if (Core::ERROR_NONE != SetVideoRectangle(x, y, w, h, t))
                 {
                     LOGWARN("AVInputService::setVideoRectangle Failed");
                     returnResponse(false);
@@ -532,7 +601,7 @@ namespace WPEFramework
 
         //     return ret;
         // }
-        Core::hresult AVInputImplementation::setVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t type)
+        Core::hresult AVInputImplementation::SetVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t type)
         {
             Core::hresult ret = Core::ERROR_NONE;
 
@@ -592,7 +661,8 @@ namespace WPEFramework
             JsonArray deviceArray;
             if (devices != nullptr)
             {
-                InputDevice device;
+                WPEFramework::Exchange::IAVInput::InputDevice device;
+
                 devices->Reset(0);
 
                 while (devices->Next(device))
@@ -607,6 +677,62 @@ namespace WPEFramework
             return deviceArray;
         }
 
+        // <pca> debug
+        // uint32_t AVInputImplementation::getInputDevicesWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     Exchange::IAVInput::IInputDeviceIterator *devices = nullptr;
+        //     Core::hresult result;
+
+        //     LOGINFOMETHOD();
+
+        //     if (parameters.HasLabel("typeOfInput"))
+        //     {
+        //         string sType = parameters["typeOfInput"].String();
+        //         int iType = 0;
+
+        //         try
+        //         {
+        //             iType = getTypeOfInput(sType);
+        //         }
+        //         catch (...)
+        //         {
+        //             LOGWARN("Invalid Arguments");
+        //             returnResponse(false);
+        //         }
+
+        //         result = getInputDevices(iType, devices);
+        //     }
+        //     else
+        //     {
+        //         Exchange::IAVInput::IInputDeviceIterator *hdmiDevices = nullptr;
+        //         result = getInputDevices(HDMI, hdmiDevices);
+
+        //         if (Core::ERROR_NONE == result)
+        //         {
+        //             Exchange::IAVInput::IInputDeviceIterator *compositeDevices = nullptr;
+        //             result = getInputDevices(COMPOSITE, compositeDevices);
+
+        //             if (Core::ERROR_NONE == result)
+        //             {
+        //                 devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(hdmiDevices, compositeDevices);
+        //                 hdmiDevices->Release();
+        //                 compositeDevices->Release();
+        //             }
+        //             else
+        //             {
+        //                 hdmiDevices->Release();
+        //             }
+        //         }
+        //     }
+
+        //     if (devices != nullptr && Core::ERROR_NONE == result)
+        //     {
+        //         response["devices"] = devicesToJson(devices);
+        //         devices->Release();
+        //     }
+
+        //     returnResponse(Core::ERROR_NONE == result);
+        // }
         uint32_t AVInputImplementation::getInputDevicesWrapper(const JsonObject &parameters, JsonObject &response)
         {
             Exchange::IAVInput::IInputDeviceIterator *devices = nullptr;
@@ -629,59 +755,32 @@ namespace WPEFramework
                     returnResponse(false);
                 }
 
-                result = getInputDevices(iType, devices);
+                result = GetInputDevices(iType, devices);
             }
             else
             {
-                Exchange::IAVInput::IInputDeviceIterator *hdmiDevices = nullptr;
-
+                std::list<WPEFramework::Exchange::IAVInput::InputDevice> hdmiDevices;
                 result = getInputDevices(HDMI, hdmiDevices);
 
                 if (Core::ERROR_NONE == result)
                 {
-                    Exchange::IAVInput::IInputDeviceIterator *compositeDevices = nullptr;
+                    std::list<WPEFramework::Exchange::IAVInput::InputDevice> compositeDevices;
                     result = getInputDevices(COMPOSITE, compositeDevices);
 
                     if (Core::ERROR_NONE == result)
                     {
-                        devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(hdmiDevices, compositeDevices);
-
-                        hdmiDevices->Release();
-                        compositeDevices->Release();
-                    }
-                    else
-                    {
-                        hdmiDevices->Release();
+                        std::list<WPEFramework::Exchange::IAVInput::InputDevice> combinedDevices = hdmiDevices;
+                        combinedDevices.insert(combinedDevices.end(), compositeDevices.begin(), compositeDevices.end());
+                        devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(combinedDevices);
                     }
                 }
             }
 
-            // <pca>
-            // if (devices != nullptr && Core::ERROR_NONE == result)
-            // {
-            //     JsonArray deviceArray;
-            //     InputDevice device;
-
-            //     devices->Reset(0);
-
-            //     while (devices->Next(device))
-            //     {
-            //         JsonObject obj;
-            //         obj["id"] = device.id;
-            //         obj["locator"] = device.locator;
-            //         obj["connected"] = device.connected;
-            //         deviceArray.Add(obj);
-            //     }
-
-            //     response["devices"] = deviceArray;
-            //     devices->Release();
-            // }
             if (devices != nullptr && Core::ERROR_NONE == result)
             {
                 response["devices"] = devicesToJson(devices);
                 devices->Release();
             }
-            // </pca>
 
             returnResponse(Core::ERROR_NONE == result);
         }
@@ -715,12 +814,12 @@ namespace WPEFramework
             LOGINFOMETHOD();
 
             string sPortId = parameters["portId"].String();
-            uint32_t portId = 0;
+            int portId = 0;
             std::string message;
 
             if (parameters.HasLabel("portId") && parameters.HasLabel("message"))
             {
-                portId = stoul(sPortId);
+                portId = stoi(sPortId);
                 message = parameters["message"].String();
             }
             else
@@ -729,7 +828,7 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            returnResponse(Core::ERROR_NONE == writeEDID(portId, message));
+            returnResponse(Core::ERROR_NONE == WriteEDID(portId, message));
         }
         // </pca>
 
@@ -779,7 +878,7 @@ namespace WPEFramework
 
             string edid;
 
-            Core::hresult result = readEDID(portId, edid);
+            Core::hresult result = ReadEDID(portId, edid);
             if (Core::ERROR_NONE != result || edid.empty())
             {
                 returnResponse(false);
@@ -792,18 +891,20 @@ namespace WPEFramework
         }
         // </pca>
 
-        // <pca>
-        // JsonArray AVInputImplementation::getInputDevices(int iType)
+        // <pca> debug
+        // Core::hresult getInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices)
         // {
-        //     JsonArray list;
+        //     uint32_t result = Core::ERROR_NONE;
+        //     std::list<WPEFramework::Exchange::IAVInput::InputDevice> list;
+
         //     try
         //     {
         //         int num = 0;
-        //         if (iType == HDMI)
+        //         if (type == HDMI)
         //         {
         //             num = device::HdmiInput::getInstance().getNumberOfInputs();
         //         }
-        //         else if (iType == COMPOSITE)
+        //         else if (type == COMPOSITE)
         //         {
         //             num = device::CompositeInput::getInstance().getNumberOfInputs();
         //         }
@@ -813,36 +914,39 @@ namespace WPEFramework
         //             for (i = 0; i < num; i++)
         //             {
         //                 // Input ID is aleays 0-indexed, continuous number starting 0
-        //                 JsonObject hash;
-        //                 hash["id"] = i;
+        //                 WPEFramework::Exchange::IAVInput::InputDevice inputDevice;
+
+        //                 inputDevice.id = i;
         //                 std::stringstream locator;
-        //                 if (iType == HDMI)
+        //                 if (type == HDMI)
         //                 {
         //                     locator << "hdmiin://localhost/deviceid/" << i;
-        //                     hash["connected"] = device::HdmiInput::getInstance().isPortConnected(i);
+        //                     inputDevice.connected = device::HdmiInput::getInstance().isPortConnected(i);
         //                 }
-        //                 else if (iType == COMPOSITE)
+        //                 else if (type == COMPOSITE)
         //                 {
         //                     locator << "cvbsin://localhost/deviceid/" << i;
-        //                     hash["connected"] = device::CompositeInput::getInstance().isPortConnected(i);
+        //                     inputDevice.connected = device::CompositeInput::getInstance().isPortConnected(i);
         //                 }
-        //                 hash["locator"] = locator.str();
-        //                 LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, hash["locator"].String().c_str(), hash["connected"].Boolean());
-        //                 list.Add(hash);
+        //                 inputDevice.locator = locator.str();
+        //                 LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, inputDevice.locator.c_str(), inputDevice.connected);
+        //                 list.push_back(inputDevice);
         //             }
         //         }
         //     }
         //     catch (const std::exception &e)
         //     {
         //         LOGWARN("AVInputService::getInputDevices Failed");
+        //         result = Core::ERROR_GENERAL;
         //     }
-        //     return list;
-        // }
 
-        Core::hresult getInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices)
+        //     devices = (Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(list));
+
+        //     return result;
+        // }
+        Core::hresult getInputDevices(int type, std::list<WPEFramework::Exchange::IAVInput::InputDevice> devices)
         {
-            uint32_t result = Core::ERROR_NONE;
-            std::list<InputDevice> list;
+            Core::hresult result = Core::ERROR_NONE;
 
             try
             {
@@ -861,7 +965,7 @@ namespace WPEFramework
                     for (i = 0; i < num; i++)
                     {
                         // Input ID is aleays 0-indexed, continuous number starting 0
-                        InputDevice inputDevice;
+                        WPEFramework::Exchange::IAVInput::InputDevice inputDevice;
 
                         inputDevice.id = i;
                         std::stringstream locator;
@@ -877,7 +981,7 @@ namespace WPEFramework
                         }
                         inputDevice.locator = locator.str();
                         LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, inputDevice.locator.c_str(), inputDevice.connected);
-                        list.push_back(inputDevice);
+                        devices.push_back(inputDevice);
                     }
                 }
             }
@@ -887,13 +991,29 @@ namespace WPEFramework
                 result = Core::ERROR_GENERAL;
             }
 
-            devices = (Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(list));
+            return result;
+        }
+
+        Core::hresult GetInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices)
+        {
+            std::list<WPEFramework::Exchange::IAVInput::InputDevice> list;
+
+            Core::hresult result = getInputDevices(type, list);
+
+            if (Core::ERROR_NONE == result)
+            {
+                devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(list);
+            }
+            else
+            {
+                devices = nullptr;
+            }
 
             return result;
         }
         // </pca>
 
-        Core::hresult writeEDID(uint8_t id, const string &edid)
+        Core::hresult WriteEDID(int id, const string &edid)
         {
             // TODO: This wasn't implemented in the original code, do we want to implement it?
             return Core::ERROR_NONE;
@@ -927,7 +1047,7 @@ namespace WPEFramework
         //     }
         //     return edidbase64;
         // }
-        Core::hresult readEDID(uint8_t id, string &edid)
+        Core::hresult ReadEDID(int id, string &edid)
         {
             vector<uint8_t> edidVec({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
 
@@ -980,7 +1100,7 @@ namespace WPEFramework
 
             Exchange::IAVInput::IInputDeviceIterator *devices;
 
-            Core::hresult result = getInputDevices(type, devices);
+            Core::hresult result = GetInputDevices(type, devices);
             if (Core::ERROR_NONE != result)
             {
                 LOGERR("AVInputHotplug [%d, %d, %d]: Failed to get devices", input, connect, type);
@@ -1283,7 +1403,7 @@ namespace WPEFramework
             dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
         }
 
-        uint32_t AVInputImplementation::getSupportedGameFeatures(const JsonObject &parameters, JsonObject &response)
+        uint32_t AVInputImplementation::GetSupportedGameFeatures(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
             vector<string> supportedFeatures;
@@ -1447,7 +1567,7 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            string spdInfo = getRawSPD(portId);
+            string spdInfo = GetRawSPD(portId);
             response["HDMISPD"] = spdInfo;
             if (spdInfo.empty())
             {
@@ -1459,6 +1579,42 @@ namespace WPEFramework
             }
         }
 
+        // <pca>
+        // uint32_t AVInputImplementation::getSPDWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     LOGINFOMETHOD();
+
+        //     string sPortId = parameters["portId"].String();
+        //     int portId = 0;
+        //     if (parameters.HasLabel("portId"))
+        //     {
+        //         try
+        //         {
+        //             portId = stoi(sPortId);
+        //         }
+        //         catch (...)
+        //         {
+        //             LOGWARN("Invalid Arguments");
+        //             returnResponse(false);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         LOGWARN("Required parameters are not passed");
+        //         returnResponse(false);
+        //     }
+
+        //     string spdInfo = getSPD(portId);
+        //     response["HDMISPD"] = spdInfo;
+        //     if (spdInfo.empty())
+        //     {
+        //         returnResponse(false);
+        //     }
+        //     else
+        //     {
+        //         returnResponse(true);
+        //     }
+        // }
         uint32_t AVInputImplementation::getSPDWrapper(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
@@ -1483,9 +1639,10 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            string spdInfo = getSPD(portId);
+            string spdInfo;
+            Core::hresult ret = GetSPD(portId, spdInfo);
             response["HDMISPD"] = spdInfo;
-            if (spdInfo.empty())
+            if (spdInfo.empty() || Core::ERROR_NONE != ret)
             {
                 returnResponse(false);
             }
@@ -1494,8 +1651,9 @@ namespace WPEFramework
                 returnResponse(true);
             }
         }
+        // </pca>
 
-        std::string AVInputImplementation::getRawSPD(int iPort)
+        std::string AVInputImplementation::GetRawSPD(int iPort)
         {
             LOGINFO("AVInputImplementation::getSPDInfo");
             vector<uint8_t> spdVect({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
@@ -1532,16 +1690,63 @@ namespace WPEFramework
             return spdbase64;
         }
 
-        std::string AVInputImplementation::getSPD(int iPort)
+        // <pca>
+        // std::string AVInputImplementation::GetSPD(int iPort)
+        // {
+        //     LOGINFO("AVInputImplementation::getSPDInfo");
+        //     vector<uint8_t> spdVect({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
+        //     std::string spdbase64 = "";
+        //     try
+        //     {
+        //         LOGWARN("AVInputImplementation::getSPDInfo");
+        //         vector<uint8_t> spdVect2;
+        //         device::HdmiInput::getInstance().getHDMISPDInfo(iPort, spdVect2);
+        //         spdVect = spdVect2; // edidVec must be "unknown" unless we successfully get to this line
+
+        //         // convert to base64
+        //         uint16_t size = min(spdVect.size(), (size_t)numeric_limits<uint16_t>::max());
+
+        //         LOGWARN("AVInputImplementation::getSPD size:%d spdVec.size:%zu", size, spdVect.size());
+
+        //         if (spdVect.size() > (size_t)numeric_limits<uint16_t>::max())
+        //         {
+        //             LOGERR("Size too large to use ToString base64 wpe api");
+        //             return spdbase64;
+        //         }
+
+        //         LOGINFO("------------getSPD: ");
+        //         for (size_t itr = 0; itr < spdVect.size(); itr++)
+        //         {
+        //             LOGINFO("%02X ", spdVect[itr]);
+        //         }
+        //         if (spdVect.size() > 0)
+        //         {
+        //             struct dsSpd_infoframe_st pre;
+        //             memcpy(&pre, spdVect.data(), sizeof(struct dsSpd_infoframe_st));
+
+        //             char str[200] = {0};
+        //             snprintf(str, sizeof(str), "Packet Type:%02X,Version:%u,Length:%u,vendor name:%s,product des:%s,source info:%02X",
+        //                      pre.pkttype, pre.version, pre.length, pre.vendor_name, pre.product_des, pre.source_info);
+        //             spdbase64 = str;
+        //         }
+        //     }
+        //     catch (const device::Exception &err)
+        //     {
+        //         LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
+        //     }
+        //     return spdbase64;
+        // }
+        Core::hresult GetSPD(int id, string &spd)
         {
-            LOGINFO("AVInputImplementation::getSPDInfo");
             vector<uint8_t> spdVect({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
-            std::string spdbase64 = "";
+
+            LOGINFO("AVInputImplementation::getSPDInfo");
+
             try
             {
                 LOGWARN("AVInputImplementation::getSPDInfo");
                 vector<uint8_t> spdVect2;
-                device::HdmiInput::getInstance().getHDMISPDInfo(iPort, spdVect2);
+                device::HdmiInput::getInstance().getHDMISPDInfo(id, spdVect2);
                 spdVect = spdVect2; // edidVec must be "unknown" unless we successfully get to this line
 
                 // convert to base64
@@ -1552,7 +1757,7 @@ namespace WPEFramework
                 if (spdVect.size() > (size_t)numeric_limits<uint16_t>::max())
                 {
                     LOGERR("Size too large to use ToString base64 wpe api");
-                    return spdbase64;
+                    return Core::ERROR_GENERAL;
                 }
 
                 LOGINFO("------------getSPD: ");
@@ -1560,6 +1765,7 @@ namespace WPEFramework
                 {
                     LOGINFO("%02X ", spdVect[itr]);
                 }
+
                 if (spdVect.size() > 0)
                 {
                     struct dsSpd_infoframe_st pre;
@@ -1568,17 +1774,20 @@ namespace WPEFramework
                     char str[200] = {0};
                     snprintf(str, sizeof(str), "Packet Type:%02X,Version:%u,Length:%u,vendor name:%s,product des:%s,source info:%02X",
                              pre.pkttype, pre.version, pre.length, pre.vendor_name, pre.product_des, pre.source_info);
-                    spdbase64 = str;
+                    spd = str;
                 }
             }
             catch (const device::Exception &err)
             {
-                LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
+                LOG_DEVICE_EXCEPTION1(std::to_string(id));
+                return Core::ERROR_GENERAL;
             }
-            return spdbase64;
-        }
 
-        uint32_t AVInputImplementation::setMixerLevels(const JsonObject &parameters, JsonObject &response)
+            return Core::ERROR_NONE;
+        }
+        // </pca>
+
+        uint32_t AVInputImplementation::SetMixerLevels(const JsonObject &parameters, JsonObject &response)
         {
             returnIfParamNotFound(parameters, "primaryVolume");
             returnIfParamNotFound(parameters, "inputVolume");
@@ -1683,13 +1892,29 @@ namespace WPEFramework
             }
         }
 
-        bool getEdid2AllmSupport(int portId, bool *allmSupportValue)
+        // <pca>
+        // bool getEdid2AllmSupport(int portId, bool *allmSupportValue)
+        // {
+        //     bool ret = true;
+        //     try
+        //     {
+        //         device::HdmiInput::getInstance().getEdid2AllmSupport(portId, allmSupportValue);
+        //         LOGINFO("AVInput - getEdid2AllmSupport:%d", *allmSupportValue);
+        //     }
+        //     catch (const device::Exception &err)
+        //     {
+        //         LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+        //         ret = false;
+        //     }
+        //     return ret;
+        // }
+        bool GetEdid2AllmSupport(int portId, bool &allmSupportValue)
         {
             bool ret = true;
             try
             {
-                device::HdmiInput::getInstance().getEdid2AllmSupport(portId, allmSupportValue);
-                LOGINFO("AVInput - getEdid2AllmSupport:%d", *allmSupportValue);
+                device::HdmiInput::getInstance().getEdid2AllmSupport(portId, &allmSupportValue);
+                LOGINFO("AVInput - getEdid2AllmSupport:%d", allmSupportValue);
             }
             catch (const device::Exception &err)
             {
@@ -1698,6 +1923,7 @@ namespace WPEFramework
             }
             return ret;
         }
+        // </pca>
 
         uint32_t AVInputImplementation::getEdid2AllmSupportWrapper(const JsonObject &parameters, JsonObject &response)
         {
@@ -1718,7 +1944,10 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            bool result = getEdid2AllmSupport(portId, &allmSupport);
+            // <pca>
+            // bool result = getEdid2AllmSupport(portId, &allmSupport);
+            bool result = GetEdid2AllmSupport(portId, allmSupport);
+            // </pca>
             if (result == true)
             {
                 response["allmSupport"] = allmSupport;
@@ -1730,22 +1959,69 @@ namespace WPEFramework
             }
         }
 
-        bool AVInputImplementation::getVRRSupport(int portId, bool *vrrSupportValue)
+        // <pca>
+        // bool AVInputImplementation::getVRRSupport(int portId, bool *vrrSupportValue)
+        // {
+        //     bool ret = true;
+        //     try
+        //     {
+        //         device::HdmiInput::getInstance().getVRRSupport(portId, vrrSupportValue);
+        //         LOGINFO("AVInput - getVRRSupport:%d", *vrrSupportValue);
+        //     }
+        //     catch (const device::Exception &err)
+        //     {
+        //         LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+        //         ret = false;
+        //     }
+        //     return ret;
+        // }
+        Core::hresult GetVRRSupport(int portId, bool &vrrSupport)
         {
-            bool ret = true;
+            Core::hresult ret = Core::ERROR_NONE;
+
             try
             {
-                device::HdmiInput::getInstance().getVRRSupport(portId, vrrSupportValue);
-                LOGINFO("AVInput - getVRRSupport:%d", *vrrSupportValue);
+                device::HdmiInput::getInstance().getVRRSupport(portId, &vrrSupport);
+                LOGINFO("AVInput - getVRRSupport:%d", vrrSupport);
             }
             catch (const device::Exception &err)
             {
                 LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-                ret = false;
+                ret = Core::ERROR_GENERAL;
             }
             return ret;
         }
 
+        // uint32_t AVInputImplementation::getVRRSupportWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     LOGINFOMETHOD();
+        //     returnIfParamNotFound(parameters, "portId");
+        //     string sPortId = parameters["portId"].String();
+
+        //     int portId = 0;
+        //     bool vrrSupport = true;
+
+        //     try
+        //     {
+        //         portId = stoi(sPortId);
+        //     }
+        //     catch (const std::exception &err)
+        //     {
+        //         LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+        //         returnResponse(false);
+        //     }
+
+        //     bool result = getVRRSupport(portId, &vrrSupport);
+        //     if (result == true)
+        //     {
+        //         response["vrrSupport"] = vrrSupport;
+        //         returnResponse(true);
+        //     }
+        //     else
+        //     {
+        //         returnResponse(false);
+        //     }
+        // }
         uint32_t AVInputImplementation::getVRRSupportWrapper(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
@@ -1765,33 +2041,47 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            bool result = getVRRSupport(portId, &vrrSupport);
-            if (result == true)
+            Core::hresult result = GetVRRSupport(portId, vrrSupport);
+
+            if (Core::ERROR_NONE == result)
             {
                 response["vrrSupport"] = vrrSupport;
-                returnResponse(true);
             }
-            else
-            {
-                returnResponse(false);
-            }
+
+            returnResponse(Core::ERROR_NONE == result);
         }
 
-        bool AVInputImplementation::setVRRSupport(int portId, bool vrrSupport)
+        // bool AVInputImplementation::setVRRSupport(int portId, bool vrrSupport)
+        // {
+        //     bool ret = true;
+        //     try
+        //     {
+        //         device::HdmiInput::getInstance().setVRRSupport(portId, vrrSupport);
+        //         LOGWARN("AVInput -  vrrSupport:%d", vrrSupport);
+        //     }
+        //     catch (const device::Exception &err)
+        //     {
+        //         LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+        //         ret = false;
+        //     }
+        //     return ret;
+        // }
+        Core::hresult SetVRRSupport(int id, bool vrrSupport)
         {
-            bool ret = true;
+            Core::hresult ret = Core::ERROR_NONE;
             try
             {
-                device::HdmiInput::getInstance().setVRRSupport(portId, vrrSupport);
+                device::HdmiInput::getInstance().setVRRSupport(id, vrrSupport);
                 LOGWARN("AVInput -  vrrSupport:%d", vrrSupport);
             }
             catch (const device::Exception &err)
             {
-                LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-                ret = false;
+                LOG_DEVICE_EXCEPTION1(std::to_string(id));
+                ret = Core::ERROR_GENERAL;
             }
             return ret;
         }
+        // </pca>
 
         uint32_t AVInputImplementation::setVRRSupportWrapper(const JsonObject &parameters, JsonObject &response)
         {
@@ -1814,15 +2104,7 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            bool result = setVRRSupport(portId, vrrSupport);
-            if (result == true)
-            {
-                returnResponse(true);
-            }
-            else
-            {
-                returnResponse(false);
-            }
+            returnResponse(Core::ERROR_NONE == SetVRRSupport(portId, vrrSupport));
         }
 
         uint32_t AVInputImplementation::getVRRFrameRateWrapper(const JsonObject &parameters, JsonObject &response)
@@ -1857,6 +2139,55 @@ namespace WPEFramework
             }
         }
 
+        // uint32_t AVInputImplementation::setEdidVersionWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     LOGINFOMETHOD();
+        //     string sPortId = parameters["portId"].String();
+        //     int portId = 0;
+        //     string sVersion = "";
+        //     if (parameters.HasLabel("portId") && parameters.HasLabel("edidVersion"))
+        //     {
+        //         try
+        //         {
+        //             portId = stoi(sPortId);
+        //             sVersion = parameters["edidVersion"].String();
+        //         }
+        //         catch (...)
+        //         {
+        //             LOGWARN("Invalid Arguments");
+        //             returnResponse(false);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         LOGWARN("Required parameters are not passed");
+        //         returnResponse(false);
+        //     }
+
+        //     int edidVer = -1;
+        //     if (strcmp(sVersion.c_str(), "HDMI1.4") == 0)
+        //     {
+        //         edidVer = HDMI_EDID_VER_14;
+        //     }
+        //     else if (strcmp(sVersion.c_str(), "HDMI2.0") == 0)
+        //     {
+        //         edidVer = HDMI_EDID_VER_20;
+        //     }
+
+        //     if (edidVer < 0)
+        //     {
+        //         returnResponse(false);
+        //     }
+        //     bool result = setEdidVersion(portId, edidVer);
+        //     if (result == false)
+        //     {
+        //         returnResponse(false);
+        //     }
+        //     else
+        //     {
+        //         returnResponse(true);
+        //     }
+        // }
         uint32_t AVInputImplementation::setEdidVersionWrapper(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
@@ -1882,29 +2213,7 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            int edidVer = -1;
-            if (strcmp(sVersion.c_str(), "HDMI1.4") == 0)
-            {
-                edidVer = HDMI_EDID_VER_14;
-            }
-            else if (strcmp(sVersion.c_str(), "HDMI2.0") == 0)
-            {
-                edidVer = HDMI_EDID_VER_20;
-            }
-
-            if (edidVer < 0)
-            {
-                returnResponse(false);
-            }
-            bool result = setEdidVersion(portId, edidVer);
-            if (result == false)
-            {
-                returnResponse(false);
-            }
-            else
-            {
-                returnResponse(true);
-            }
+            returnResponse(Core::ERROR_NONE == SetEdidVersion(portId, sVersion));
         }
 
         uint32_t AVInputImplementation::getHdmiVersionWrapper(const JsonObject &parameters, JsonObject &response)
@@ -1960,22 +2269,98 @@ namespace WPEFramework
             }
         }
 
-        int AVInputImplementation::setEdidVersion(int iPort, int iEdidVer)
+        // int AVInputImplementation::setEdidVersion(int iPort, int iEdidVer)
+        // {
+        //     bool ret = true;
+        //     try
+        //     {
+        //         device::HdmiInput::getInstance().setEdidVersion(iPort, iEdidVer);
+        //         LOGWARN("AVInputImplementation::setEdidVersion EDID Version:%d", iEdidVer);
+        //     }
+        //     catch (const device::Exception &err)
+        //     {
+        //         LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
+        //         ret = false;
+        //     }
+        //     return ret;
+        // }
+        Core::hresult SetEdidVersion(int id, const string &version)
         {
-            bool ret = true;
+            Core::hresult ret = Core::ERROR_NONE;
+            int edidVer = -1;
+
+            if (strcmp(version.c_str(), "HDMI1.4") == 0)
+            {
+                edidVer = HDMI_EDID_VER_14;
+            }
+            else if (strcmp(version.c_str(), "HDMI2.0") == 0)
+            {
+                edidVer = HDMI_EDID_VER_20;
+            }
+            else
+            {
+                LOGERR("Invalid EDID Version: %s", version.c_str());
+                return Core::ERROR_GENERAL;
+            }
+
             try
             {
-                device::HdmiInput::getInstance().setEdidVersion(iPort, iEdidVer);
-                LOGWARN("AVInputImplementation::setEdidVersion EDID Version:%d", iEdidVer);
+                device::HdmiInput::getInstance().setEdidVersion(id, edidVer);
+                LOGWARN("AVInputImplementation::setEdidVersion EDID Version: %s", version.c_str());
             }
             catch (const device::Exception &err)
             {
-                LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
-                ret = false;
+                LOG_DEVICE_EXCEPTION1(std::to_string(id));
+                ret = Core::ERROR_GENERAL;
             }
+
             return ret;
         }
 
+        // uint32_t AVInputImplementation::getEdidVersionWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     string sPortId = parameters["portId"].String();
+        //     int portId = 0;
+
+        //     LOGINFOMETHOD();
+        //     if (parameters.HasLabel("portId"))
+        //     {
+        //         try
+        //         {
+        //             portId = stoi(sPortId);
+        //         }
+        //         catch (...)
+        //         {
+        //             LOGWARN("Invalid Arguments");
+        //             returnResponse(false);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         LOGWARN("Required parameters are not passed");
+        //         returnResponse(false);
+        //     }
+
+        //     int edidVer = getEdidVersion(portId);
+        //     switch (edidVer)
+        //     {
+        //     case HDMI_EDID_VER_14:
+        //         response["edidVersion"] = "HDMI1.4";
+        //         break;
+        //     case HDMI_EDID_VER_20:
+        //         response["edidVersion"] = "HDMI2.0";
+        //         break;
+        //     }
+
+        //     if (edidVer < 0)
+        //     {
+        //         returnResponse(false);
+        //     }
+        //     else
+        //     {
+        //         returnResponse(true);
+        //     }
+        // }
         uint32_t AVInputImplementation::getEdidVersionWrapper(const JsonObject &parameters, JsonObject &response)
         {
             string sPortId = parameters["portId"].String();
@@ -2000,41 +2385,64 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            int edidVer = getEdidVersion(portId);
-            switch (edidVer)
+            string version;
+            Core::hresult ret = GetEdidVersion(portId, version);
+            if (Core::ERROR_NONE == ret)
             {
-            case HDMI_EDID_VER_14:
-                response["edidVersion"] = "HDMI1.4";
-                break;
-            case HDMI_EDID_VER_20:
-                response["edidVersion"] = "HDMI2.0";
-                break;
-            }
-
-            if (edidVer < 0)
-            {
-                returnResponse(false);
+                response["edidVersion"] = version;
+                returnResponse(true);
             }
             else
             {
-                returnResponse(true);
+                LOGERR("Failed to get EDID version for port %d", portId);
+                returnResponse(false);
             }
         }
 
-        int AVInputImplementation::getEdidVersion(int iPort)
+        // int AVInputImplementation::getEdidVersion(int iPort)
+        // {
+        //     int edidVersion = -1;
+
+        //     try
+        //     {
+        //         device::HdmiInput::getInstance().getEdidVersion(iPort, &edidVersion);
+        //         LOGWARN("AVInputImplementation::getEdidVersion EDID Version:%d", edidVersion);
+        //     }
+        //     catch (const device::Exception &err)
+        //     {
+        //         LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
+        //     }
+        //     return edidVersion;
+        // }
+        Core::hresult GetEdidVersion(int id, string &version)
         {
+            Core::hresult ret = Core::ERROR_NONE;
             int edidVersion = -1;
 
             try
             {
-                device::HdmiInput::getInstance().getEdidVersion(iPort, &edidVersion);
+                device::HdmiInput::getInstance().getEdidVersion(id, &edidVersion);
                 LOGWARN("AVInputImplementation::getEdidVersion EDID Version:%d", edidVersion);
             }
             catch (const device::Exception &err)
             {
-                LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
+                LOG_DEVICE_EXCEPTION1(std::to_string(id));
+                return Core::ERROR_GENERAL;
             }
-            return edidVersion;
+
+            switch (edidVersion)
+            {
+            case HDMI_EDID_VER_14:
+                version = "HDMI1.4";
+                break;
+            case HDMI_EDID_VER_20:
+                version = "HDMI2.0";
+                break;
+            default:
+                return Core::ERROR_GENERAL;
+            }
+
+            return ret;
         }
 
     } // namespace Plugin
