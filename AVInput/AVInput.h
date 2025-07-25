@@ -23,6 +23,8 @@
 #include <interfaces/IAVInput.h>
 #include <interfaces/json/JAVInput.h>
 #include <interfaces/json/JsonData_AVInput.h>
+
+#include "AVInputImplementation.h"
 #include "UtilsLogging.h"
 #include "tracing/Logging.h"
 
@@ -75,34 +77,37 @@ namespace WPEFramework
                     _parent.Deactivated(connection);
                 }
 
-                void OnSignalChanged(uint8_t id, const InputSignalInfo &info) override
+                void OnSignalChanged(const InputSignalInfo &info) override
                 {
-                    LOGINFO("OnSignalChanged: id %d, locator %s, status %s\n", id, info.locator.c_str(), info.status.c_str());
-                    Exchange::JAVInput::Event::OnSignalChanged(_parent, id, info);
+                    LOGINFO("OnSignalChanged: id %d, locator %s, status %s\n", info.id, info.locator.c_str(), info.status.c_str());
+                    Exchange::JAVInput::Event::OnSignalChanged(_parent, info);
                 }
 
-                void OnInputStatusChanged(uint8_t id, const InputSignalInfo &info) override
+                void OnInputStatusChanged(const InputSignalInfo &info) override
                 {
-                    LOGINFO("OnInputStatusChanged: id %d, locator %s, status %s\n", id, info.locator.c_str(), info.status.c_str());
-                    Exchange::JAVInput::Event::OnInputStatusChanged(_parent, id, info);
+                    LOGINFO("OnInputStatusChanged: id %d, locator %s, status %s\n", info.id, info.locator.c_str(), info.status.c_str());
+                    Exchange::JAVInput::Event::OnInputStatusChanged(_parent, info);
                 }
 
-                void videoStreamInfoUpdate(uint8_t id, const InputVideoMode &videoMode) override
+                void VideoStreamInfoUpdate(const InputVideoMode &videoMode) override
                 {
-                    LOGINFO("videoStreamInfoUpdate: id %d, videoMode %d\n", id, videoMode);
-                    Exchange::JAVInput::Event::videoStreamInfoUpdate(_parent, id, videoMode);
+                    LOGINFO("VideoStreamInfoUpdate: id %d, width %d, height %d, frameRateN %d, frameRateD %d, progressive %d, locator %s\n",
+                            videoMode.id, videoMode.width, videoMode.height, videoMode.frameRateN, videoMode.frameRateD,
+                            videoMode.progressive, videoMode.locator.c_str());
+                    Exchange::JAVInput::Event::VideoStreamInfoUpdate(_parent, videoMode);
                 }
 
-                void gameFeatureStatusUpdate(uint8_t id, const GameFeatureStatus &status) override
+                void GameFeatureStatusUpdate(const GameFeatureStatus &status) override
                 {
-                    LOGINFO("gameFeatureStatusUpdate: id %d, status %d\n", id, status);
-                    Exchange::JAVInput::Event::gameFeatureStatusUpdate(_parent, id, status);
+                    LOGINFO("GameFeatureStatusUpdate: id %d, gameFeature %s, allmMode %d\n",
+                            status.id, status.gameFeature.c_str(), static_cast<int>(status.allmMode));
+                    Exchange::JAVInput::Event::GameFeatureStatusUpdate(_parent, status);
                 }
 
-                void aviContentTypeUpdate(uint8_t id, int contentType) override
+                void AviContentTypeUpdate(int contentType) override
                 {
-                    LOGINFO("aviContentTypeUpdate: id %d, contentType %d\n", id, contentType);
-                    Exchange::JAVInput::Event::aviContentTypeUpdate(_parent, id, contentType);
+                    LOGINFO("AviContentTypeUpdate: contentType %d\n", contentType);
+                    Exchange::JAVInput::Event::AviContentTypeUpdate(_parent, contentType);
                 }
 
             private:
@@ -136,6 +141,13 @@ namespace WPEFramework
             const string Initialize(PluginHost::IShell *service) override;
             void Deinitialize(PluginHost::IShell *service) override;
             string Information() const override;
+
+        protected:
+            void InitializeIARM();
+            void DeinitializeIARM();
+
+            void RegisterAll();
+            void UnregisterAll();
 
         private:
             void Deactivated(RPC::IRemoteConnection *connection);

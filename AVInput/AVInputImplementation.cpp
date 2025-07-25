@@ -26,37 +26,6 @@
 
 #define HDMI 0
 #define COMPOSITE 1
-#define AV_HOT_PLUG_EVENT_CONNECTED 0
-#define AV_HOT_PLUG_EVENT_DISCONNECTED 1
-#define AVINPUT_METHOD_NUMBER_OF_INPUTS "numberOfInputs"
-#define AVINPUT_METHOD_GET_INPUT_DEVICES "getInputDevices"
-#define AVINPUT_METHOD_WRITE_EDID "writeEDID"
-#define AVINPUT_METHOD_READ_EDID "readEDID"
-#define AVINPUT_METHOD_READ_RAWSPD "getRawSPD"
-#define AVINPUT_METHOD_READ_SPD "getSPD"
-#define AVINPUT_METHOD_SET_EDID_VERSION "setEdidVersion"
-#define AVINPUT_METHOD_GET_EDID_VERSION "getEdidVersion"
-#define AVINPUT_METHOD_SET_EDID_ALLM_SUPPORT "setEdid2AllmSupport"
-#define AVINPUT_METHOD_GET_EDID_ALLM_SUPPORT "getEdid2AllmSupport"
-#define AVINPUT_METHOD_SET_VRR_SUPPORT "setVRRSupport"
-#define AVINPUT_METHOD_GET_VRR_SUPPORT "getVRRSupport"
-#define AVINPUT_METHOD_GET_VRR_FRAME_RATE "getVRRFrameRate"
-#define AVINPUT_METHOD_GET_HDMI_COMPATIBILITY_VERSION "getHdmiVersion"
-#define AVINPUT_METHOD_SET_MIXER_LEVELS "setMixerLevels"
-#define AVINPUT_METHOD_START_INPUT "startInput"
-#define AVINPUT_METHOD_STOP_INPUT "stopInput"
-#define AVINPUT_METHOD_SCALE_INPUT "setVideoRectangle"
-#define AVINPUT_METHOD_CURRENT_VIDEO_MODE "currentVideoMode"
-#define AVINPUT_METHOD_CONTENT_PROTECTED "contentProtected"
-#define AVINPUT_METHOD_SUPPORTED_GAME_FEATURES "getSupportedGameFeatures"
-#define AVINPUT_METHOD_GAME_FEATURE_STATUS "getGameFeatureStatus"
-
-#define AVINPUT_EVENT_ON_DEVICES_CHANGED "onDevicesChanged"
-#define AVINPUT_EVENT_ON_SIGNAL_CHANGED "onSignalChanged"
-#define AVINPUT_EVENT_ON_STATUS_CHANGED "onInputStatusChanged"
-#define AVINPUT_EVENT_ON_VIDEO_MODE_UPDATED "videoStreamInfoUpdate"
-#define AVINPUT_EVENT_ON_GAME_FEATURE_STATUS_CHANGED "gameFeatureStatusUpdate"
-#define AVINPUT_EVENT_ON_AVI_CONTENT_TYPE_CHANGED "aviContentTypeUpdate"
 
 #define STR_ALLM "ALLM"
 #define VRR_TYPE_HDMI "VRR-HDMI"
@@ -168,7 +137,6 @@ namespace WPEFramework
 
                 while (index != _avInputNotification.end())
                 {
-                    // <pca> YAH: Missing ID here </pca>
                     (*index)->OnSignalChanged(inputSignalInfo);
                     ++index;
                 }
@@ -201,7 +169,7 @@ namespace WPEFramework
 
                 while (index != _avInputNotification.end())
                 {
-                    (*index)->videoStreamInfoUpdate(videoMode);
+                    (*index)->VideoStreamInfoUpdate(videoMode);
                     ++index;
                 }
                 break;
@@ -215,7 +183,7 @@ namespace WPEFramework
 
                 while (index != _avInputNotification.end())
                 {
-                    (*index)->gameFeatureStatusUpdate(status);
+                    (*index)->GameFeatureStatusUpdate(status);
                     ++index;
                 }
                 break;
@@ -225,7 +193,7 @@ namespace WPEFramework
                 int contentType = params.Number();
                 while (index != _avInputNotification.end())
                 {
-                    (*index)->aviContentTypeUpdate(contentType);
+                    (*index)->AviContentTypeUpdate(contentType);
                     ++index;
                 }
                 break;
@@ -677,62 +645,6 @@ namespace WPEFramework
             return deviceArray;
         }
 
-        // <pca> debug
-        // uint32_t AVInputImplementation::getInputDevicesWrapper(const JsonObject &parameters, JsonObject &response)
-        // {
-        //     Exchange::IAVInput::IInputDeviceIterator *devices = nullptr;
-        //     Core::hresult result;
-
-        //     LOGINFOMETHOD();
-
-        //     if (parameters.HasLabel("typeOfInput"))
-        //     {
-        //         string sType = parameters["typeOfInput"].String();
-        //         int iType = 0;
-
-        //         try
-        //         {
-        //             iType = getTypeOfInput(sType);
-        //         }
-        //         catch (...)
-        //         {
-        //             LOGWARN("Invalid Arguments");
-        //             returnResponse(false);
-        //         }
-
-        //         result = getInputDevices(iType, devices);
-        //     }
-        //     else
-        //     {
-        //         Exchange::IAVInput::IInputDeviceIterator *hdmiDevices = nullptr;
-        //         result = getInputDevices(HDMI, hdmiDevices);
-
-        //         if (Core::ERROR_NONE == result)
-        //         {
-        //             Exchange::IAVInput::IInputDeviceIterator *compositeDevices = nullptr;
-        //             result = getInputDevices(COMPOSITE, compositeDevices);
-
-        //             if (Core::ERROR_NONE == result)
-        //             {
-        //                 devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(hdmiDevices, compositeDevices);
-        //                 hdmiDevices->Release();
-        //                 compositeDevices->Release();
-        //             }
-        //             else
-        //             {
-        //                 hdmiDevices->Release();
-        //             }
-        //         }
-        //     }
-
-        //     if (devices != nullptr && Core::ERROR_NONE == result)
-        //     {
-        //         response["devices"] = devicesToJson(devices);
-        //         devices->Release();
-        //     }
-
-        //     returnResponse(Core::ERROR_NONE == result);
-        // }
         uint32_t AVInputImplementation::getInputDevicesWrapper(const JsonObject &parameters, JsonObject &response)
         {
             Exchange::IAVInput::IInputDeviceIterator *devices = nullptr;
@@ -784,7 +696,6 @@ namespace WPEFramework
 
             returnResponse(Core::ERROR_NONE == result);
         }
-        // </pca>
 
         // <pca>
         // uint32_t AVInputImplementation::writeEDIDWrapper(const JsonObject &parameters, JsonObject &response)
@@ -891,59 +802,6 @@ namespace WPEFramework
         }
         // </pca>
 
-        // <pca> debug
-        // Core::hresult getInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices)
-        // {
-        //     uint32_t result = Core::ERROR_NONE;
-        //     std::list<WPEFramework::Exchange::IAVInput::InputDevice> list;
-
-        //     try
-        //     {
-        //         int num = 0;
-        //         if (type == HDMI)
-        //         {
-        //             num = device::HdmiInput::getInstance().getNumberOfInputs();
-        //         }
-        //         else if (type == COMPOSITE)
-        //         {
-        //             num = device::CompositeInput::getInstance().getNumberOfInputs();
-        //         }
-        //         if (num > 0)
-        //         {
-        //             int i = 0;
-        //             for (i = 0; i < num; i++)
-        //             {
-        //                 // Input ID is aleays 0-indexed, continuous number starting 0
-        //                 WPEFramework::Exchange::IAVInput::InputDevice inputDevice;
-
-        //                 inputDevice.id = i;
-        //                 std::stringstream locator;
-        //                 if (type == HDMI)
-        //                 {
-        //                     locator << "hdmiin://localhost/deviceid/" << i;
-        //                     inputDevice.connected = device::HdmiInput::getInstance().isPortConnected(i);
-        //                 }
-        //                 else if (type == COMPOSITE)
-        //                 {
-        //                     locator << "cvbsin://localhost/deviceid/" << i;
-        //                     inputDevice.connected = device::CompositeInput::getInstance().isPortConnected(i);
-        //                 }
-        //                 inputDevice.locator = locator.str();
-        //                 LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, inputDevice.locator.c_str(), inputDevice.connected);
-        //                 list.push_back(inputDevice);
-        //             }
-        //         }
-        //     }
-        //     catch (const std::exception &e)
-        //     {
-        //         LOGWARN("AVInputService::getInputDevices Failed");
-        //         result = Core::ERROR_GENERAL;
-        //     }
-
-        //     devices = (Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(list));
-
-        //     return result;
-        // }
         Core::hresult getInputDevices(int type, std::list<WPEFramework::Exchange::IAVInput::InputDevice> devices)
         {
             Core::hresult result = Core::ERROR_NONE;
@@ -1011,7 +869,6 @@ namespace WPEFramework
 
             return result;
         }
-        // </pca>
 
         Core::hresult WriteEDID(int id, const string &edid)
         {

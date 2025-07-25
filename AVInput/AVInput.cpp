@@ -23,6 +23,38 @@
 #define API_VERSION_NUMBER_MINOR 7
 #define API_VERSION_NUMBER_PATCH 1
 
+#define AV_HOT_PLUG_EVENT_CONNECTED 0
+#define AV_HOT_PLUG_EVENT_DISCONNECTED 1
+#define AVINPUT_METHOD_NUMBER_OF_INPUTS "numberOfInputs"
+#define AVINPUT_METHOD_GET_INPUT_DEVICES "getInputDevices"
+#define AVINPUT_METHOD_WRITE_EDID "writeEDID"
+#define AVINPUT_METHOD_READ_EDID "readEDID"
+#define AVINPUT_METHOD_READ_RAWSPD "getRawSPD"
+#define AVINPUT_METHOD_READ_SPD "getSPD"
+#define AVINPUT_METHOD_SET_EDID_VERSION "setEdidVersion"
+#define AVINPUT_METHOD_GET_EDID_VERSION "getEdidVersion"
+#define AVINPUT_METHOD_SET_EDID_ALLM_SUPPORT "setEdid2AllmSupport"
+#define AVINPUT_METHOD_GET_EDID_ALLM_SUPPORT "getEdid2AllmSupport"
+#define AVINPUT_METHOD_SET_VRR_SUPPORT "setVRRSupport"
+#define AVINPUT_METHOD_GET_VRR_SUPPORT "getVRRSupport"
+#define AVINPUT_METHOD_GET_VRR_FRAME_RATE "getVRRFrameRate"
+#define AVINPUT_METHOD_GET_HDMI_COMPATIBILITY_VERSION "getHdmiVersion"
+#define AVINPUT_METHOD_SET_MIXER_LEVELS "setMixerLevels"
+#define AVINPUT_METHOD_START_INPUT "startInput"
+#define AVINPUT_METHOD_STOP_INPUT "stopInput"
+#define AVINPUT_METHOD_SCALE_INPUT "setVideoRectangle"
+#define AVINPUT_METHOD_CURRENT_VIDEO_MODE "currentVideoMode"
+#define AVINPUT_METHOD_CONTENT_PROTECTED "contentProtected"
+#define AVINPUT_METHOD_SUPPORTED_GAME_FEATURES "getSupportedGameFeatures"
+#define AVINPUT_METHOD_GAME_FEATURE_STATUS "getGameFeatureStatus"
+
+#define AVINPUT_EVENT_ON_DEVICES_CHANGED "onDevicesChanged"
+#define AVINPUT_EVENT_ON_SIGNAL_CHANGED "onSignalChanged"
+#define AVINPUT_EVENT_ON_STATUS_CHANGED "onInputStatusChanged"
+#define AVINPUT_EVENT_ON_VIDEO_MODE_UPDATED "videoStreamInfoUpdate"
+#define AVINPUT_EVENT_ON_GAME_FEATURE_STATUS_CHANGED "gameFeatureStatusUpdate"
+#define AVINPUT_EVENT_ON_AVI_CONTENT_TYPE_CHANGED "aviContentTypeUpdate"
+
 namespace WPEFramework
 {
     namespace
@@ -152,151 +184,153 @@ namespace WPEFramework
         {
             return (string());
         }
-    }
 
-    void AVInput::InitializeIARM()
-    {
-        if (Utils::IARM::init())
+        void AVInput::InitializeIARM()
         {
-            IARM_Result_t res;
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG,
-                dsAVEventHandler));
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS,
-                dsAVSignalStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS,
-                dsAVStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE,
-                dsAVVideoModeEventHandler));
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS,
-                dsAVGameFeatureStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS,
-                dsAVGameFeatureStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG,
-                dsAVEventHandler));
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS,
-                dsAVSignalStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS,
-                dsAVStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE,
-                dsAVVideoModeEventHandler));
-            IARM_CHECK(IARM_Bus_RegisterEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE,
-                dsAviContentTypeEventHandler));
+            if (Utils::IARM::init())
+            {
+                IARM_Result_t res;
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG,
+                    dsAVEventHandler));
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS,
+                    dsAVSignalStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS,
+                    dsAVStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE,
+                    dsAVVideoModeEventHandler));
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS,
+                    dsAVGameFeatureStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS,
+                    dsAVGameFeatureStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG,
+                    dsAVEventHandler));
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS,
+                    dsAVSignalStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS,
+                    dsAVStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE,
+                    dsAVVideoModeEventHandler));
+                IARM_CHECK(IARM_Bus_RegisterEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE,
+                    dsAviContentTypeEventHandler));
+            }
         }
-    }
 
-    void AVInput::DeinitializeIARM()
-    {
-        if (Utils::IARM::isConnected())
+        void AVInput::DeinitializeIARM()
         {
-            IARM_Result_t res;
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, dsAVEventHandler));
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, dsAVSignalStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS, dsAVStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, dsAVVideoModeEventHandler));
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS, dsAVGameFeatureStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS, dsAVGameFeatureStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG, dsAVEventHandler));
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, dsAVSignalStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS, dsAVStatusEventHandler));
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE, dsAVVideoModeEventHandler));
-            IARM_CHECK(IARM_Bus_RemoveEventHandler(
-                IARM_BUS_DSMGR_NAME,
-                IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE, dsAviContentTypeEventHandler));
+            if (Utils::IARM::isConnected())
+            {
+                IARM_Result_t res;
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, dsAVEventHandler));
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, dsAVSignalStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS, dsAVStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, dsAVVideoModeEventHandler));
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS, dsAVGameFeatureStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS, dsAVGameFeatureStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG, dsAVEventHandler));
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, dsAVSignalStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS, dsAVStatusEventHandler));
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE, dsAVVideoModeEventHandler));
+                IARM_CHECK(IARM_Bus_RemoveEventHandler(
+                    IARM_BUS_DSMGR_NAME,
+                    IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE, dsAviContentTypeEventHandler));
+            }
         }
-    }
 
-    void AVInput::RegisterAll()
-    {
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_NUMBER_OF_INPUTS), &AVInput::endpoint_numberOfInputs, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_CURRENT_VIDEO_MODE), &AVInput::endpoint_currentVideoMode, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_CONTENT_PROTECTED), &AVInput::endpoint_contentProtected, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_INPUT_DEVICES), &AVInput::getInputDevicesWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_WRITE_EDID), &AVInput::writeEDIDWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_READ_EDID), &AVInput::readEDIDWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_READ_RAWSPD), &AVInput::getRawSPDWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_READ_SPD), &AVInput::getSPDWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_EDID_VERSION), &AVInput::setEdidVersionWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_EDID_VERSION), &AVInput::getEdidVersionWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_MIXER_LEVELS), &AVInput::setMixerLevels, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_EDID_ALLM_SUPPORT), &AVInput::setEdid2AllmSupportWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_EDID_ALLM_SUPPORT), &AVInput::getEdid2AllmSupportWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_VRR_SUPPORT), &AVInput::setVRRSupportWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_VRR_SUPPORT), &AVInput::getVRRSupportWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_VRR_FRAME_RATE), &AVInput::getVRRFrameRateWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_HDMI_COMPATIBILITY_VERSION), &AVInput::getHdmiVersionWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_START_INPUT), &AVInput::startInput, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_STOP_INPUT), &AVInput::stopInput, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SCALE_INPUT), &AVInput::setVideoRectangleWrapper, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SUPPORTED_GAME_FEATURES), &AVInput::getSupportedGameFeatures, this);
-        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GAME_FEATURE_STATUS), &AVInput::getGameFeatureStatusWrapper, this);
-        m_primVolume = DEFAULT_PRIM_VOL_LEVEL;
-        m_inputVolume = DEFAULT_INPUT_VOL_LEVEL;
-        m_currentVrrType = dsVRR_NONE;
-    }
+        void AVInput::RegisterAll()
+        {
+            // <pca> YAH: Figure out if we still need to do this, or do this differently. </pca>
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_NUMBER_OF_INPUTS), &AVInputImplementation::endpoint_numberOfInputs, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_CURRENT_VIDEO_MODE), &AVInputImplementation::endpoint_currentVideoMode, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_CONTENT_PROTECTED), &AVInputImplementation::endpoint_contentProtected, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_INPUT_DEVICES), &AVInputImplementation::getInputDevicesWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_WRITE_EDID), &AVInputImplementation::writeEDIDWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_READ_EDID), &AVInputImplementation::readEDIDWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_READ_RAWSPD), &AVInputImplementation::getRawSPDWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_READ_SPD), &AVInputImplementation::getSPDWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_EDID_VERSION), &AVInputImplementation::setEdidVersionWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_EDID_VERSION), &AVInputImplementation::getEdidVersionWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_MIXER_LEVELS), &AVInputImplementation::setMixerLevels, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_EDID_ALLM_SUPPORT), &AVInputImplementation::setEdid2AllmSupportWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_EDID_ALLM_SUPPORT), &AVInputImplementation::getEdid2AllmSupportWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SET_VRR_SUPPORT), &AVInputImplementation::setVRRSupportWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_VRR_SUPPORT), &AVInputImplementation::getVRRSupportWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_VRR_FRAME_RATE), &AVInputImplementation::getVRRFrameRateWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_HDMI_COMPATIBILITY_VERSION), &AVInputImplementation::getHdmiVersionWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_START_INPUT), &AVInputImplementation::startInput, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_STOP_INPUT), &AVInputImplementation::stopInput, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SCALE_INPUT), &AVInputImplementation::setVideoRectangleWrapper, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_SUPPORTED_GAME_FEATURES), &AVInputImplementation::getSupportedGameFeatures, this);
+            Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GAME_FEATURE_STATUS), &AVInputImplementation::getGameFeatureStatusWrapper, this);
+            m_primVolume = DEFAULT_PRIM_VOL_LEVEL;
+            m_inputVolume = DEFAULT_INPUT_VOL_LEVEL;
+            m_currentVrrType = dsVRR_NONE;
+        }
 
-    void AVInput::UnregisterAll()
-    {
-        Unregister(_T(AVINPUT_METHOD_NUMBER_OF_INPUTS));
-        Unregister(_T(AVINPUT_METHOD_CURRENT_VIDEO_MODE));
-        Unregister(_T(AVINPUT_METHOD_CONTENT_PROTECTED));
-        Unregister(_T(AVINPUT_METHOD_GET_INPUT_DEVICES));
-        Unregister(_T(AVINPUT_METHOD_WRITE_EDID));
-        Unregister(_T(AVINPUT_METHOD_READ_EDID));
-        Unregister(_T(AVINPUT_METHOD_READ_RAWSPD));
-        Unregister(_T(AVINPUT_METHOD_READ_SPD));
-        Unregister(_T(AVINPUT_METHOD_SET_VRR_SUPPORT));
-        Unregister(_T(AVINPUT_METHOD_GET_VRR_SUPPORT));
-        Unregister(_T(AVINPUT_METHOD_GET_VRR_FRAME_RATE));
-        Unregister(_T(AVINPUT_METHOD_SET_EDID_VERSION));
-        Unregister(_T(AVINPUT_METHOD_GET_EDID_VERSION));
-        Unregister(_T(AVINPUT_METHOD_START_INPUT));
-        Unregister(_T(AVINPUT_METHOD_STOP_INPUT));
-        Unregister(_T(AVINPUT_METHOD_SCALE_INPUT));
-        Unregister(_T(AVINPUT_METHOD_SUPPORTED_GAME_FEATURES));
-        Unregister(_T(AVINPUT_METHOD_GAME_FEATURE_STATUS));
-    }
+        void AVInput::UnregisterAll()
+        {
+            Unregister(_T(AVINPUT_METHOD_NUMBER_OF_INPUTS));
+            Unregister(_T(AVINPUT_METHOD_CURRENT_VIDEO_MODE));
+            Unregister(_T(AVINPUT_METHOD_CONTENT_PROTECTED));
+            Unregister(_T(AVINPUT_METHOD_GET_INPUT_DEVICES));
+            Unregister(_T(AVINPUT_METHOD_WRITE_EDID));
+            Unregister(_T(AVINPUT_METHOD_READ_EDID));
+            Unregister(_T(AVINPUT_METHOD_READ_RAWSPD));
+            Unregister(_T(AVINPUT_METHOD_READ_SPD));
+            Unregister(_T(AVINPUT_METHOD_SET_VRR_SUPPORT));
+            Unregister(_T(AVINPUT_METHOD_GET_VRR_SUPPORT));
+            Unregister(_T(AVINPUT_METHOD_GET_VRR_FRAME_RATE));
+            Unregister(_T(AVINPUT_METHOD_SET_EDID_VERSION));
+            Unregister(_T(AVINPUT_METHOD_GET_EDID_VERSION));
+            Unregister(_T(AVINPUT_METHOD_START_INPUT));
+            Unregister(_T(AVINPUT_METHOD_STOP_INPUT));
+            Unregister(_T(AVINPUT_METHOD_SCALE_INPUT));
+            Unregister(_T(AVINPUT_METHOD_SUPPORTED_GAME_FEATURES));
+            Unregister(_T(AVINPUT_METHOD_GAME_FEATURE_STATUS));
+        }
+
+    } // Plugin
 
     void AVInput::dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
     {
