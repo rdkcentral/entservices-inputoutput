@@ -147,6 +147,14 @@ namespace WPEFramework
             Core::hresult GetSupportedGameFeatures(IStringIterator *&features) override;
             Core::hresult GetGameFeatureStatus(int id, const string &feature, bool &mode) override;
 
+            void AVInputHotplug(int input, int connect, int type);
+            void AVInputSignalChange(int port, int signalStatus, int type);
+            void AVInputStatusChange(int port, bool isPresented, int type);
+            void AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type);
+            void hdmiInputAviContentTypeChange(int port, int content_type);
+            void AVInputALLMChange(int port, bool allm_mode);
+            void AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode);
+
         private:
             mutable Core::CriticalSection _adminLock;
             PluginHost::IShell *_service;
@@ -180,15 +188,8 @@ namespace WPEFramework
             uint32_t SetMixerLevels(const JsonObject &parameters, JsonObject &response);
             uint32_t getHdmiVersionWrapper(const JsonObject &parameters, JsonObject &response);
 
-            void AVInputHotplug(int input, int connect, int type);
             Core::hresult getInputDevices(int type, std::list<WPEFramework::Exchange::IAVInput::InputDevice> devices);
             JsonArray devicesToJson(Exchange::IAVInput::IInputDeviceIterator *devices);
-            void AVInputSignalChange(int port, int signalStatus, int type);
-            void AVInputStatusChange(int port, bool isPresented, int type);
-            void AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type);
-            void hdmiInputAviContentTypeChange(int port, int content_type);
-            void AVInputALLMChange(int port, bool allm_mode);
-            void AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode);
 
             bool getALLMStatus(int iPort);
             bool getVRRStatus(int iPort, dsHdmiInVrrStatus_t *vrrStatus);
@@ -196,6 +197,7 @@ namespace WPEFramework
 
         public:
             static AVInputImplementation *_instance;
+            dsVRRType_t m_currentVrrType;
 
             friend class Job;
         };

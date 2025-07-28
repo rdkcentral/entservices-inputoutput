@@ -114,13 +114,6 @@ namespace WPEFramework
                 AVInput &_parent;
             };
 
-            static void dsAVEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            static void dsAVSignalStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            static void dsAVStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            static void dsAVVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            static void dsAVGameFeatureStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            static void dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-
         public:
             AVInput(const AVInput &) = delete;
             AVInput &operator=(const AVInput &) = delete;
@@ -133,8 +126,6 @@ namespace WPEFramework
             INTERFACE_ENTRY(PluginHost::IDispatcher)
             INTERFACE_AGGREGATE(Exchange::IAVInput, _avInput)
             END_INTERFACE_MAP
-
-            dsVRRType_t m_currentVrrType;
 
             //  IPlugin methods
             // -------------------------------------------------------------------------------------------------------
@@ -150,13 +141,20 @@ namespace WPEFramework
             void UnregisterAll();
 
         private:
-            void Deactivated(RPC::IRemoteConnection *connection);
-
-        private:
             PluginHost::IShell *_service{};
             uint32_t _connectionId{};
             Exchange::IAVInput *_avInput{};
             Core::Sink<Notification> _avInputNotification;
-        };
+
+            void Deactivated(RPC::IRemoteConnection *connection);
+
+            static void dsAVEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVSignalStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVGameFeatureStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+
+        }; // AVInput
     } // namespace Plugin
 } // namespace WPEFramework
