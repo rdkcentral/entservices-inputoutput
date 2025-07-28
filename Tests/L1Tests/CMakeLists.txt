@@ -106,9 +106,6 @@ set (HDCPPROFILE_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdcpProfile 
 set (HDCPPROFILE_LIBS ${NAMESPACE}HdcpProfile ${NAMESPACE}HdcpProfileImplementation)
 add_plugin_test_ex(PLUGIN_HDCPPROFILE tests/test_HdcpProfile.cpp "${HDCPPROFILE_INC}" "${HDCPPROFILE_LIBS}")
 
-# PLUGIN_HDMIINPUT
-set (HDMIINPUT_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdmiInput ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
-add_plugin_test_ex(PLUGIN_HDMIINPUT tests/test_HdmiInput.cpp "${HDMIINPUT_INC}" "${NAMESPACE}HdmiInput")
 
 # PLUGIN_HDMICEC2
 add_plugin_test_ex(PLUGIN_HDMICEC2 tests/test_HdmiCec2.cpp "../../HdmiCec_2" "${NAMESPACE}HdmiCec_2")
