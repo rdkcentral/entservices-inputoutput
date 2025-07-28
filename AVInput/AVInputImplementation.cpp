@@ -132,18 +132,18 @@ namespace WPEFramework
 
                 // <pca> YAH </pca>
 
-                devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(deviceList);
+                // devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(deviceList);
 
-                uint8_t id = params.Object()["id"].Number();
-                string locator = params.Object()["locator"].String();
-                string status = params.Object()["signalStatus"].String();
-                InputSignalInfo inputSignalInfo = {id, locator, status};
+                // uint8_t id = params.Object()["id"].Number();
+                // string locator = params.Object()["locator"].String();
+                // string status = params.Object()["signalStatus"].String();
+                // InputSignalInfo inputSignalInfo = {id, locator, status};
 
-                while (index != _avInputNotification.end())
-                {
-                    (*index)->OnDevicesChanged(inputSignalInfo);
-                    ++index;
-                }
+                // while (index != _avInputNotification.end())
+                // {
+                //     (*index)->OnDevicesChanged(inputSignalInfo);
+                //     ++index;
+                // }
                 break;
             }
             case ON_AVINPUT_SIGNAL_CHANGED:
