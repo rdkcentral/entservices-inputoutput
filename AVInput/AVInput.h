@@ -104,10 +104,10 @@ namespace WPEFramework
                     Exchange::JAVInput::Event::GameFeatureStatusUpdate(_parent, status);
                 }
 
-                void AviContentTypeUpdate(int contentType) override
+                void HdmiContentTypeUpdate(int contentType) override
                 {
-                    LOGINFO("AviContentTypeUpdate: contentType %d\n", contentType);
-                    Exchange::JAVInput::Event::AviContentTypeUpdate(_parent, contentType);
+                    LOGINFO("HdmiContentTypeUpdate: contentType %d\n", contentType);
+                    Exchange::JAVInput::Event::HdmiContentTypeUpdate(_parent, contentType);
                 }
 
             private:

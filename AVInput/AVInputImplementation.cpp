@@ -123,8 +123,29 @@ namespace WPEFramework
 
             std::list<Exchange::IAVInput::INotification *>::const_iterator index(_avInputNotification.begin());
 
-            switch (event) // <pca> TODO: Can probably refactor this using a function pointer </pca>
+            switch (event)
             {
+            case ON_AVINPUT_DEVICES_CHANGED:
+            {
+                Exchange::IAVInput::IInputDeviceIterator *devices = nullptr;
+                std::list<WPEFramework::Exchange::IAVInput::InputDevice> deviceList;
+
+                // <pca> YAH </pca>
+
+                devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(deviceList);
+
+                uint8_t id = params.Object()["id"].Number();
+                string locator = params.Object()["locator"].String();
+                string status = params.Object()["signalStatus"].String();
+                InputSignalInfo inputSignalInfo = {id, locator, status};
+
+                while (index != _avInputNotification.end())
+                {
+                    (*index)->OnDevicesChanged(inputSignalInfo);
+                    ++index;
+                }
+                break;
+            }
             case ON_AVINPUT_SIGNAL_CHANGED:
             {
                 uint8_t id = params.Object()["id"].Number();
@@ -190,7 +211,7 @@ namespace WPEFramework
                 int contentType = params.Number();
                 while (index != _avInputNotification.end())
                 {
-                    (*index)->AviContentTypeUpdate(contentType);
+                    (*index)->HdmiContentTypeUpdate(contentType);
                     ++index;
                 }
                 break;

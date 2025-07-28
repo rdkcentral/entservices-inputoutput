@@ -26,13 +26,6 @@
 #define AV_HOT_PLUG_EVENT_CONNECTED 0
 #define AV_HOT_PLUG_EVENT_DISCONNECTED 1
 
-#define AVINPUT_EVENT_ON_DEVICES_CHANGED "onDevicesChanged"
-#define AVINPUT_EVENT_ON_SIGNAL_CHANGED "onSignalChanged"
-#define AVINPUT_EVENT_ON_STATUS_CHANGED "onInputStatusChanged"
-#define AVINPUT_EVENT_ON_VIDEO_MODE_UPDATED "videoStreamInfoUpdate"
-#define AVINPUT_EVENT_ON_GAME_FEATURE_STATUS_CHANGED "gameFeatureStatusUpdate"
-#define AVINPUT_EVENT_ON_AVI_CONTENT_TYPE_CHANGED "aviContentTypeUpdate"
-
 namespace WPEFramework
 {
     namespace

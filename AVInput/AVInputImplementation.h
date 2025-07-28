@@ -69,6 +69,7 @@ namespace WPEFramework
         public:
             enum Event
             {
+                ON_AVINPUT_DEVICES_CHANGED,
                 ON_AVINPUT_SIGNAL_CHANGED,
                 ON_AVINPUT_STATUS_CHANGED,
                 ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE,
