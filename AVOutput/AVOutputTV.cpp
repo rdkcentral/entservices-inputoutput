@@ -799,6 +799,7 @@ namespace Plugin {
         LOGWARN("AVOutputPlugins: %s: result: %d", __FUNCTION__, result);
 
         if (result != tvERROR_NONE) {
+            response["platformSupport"] = false;
             returnResponse(false);
         }
 
@@ -963,6 +964,7 @@ namespace Plugin {
 
         if (ret != tvERROR_NONE) {
             LOGWARN("GetMultiPointWBCaps failed: %s", getErrorString(ret).c_str());
+            response["platformSupport"] = false;
             returnResponse(false);
         }
         response["platformSupport"] = true;
@@ -1032,6 +1034,7 @@ namespace Plugin {
 
         tvError_t err = GetColorTemperatureCaps(&color_temp, &num_color_temp, &context_caps);
         if (err != tvERROR_NONE) {
+            response["platformSupport"] = false;
             return err;
         }
 
@@ -1059,6 +1062,7 @@ namespace Plugin {
 
         tvError_t err = GetSdrGammaCaps(&sdr_gamma, &num_sdr_gamma, &context_caps);
         if (err != tvERROR_NONE) {
+            response["platformSupport"] = false;
             return err;
         }
 
@@ -1093,6 +1097,7 @@ namespace Plugin {
 
         tvError_t err = GetTVDimmingModeCaps(&dimming_mode, &num_dimming_mode, &context_caps);
         if (err != tvERROR_NONE) {
+            response["platformSupport"] = false;
             return err;
         }
 
@@ -1114,8 +1119,6 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getZoomModeCapsV2(const JsonObject& parameters, JsonObject& response)
     {
-        response["platformSupport"] = true;
-
         JsonArray optionsArray;
         for (size_t i = 0; i < m_numAspectRatio; ++i) {
             auto it = zoomModeReverseMap.find(m_aspectRatio[i]);
@@ -1123,17 +1126,18 @@ namespace Plugin {
                 optionsArray.Add(it->second);
             }
         }
-        response["options"] = optionsArray;
 
+        bool platformSupport = (optionsArray.Length() > 0);
+
+        response["platformSupport"] = platformSupport;
+        response["options"] = optionsArray;
         response["context"] = parseContextCaps(m_aspectRatioCaps);
 
-        returnResponse(true);
+        returnResponse(platformSupport);
     }
 
     uint32_t AVOutputTV::getPictureModeCapsV2(const JsonObject& parameters, JsonObject& response)
     {
-        response["platformSupport"] = true;
-
         JsonArray optionsArray;
         for (size_t i = 0; i < m_numPictureModes; ++i) {
             auto it = pqModeMap.find(m_pictureModes[i]);
@@ -1141,17 +1145,18 @@ namespace Plugin {
                 optionsArray.Add(it->second);
             }
         }
-        response["options"] = optionsArray;
 
+        bool platformSupport = (optionsArray.Length() > 0);
+
+        response["platformSupport"] = platformSupport;
+        response["options"] = optionsArray;
         response["context"] = parseContextCaps(m_pictureModeCaps);
 
-        returnResponse(true);
+        returnResponse(platformSupport);
     }
 
     uint32_t AVOutputTV::getAutoBacklightModeCapsV2(const JsonObject& parameters, JsonObject& response)
     {
-        response["platformSupport"] = true;
-
         JsonArray optionsArray;
         for (size_t i = 0; i < m_numBacklightModes; ++i) {
             switch (m_backlightModes[i]) {
@@ -1169,45 +1174,19 @@ namespace Plugin {
                     break;
             }
         }
-        response["options"] = optionsArray;
 
+        bool platformSupport = (optionsArray.Length() > 0);
+
+        response["platformSupport"] = platformSupport;
+        response["options"] = optionsArray;
         response["context"] = parseContextCaps(m_backlightModeCaps);
 
-        returnResponse(true);
+        returnResponse(platformSupport);
     }
+
 
     uint32_t AVOutputTV::getDolbyVisionCalibrationCaps(const JsonObject& parameters, JsonObject& response)
     {
-        tvDVCalibrationSettings_t* min_values = nullptr;
-        tvDVCalibrationSettings_t* max_values = nullptr;
-        tvContextCaps_t* context_caps = nullptr;
-
-        if (GetDVCalibrationCaps(&min_values, &max_values, &context_caps) != tvERROR_NONE) {
-            returnResponse(false);
-        }
-
-        // Set platform support
-        response["platformSupport"] = true;
-
-        // Add all range fields (flattened as per expected JSON)
-        response["rangeTmax"] = JsonObject({{"from", min_values->Tmax}, {"to", max_values->Tmax}});
-        response["rangeTmin"] = JsonObject({{"from", min_values->Tmin}, {"to", max_values->Tmin}});
-        response["rangeTgamma"] = JsonObject({{"from", min_values->Tgamma}, {"to", max_values->Tgamma}});
-        response["rangeRx"] = JsonObject({{"from", min_values->Rx}, {"to", max_values->Rx}});
-        response["rangeRy"] = JsonObject({{"from", min_values->Ry}, {"to", max_values->Ry}});
-        response["rangeGx"] = JsonObject({{"from", min_values->Gx}, {"to", max_values->Gx}});
-        response["rangeGy"] = JsonObject({{"from", min_values->Gy}, {"to", max_values->Gy}});
-        response["rangeBx"] = JsonObject({{"from", min_values->Bx}, {"to", max_values->Bx}});
-        response["rangeBy"] = JsonObject({{"from", min_values->By}, {"to", max_values->By}});
-        response["rangeWx"] = JsonObject({{"from", min_values->Wx}, {"to", max_values->Wx}});
-        response["rangeWy"] = JsonObject({{"from", min_values->Wy}, {"to", max_values->Wy}});
-
-        // Add context list
-        response["context"] = parseContextCaps(context_caps);
-
-        // Indicate success
-        response["success"] = true;
-
         returnResponse(true);
     }
 
@@ -5215,6 +5194,7 @@ namespace Plugin {
 
         if (ret != tvERROR_NONE) {
             LOGERR("GetCMSCaps failed with error: %d", ret);
+            response["platformSupport"] = false;
             returnResponse(false);
         }
         response["platformSupport"] = true;
@@ -5721,6 +5701,7 @@ namespace Plugin {
 
         if (ret != tvERROR_NONE) {
             LOGERR("GetCustom2PointWhiteBalanceCaps failed with error: %d", ret);
+            response["platformSupport"] = false;
             returnResponse(false);
         }
 
