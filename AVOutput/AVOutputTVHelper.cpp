@@ -1281,9 +1281,6 @@ namespace Plugin {
             updateAVoutputTVParamV2("sync", "ColorTemp", paramJson, PQ_PARAM_COLOR_TEMPERATURE,level);
         }
 
-        // HDRMode
-        updateAVoutputTVParam("sync", "HDRMode", info, PQ_PARAM_DOLBY_MODE, level);
-
         // DimmingMode
         m_dimmingModeStatus = GetTVDimmingModeCaps(&m_dimmingModes, &m_numdimmingModes, &m_dimmingModeCaps);
         LOGINFO("GetTVDimmingModeCaps returned status: %d, numdimmingModes: %d", m_dimmingModeStatus, m_numdimmingModes);
@@ -1297,27 +1294,7 @@ namespace Plugin {
         LOGINFO("Calling GetBacklightCaps...");
         m_backlightStatus = GetBacklightCaps(&m_maxBacklight, &m_backlightCaps);
         LOGINFO("GetBacklightCaps returned status: %d, maxBacklight: %d", m_backlightStatus, m_maxBacklight);
-#if DEBUG
-        if (m_backlightCaps)
-        {
-            LOGINFO("Backlight caps pointer is valid. Num contexts: %zu", m_backlightCaps->num_contexts);
-            for (size_t i = 0; i < m_backlightCaps->num_contexts; ++i) {
-                const auto& context = m_backlightCaps->contexts[i];
-                std::string pqModeStr = AVOutputTV::pqModeMap.count(context.pq_mode) ?
-                                        AVOutputTV::pqModeMap.at(context.pq_mode) : "Unknown";
-                std::string formatStr = AVOutputTV::videoFormatMap.count(context.videoFormatType) ?
-                                        AVOutputTV::videoFormatMap.at(context.videoFormatType) : "Unknown";
-                std::string srcStr = AVOutputTV::videoSrcMap.count(context.videoSrcType) ?
-                                     AVOutputTV::videoSrcMap.at(context.videoSrcType) : "Unknown";
-                LOGINFO("Context[%zu]: PQMode = %s (%d), Format = %s (%d), Source = %s (%d)",
-                        i, pqModeStr.c_str(), context.pq_mode,
-                        formatStr.c_str(), context.videoFormatType,
-                        srcStr.c_str(), context.videoSrcType);
-            }
-        } else {
-            LOGWARN("Backlight caps pointer is null.");
-        }
-#endif
+
         if (m_backlightStatus == tvERROR_OPERATION_NOT_SUPPORTED) {
             updateAVoutputTVParam("sync", "Backlight", info, PQ_PARAM_BACKLIGHT, level);
         } else {
@@ -1398,11 +1375,14 @@ namespace Plugin {
             syncCMSParams();
         }
 
-        syncWBParams();
+            //syncWBParams();  Enable once Get2PointWBCaps is implemented
 
+        if(m_pictureModeStatus == tvERROR_OPERATION_NOT_SUPPORTED)
+        {
         // Dolby Vision Mode
         info.format = "DV"; // Sync only for Dolby
         updateAVoutputTVParam("sync", "DolbyVisionMode", info, PQ_PARAM_DOLBY_MODE, level);
+        }
 
         LOGINFO("Exit %s : pqmode : %s source : %s format : %s\n", __FUNCTION__, pqmode.c_str(), source.c_str(), format.c_str());
         return tvERROR_NONE;
@@ -1464,9 +1444,7 @@ namespace Plugin {
                         break;
                     }
                 }
-#if DEBUG
-                LOGINFO("Got mode string from TR181: %s -> index=%d", modeStr.c_str(), modeIndex);
-#endif
+
                 tvError_t tv_err = SaveSourcePictureMode(ctx.videoSrcType, ctx.videoFormatType, modeIndex);
                 if (tv_err != tvERROR_NONE) {
                     LOGWARN("Failed SaveSourcePictureMode for %s / %s\n", sourceStr.c_str(), formatStr.c_str());
@@ -2182,6 +2160,11 @@ namespace Plugin {
         inputInfo.source = source;
         inputInfo.format = format;
 
+        JsonObject paramJson;
+        paramJson["pictureMode"] = inputInfo.pqmode;
+        paramJson["videoSource"] = inputInfo.source;
+        paramJson["videoFormat"] = inputInfo.format;
+
         memset(&param, 0, sizeof(param));
         tr181ErrorCode_t err = getLocalParam(rfc_caller_id, AVOUTPUT_ASPECTRATIO_RFC_PARAM, &param);
         if ( tr181Success == err ) {
@@ -2226,14 +2209,17 @@ namespace Plugin {
                 LOGERR("AspectRatio  set failed: %s\n",getErrorString(ret).c_str());
             }
             else {
-                //Save DisplayMode to ssm_data
-                int retval=updateAVoutputTVParam("set","ZoomMode",inputInfo,PQ_PARAM_ASPECT_RATIO,mode);
-
-                if(retval != 0) {
+                if (m_aspectRatioStatus == tvERROR_OPERATION_NOT_SUPPORTED) {
+                    int retval=updateAVoutputTVParam("set","ZoomMode",inputInfo,PQ_PARAM_ASPECT_RATIO,mode);
+                    if(retval != 0) {
                     LOGERR("Failed to Save DisplayMode to ssm_data\n");
                     ret = tvERROR_GENERAL;
+                    }
+                    LOGINFO("Aspect Ratio initialized successfully, value: %s\n", param.value);
                 }
-                LOGINFO("Aspect Ratio initialized successfully, value: %s\n", param.value);
+                else {
+                    updateAVoutputTVParamV2("set", "ZoomMode", paramJson, PQ_PARAM_ASPECT_RATIO,mode);
+                }
             }
 
         }
@@ -2760,10 +2746,7 @@ namespace Plugin {
         if (caps && caps->num_contexts > 0) {
             for (size_t i = 0; i < caps->num_contexts; ++i) {
                 const tvConfigContext_t& available = caps->contexts[i];
-#if DEBUG
-                LOGINFO("Context[%zu]: PQMode=%d, Format=%d, Source=%d", i,
-                    available.pq_mode, available.videoFormatType, available.videoSrcType);
-#endif
+
                 if (available.videoSrcType == validContext.videoSrcType &&
                     available.videoFormatType == validContext.videoFormatType &&
                     available.pq_mode == validContext.pq_mode) {
@@ -2975,22 +2958,7 @@ namespace Plugin {
         const auto resolvedPicModes = resolveParam("pictureMode", curPicMode);
         const auto resolvedFormats  = resolveParam("videoFormat", curFormat);
         const auto resolvedSources  = resolveParam("videoSource", curSource);
-#if DEBUG
-        // Helper function to log vector content
-        auto logResolvedValues = [&](const std::string& label, const std::vector<std::string>& values) {
-            std::string joined;
-            for (const auto& val : values) {
-                if (!joined.empty()) joined += ", ";
-                joined += val;
-            }
-            LOGINFO("Resolved %s: [%s]", label.c_str(), joined.c_str());
-        };
 
-        // Debug logs
-        logResolvedValues("pictureMode", resolvedPicModes);
-        logResolvedValues("videoSource", resolvedSources);
-        logResolvedValues("videoFormat", resolvedFormats);
-#endif
 
         // Check if current combination exists in resolved sets
         for (const auto& pm : resolvedPicModes) {
@@ -3135,9 +3103,7 @@ namespace Plugin {
         const JsonObject& parameters,
         tvPQParameterIndex_t pqParamIndex,int level)
     {
-#if DEBUG
         LOGINFO("Entry %s: Action: %s, Param: %s, Level: %d", __FUNCTION__, action.c_str(), tr181ParamName.c_str(), level);
-#endif
         int ret = 0;
         const bool isSet = (action == "set");
         const bool isReset = (action == "reset");
@@ -3145,15 +3111,7 @@ namespace Plugin {
 
         std::vector<tvConfigContext_t> validContexts = getValidContextsFromParameters(parameters, tr181ParamName);
         LOGINFO("%s: Number of validContexts = %zu", __FUNCTION__, validContexts.size());
-#if DEBUG
-        for (const auto& ctx : validContexts) {
 
-            std::string pqStr = pqModeMap.count(ctx.pq_mode) ? pqModeMap.at(ctx.pq_mode) : std::to_string(ctx.pq_mode);
-            std::string fmtStr = videoFormatMap.count(ctx.videoFormatType) ? videoFormatMap.at(ctx.videoFormatType) : std::to_string(ctx.videoFormatType);
-            std::string srcStr = videoSrcMap.count(ctx.videoSrcType) ? videoSrcMap.at(ctx.videoSrcType) : std::to_string(ctx.videoSrcType);
-            LOGINFO("Valid Context - PQMode: %s, Format: %s, Source: %s", pqStr.c_str(), fmtStr.c_str(), srcStr.c_str());
-        }
-#endif
         if (validContexts.empty()) {
             LOGWARN("%s: No valid contexts found for parameters", __FUNCTION__);
             return (int)tvERROR_GENERAL;
@@ -3182,9 +3140,7 @@ namespace Plugin {
             for (const auto& ctx : validContexts) {
                 for (const auto& colorStr : colors) {
                     for (const auto& componentStr : components) {
-#if DEBUG
-                        LOGINFO("%s: Processing Color: %s, Component: %s", __FUNCTION__, colorStr.c_str(), componentStr.c_str());
-#endif
+
                         tvPQParameterIndex_t pqIndex;
                         if (convertCMSParamToPQEnum(componentStr, colorStr, pqIndex) != 0) {
                             LOGERR("%s: convertCMSParamToPQEnum failed for color: %s, component: %s",
