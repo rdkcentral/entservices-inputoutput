@@ -28,7 +28,7 @@
 #include "IarmBusMock.h"
 #include "ServiceMock.h"
 #include "devicesettings.h"
-#include "HdmiCecSinkImplementation.h"
+#include "HdmiCec.h"
 #include "HdmiCecMock.h"
 #include "WrapsMock.h"
 #include "RfcApiMock.h"
