@@ -28,13 +28,13 @@
 #include "IarmBusMock.h"
 #include "ServiceMock.h"
 #include "devicesettings.h"
-#include "HdmiCec.h"
+#include "HdmiCecSinkImplementation.h"
 #include "HdmiCecMock.h"
 #include "WrapsMock.h"
 #include "RfcApiMock.h"
 #include "ThunderPortability.h"
 #include "PowerManagerMock.h"
-#include "HdmiCecSinkImplementation.h"
+
 
 using namespace WPEFramework;
 using ::testing::NiceMock;
