@@ -34,6 +34,7 @@
 #include "RfcApiMock.h"
 #include "ThunderPortability.h"
 #include "PowerManagerMock.h"
+#include "HdmiCecSinkImplementation.h"
 
 using namespace WPEFramework;
 using ::testing::NiceMock;
@@ -500,4 +501,76 @@ TEST_F(HdmiCecSinkTest, DISABLED_getCecVersion)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getCecVersion"), _T("{}"), response));
     EXPECT_EQ(response, string("{\"CECVersion\":\"1.4\",\"success\":true}"));
 
+}
+
+TEST_F(HdmiCecSinkDsTest, getDeviceList)
+{
+    // Setup necessary mocks
+    ON_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(true));
+
+    // We need to directly access the HdmiCecSinkImplementation instance to set up mock device data
+    // First, get access to the underlying implementation
+    Plugin::HdmiCecSinkImplementation* impl = Plugin::HdmiCecSinkImplementation::_instance;
+    
+    // Make sure the implementation instance is accessible
+    ASSERT_NE(impl, nullptr) << "Cannot access HdmiCecSinkImplementation instance";
+    
+    // Define our test device data
+    const int TEST_LOGICAL_ADDRESS = 4; // Playback Device
+    const int TEST_PORT_NUMBER = 1;
+    
+    // Setup the mock device in the deviceList array
+    // This will ensure the implementation returns our test device when getDeviceList is called
+    impl->deviceList[TEST_LOGICAL_ADDRESS].m_isDevicePresent = true;
+    impl->deviceList[TEST_LOGICAL_ADDRESS].m_logicalAddress = LogicalAddress(TEST_LOGICAL_ADDRESS);
+    impl->deviceList[TEST_LOGICAL_ADDRESS].m_physicalAddr = PhysicalAddress(1, 0, 0, 0); // 1.0.0.0
+    impl->deviceList[TEST_LOGICAL_ADDRESS].m_deviceType = DeviceType(1); // Playback Device
+    impl->deviceList[TEST_LOGICAL_ADDRESS].m_cecVersion = Version(5); // CEC 1.4
+    impl->deviceList[TEST_LOGICAL_ADDRESS].m_osdName = OSDName("Mock Device");
+    impl->deviceList[TEST_LOGICAL_ADDRESS].m_vendorID = VendorID(0x12, 0x34, 0x56);
+    impl->deviceList[TEST_LOGICAL_ADDRESS].m_powerStatus = PowerStatus(0); // "on"
+    
+    // Set the device count
+    impl->m_numberOfDevices = 1;
+    
+    // Setup HDMI input mock data for port mapping
+    impl->hdmiInputs.clear();
+    HdmiPortMap portMap(TEST_PORT_NUMBER);
+    portMap.m_isConnected = true;
+    portMap.m_logicalAddr = LogicalAddress(TEST_LOGICAL_ADDRESS);
+    impl->hdmiInputs.push_back(portMap);
+    impl->m_numofHdmiInput = 1;
+    
+    // Set the logical address allocated to TV (0)
+    impl->m_logicalAddressAllocated = LogicalAddress::TV;
+    
+    // Now invoke the getDeviceList method
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T("{}"), response));
+    
+    // Print the response for validation and debugging
+    std::cout << "getDeviceList response: " << response << std::endl;
+    
+    // Basic validation that the method executed successfully
+    EXPECT_NE(response.find("\"success\":true"), std::string::npos);
+    
+    // With our mock data, we should now have devices in the response
+    // Let's verify all the fields are present as expected
+    EXPECT_NE(response.find("\"devices\""), std::string::npos) << "Response should contain devices array";
+    EXPECT_NE(response.find("\"logicalAddress\":" + std::to_string(TEST_LOGICAL_ADDRESS)), std::string::npos) << "Response should contain correct logical address";
+    
+    // Most importantly, check for both portNumber and powerStatus fields
+    bool hasPortNumber = response.find("\"portNumber\"") != std::string::npos;
+    bool hasPowerStatus = response.find("\"powerStatus\"") != std::string::npos;
+    
+    EXPECT_TRUE(hasPortNumber) << "Response should contain portNumber field";
+    EXPECT_TRUE(hasPowerStatus) << "Response should contain powerStatus field";
+    
+    // Verify that portNumber contains our test value
+    EXPECT_NE(response.find("\"portNumber\":" + std::to_string(TEST_PORT_NUMBER)), std::string::npos) 
+        << "portNumber should contain the correct value";
+    
+    // Verify that powerStatus contains our test value (0 = "on")
+    EXPECT_NE(response.find("\"powerStatus\":\"on\""), std::string::npos) 
+        << "powerStatus should contain the correct value";
 }
