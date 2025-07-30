@@ -77,7 +77,7 @@ namespace WPEFramework
                     _parent.Deactivated(connection);
                 }
 
-                void OnDevicesChanged(IInputDeviceIterator *const devices) override
+                void OnDevicesChanged(WPEFramework::Exchange::IAVInput::IInputDeviceIterator *const devices) override
                 {
                     LOGINFO("OnDevicesChanged\n");
                     Exchange::JAVInput::Event::OnDevicesChanged(_parent, devices);
