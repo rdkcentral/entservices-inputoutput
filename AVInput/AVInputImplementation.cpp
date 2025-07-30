@@ -127,10 +127,12 @@ namespace WPEFramework
             {
             case ON_AVINPUT_DEVICES_CHANGED:
             {
-                Exchange::IAVInput::IInputDeviceIterator *devices = nullptr;
-                std::list<WPEFramework::Exchange::IAVInput::InputDevice> deviceList;
+                // Exchange::IAVInput::IInputDeviceIterator *devices = nullptr;
+                //  std::list<WPEFramework::Exchange::IAVInput::InputDevice> deviceList;
 
                 // <pca> YAH </pca>
+
+                // std::list<WPEFramework::Exchange::IAVInput::InputDevice> deviceList = params.Array();
 
                 // devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(deviceList);
 
