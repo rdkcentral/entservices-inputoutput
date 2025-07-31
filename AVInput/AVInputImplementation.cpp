@@ -127,25 +127,16 @@ namespace WPEFramework
             {
             case ON_AVINPUT_DEVICES_CHANGED:
             {
-                // Exchange::IAVInput::IInputDeviceIterator *devices = nullptr;
-                //  std::list<WPEFramework::Exchange::IAVInput::InputDevice> deviceList;
+                string devices = params.String();
 
-                // <pca> YAH </pca>
+                printf("*** _DEBUG: printf: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices.c_str());
+                LOGINFO("*** _DEBUG: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices.c_str());
 
-                // std::list<WPEFramework::Exchange::IAVInput::InputDevice> deviceList = params.Array();
-
-                // devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(deviceList);
-
-                // uint8_t id = params.Object()["id"].Number();
-                // string locator = params.Object()["locator"].String();
-                // string status = params.Object()["signalStatus"].String();
-                // InputSignalInfo inputSignalInfo = {id, locator, status};
-
-                // while (index != _avInputNotification.end())
-                // {
-                //     (*index)->OnDevicesChanged(inputSignalInfo);
-                //     ++index;
-                // }
+                while (index != _avInputNotification.end())
+                {
+                    (*index)->OnDevicesChanged(devices);
+                    ++index;
+                }
                 break;
             }
             case ON_AVINPUT_SIGNAL_CHANGED:

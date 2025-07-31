@@ -81,7 +81,7 @@ namespace WPEFramework
                 // Invoking Plugin API register to wpeframework
                 Exchange::JAVInput::Register(*this, _avInput);
 
-                InitializeIARM(); // <pca> TODO: Do we want to do this here/at all? </pca>
+                InitializeIARM();
             }
             else
             {
@@ -103,7 +103,7 @@ namespace WPEFramework
 
             if (nullptr != _avInput)
             {
-                DeinitializeIARM(); // <pca> TODO: Do we want to do this here/at all? </pca>
+                DeinitializeIARM();
 
                 _avInput->Unregister(&_avInputNotification);
                 Exchange::JAVInput::Unregister(*this);
