@@ -673,6 +673,7 @@ private:
 	    bool m_isAudioStatusInfoUpdated;
 	    bool m_audioStatusReceived;
 	    bool m_audioStatusTimerStarted;
+	    int m_audioStatusRequestedCount;
             std::thread m_sendKeyEventThread;
             std::mutex m_sendKeyEventMutex;
             std::queue<SendKeyInfo> m_SendKeyQueue;
