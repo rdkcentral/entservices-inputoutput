@@ -1438,11 +1438,13 @@ namespace Plugin {
 
                 std::string modeStr = param.value;
                 int modeIndex = -1;
-                for (size_t i = 0; i < m_numPictureModes; ++i) {
-                    if (pqModeMap.at(m_pictureModes[i]) == modeStr) {
-                        modeIndex = static_cast<int>(i);
-                        break;
-                    }
+                initializeReverseMaps();
+                auto it = pqModeReverseMap.find(modeStr);
+                if (it != pqModeReverseMap.end()) {
+                    modeIndex = static_cast<int>(it->second);
+                } else {
+                    LOGWARN("Mode string %s not found in pqModeReverseMap", modeStr.c_str());
+                    continue;
                 }
 
                 tvError_t tv_err = SaveSourcePictureMode(ctx.videoSrcType, ctx.videoFormatType, modeIndex);
