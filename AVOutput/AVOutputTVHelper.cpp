@@ -908,8 +908,9 @@ namespace Plugin {
         // Generate storage key based on parameter type
         if (forParam == "CMS")
             generateStorageIdentifierCMS(key, forParam, indexInfo);
-        else if (forParam == "WhiteBalance")
-            generateStorageIdentifierWB(key, forParam, indexInfo);
+        else if (forParam.compare("WhiteBalance") == 0) {
+                generateStorageIdentifierWB(key, forParam, indexInfo);
+        }
         else
             generateStorageIdentifierV2(key, forParam, indexInfo);
 
@@ -928,7 +929,8 @@ namespace Plugin {
                 {"ColorTemp", [this](int v, std::string& s) { getColorTempStringFromEnum(v, s); }},
                 {"DimmingMode", [this](int v, std::string& s) { getDimmingModeStringFromEnum(v, s); }},
                 {"AspectRatio", [this](int v, std::string& s) { getDisplayModeStringFromEnum(v, s); }},
-                {"BacklightMode", [this](int v, std::string& s) { getBacklightModeStringFromEnum(v, s); }}
+                {"BacklightMode", [this](int v, std::string& s) { getBacklightModeStringFromEnum(v, s); }},
+                {"SDRGamma", [this](int v, std::string& s) { getSdrGammaStringFromEnum(static_cast<tvSdrGamma_t>(v), s); }}
             };
 
             // If there's a custom string conversion for this parameter, apply it
@@ -1319,7 +1321,7 @@ namespace Plugin {
         }
         // PrecisionDetail
         m_precisionDetailStatus = GetPrecisionDetailCaps(&m_maxPrecisionDetail, &m_precisionDetailCaps);
-        if (m_localContrastEnhancementStatus == tvERROR_NONE) {
+        if (m_precisionDetailStatus == tvERROR_NONE) {
             updateAVoutputTVParamV2("sync", "PrecisionDetails", paramJson, PQ_PARAM_PRECISION_DETAIL, level);
         }
         //PictureMode
@@ -1354,7 +1356,11 @@ namespace Plugin {
         if (m_MEMCStatus == tvERROR_NONE) {
             updateAVoutputTVParamV2("sync", "MEMC", paramJson, PQ_PARAM_MEMC, level);
         }
-        
+        m_sdrGammaModeStatus = GetSdrGammaCaps(&m_sdrGammaModes, &m_numsdrGammaModes, &m_sdrGammaModeCaps);
+        if (m_sdrGammaModeStatus == tvERROR_NONE) {
+            updateAVoutputTVParamV2("sync", "SDRGamma", paramJson, PQ_PARAM_SDR_GAMMA, level);
+        }
+
         //Commented due to missing HAL implementation
         /*m_cmsStatus = GetCMSCaps(&m_maxCmsHue, &m_maxCmsSaturation, &m_maxCmsLuma,
                                 &m_cmsColorArr, &m_cmsComponentArr,
@@ -1539,8 +1545,6 @@ namespace Plugin {
         return tvERROR_NONE;
     }
 
-
-
     uint32_t AVOutputTV::generateStorageIdentifierDirty(std::string &key, std::string forParam,uint32_t contentFormat, int pqmode)
     {
         key+=std::string(AVOUTPUT_GENERIC_STRING_RFC_PARAM);
@@ -1680,13 +1684,15 @@ namespace Plugin {
     {
         string key;
         TR181_ParamData_t param={0};
-        
-        if( forParam.compare("CMS") == 0 ) {
-            generateStorageIdentifierCMS(key,forParam,indexInfo);
-        } else if( forParam.compare("WhiteBalance") == 0 ) {
-            generateStorageIdentifierWB(key,forParam,indexInfo);
-        } else {
-            generateStorageIdentifierV2(key,forParam,indexInfo);
+
+        if (forParam.compare("CMS") == 0) {
+            generateStorageIdentifierCMS(key, forParam, indexInfo);
+        }
+        else if (forParam.compare("WhiteBalance") == 0) {
+                generateStorageIdentifierWB(key, forParam, indexInfo);
+        }
+        else {
+            generateStorageIdentifierV2(key, forParam, indexInfo);
         }
 
         if(key.empty()) {
@@ -1778,6 +1784,33 @@ namespace Plugin {
                }
                return 0;
            }
+           else if (forParam.compare("SDRGamma") == 0) {
+                if (strncmp(param.value, "1.8", strlen(param.value)) == 0) {
+                    value = tvSdrGamma_1_8;
+                }
+                else if (strncmp(param.value, "1.9", strlen(param.value)) == 0) {
+                    value = tvSdrGamma_1_9;
+                }
+                else if (strncmp(param.value, "2.0", strlen(param.value)) == 0) {
+                    value = tvSdrGamma_2_0;
+                }
+                else if (strncmp(param.value, "2.1", strlen(param.value)) == 0) {
+                    value = tvSdrGamma_2_1;
+                }
+                else if (strncmp(param.value, "2.2", strlen(param.value)) == 0) {
+                    value = tvSdrGamma_2_2;
+                }
+                else if (strncmp(param.value, "2.3", strlen(param.value)) == 0) {
+                    value = tvSdrGamma_2_3;
+                }
+                else if (strncmp(param.value, "2.4", strlen(param.value)) == 0) {
+                    value = tvSdrGamma_2_4;
+                }
+                else if (strncmp(param.value, "BT.1886", strlen(param.value)) == 0) {
+                    value = tvSdrGamma_BT_1886;
+                }
+                return 0;
+            }
            else {
                value=std::stoi(param.value);
                return 0;  
@@ -1928,6 +1961,42 @@ namespace Plugin {
                 break;
             default:
                 toStore = "Unknown";
+                break;
+        }
+    }
+
+    void AVOutputTV::getSdrGammaStringFromEnum(tvSdrGamma_t value, std::string& str)
+    {
+        switch (value)
+        {
+            case tvSdrGamma_1_8:
+                str = "1.8";
+                break;
+            case tvSdrGamma_1_9:
+                str = "1.9";
+                break;
+            case tvSdrGamma_2_0:
+                str = "2.0";
+                break;
+            case tvSdrGamma_2_1:
+                str = "2.1";
+                break;
+            case tvSdrGamma_2_2:
+                str = "2.2";
+                break;
+            case tvSdrGamma_2_3:
+                str = "2.3";
+                break;
+            case tvSdrGamma_2_4:
+                str = "2.4";
+                break;
+            case tvSdrGamma_BT_1886:
+                str = "BT.1886";
+                break;
+            case tvSdrGamma_INVALID:
+            default:
+                str = "Unknown";
+                LOGERR("Invalid or unsupported SDR Gamma enum: %d", value);
                 break;
         }
     }
@@ -2651,6 +2720,37 @@ namespace Plugin {
         auto it = pqModeMap.find(pqmode);
         return (it != pqModeMap.end()) ? it->second : "";
     }
+
+    tvPQModeIndex_t AVOutputTV::convertPictureStringToIndexV2(const std::string& modeStr) {
+        initializeReverseMaps();
+        auto it = pqModeReverseMap.find(modeStr);
+        if (it != pqModeReverseMap.end()) {
+            return it->second;
+        }
+        LOGERR("Unknown Picture Mode string: %s", modeStr.c_str());
+        return PQ_MODE_MAX;
+    }
+
+    tvVideoSrcType_t AVOutputTV::convertSourceStringToIndexV2(const std::string& srcStr) {
+        initializeReverseMaps();
+        auto it = videoSrcReverseMap.find(srcStr);
+        if (it != videoSrcReverseMap.end()) {
+            return it->second;
+        }
+        LOGERR("Unknown Video Source string: %s", srcStr.c_str());
+        return VIDEO_SOURCE_MAX;
+    }
+
+    tvVideoFormatType_t AVOutputTV::convertVideoFormatStringToIndexV2(const std::string& fmtStr) {
+        initializeReverseMaps();
+        auto it = videoFormatReverseMap.find(fmtStr);
+        if (it != videoFormatReverseMap.end()) {
+            return it->second;
+        }
+        LOGERR("Unknown Video Format string: %s", fmtStr.c_str());
+        return VIDEO_FORMAT_NONE;
+    }
+
     uint32_t AVOutputTV::generateStorageIdentifierV2(std::string &key, std::string forParam, paramIndex_t info)
     {
         key += AVOUTPUT_GENERIC_STRING_RFC_PARAM;
@@ -2887,6 +2987,7 @@ namespace Plugin {
         else if (paramName == "MEMC") caps = m_MEMCCaps;
         else if (paramName == "BacklightMode") caps = m_backlightModeCaps;
         else if (paramName == "CMS") caps = m_cmsCaps;
+        else if (paramName == "SDRGamma") caps = m_sdrGammaModeCaps;
         else {
             LOGERR("Unknown ParamName: %s", paramName.c_str());
             return nullptr;
@@ -3313,6 +3414,11 @@ namespace Plugin {
                                 (tvPQModeIndex_t)paramIndex.pqmodeIndex,
                                 (tvVideoFormatType_t)paramIndex.formatIndex,
                                 level);
+                    break;
+                case PQ_PARAM_SDR_GAMMA:
+                    ret |= SetSdrGamma((tvVideoSrcType_t)paramIndex.sourceIndex,
+                                (tvPQModeIndex_t)paramIndex.pqmodeIndex,
+                                static_cast<tvSdrGamma_t>(level));
                     break;
                 case PQ_PARAM_BACKLIGHT_MODE:
                     ret |= SaveBacklightMode((tvVideoSrcType_t)paramIndex.sourceIndex,

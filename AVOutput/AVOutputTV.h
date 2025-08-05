@@ -209,7 +209,7 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(getMPEGNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(getDigitalNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(getMEMC)
-
+		DECLARE_JSON_RPC_METHOD(getSDRGamma)
 
 
 		/*Get Capability API's*/
@@ -282,7 +282,7 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(setMPEGNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(setDigitalNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(setMEMC)
-
+		DECLARE_JSON_RPC_METHOD(setSDRGamma)
 		/*Reset API's*/
 		DECLARE_JSON_RPC_METHOD(resetBacklight)
 		DECLARE_JSON_RPC_METHOD(resetBrightness )
@@ -306,7 +306,7 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(resetMPEGNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(resetDigitalNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(resetMEMC)
-
+		DECLARE_JSON_RPC_METHOD(resetSDRGamma)
 
 
     private:
@@ -597,6 +597,7 @@ class AVOutputTV : public AVOutputBase {
 		size_t m_numsdrGammaModes = 0;
 		tvContextCaps_t* m_sdrGammaModeCaps = nullptr;
 		tvError_t m_sdrGammaModeStatus = tvERROR_NONE;
+		void getSdrGammaStringFromEnum(tvSdrGamma_t value, std::string& str);
 
 		int m_numHalMatrixPoints = 0;
 		int m_rgbMin = 0;
@@ -629,10 +630,12 @@ class AVOutputTV : public AVOutputBase {
 		std::string convertPictureIndexToStringV2(int pqmode);
 		std::string convertVideoFormatToStringV2(int format);
 		std::string convertSourceIndexToStringV2(int source);
+		static tvPQModeIndex_t convertPictureStringToIndexV2(const std::string& modeStr);
+		static tvVideoSrcType_t convertSourceStringToIndexV2(const std::string& srcStr);
+		static tvVideoFormatType_t convertVideoFormatStringToIndexV2(const std::string& fmtStr);
 
 		uint32_t generateStorageIdentifierV2(std::string &key, std::string forParam, paramIndex_t info);
 		void generateStorageIdentifierCMSV2(std::string &key, std::string forParam, paramIndex_t info);
-		void generateStorageIdentifierWBV2(std::string &key, std::string forParam, paramIndex_t info);
 		
 		AVOutputTV();
 		~AVOutputTV();
