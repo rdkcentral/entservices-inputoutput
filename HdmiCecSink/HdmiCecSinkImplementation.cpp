@@ -918,6 +918,8 @@ namespace WPEFramework
                 return;
             }
 
+            LOGINFO("sendStandbyMessage called - Sending Standby message to BROADCAST from logical address 0x%02x",
+                  _instance->m_logicalAddressAllocated);
             _instance->smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(Standby()), 1000);
        }
 
@@ -1043,6 +1045,9 @@ namespace WPEFramework
 
         if(!(_instance->smConnection))
         return;
+
+        LOGINFO("setLatencyInfo called - Values: physical_addr=%s, m_video_latency=%d, m_latency_flags=%d, m_audio_output_delay=%d",
+               physical_addr.toString().c_str(), m_video_latency, m_latency_flags, m_audio_output_delay);
 
         LOGINFO("Send Report Current Latency message \n");
         _instance->smConnection->sendTo(LogicalAddress::BROADCAST,MessageEncoder().encode(ReportCurrentLatency(physical_addr,m_video_latency,m_latency_flags,m_audio_output_delay)));
@@ -1363,6 +1368,9 @@ namespace WPEFramework
 
             setEnabled(enabled);
             success.success = true;
+            LOGINFO("SetEnabled - Exit: enabled=%s, success=%s",
+                   enabled ? "true" : "false",
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
        }
 
@@ -1370,6 +1378,9 @@ namespace WPEFramework
        {
             enabled = getEnabled();
             success = true;
+            LOGINFO("GetEnabled - Exit: enabled=%s, success=%s",
+                   enabled ? "true" : "false",
+                   success ? "true" : "false");
             return Core::ERROR_NONE;
        }
 
@@ -1377,6 +1388,9 @@ namespace WPEFramework
        {
             connected = getAudioDeviceConnectedStatus();
             success = true;
+            LOGINFO("GetAudioDeviceConnectedStatus - Exit: connected=%s, success=%s",
+                   connected ? "true" : "false",
+                   success ? "true" : "false");
             return Core::ERROR_NONE;
        }
 
@@ -1398,6 +1412,9 @@ namespace WPEFramework
                 vendorID = HdmiCecSinkImplementation::_instance->deviceList[n].m_vendorID.toString().c_str();
                 powerStatus = HdmiCecSinkImplementation::_instance->deviceList[n].m_powerStatus.toString().c_str();
 
+                LOGINFO("getActiveSource - Values: available=%d, logicalAddress=0x%02x, physicalAddress=%s, deviceType=%s, cecVersion=%s, osdName=%s, vendorID=%s, powerStatus=%s",
+                       available, logicalAddress, physicalAddress.c_str(), deviceType.c_str(), cecVersion.c_str(), osdName.c_str(), vendorID.c_str(), powerStatus.c_str());
+
 
                 if ( HdmiCecSinkImplementation::_instance->deviceList[n].m_physicalAddr.getByteValue(0) != 0 )
                 {
@@ -1418,6 +1435,17 @@ namespace WPEFramework
             }
 
             success = true;
+            LOGINFO("GetActiveSource - Exit: available=%s, logicalAddress=0x%02x, physicalAddress=%s, deviceType=%s, cecVersion=%s, osdName=%s, vendorID=%s, powerStatus=%s, port=%s, success=%s",
+                   available ? "true" : "false",
+                   logicalAddress,
+                   physicalAddress.c_str(),
+                   deviceType.c_str(),
+                   cecVersion.c_str(),
+                   osdName.c_str(),
+                   vendorID.c_str(),
+                   powerStatus.c_str(),
+                   port.c_str(),
+                   success ? "true" : "false");
             return Core::ERROR_NONE;
             
        }
@@ -1463,6 +1491,8 @@ namespace WPEFramework
 
             deviceList = (Core::Service<RPC::IteratorType<Exchange::IHdmiCecSink::IHdmiCecSinkDeviceListIterator>>::Create<Exchange::IHdmiCecSink::IHdmiCecSinkDeviceListIterator>(localDevices));
             success = true;
+            LOGINFO("GetDeviceList - Exit: numberofdevices=%d, deviceList=%p, success=%s",
+                   numberofdevices, deviceList, success ? "true" : "false");
             return Core::ERROR_NONE;
        }
 
@@ -1472,9 +1502,13 @@ namespace WPEFramework
 
             LOGINFO("SetOSDName osdName: %s",name.c_str());
             osdName = name.c_str();
+            LOGINFO("SetOSDName - After assignment osdName=%s", osdName.toString().c_str());
             Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_OSD_NAME, JsonValue(name.c_str()));
 
             success.success = true;
+            LOGINFO("SetOSDName - Exit: name=%s, success=%s",
+                   name.c_str(),
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1483,6 +1517,8 @@ namespace WPEFramework
             name = osdName.toString(); 
             LOGINFO("GetOSDName osdName : %s \n",osdName.toString().c_str());
             success = true;
+            LOGINFO("GetOSDName - Exit: name=%s, success=%s",
+                   name.c_str(), success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1491,6 +1527,9 @@ namespace WPEFramework
             printDeviceList();
             printed = true;
             success = true;
+            LOGINFO("PrintDeviceList - Exit: printed=%s, success=%s",
+                   printed ? "true" : "false",
+                   success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1498,6 +1537,8 @@ namespace WPEFramework
         {
             setActiveSource(false);
             success.success = true;
+            LOGINFO("SetActiveSource - Exit: success=%s",
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1508,6 +1549,10 @@ namespace WPEFramework
             LOGINFO("Addr = %s, length = %zu", activePathStr.c_str(), activePathStr.length());
             setStreamPath(phy_addr);
             success.success = true;
+            LOGINFO("SetActivePath - Exit: activePath=%s, phy_addr=%s, success=%s",
+                   activePath.c_str(),
+                   phy_addr.toString().c_str(),
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1576,6 +1621,12 @@ namespace WPEFramework
             }
 
             success = true;
+            LOGINFO("GetActiveRoute - Exit: available=%s, length=%d, pathList=%p, ActiveRoute=%s, success=%s",
+                   available ? "true" : "false",
+                   length,
+                   pathList,
+                   ActiveRoute.c_str(),
+                   success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1583,6 +1634,8 @@ namespace WPEFramework
         {
             requestActiveSource();
             success.success = true;
+            LOGINFO("RequestActiveSource - Exit: success=%s",
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1600,6 +1653,10 @@ namespace WPEFramework
             {
                 success.success = false;
             }
+            LOGINFO("SetRoutingChange - Exit: oldPort=%s, newPort=%s, success=%s",
+                   oldPort.c_str(),
+                   newPort.c_str(),
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
        }
 
@@ -1611,6 +1668,9 @@ namespace WPEFramework
 
 			setCurrentLanguage(Language(lang.data()));
             success.success = true;
+            LOGINFO("SetMenuLanguage - Exit: language=%s, success=%s",
+                   language.c_str(),
+                   success.success ? "true" : "false");
 
             return Core::ERROR_NONE;
 
@@ -1635,6 +1695,10 @@ namespace WPEFramework
             Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_VENDOR_ID, JsonValue(vendorID));
 
             success.success = true;
+            LOGINFO("SetVendorId - Exit: vendorId=%s, appVendorId=%s, success=%s",
+                   vendorId.c_str(),
+                   appVendorId.toString().c_str(),
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
         Core::hresult HdmiCecSinkImplementation::SetupARCRouting(const bool &enabled, HdmiCecSinkSuccess &success)
@@ -1649,6 +1713,9 @@ namespace WPEFramework
             }
 
             success.success = true;
+            LOGINFO("SetupARCRouting - Exit: enabled=%s, success=%s",
+                   enabled ? "true" : "false",
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
        }
 
@@ -1657,6 +1724,8 @@ namespace WPEFramework
             LOGINFO("GetVendorId  appVendorId : %s  \n",appVendorId.toString().c_str());
             vendorid = appVendorId.toString() ;
             success = true;
+            LOGINFO("GetVendorId - Exit: vendorid=%s, success=%s",
+                   vendorid.c_str(), success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1664,12 +1733,16 @@ namespace WPEFramework
         {
             requestShortaudioDescriptor();
             success.success = true;
+            LOGINFO("RequestShortAudioDescriptor - Exit: success=%s",
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
         Core::hresult HdmiCecSinkImplementation::SendStandbyMessage(HdmiCecSinkSuccess &success)
         {
             sendStandbyMessage();
             success.success = true;
+            LOGINFO("SendStandbyMessage - Exit: success=%s",
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1678,6 +1751,8 @@ namespace WPEFramework
             LOGINFO("%s invoked. \n",__FUNCTION__);
             systemAudioModeRequest();
             success.success = true;
+            LOGINFO("SendAudioDevicePowerOnMessage - Exit: success=%s",
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
         Core::hresult HdmiCecSinkImplementation::SendKeyPressEvent(const uint32_t &logicalAddress, const uint32_t &keyCode, HdmiCecSinkSuccess &success)
@@ -1693,6 +1768,10 @@ namespace WPEFramework
             m_sendKeyCV.notify_one();
             LOGINFO("Post send key press event to queue size:%zu \n",m_SendKeyQueue.size());
             success.success = true;
+            LOGINFO("SendKeyPressEvent - Exit: logicalAddress=0x%x, keyCode=0x%x, success=%s",
+                   logicalAddress,
+                   keyCode,
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1709,6 +1788,10 @@ namespace WPEFramework
             m_sendKeyCV.notify_one();
             LOGINFO("User control pressed, queue size:%zu \n",m_SendKeyQueue.size());
             success.success = true;
+            LOGINFO("SendUserControlPressed - Exit: logicalAddress=0x%x, keyCode=0x%x, success=%s",
+                   logicalAddress,
+                   keyCode,
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1724,6 +1807,9 @@ namespace WPEFramework
             m_sendKeyCV.notify_one();
             LOGINFO("User Control Released, queue size:%zu \n",m_SendKeyQueue.size());
             success.success = true;
+            LOGINFO("SendUserControlReleased - Exit: logicalAddress=0x%x, success=%s",
+                   logicalAddress,
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
 
@@ -1731,6 +1817,8 @@ namespace WPEFramework
         {
             sendGiveAudioStatusMsg();
             success.success = true;
+            LOGINFO("SendGetAudioStatusMessage - Exit: success=%s",
+                   success.success ? "true" : "false");
             return Core::ERROR_NONE;
         }
        Core::hresult HdmiCecSinkImplementation::SetLatencyInfo(const string &videoLatency, const string &lowLatencyMode, const string &audioOutputCompensated, const string &audioOutputDelay, HdmiCecSinkSuccess &success) 
@@ -1746,6 +1834,12 @@ namespace WPEFramework
 
            updateCurrentLatency(video_latency, low_latency_mode,audio_output_compensated, audio_output_delay);
            success.success = true;
+               LOGINFO("SetLatencyInfo - Exit: videoLatency=%s, lowLatencyMode=%s, audioOutputCompensated=%s, audioOutputDelay=%s, success=%s",
+                  videoLatency.c_str(),
+                  lowLatencyMode.c_str(),
+                  audioOutputCompensated.c_str(),
+                  audioOutputDelay.c_str(),
+                  success.success ? "true" : "false");
            return Core::ERROR_NONE;
         }
         bool HdmiCecSinkImplementation::loadSettings()
