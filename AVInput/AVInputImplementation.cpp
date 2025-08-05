@@ -127,6 +127,7 @@ namespace WPEFramework
             {
             case ON_AVINPUT_DEVICES_CHANGED:
             {
+                // <pca> debug
                 string devices = params.String();
 
                 printf("*** _DEBUG: printf: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices.c_str());
@@ -137,6 +138,7 @@ namespace WPEFramework
                     (*index)->OnDevicesChanged(devices);
                     ++index;
                 }
+                // </pca>
                 break;
             }
             case ON_AVINPUT_SIGNAL_CHANGED:

@@ -77,11 +77,17 @@ namespace WPEFramework
                     _parent.Deactivated(connection);
                 }
 
+                // <pca> debug
                 void OnDevicesChanged(const string &devices) override
                 {
                     LOGINFO("OnDevicesChanged: devices %s\n", devices.c_str());
                     Exchange::JAVInput::Event::OnDevicesChanged(_parent, devices);
                 }
+                // void OnDevicesChanged(const InputDevice &inputDevice, IInputDeviceIterator *const devices) override
+                // {
+                //     Exchange::JAVInput::Event::OnDevicesChanged(_parent, devices);
+                // }
+                // </pca>
 
                 void OnSignalChanged(const InputSignalInfo &info) override
                 {
