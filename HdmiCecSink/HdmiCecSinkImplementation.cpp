@@ -1492,7 +1492,7 @@ namespace WPEFramework
             deviceList = (Core::Service<RPC::IteratorType<Exchange::IHdmiCecSink::IHdmiCecSinkDeviceListIterator>>::Create<Exchange::IHdmiCecSink::IHdmiCecSinkDeviceListIterator>(localDevices));
             success = true;
             LOGINFO("GetDeviceList - Exit: logicalAddress=%d, physicalAddress=%s, deviceType=%s, cecVersion=%s, osdName=%s, vendorID=%s, powerStatus=%s, numberofdevices=%d,portnumber=%s, success=%s",
-                   actual_hdmicecdevices.logicalAddress.c_str(),
+                   actual_hdmicecdevices.logicalAddress,
                    actual_hdmicecdevices.physicalAddress.c_str(),
                    actual_hdmicecdevices.deviceType.c_str(),
                    actual_hdmicecdevices.cecVersion.c_str(),
