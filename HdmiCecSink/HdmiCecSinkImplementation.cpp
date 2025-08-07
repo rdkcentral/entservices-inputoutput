@@ -1491,16 +1491,16 @@ namespace WPEFramework
 
             deviceList = (Core::Service<RPC::IteratorType<Exchange::IHdmiCecSink::IHdmiCecSinkDeviceListIterator>>::Create<Exchange::IHdmiCecSink::IHdmiCecSinkDeviceListIterator>(localDevices));
             success = true;
-            LOGINFO("GetDeviceList - Exit: logicalAddress=%d, physicalAddress=%s, deviceType=%s, cecVersion=%s, osdName=%s, vendorID=%s, powerStatus=%s, numberofdevices=%d,port=%s, success=%s",
-                   actual_hdmicecdevices.logicalAddress,
-                   actual_hdmicecdevices.physicalAddress,
-                   actual_hdmicecdevices.deviceType,
-                   actual_hdmicecdevices.cecVersion,
-                   actual_hdmicecdevices.osdName,
-                   actual_hdmicecdevices.vendorID,
-                   actual_hdmicecdevices.powerStatus,
+            LOGINFO("GetDeviceList - Exit: logicalAddress=%d, physicalAddress=%s, deviceType=%s, cecVersion=%s, osdName=%s, vendorID=%s, powerStatus=%s, numberofdevices=%d,portnumber=%s, success=%s",
+                   actual_hdmicecdevices.logicalAddress.c_str(),
+                   actual_hdmicecdevices.physicalAddress.c_str(),
+                   actual_hdmicecdevices.deviceType.c_str(),
+                   actual_hdmicecdevices.cecVersion.c_str(),
+                   actual_hdmicecdevices.osdName.c_str(),
+                   actual_hdmicecdevices.vendorID.c_str(),
+                   actual_hdmicecdevices.powerStatus.c_str(),
                    numberofdevices,
-                   actual_hdmicecdevices.portNumber,
+                   actual_hdmicecdevices.portNumber.c_str(),
                    success ? "true" : "false");
             return Core::ERROR_NONE;
        }
