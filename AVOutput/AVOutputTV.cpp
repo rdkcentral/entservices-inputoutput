@@ -4842,51 +4842,59 @@ namespace Plugin {
     uint32_t AVOutputTV::resetLowLatencyState(const JsonObject& parameters, JsonObject& response)
     {
         LOGINFO("Entry\n");
+        if(m_lowLatencyStateStatus == tvERROR_OPERATION_NOT_SUPPORTED)
+        {
+            capDetails_t inputInfo;
+            paramIndex_t indexInfo;
+            int lowlatencystate=0;
+            tvError_t ret = tvERROR_NONE;
 
-        capDetails_t inputInfo;
-        paramIndex_t indexInfo;
-        int lowlatencystate=0;
-        tvError_t ret = tvERROR_NONE;
+            if (parsingSetInputArgument(parameters, "LowLatencyState", inputInfo) != 0) {
+                LOGERR("%s: Failed to parse the input arguments \n", __FUNCTION__);
+                returnResponse(false);
+            }
 
-        if (parsingSetInputArgument(parameters, "LowLatencyState", inputInfo) != 0) {
-            LOGERR("%s: Failed to parse the input arguments \n", __FUNCTION__);
-            returnResponse(false);
-        }
+            if( !isCapablityCheckPassed( "LowLatencyState" , inputInfo )) {
+                LOGERR("%s: CapablityCheck failed for LowLatencyState\n", __FUNCTION__);
+                returnResponse(false);
+            }
 
-        if( !isCapablityCheckPassed( "LowLatencyState" , inputInfo )) {
-            LOGERR("%s: CapablityCheck failed for LowLatencyState\n", __FUNCTION__);
-            returnResponse(false);
-        }
-
-        int retval= updateAVoutputTVParam("reset","LowLatencyState", inputInfo,PQ_PARAM_LOWLATENCY_STATE,lowlatencystate);
-        if(retval != 0 ) {
-            LOGERR("Failed to clear Lowlatency from ssmdata and localstore\n");
-            returnResponse(false);
-        }
-        else {
-            if (isSetRequired(inputInfo.pqmode,inputInfo.source,inputInfo.format)) {
-                inputInfo.pqmode = "Current";
-                inputInfo.source = "Current";
-                inputInfo.format = "Current";
-                getParamIndex("LowLatencyState",inputInfo, indexInfo);
-                int err = getLocalparam("LowLatencyState",indexInfo, lowlatencystate, PQ_PARAM_LOWLATENCY_STATE);
-                if( err == 0 ) {
-                    LOGINFO("%s : getLocalparam success format :%d source : %d format : %d value : %d\n",__FUNCTION__,indexInfo.formatIndex, indexInfo.sourceIndex, indexInfo.pqmodeIndex, lowlatencystate);
-                    ret = SetLowLatencyState(lowlatencystate);
-                }
-                else {
-                    LOGERR("%s : GetLocalParam Failed \n",__FUNCTION__);
-                    ret = tvERROR_GENERAL;
+            int retval= updateAVoutputTVParam("reset","LowLatencyState", inputInfo,PQ_PARAM_LOWLATENCY_STATE,lowlatencystate);
+            if(retval != 0 ) {
+                LOGERR("Failed to clear Lowlatency from ssmdata and localstore\n");
+                returnResponse(false);
+            }
+            else {
+                if (isSetRequired(inputInfo.pqmode,inputInfo.source,inputInfo.format)) {
+                    inputInfo.pqmode = "Current";
+                    inputInfo.source = "Current";
+                    inputInfo.format = "Current";
+                    getParamIndex("LowLatencyState",inputInfo, indexInfo);
+                    int err = getLocalparam("LowLatencyState",indexInfo, lowlatencystate, PQ_PARAM_LOWLATENCY_STATE);
+                    if( err == 0 ) {
+                        LOGINFO("%s : getLocalparam success format :%d source : %d format : %d value : %d\n",__FUNCTION__,indexInfo.formatIndex, indexInfo.sourceIndex, indexInfo.pqmodeIndex, lowlatencystate);
+                        ret = SetLowLatencyState(lowlatencystate);
+                    }
+                    else {
+                        LOGERR("%s : GetLocalParam Failed \n",__FUNCTION__);
+                        ret = tvERROR_GENERAL;
+                    }
                 }
             }
-        }
 
-        if(ret != tvERROR_NONE) {
-            returnResponse(false);
+            if(ret != tvERROR_NONE) {
+                returnResponse(false);
+            }
+            else {
+                LOGINFO("Exit : resetLowLatency Successful to value : %d \n",lowlatencystate);
+                returnResponse(true);
+            }
         }
-        else {
-            LOGINFO("Exit : resetLowLatency Successful to value : %d \n",lowlatencystate);
-            returnResponse(true);
+        else
+        {
+            bool success = resetPQParamToDefault(parameters, "LowLatencyState",
+                                                PQ_PARAM_LOWLATENCY_STATE, SetLowLatencyState);
+            returnResponse(success);
         }
     }
 

@@ -2289,7 +2289,7 @@ namespace Plugin {
                     LOGINFO("Aspect Ratio initialized successfully, value: %s\n", param.value);
                 }
                 else {
-                    updateAVoutputTVParamV2("set", "ZoomMode", paramJson, PQ_PARAM_ASPECT_RATIO,mode);
+                    updateAVoutputTVParamV2("set", "AspectRatio", paramJson, PQ_PARAM_ASPECT_RATIO,mode);
                 }
             }
 
