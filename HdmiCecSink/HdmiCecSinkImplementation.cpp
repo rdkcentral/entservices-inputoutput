@@ -1484,7 +1484,7 @@ namespace WPEFramework
                              break;
                          }
                     }
-                    actual_hdmicecdevices.portNumber = std::to_string(hdmiPortNumber)                    // Add more detailed logging to help debug field assignments
+                    actual_hdmicecdevices.portNumber = std::to_string(hdmiPortNumber);
                     LOGINFO("Device Info Debug - LA:%d, PA:%s, DT:%s, CEC:%s, OSD:%s, VID:%s, PS:%s, PN:%s",
                            actual_hdmicecdevices.logicalAddress,
                            actual_hdmicecdevices.physicalAddress.c_str(),
