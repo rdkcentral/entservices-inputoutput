@@ -1484,7 +1484,16 @@ namespace WPEFramework
                              break;
                          }
                     }
-                    actual_hdmicecdevices.portNumber = hdmiPortNumber;
+                    actual_hdmicecdevices.portNumber = std::to_string(hdmiPortNumber)                    // Add more detailed logging to help debug field assignments
+                    LOGINFO("Device Info Debug - LA:%d, PA:%s, DT:%s, CEC:%s, OSD:%s, VID:%s, PS:%s, PN:%s",
+                           actual_hdmicecdevices.logicalAddress,
+                           actual_hdmicecdevices.physicalAddress.c_str(),
+                           actual_hdmicecdevices.deviceType.c_str(),
+                           actual_hdmicecdevices.cecVersion.c_str(),
+                           actual_hdmicecdevices.osdName.c_str(),
+                           actual_hdmicecdevices.vendorID.c_str(),
+                           actual_hdmicecdevices.powerStatus.c_str(),
+                           actual_hdmicecdevices.portNumber.c_str());;
                     localDevices.push_back(actual_hdmicecdevices);
                 }
             }
@@ -1591,8 +1600,8 @@ namespace WPEFramework
                             device.logicalAddress = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_logicalAddress.toInt();
                             device.physicalAddress = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_physicalAddr.toString().c_str();
                             device.deviceType = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_deviceType.toString().c_str();
-                            device.vendorID = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_osdName.toString().c_str();
-                            device.osdName = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_vendorID.toString().c_str();
+                            device.osdName = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_osdName.toString().c_str();
+                            device.vendorID = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_vendorID.toString().c_str();
 
                             paths.push_back(device);
 
