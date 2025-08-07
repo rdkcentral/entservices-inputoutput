@@ -296,13 +296,13 @@ namespace Plugin {
     {
         tvDimmingMode_t index = tvDimmingMode_MAX;
 
-        if(mode.compare("local") == 0 ) {
+        if(mode.compare("Local") == 0 ) {
             index=tvDimmingMode_Local;
 	}
-        else if(mode.compare("fixed") == 0 ) {
+        else if(mode.compare("Fixed") == 0 ) {
             index=tvDimmingMode_Fixed;
 	}
-        else if(mode.compare("global") == 0 ) {
+        else if(mode.compare("Global") == 0 ) {
             index=tvDimmingMode_Global;
 	}
         else {
@@ -1455,7 +1455,7 @@ namespace Plugin {
 
                 tvError_t tv_err = SaveSourcePictureMode(ctx.videoSrcType, ctx.videoFormatType, modeIndex);
                 if (tv_err != tvERROR_NONE) {
-                    LOGWARN("Failed SaveSourcePictureMode for %s / %s\n", sourceStr.c_str(), formatStr.c_str());
+                    LOGWARN("Failed SaveSourcePictureMode for %s / %s : %d \n", sourceStr.c_str(), formatStr.c_str(),modeIndex);
                     continue;
                 }
 
