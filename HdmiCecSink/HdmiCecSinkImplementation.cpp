@@ -1491,8 +1491,17 @@ namespace WPEFramework
 
             deviceList = (Core::Service<RPC::IteratorType<Exchange::IHdmiCecSink::IHdmiCecSinkDeviceListIterator>>::Create<Exchange::IHdmiCecSink::IHdmiCecSinkDeviceListIterator>(localDevices));
             success = true;
-            LOGINFO("GetDeviceList - Exit: numberofdevices=%d, deviceList=%p, success=%s",
-                   numberofdevices, deviceList, success ? "true" : "false");
+            LOGINFO("GetDeviceList - Exit: logicalAddress=%d, physicalAddress=%s, deviceType=%s, cecVersion=%s, osdName=%s, vendorID=%s, powerStatus=%s, numberofdevices=%d,port=%s, success=%s",
+                   actual_hdmicecdevices.logicalAddress,
+                   actual_hdmicecdevices.physicalAddress,
+                   actual_hdmicecdevices.deviceType,
+                   actual_hdmicecdevices.cecVersion,
+                   actual_hdmicecdevices.osdName,
+                   actual_hdmicecdevices.vendorID,
+                   actual_hdmicecdevices.powerStatus,
+                   numberofdevices,
+                   actual_hdmicecdevices.portNumber,
+                   success ? "true" : "false");
             return Core::ERROR_NONE;
        }
 
@@ -1621,10 +1630,14 @@ namespace WPEFramework
             }
 
             success = true;
-            LOGINFO("GetActiveRoute - Exit: available=%s, length=%d, pathList=%p, ActiveRoute=%s, success=%s",
+            LOGINFO("GetActiveRoute - Exit: logical Address=0x%02x, physicalAddress=%s, deviceType=%s, vendorID=%s, osdName=%s, available=%s, length=%d, ActiveRoute=%s, success=%s",
+                   HdmiCecSinkImplementation::_instance->m_currentActiveSource,
+                   HdmiCecSinkImplementation::_instance->deviceList[HdmiCecSinkImplementation::_instance->m_currentActiveSource].m_physicalAddr.toString().c_str(),
+                   HdmiCecSinkImplementation::_instance->deviceList[HdmiCecSinkImplementation::_instance->m_currentActiveSource].m_deviceType.toString().c_str(),
+                   HdmiCecSinkImplementation::_instance->deviceList[HdmiCecSinkImplementation::_instance->m_currentActiveSource].m_vendorID.toString().c_str(),
+                   HdmiCecSinkImplementation::_instance->deviceList[HdmiCecSinkImplementation::_instance->m_currentActiveSource].m_osdName.toString().c_str(),
                    available ? "true" : "false",
                    length,
-                   pathList,
                    ActiveRoute.c_str(),
                    success ? "true" : "false");
             return Core::ERROR_NONE;
