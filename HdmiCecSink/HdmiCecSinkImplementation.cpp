@@ -1493,7 +1493,7 @@ namespace WPEFramework
                            actual_hdmicecdevices.osdName.c_str(),
                            actual_hdmicecdevices.vendorID.c_str(),
                            actual_hdmicecdevices.powerStatus.c_str(),
-                           actual_hdmicecdevices.portNumber.c_str());;
+                           actual_hdmicecdevices.portNumber.c_str());
                     localDevices.push_back(actual_hdmicecdevices);
                 }
             }

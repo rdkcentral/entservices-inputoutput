@@ -194,10 +194,10 @@ namespace WPEFramework {
                 LOGWARN("Version Updated %d", m_isVersionUpdated);
                 LOGWARN("OSDName Updated %d", m_isOSDNameUpdated);
                 LOGWARN("PowerStatus Updated %d", m_isPowerStatusUpdated);
-                LOGWARN("VendorID Updated %d", m_isPowerStatusUpdated);
+                LOGWARN("VendorID Updated %d", m_isVendorIDUpdated);
                 LOGWARN("CEC Version : %s", m_cecVersion.toString().c_str());
                 LOGWARN("Vendor ID : %s", m_vendorID.toString().c_str());
-                LOGWARN("PhisicalAddress : %s", m_physicalAddr.toString().c_str());
+                LOGWARN("PhysicalAddress : %s", m_physicalAddr.toString().c_str());
                 LOGWARN("OSDName : %s", m_osdName.toString().c_str());
                 LOGWARN("Power Status : %s", m_powerStatus.toString().c_str());
                 LOGWARN("Language : %s", m_currentLanguage.toString().c_str());
