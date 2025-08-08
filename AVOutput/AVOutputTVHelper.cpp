@@ -1192,6 +1192,41 @@ namespace Plugin {
         }
         return ret;
     }
+
+    void AVOutputTV::syncDVCalibrationParams()
+    {
+        LOGINFO("syncDVCalibrationParams() Entry");
+
+        if (!m_dvCalibrationCaps || !m_minDVCalibrationSettings || !m_maxDVCalibrationSettings ||
+            !m_dvCalibrationComponentArr || m_numDVCalibrationComponent == 0)
+        {
+            LOGERR("DV Calibration capability not initialized properly");
+            return;
+        }
+
+        std::vector<tvConfigContext_t> contextList;
+        std::vector<std::string> componentList;
+
+        // Populate contexts from capability
+        for (size_t i = 0; i < m_dvCalibrationCaps->num_contexts; ++i) {
+            contextList.push_back(m_dvCalibrationCaps->contexts[i]);
+        }
+
+        // Build component string list from array
+        componentList.clear();
+        for (size_t j = 0; j < m_numDVCalibrationComponent; ++j) {
+            std::string compStr = dvComponentToString(m_dvCalibrationComponentArr[j]);
+            componentList.push_back(compStr);
+        }
+
+        if (!contextList.empty() && !componentList.empty()) {
+            LOGINFO("Performing DV Calibration sync with %zu contexts and %zu components", contextList.size(), componentList.size());
+            updateDVCalibration(contextList, componentList, {}, "sync");
+        }
+
+        LOGINFO("syncDVCalibrationParams() Done");
+    }
+
     void AVOutputTV::syncCMSParamsV2() {
         JsonObject parameters;
 
@@ -1382,12 +1417,35 @@ namespace Plugin {
         }
 
             //syncWBParams();  Enable once Get2PointWBCaps is implemented
+        tvDVCalibrationSettings_t* minDV = nullptr;
+        tvDVCalibrationSettings_t* maxDV = nullptr;
+        tvDVCalibrationComponent_t* componentArr = nullptr;
+        size_t numComponents = 0;
+        tvContextCaps_t* contextCaps = nullptr;
 
+        m_dvCalibrationStatus = GetDVCalibrationCaps(&minDV, &maxDV, &componentArr, &numComponents, &contextCaps);
+        m_isDVCalibrationPlatformSupported = (m_dvCalibrationStatus == tvERROR_NONE);
+
+        if (m_isDVCalibrationPlatformSupported) {
+            m_minDVCalibrationSettings = minDV;
+            m_maxDVCalibrationSettings = maxDV;
+            m_dvCalibrationComponentArr = componentArr;
+            m_numDVCalibrationComponent = numComponents;
+            m_dvCalibrationCaps = contextCaps;
+
+            m_dvCalibrationComponentList.clear();
+            for (size_t i = 0; i < m_numDVCalibrationComponent; ++i) {
+                std::string compStr = dvComponentToString(m_dvCalibrationComponentArr[i]);
+                m_dvCalibrationComponentList.push_back(compStr);
+            }
+
+            syncDVCalibrationParams();
+        }
         if(m_pictureModeStatus == tvERROR_OPERATION_NOT_SUPPORTED)
         {
-        // Dolby Vision Mode
-        info.format = "DV"; // Sync only for Dolby
-        updateAVoutputTVParam("sync", "DolbyVisionMode", info, PQ_PARAM_DOLBY_MODE, level);
+            // Dolby Vision Mode
+            info.format = "DV"; // Sync only for Dolby
+            updateAVoutputTVParam("sync", "DolbyVisionMode", info, PQ_PARAM_DOLBY_MODE, level);
         }
 
         LOGINFO("Exit %s : pqmode : %s source : %s format : %s\n", __FUNCTION__, pqmode.c_str(), source.c_str(), format.c_str());
@@ -2760,7 +2818,45 @@ namespace Plugin {
             forParam;
         return tvERROR_NONE;
     }
+    uint32_t AVOutputTV::generateStorageIdentifierDV(std::string &key, const std::string &forParam, const paramIndex_t &info)
+    {
+        key.clear();
+        key += AVOUTPUT_GENERIC_STRING_RFC_PARAM;
+        key += STRING_SOURCE + convertSourceIndexToStringV2(info.sourceIndex) + ".";
+        key += STRING_PICMODE + convertPictureIndexToStringV2(info.pqmodeIndex) + ".";
+        key += STRING_FORMAT + convertVideoFormatToStringV2(info.formatIndex) + ".";
+        if (info.componentIndex >= static_cast<uint8_t>(tvDVCalibrationComponent_TMAX) &&
+            info.componentIndex <= static_cast<uint8_t>(tvDVCalibrationComponent_WY)) {
+            key += "Component." + dvComponentToString(static_cast<tvDVCalibrationComponent_t>(info.componentIndex)) + ".";
+        } else {
+            LOGERR("Invalid DV Calibration component index: %d", info.componentIndex);
+            return tvERROR_INVALID_PARAM;
+        }
+        key += forParam;
+        return tvERROR_NONE;
+    }
 
+    bool AVOutputTV::isDVCalibrationComponentValueInRange(tvDVCalibrationComponent_t comp, double val)
+    {
+        int minVal = 0, maxVal = 0;
+        switch (comp) {
+            case tvDVCalibrationComponent_TMAX:   minVal = m_minDVCalibrationSettings->Tmax;   maxVal = m_maxDVCalibrationSettings->Tmax; break;
+            case tvDVCalibrationComponent_TMIN:   minVal = m_minDVCalibrationSettings->Tmin;   maxVal = m_maxDVCalibrationSettings->Tmin; break;
+            case tvDVCalibrationComponent_TGAMMA: minVal = m_minDVCalibrationSettings->Tgamma; maxVal = m_maxDVCalibrationSettings->Tgamma; break;
+            case tvDVCalibrationComponent_RX:     minVal = m_minDVCalibrationSettings->Rx;     maxVal = m_maxDVCalibrationSettings->Rx; break;
+            case tvDVCalibrationComponent_RY:     minVal = m_minDVCalibrationSettings->Ry;     maxVal = m_maxDVCalibrationSettings->Ry; break;
+            case tvDVCalibrationComponent_GX:     minVal = m_minDVCalibrationSettings->Gx;     maxVal = m_maxDVCalibrationSettings->Gx; break;
+            case tvDVCalibrationComponent_GY:     minVal = m_minDVCalibrationSettings->Gy;     maxVal = m_maxDVCalibrationSettings->Gy; break;
+            case tvDVCalibrationComponent_BX:     minVal = m_minDVCalibrationSettings->Bx;     maxVal = m_maxDVCalibrationSettings->Bx; break;
+            case tvDVCalibrationComponent_BY:     minVal = m_minDVCalibrationSettings->By;     maxVal = m_maxDVCalibrationSettings->By; break;
+            case tvDVCalibrationComponent_WX:     minVal = m_minDVCalibrationSettings->Wx;     maxVal = m_maxDVCalibrationSettings->Wx; break;
+            case tvDVCalibrationComponent_WY:     minVal = m_minDVCalibrationSettings->Wy;     maxVal = m_maxDVCalibrationSettings->Wy; break;
+            default:
+                LOGERR("Unknown DV Calibration component enum: %d", comp);
+                return false;
+        }
+        return (val >= minVal && val <= maxVal);
+    }
     bool AVOutputTV::isValidSource(const std::vector<std::string>& sourceArray, tvVideoSrcType_t sourceIndex)
     {
         // If "Current" is passed, match the current source
@@ -2965,6 +3061,135 @@ namespace Plugin {
             : JsonArray(); // returns empty array
     }
 
+    tvError_t AVOutputTV::setDVCalibrationParam(const std::string& forParam, const paramIndex_t& indexInfo, double value, const std::string& component)
+    {
+        std::string key;
+
+        // Fill componentIndex
+        paramIndex_t fullIndex = indexInfo;
+        fullIndex.componentIndex = static_cast<uint8_t>(getDVComponentEnumFromString(component));
+
+        if (generateStorageIdentifierDV(key, forParam, fullIndex) != tvERROR_NONE || key.empty()) {
+            LOGERR("Failed to generate storage key for DV Calibration param: %s", component.c_str());
+            return tvERROR_INVALID_PARAM;
+        }
+
+        // Prepare string value with 6 digits precision
+        char valueStr[32] = {0};
+        snprintf(valueStr, sizeof(valueStr), "%.6f", value);
+
+        tr181ErrorCode_t err = setLocalParam(const_cast<char*>(rfc_caller_id), key.c_str(), valueStr);
+        if (err != tr181Success) {
+            LOGERR("setLocalParam failed for key=%s value=%.6f", key.c_str(), value);
+            return tvERROR_GENERAL;
+        }
+
+        LOGINFO("DV Calibration param saved: %s = %.6f", key.c_str(), value);
+        return tvERROR_NONE;
+    }
+
+    uint64_t AVOutputTV::getLastDVCalibrationSetTimestamp(const std::string& pqModeStr,
+                                                        const std::string& videoSourceStr,
+                                                        const std::string& videoFormatStr)
+    {
+        paramIndex_t indexInfo;
+        indexInfo.pqmodeIndex   = convertPictureStringToIndexV2(pqModeStr);
+        indexInfo.sourceIndex   = convertSourceStringToIndexV2(videoSourceStr);
+        indexInfo.formatIndex   = convertVideoFormatStringToIndexV2(videoFormatStr);
+
+        std::string key;
+        if (generateStorageIdentifierDV(key, "UtcTimestamp", indexInfo) != tvERROR_NONE) {
+            LOGERR("Failed to generate storage key for DV timestamp");
+            return 0;
+        }
+
+        TR181_ParamData_t param = {};
+        tr181ErrorCode_t err = getLocalParam(rfc_caller_id, key.c_str(), &param);
+
+        if (err == tr181Success && param.value && strlen(param.value) > 0) {
+            try {
+                return std::stoull(param.value);
+            } catch (const std::exception& e) {
+                LOGERR("Invalid timestamp value for key %s: %s", key.c_str(), e.what());
+                return 0;
+            }
+        } else {
+            LOGINFO("DV calibration timestamp not set for key: %s", key.c_str());
+            return 0;
+        }
+    }
+
+    tvError_t AVOutputTV::getDVCalibrationParam(const std::string& forParam,
+                                                const paramIndex_t& indexInfo,
+                                                double& outValue,
+                                                const std::string& component)
+    {
+        std::string key;
+        paramIndex_t fullIndex = indexInfo;
+
+        // Map string to component index
+        if (component == "tmax")       fullIndex.componentIndex = tvDVCalibrationComponent_TMAX;
+        else if (component == "tmin")  fullIndex.componentIndex = tvDVCalibrationComponent_TMIN;
+        else if (component == "tgamma")fullIndex.componentIndex = tvDVCalibrationComponent_TGAMMA;
+        else if (component == "rx")    fullIndex.componentIndex = tvDVCalibrationComponent_RX;
+        else if (component == "ry")    fullIndex.componentIndex = tvDVCalibrationComponent_RY;
+        else if (component == "gx")    fullIndex.componentIndex = tvDVCalibrationComponent_GX;
+        else if (component == "gy")    fullIndex.componentIndex = tvDVCalibrationComponent_GY;
+        else if (component == "bx")    fullIndex.componentIndex = tvDVCalibrationComponent_BX;
+        else if (component == "by")    fullIndex.componentIndex = tvDVCalibrationComponent_BY;
+        else if (component == "wx")    fullIndex.componentIndex = tvDVCalibrationComponent_WX;
+        else if (component == "wy")    fullIndex.componentIndex = tvDVCalibrationComponent_WY;
+        else {
+            LOGERR("Unknown DV calibration component: %s", component.c_str());
+            return tvERROR_INVALID_PARAM;
+        }
+
+        // Generate TR-181 key
+        if (generateStorageIdentifierDV(key, forParam, fullIndex) != tvERROR_NONE) {
+            LOGERR("Failed to generate key for component: %s", component.c_str());
+            return tvERROR_GENERAL;
+        }
+
+        // Fetch from TR-181
+        TR181_ParamData_t param = {0};
+        tr181ErrorCode_t err = getLocalParam(rfc_caller_id, key.c_str(), &param);
+
+        if (err == tr181Success && strlen(param.value) > 0) {
+            try {
+                outValue = std::stod(param.value);
+                return tvERROR_NONE;
+            } catch (...) {
+                LOGWARN("Invalid numeric value for component %s in TR-181", component.c_str());
+            }
+        }
+
+        // Fallback to default values
+        tvDVCalibrationSettings_t defaults = {};
+        if (GetDVCalibrationDefault(
+                static_cast<tvVideoSrcType_t>(fullIndex.sourceIndex),
+                static_cast<tvPQModeIndex_t>(fullIndex.pqmodeIndex),
+                static_cast<tvVideoFormatType_t>(fullIndex.formatIndex),
+                &defaults) != tvERROR_NONE)
+        {
+            LOGERR("Failed to retrieve default DV calibration settings");
+            return tvERROR_GENERAL;
+        }
+
+        if      (component == "tmax")   outValue = defaults.Tmax;
+        else if (component == "tmin")   outValue = defaults.Tmin;
+        else if (component == "tgamma") outValue = defaults.Tgamma;
+        else if (component == "rx")     outValue = defaults.Rx;
+        else if (component == "ry")     outValue = defaults.Ry;
+        else if (component == "gx")     outValue = defaults.Gx;
+        else if (component == "gy")     outValue = defaults.Gy;
+        else if (component == "bx")     outValue = defaults.Bx;
+        else if (component == "by")     outValue = defaults.By;
+        else if (component == "wx")     outValue = defaults.Wx;
+        else if (component == "wy")     outValue = defaults.Wy;
+
+        return tvERROR_NONE;
+    }
+
     tvContextCaps_t* AVOutputTV::getCapsForParam(const std::string& paramName)
     {
         tvContextCaps_t* caps = nullptr;
@@ -2988,6 +3213,7 @@ namespace Plugin {
         else if (paramName == "BacklightMode") caps = m_backlightModeCaps;
         else if (paramName == "CMS") caps = m_cmsCaps;
         else if (paramName == "SDRGamma") caps = m_sdrGammaModeCaps;
+        else if (paramName == "DolbyVisionCalibration") caps = m_dvCalibrationCaps;
         else {
             LOGERR("Unknown ParamName: %s", paramName.c_str());
             return nullptr;
@@ -3023,6 +3249,60 @@ namespace Plugin {
         }
         return convertVideoFormatToStringV2(formatIndex);
     }
+
+    std::string AVOutputTV::dvComponentToString(tvDVCalibrationComponent_t comp) {
+        switch (comp) {
+            case tvDVCalibrationComponent_TMAX: return "Tmax";
+            case tvDVCalibrationComponent_TMIN: return "Tmin";
+            case tvDVCalibrationComponent_TGAMMA: return "Tgamma";
+            case tvDVCalibrationComponent_RX: return "Rx";
+            case tvDVCalibrationComponent_RY: return "Ry";
+            case tvDVCalibrationComponent_GX: return "Gx";
+            case tvDVCalibrationComponent_GY: return "Gy";
+            case tvDVCalibrationComponent_BX: return "Bx";
+            case tvDVCalibrationComponent_BY: return "By";
+            case tvDVCalibrationComponent_WX: return "Wx";
+            case tvDVCalibrationComponent_WY: return "Wy";
+            default: return "Unknown";
+        }
+    }
+    tvDVCalibrationComponent_t AVOutputTV::getDVComponentEnumFromString(const std::string& str) {
+        if (str == "Tmax") return tvDVCalibrationComponent_TMAX;
+        if (str == "Tmin") return tvDVCalibrationComponent_TMIN;
+        if (str == "Tgamma") return tvDVCalibrationComponent_TGAMMA;
+        if (str == "Rx") return tvDVCalibrationComponent_RX;
+        if (str == "Ry") return tvDVCalibrationComponent_RY;
+        if (str == "Gx") return tvDVCalibrationComponent_GX;
+        if (str == "Gy") return tvDVCalibrationComponent_GY;
+        if (str == "Bx") return tvDVCalibrationComponent_BX;
+        if (str == "By") return tvDVCalibrationComponent_BY;
+        if (str == "Wx") return tvDVCalibrationComponent_WX;
+        if (str == "Wy") return tvDVCalibrationComponent_WY;
+        return tvDVCalibrationComponent_MAX;
+    }
+
+    tvError_t AVOutputTV::setDVCalibrationTimestamp(const paramIndex_t& indexInfo, uint64_t timestamp)
+    {
+        std::string key;
+        if (generateStorageIdentifierDV(key, "UtcTimestamp", indexInfo) != tvERROR_NONE) {
+            LOGERR("Failed to generate TR-181 key for DV calibration timestamp");
+            return tvERROR_GENERAL;
+        }
+
+        // Convert timestamp to string
+        std::string toStore = std::to_string(timestamp);
+
+        // Set the value using TR-181 key and string
+        tr181ErrorCode_t result = setLocalParam(rfc_caller_id, key.c_str(), toStore.c_str());
+        if (result != tr181Success) {
+            LOGERR("setLocalParam failed for key: %s", key.c_str());
+            return tvERROR_GENERAL;
+        }
+
+        LOGINFO("DV calibration timestamp %" PRIu64 " saved successfully for %s", timestamp, key.c_str());
+        return tvERROR_NONE;
+    }
+
 
     bool AVOutputTV::isSetRequiredForParam(const JsonObject& parameters, const std::string& paramName)
     {
@@ -3099,6 +3379,78 @@ namespace Plugin {
 
         return false;
     }
+
+    tvError_t AVOutputTV::updateDVCalibration(const std::vector<tvConfigContext_t>& contexts,
+                                const std::vector<std::string>& components,
+                                const std::map<std::string, double>& overrideValues,
+                                const std::string& action)
+    {
+        bool isSet = (action == "set");
+        bool isReset = (action == "reset");
+        bool isSync = (action == "sync");
+
+        tvError_t overallStatus = tvERROR_NONE;
+
+        for (const auto& ctx : contexts) {
+            paramIndex_t indexInfo;
+            indexInfo.sourceIndex = ctx.videoSrcType;
+            indexInfo.pqmodeIndex = ctx.pq_mode;
+            indexInfo.formatIndex = ctx.videoFormatType;
+
+            tvDVCalibrationSettings_t dvValues = {};
+
+            if (isReset) {
+                if (GetDVCalibrationDefault(ctx.videoSrcType, ctx.pq_mode, ctx.videoFormatType, &dvValues) != tvERROR_NONE) {
+                    LOGERR("Failed to get default DV Calibration");
+                    overallStatus = tvERROR_GENERAL;
+                    continue;
+                }
+            } else {
+                GetDVCalibration(ctx.videoSrcType, ctx.pq_mode, ctx.videoFormatType, &dvValues);
+            }
+
+            for (const auto& comp : components) {
+                double val = 0.0;
+
+                if (isSync || isReset) {
+                    getDVCalibrationParam("DolbyVisionCalibration", indexInfo, val, comp);
+                } else if (isSet && overrideValues.find(comp) != overrideValues.end()) {
+                    val = overrideValues.at(comp);
+
+                    tvDVCalibrationComponent_t compEnum = getDVComponentEnumFromString(comp);
+                    if (!isDVCalibrationComponentValueInRange(compEnum, val)) {
+                        LOGERR("Value %f out of range for component %s", val, comp.c_str());
+                        overallStatus = tvERROR_INVALID_PARAM;
+                        continue;
+                    }
+                }
+
+                if (comp == "tmax")   dvValues.Tmax = val;
+                else if (comp == "tmin")   dvValues.Tmin = val;
+                else if (comp == "tgamma") dvValues.Tgamma = val;
+                else if (comp == "rx")     dvValues.Rx = val;
+                else if (comp == "ry")     dvValues.Ry = val;
+                else if (comp == "gx")     dvValues.Gx = val;
+                else if (comp == "gy")     dvValues.Gy = val;
+                else if (comp == "bx")     dvValues.Bx = val;
+                else if (comp == "by")     dvValues.By = val;
+                else if (comp == "wx")     dvValues.Wx = val;
+                else if (comp == "wy")     dvValues.Wy = val;
+
+                if (isSet || isReset) {
+                    setDVCalibrationParam("DolbyVisionCalibration", indexInfo, val, comp);
+                }
+            }
+
+            if (SetDVCalibration(ctx.videoSrcType, ctx.pq_mode, ctx.videoFormatType, &dvValues) != tvERROR_NONE) {
+                LOGERR("SetDVCalibration failed for %d/%d/%d", ctx.videoSrcType, ctx.pq_mode, ctx.videoFormatType);
+                overallStatus = tvERROR_GENERAL;
+            }
+        }
+
+        return overallStatus;
+    }
+
     std::string AVOutputTV::getCMSNameFromEnum(tvDataComponentColor_t colorEnum)
     {
         switch (colorEnum) {
