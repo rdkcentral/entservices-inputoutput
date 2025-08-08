@@ -1580,6 +1580,7 @@ namespace WPEFramework
             char routeString[1024] = {'\0'};
             std::vector<Exchange::IHdmiCecSink::HdmiCecSinkActivePath> paths;
             std::stringstream temp;
+            int stringLength = 0;
 
              if (HdmiCecSinkImplementation::_instance->m_currentActiveSource != -1 &&
                     HdmiCecSinkImplementation::_instance->m_currentActiveSource != HdmiCecSinkImplementation::_instance->m_logicalAddressAllocated )
@@ -1590,6 +1591,7 @@ namespace WPEFramework
                 {
                     available = true;
                     length = route.size();
+                    LOGINFO("GetActiveRoute:Length = [%zu]", length);
 
                     for (unsigned int i=0; i < route.size(); i++)
                     {
@@ -1605,15 +1607,15 @@ namespace WPEFramework
 
                             paths.push_back(device);
 
-                            snprintf(&routeString[length], sizeof(routeString) - length, "%s", _instance->deviceList[route[i]].m_logicalAddress.toString().c_str());
-                            length += _instance->deviceList[route[i]].m_logicalAddress.toString().length();
-                            snprintf(&routeString[length], sizeof(routeString) - length, "(%s", _instance->deviceList[route[i]].m_osdName.toString().c_str());
-                            length += _instance->deviceList[route[i]].m_osdName.toString().length();
-                            snprintf(&routeString[length], sizeof(routeString) - length, "%s", ")-->");
-                            length += strlen(")-->");
+                            snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s", _instance->deviceList[route[i]].m_logicalAddress.toString().c_str());
+                            stringLength += _instance->deviceList[route[i]].m_logicalAddress.toString().length();
+                            snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "(%s", _instance->deviceList[route[i]].m_osdName.toString().c_str());
+                            stringLength += _instance->deviceList[route[i]].m_osdName.toString().length();
+                            snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s", ")-->");
+                            stringLength += strlen(")-->");
                             if( i + 1 ==  route.size() )
                             {
-                                snprintf(&routeString[length], sizeof(routeString) - length, "%s%d", "HDMI",(HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_physicalAddr.getByteValue(0) - 1));
+                                snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s%d", "HDMI",(HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_physicalAddr.getByteValue(0) - 1));
                             }
                         }
                     }
