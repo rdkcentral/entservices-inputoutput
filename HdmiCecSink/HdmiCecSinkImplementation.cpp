@@ -1562,7 +1562,9 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSinkImplementation::SetActivePath(const string &activePath, HdmiCecSinkSuccess &success)
         {
+            LOGINFO(" passed activePath = %s", activePath.c_str());
             string activePathStr = activePath;
+            LOGINFO("activePathStr = %s", activePathStr.c_str());
             PhysicalAddress phy_addr = PhysicalAddress(activePathStr);
             LOGINFO("Addr = %s, length = %zu", activePathStr.c_str(), activePathStr.length());
             setStreamPath(phy_addr);
