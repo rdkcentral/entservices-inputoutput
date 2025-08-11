@@ -643,6 +643,7 @@ private:
                         uint32_t requestShortAudioDescriptorWrapper(const JsonObject& parameters, JsonObject& response);
                         uint32_t sendStandbyMessageWrapper(const JsonObject& parameters, JsonObject& response);
 			uint32_t sendAudioDevicePowerOnMsgWrapper(const JsonObject& parameters, JsonObject& response);
+			uint32_t sendAVRMuteMsgWrapper(const JsonObject& parameters, JsonObject& response);
                         uint32_t sendRemoteKeyPressWrapper(const JsonObject& parameters, JsonObject& response);
 			uint32_t sendUserControlPressedWrapper(const JsonObject& parameters, JsonObject& response);
                         uint32_t sendUserControlReleasedWrapper(const JsonObject& parameters, JsonObject& response);
