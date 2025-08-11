@@ -68,6 +68,9 @@ target_link_libraries(${MODULE_NAME}
         ${NAMESPACE}Plugins::${NAMESPACE}Plugins
         ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
 
+install(TARGETS ${MODULE_NAME}
+        DESTINATION lib/${STORAGE_DIRECTORY}/plugins)        
+
 add_library(${PLUGIN_IMPLEMENTATION} SHARED
         AVInputImplementation.cpp
         Module.cpp)
