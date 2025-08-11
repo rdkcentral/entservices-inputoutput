@@ -25,9 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: partners.artifactory.comcast.com/rdk-docker/mw_hal_emulator_docker_image:latest
-      credentials:
-        username: ${{ vars.RDKE_ARTIFACTORY_USER }}
-        password: ${{ secrets.RDKE_ARTIFACTORY_USER_APIKEY }}
+      #credentials:
+        #username: ${{ vars.RDKE_ARTIFACTORY_USER }}
+        #password: ${{ secrets.RDKE_ARTIFACTORY_USER_APIKEY }}
         
     steps:
       - uses: actions/checkout@v2
