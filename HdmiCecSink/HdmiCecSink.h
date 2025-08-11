@@ -563,6 +563,7 @@ private:
 			void sendFeatureAbort(const LogicalAddress logicalAddress, const OpCode feature, const AbortReason reason);
 			void reportFeatureAbortEvent(const LogicalAddress logicalAddress, const OpCode feature, const AbortReason reason);
 			void systemAudioModeRequest();
+			void systemAVRAudioMuteRequest();
                         void SendStandbyMsgEvent(const int logicalAddress);
                         void requestAudioDevicePowerStatus();
                         void reportAudioDevicePowerStatusInfo(const int logicalAddress, const int powerStatus);
