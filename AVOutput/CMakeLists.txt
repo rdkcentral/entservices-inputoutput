@@ -30,6 +30,8 @@ set(PLUGIN_AVOUTPUT_AUTOSTART "true" CACHE STRING "Automatically start AVOutput 
 find_package(WPEFramework)
 find_package(${NAMESPACE}Plugins REQUIRED)
 
+find_package(Boost COMPONENTS system filesystem REQUIRED)
+
 set (CMAKE_CXX_STANDARD 11)
 
 find_path (STAGING_INCDIR glib-2.0)
@@ -87,6 +89,9 @@ target_include_directories(${MODULE_NAME} PRIVATE ../helpers)
 target_link_libraries(${MODULE_NAME} 
     PRIVATE
         ${NAMESPACE}Plugins::${NAMESPACE}Plugins)
+
+target_link_libraries(${MODULE_NAME} PRIVATE ${Boost_SYSTEM_LIBRARY})
+target_link_libraries(${MODULE_NAME} PRIVATE ${Boost_FILESYSTEM_LIBRARY})
 
 
 install(TARGETS ${MODULE_NAME} 
