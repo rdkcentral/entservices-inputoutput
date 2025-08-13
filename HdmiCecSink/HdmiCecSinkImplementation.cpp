@@ -1637,7 +1637,7 @@ namespace WPEFramework
             successResult.success = true;
             return Core::ERROR_NONE;
         }
-        Core::hresult HdmiCecSinkImplementation::SetupARCRouting(const bool &enabled, HdmiCecSinkSuccess &success)
+        Core::hresult HdmiCecSinkImplementation::SetupARCRouting(const bool &enabled, HdmiCecSinkSuccess &successResult)
        {
             if(enabled)
             {
@@ -1666,14 +1666,14 @@ namespace WPEFramework
             successResult.success = true;
             return Core::ERROR_NONE;
         }
-        Core::hresult HdmiCecSinkImplementation::SendStandbyMessage(HdmiCecSinkSuccess &success)
+        Core::hresult HdmiCecSinkImplementation::SendStandbyMessage(HdmiCecSinkSuccess &successResult)
         {
             sendStandbyMessage();
             successResult.success = true;
             return Core::ERROR_NONE;
         }
 
-        Core::hresult HdmiCecSinkImplementation::SendAudioDevicePowerOnMessage(HdmiCecSinkSuccess &success)
+        Core::hresult HdmiCecSinkImplementation::SendAudioDevicePowerOnMessage(HdmiCecSinkSuccess &successResult)
         {
             LOGINFO("%s invoked. \n",__FUNCTION__);
             systemAudioModeRequest();
@@ -1727,7 +1727,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
         }
 
-       Core::hresult HdmiCecSinkImplementation::SendGetAudioStatusMessage(HdmiCecSinkSuccess &success)
+       Core::hresult HdmiCecSinkImplementation::SendGetAudioStatusMessage(HdmiCecSinkSuccess &successResult)
         {
             sendGiveAudioStatusMsg();
             successResult.success = true;
