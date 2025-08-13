@@ -1357,7 +1357,7 @@ namespace Plugin {
         // PrecisionDetail
         m_precisionDetailStatus = GetPrecisionDetailCaps(&m_maxPrecisionDetail, &m_precisionDetailCaps);
         if (m_precisionDetailStatus == tvERROR_NONE) {
-            updateAVoutputTVParamV2("sync", "PrecisionDetails", paramJson, PQ_PARAM_PRECISION_DETAIL, level);
+            updateAVoutputTVParamV2("sync", "PrecisionDetail", paramJson, PQ_PARAM_PRECISION_DETAIL, level);
         }
         //PictureMode
         m_pictureModeStatus = GetTVPictureModeCaps(&m_pictureModes, &m_numPictureModes, &m_pictureModeCaps);
@@ -1423,7 +1423,7 @@ namespace Plugin {
         size_t numComponents = 0;
         tvContextCaps_t* contextCaps = nullptr;
 
-        m_dvCalibrationStatus = GetDVCalibrationCaps(&minDV, &maxDV, &componentArr, &numComponents, &contextCaps);
+        //m_dvCalibrationStatus = GetDVCalibrationCaps(&minDV, &maxDV, &componentArr, &numComponents, &contextCaps);
         m_isDVCalibrationPlatformSupported = (m_dvCalibrationStatus == tvERROR_NONE);
 
         if (m_isDVCalibrationPlatformSupported) {
@@ -3554,19 +3554,81 @@ namespace Plugin {
         return validContexts;
     }
 
+
+    void AVOutputTV::paramUpdateWorker() {
+        while (!shouldStopWorker) {
+            std::unique_lock<std::mutex> lock(queueMutex);
+
+            // Wait for work or stop signal
+            queueCondition.wait(lock, [this] {
+                return !paramUpdateQueue.empty() || shouldStopWorker;
+            });
+
+            if (shouldStopWorker) {
+                break;
+            }
+
+            // Process all queued updates
+            while (!paramUpdateQueue.empty() && !shouldStopWorker) {
+                auto task = paramUpdateQueue.front();
+                paramUpdateQueue.pop();
+                lock.unlock();
+                // Execute the task
+                task();
+                lock.lock();
+            }
+        }
+    }
+
     int AVOutputTV::updateAVoutputTVParamV2(std::string action, std::string tr181ParamName,
+            const JsonObject& parameters,
+            tvPQParameterIndex_t pqParamIndex, int level)
+    {
+#if DEBUG
+        LOGINFO("Entry %s: Action: %s, Param: %s, Level: %d", __FUNCTION__, action.c_str(), tr181ParamName.c_str(), level);
+#endif
+        std::vector<tvConfigContext_t> validContexts = getValidContextsFromParameters(parameters, tr181ParamName);
+        if (validContexts.empty()) {
+            LOGWARN("%s: No valid contexts found for parameters", __FUNCTION__);
+            return (int)tvERROR_GENERAL;
+        }
+        if (validContexts.size() == 1){
+#if DEBUG
+            LOGINFO("Processing immediately");
+#endif
+            return updateAVoutputTVParamV2Implementation(action, tr181ParamName, parameters, pqParamIndex, level);
+        } else {
+#if DEBUG
+            LOGINFO("Queuing for background processing - no current values involved");
+#endif
+            // Capture parameters by value for thread safety
+            std::lock_guard<std::mutex> lock(queueMutex);
+            paramUpdateQueue.push([this, action, tr181ParamName, parameters, pqParamIndex, level]() {
+                updateAVoutputTVParamV2Implementation(action, tr181ParamName, parameters, pqParamIndex, level);
+            });
+            queueCondition.notify_one();
+
+            // Return immediately - operation queued successfully
+            return 0;
+        }
+    }
+
+    int AVOutputTV::updateAVoutputTVParamV2Implementation(std::string action, std::string tr181ParamName,
         const JsonObject& parameters,
         tvPQParameterIndex_t pqParamIndex,int level)
     {
+#if DEBUG
         LOGINFO("Entry %s: Action: %s, Param: %s, Level: %d", __FUNCTION__, action.c_str(), tr181ParamName.c_str(), level);
+#endif
         int ret = 0;
         const bool isSet = (action == "set");
         const bool isReset = (action == "reset");
         const bool isSync = (action == "sync");
 
         std::vector<tvConfigContext_t> validContexts = getValidContextsFromParameters(parameters, tr181ParamName);
+#if DEBUG
         LOGINFO("%s: Number of validContexts = %zu", __FUNCTION__, validContexts.size());
-
+#endif
         if (validContexts.empty()) {
             LOGWARN("%s: No valid contexts found for parameters", __FUNCTION__);
             return (int)tvERROR_GENERAL;

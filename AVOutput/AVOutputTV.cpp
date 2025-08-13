@@ -416,11 +416,22 @@ namespace Plugin {
 
         registerMethod("getMultiPointWBCaps", &AVOutputTV::getMultiPointWBCaps, this);
 
+        // Start worker thread for non-blocking updates
+        workerThread = std::thread(&AVOutputTV::paramUpdateWorker, this);
+
         LOGINFO("Exit\n");
     }
     
     AVOutputTV :: ~AVOutputTV()
     {
+        // Signal worker thread to stop
+        shouldStopWorker = true;
+
+        queueCondition.notify_all();
+        // Wait for worker thread to finish
+        if (workerThread.joinable()) {
+            workerThread.join();
+        }
         DeinitializeIARM();	
     }
 
@@ -1227,9 +1238,9 @@ namespace Plugin {
         size_t num_component = 0;
         tvContextCaps_t* context_caps = nullptr;
 
-        if (GetDVCalibrationCaps(&min_values, &max_values, &component, &num_component, &context_caps) != tvERROR_NONE) {
+        //if (GetDVCalibrationCaps(&min_values, &max_values, &component, &num_component, &context_caps) != tvERROR_NONE) {
             returnResponse(false);
-        }
+       // }
 
         response["platformSupport"] = true;
 

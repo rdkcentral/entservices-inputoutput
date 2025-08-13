@@ -25,6 +25,14 @@
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
+#include <functional>
+#include <vector>
+#include <atomic>
+
 #include "tvTypes.h"
 #include "tvSettings.h"
 #include <pthread.h>
@@ -450,8 +458,6 @@ class AVOutputTV : public AVOutputBase {
 		std::vector<tvVideoFormatType_t> extractVideoFormats(const JsonObject& parameters);
 		static bool isGlobalParam(const JsonArray& arr);
 		JsonArray getJsonArrayIfArray(const JsonObject& obj, const std::string& key);
-			int updateAVoutputTVParamV2(std::string action, std::string tr181ParamName,
-			const JsonObject& parameters, tvPQParameterIndex_t pqParamIndex, int level);
 		std::vector<tvConfigContext_t> getValidContextsFromParameters(const JsonObject& parameters,const std::string& tr181ParamName );
 		typedef tvError_t (*tvSetFunction)(int);
 		bool resetPQParamToDefault(const JsonObject& parameters,
@@ -507,6 +513,22 @@ class AVOutputTV : public AVOutputBase {
 		int syncAvoutputTVPQModeParamsToHALV2(std::string pqmode, std::string source, std::string format);
 		std::string getCMSNameFromEnum(tvDataComponentColor_t colorEnum);
         void syncCMSParamsV2();
+
+		// Thread pool for non-blocking parameter updates
+		std::queue<std::function<void()>> paramUpdateQueue;
+		std::mutex queueMutex;
+		std::condition_variable queueCondition;
+		std::thread workerThread;
+		std::atomic<bool> shouldStopWorker{false};
+		// Worker thread function
+		void paramUpdateWorker();
+		//dispatcher
+		int updateAVoutputTVParamV2(std::string action, std::string tr181ParamName,
+			const JsonObject& parameters, tvPQParameterIndex_t pqParamIndex, int level);
+		// Implementation function that does the actual work
+		int updateAVoutputTVParamV2Implementation(std::string action, std::string tr181ParamName,
+			const JsonObject& parameters,
+			tvPQParameterIndex_t pqParamIndex, int level);
 
 
 	public:
