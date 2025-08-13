@@ -169,7 +169,7 @@ namespace WPEFramework
             if(method == _T("getHDCPStatus"))
             {
                 LOGINFO("DBG-Inside If");
-                errormessage = error_strings[errorcode-ERROR_BASE];
+                errormessage = ERROR_MESSAGE(errorcode);
             }
             return errorcode;
         }
