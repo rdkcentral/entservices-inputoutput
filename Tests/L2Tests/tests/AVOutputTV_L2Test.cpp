@@ -183,18 +183,18 @@ TEST_F(AVOutput_L2test, AVOUTPUT_GETINPUTDEVICE_Test)
     uint32_t status = Core::ERROR_GENERAL;
     JsonObject result, params;
 
-    ON_CALL(*p_tvSettingsImplMock, ReadCapablitiesFromConfODM(testing::_, testing::_, testing::_, testing::_, testing::_, testing::_, testing::_))
-        .WillByDefault([](std::string& rangeInfo, std::string& pqmodeInfo, std::string& formatInfo, std::string& sourceInfo, std::string param, std::string& platformsupport, std::string& index) {
-            printf("ReadCapablitiesFromConfODM\n");
-            rangeInfo = "\"Standard\",\"Vivid\",\"EnergySaving\",\"Custom\",\"Theater\",\"Game\"";
-            pqmodeInfo = "";
-            formatInfo = "\"SDR\"";
-            sourceInfo = "\"HDMI\",\"HDMI2\"";
-            platformsupport = "";
-            index = "0";
+    // ON_CALL(*p_tvSettingsImplMock, ReadCapablitiesFromConfODM(testing::_, testing::_, testing::_, testing::_, testing::_, testing::_, testing::_))
+    //     .WillByDefault([](std::string& rangeInfo, std::string& pqmodeInfo, std::string& formatInfo, std::string& sourceInfo, std::string param, std::string& platformsupport, std::string& index) {
+    //         printf("ReadCapablitiesFromConfODM\n");
+    //         rangeInfo = "\"Standard\",\"Vivid\",\"EnergySaving\",\"Custom\",\"Theater\",\"Game\"";
+    //         pqmodeInfo = "";
+    //         formatInfo = "\"SDR\"";
+    //         sourceInfo = "\"HDMI\",\"HDMI2\"";
+    //         platformsupport = "";
+    //         index = "0";
 
-            return tvERROR_NONE;
-        });
+    //         return tvERROR_NONE;
+    //     });
 
     status = InvokeServiceMethod("org.rdk.AVOutput.1", "getPictureModeCaps", params, result);
 
