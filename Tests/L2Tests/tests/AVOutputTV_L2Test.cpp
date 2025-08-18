@@ -157,6 +157,42 @@ AVOutput_L2test::AVOutput_L2test()
             return tvERROR_NONE;
         }));
 
+// Assuming '*p_tvSettingsImplMock' is your mock class instance
+
+    ON_CALL(*p_tvSettingsImplMock, SaveBrightness(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveContrast(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveSharpness(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveHue(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveSaturation(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveColorTemperature(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveBacklight(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveTVDimmingMode(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveLowLatencyState(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveTVDolbyVisionMode(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveAspectRatio(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
+
+
          /* Activate plugin in constructor */
          status = ActivateService("org.rdk.AVOutput");
          EXPECT_EQ(Core::ERROR_NONE, status);
