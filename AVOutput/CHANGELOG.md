@@ -14,7 +14,6 @@ All notable changes to this RDK Service will be documented in this file.
 
 * Changes in CHANGELOG should be updated when commits are added to the main or release branches. There should be one CHANGELOG entry per JIRA Ticket. This is not enforced on sprint branches since there could be multiple changes for the same JIRA ticket during development. 
 
-<<<<<<< HEAD
 ## [1.1.4] - 2025-09-08
 ### Fixed
 - Sync low latency for AVOutput initialization
@@ -22,6 +21,10 @@ All notable changes to this RDK Service will be documented in this file.
 ## [1.1.3] - 2025-08-08
 ### Fixed
 - Fixed getDolbyVisionMode() for non DV content
+
+## [1.2.0] - 2025-06-25
+### Added
+- Advance PQ Params
 
 ## [1.1.2] - 2025-07-01
 ### Fixed
