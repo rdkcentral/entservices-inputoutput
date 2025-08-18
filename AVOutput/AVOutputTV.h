@@ -218,7 +218,7 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(getDigitalNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(getMEMC)
 		DECLARE_JSON_RPC_METHOD(getSDRGamma)
-		DECLARE_JSON_RPC_METHOD(getDolbyVisionCalibration)
+
 
 		/*Get Capability API's*/
 		DECLARE_JSON_RPC_METHOD(getBacklightCaps)
@@ -291,7 +291,6 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(setDigitalNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(setMEMC)
 		DECLARE_JSON_RPC_METHOD(setSDRGamma)
-		DECLARE_JSON_RPC_METHOD(setDolbyVisionCalibration)
 		/*Reset API's*/
 		DECLARE_JSON_RPC_METHOD(resetBacklight)
 		DECLARE_JSON_RPC_METHOD(resetBrightness )
@@ -316,7 +315,6 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(resetDigitalNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(resetMEMC)
 		DECLARE_JSON_RPC_METHOD(resetSDRGamma)
-		DECLARE_JSON_RPC_METHOD(resetDolbyVisionCalibration)
 
 
     private:
@@ -631,29 +629,10 @@ class AVOutputTV : public AVOutputBase {
 		tvContextCaps_t* m_multiPointWBCaps = nullptr;
 		tvError_t m_multiPointWBStatus = tvERROR_NONE;
 
-
-		tvError_t m_dvCalibrationStatus = tvERROR_GENERAL;
-		tvDVCalibrationSettings_t* m_minDVCalibrationSettings = nullptr;
-		tvDVCalibrationSettings_t* m_maxDVCalibrationSettings = nullptr;
-		tvDVCalibrationComponent_t* m_dvCalibrationComponentArr = nullptr;
-		size_t m_numDVCalibrationComponent = 0;
-		tvContextCaps_t* m_dvCalibrationCaps = nullptr;
-		std::vector<std::string> m_dvCalibrationComponentList;
-		bool m_isDVCalibrationPlatformSupported = false;
-		std::string dvComponentToString(tvDVCalibrationComponent_t comp);
-		tvDVCalibrationComponent_t getDVComponentEnumFromString(const std::string& str);
-		bool isDVCalibrationComponentValueInRange(tvDVCalibrationComponent_t comp, double val);
-		tvError_t setDVCalibrationParam(const std::string& forParam, const paramIndex_t& indexInfo, double value, const std::string& component);
-		tvError_t setDVCalibrationTimestamp(const paramIndex_t& indexInfo, uint64_t timestamp);
-		tvError_t getDVCalibrationParam(const std::string& forParam, const paramIndex_t& indexInfo, double& outValue, const std::string& component);
-		uint64_t getLastDVCalibrationSetTimestamp(const std::string& pqMode, const std::string& source, const std::string& format);
-		tvError_t updateDVCalibration(const std::vector<tvConfigContext_t>& contexts,
-                              const std::vector<std::string>& components,
-                              const std::map<std::string, double>& overrideValues,
-                              const std::string& action);
-		void syncDVCalibrationParams();
-		uint32_t generateStorageIdentifierDV(std::string &key, const std::string &forParam, const paramIndex_t &info);
-
+		tvDVCalibrationSettings_t* m_minValues;
+		tvDVCalibrationSettings_t* m_maxValues;
+		tvContextCaps_t* m_DVCalibrationCaps = nullptr;
+		tvError_t m_DVCalibrationStatus = tvERROR_NONE;
 
 		int m_maxCmsHue = 0;
 		int m_maxCmsSaturation = 0;

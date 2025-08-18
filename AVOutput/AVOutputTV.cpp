@@ -368,17 +368,11 @@ namespace Plugin {
         registerMethod("getColorTemperatureCapsV2", &AVOutputTV::getColorTemperatureCapsV2, this);
         registerMethod("getBacklightDimmingModeCapsV2", &AVOutputTV::getBacklightDimmingModeCapsV2, this);
         registerMethod("getZoomModeCapsV2", &AVOutputTV::getZoomModeCapsV2, this);
+        registerMethod("getDolbyVisionCalibrationCaps", &AVOutputTV::getDolbyVisionCalibrationCaps, this);
         registerMethod("getPictureModeCapsV2", &AVOutputTV::getPictureModeCapsV2, this);
         registerMethod("getAutoBacklightModeCapsV2", &AVOutputTV::getAutoBacklightModeCapsV2, this);
         registerMethod("getCMSCapsV2", &AVOutputTV::getCMSCapsV2, this);
         registerMethod("get2PointWBCapsV2", &AVOutputTV::get2PointWBCapsV2, this);
-
-        registerMethod("getDolbyVisionCalibrationCaps", &AVOutputTV::getDolbyVisionCalibrationCaps, this);
-        registerMethod("getDolbyVisionCalibration", &AVOutputTV::getDolbyVisionCalibration, this);
-        registerMethod("setDolbyVisionCalibration", &AVOutputTV::setDolbyVisionCalibration, this);
-        registerMethod("resetDolbyVisionCalibration", &AVOutputTV::resetDolbyVisionCalibration, this);
-
-
         registerMethod("getSDRGammaCaps", &AVOutputTV::getSDRGammaCaps, this);
         registerMethod("getSDRGamma", &AVOutputTV::getSDRGamma, this);
         registerMethod("setSDRGamma", &AVOutputTV::setSDRGamma, this);
@@ -1232,48 +1226,6 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getDolbyVisionCalibrationCaps(const JsonObject& parameters, JsonObject& response)
     {
-        tvDVCalibrationSettings_t* min_values = nullptr;
-        tvDVCalibrationSettings_t* max_values = nullptr;
-        tvDVCalibrationComponent_t* component = nullptr;
-        size_t num_component = 0;
-        tvContextCaps_t* context_caps = nullptr;
-
-        //if (GetDVCalibrationCaps(&min_values, &max_values, &component, &num_component, &context_caps) != tvERROR_NONE) {
-            returnResponse(false);
-       // }
-
-        response["platformSupport"] = true;
-
-        // Add ranges
-        response["rangeTmax"] = JsonObject({{"from", min_values->Tmax}, {"to", max_values->Tmax}});
-        response["rangeTmin"] = JsonObject({{"from", min_values->Tmin}, {"to", max_values->Tmin}});
-        response["rangeTgamma"] = JsonObject({{"from", min_values->Tgamma}, {"to", max_values->Tgamma}});
-        response["rangeRx"] = JsonObject({{"from", min_values->Rx}, {"to", max_values->Rx}});
-        response["rangeRy"] = JsonObject({{"from", min_values->Ry}, {"to", max_values->Ry}});
-        response["rangeGx"] = JsonObject({{"from", min_values->Gx}, {"to", max_values->Gx}});
-        response["rangeGy"] = JsonObject({{"from", min_values->Gy}, {"to", max_values->Gy}});
-        response["rangeBx"] = JsonObject({{"from", min_values->Bx}, {"to", max_values->Bx}});
-        response["rangeBy"] = JsonObject({{"from", min_values->By}, {"to", max_values->By}});
-        response["rangeWx"] = JsonObject({{"from", min_values->Wx}, {"to", max_values->Wx}});
-        response["rangeWy"] = JsonObject({{"from", min_values->Wy}, {"to", max_values->Wy}});
-
-        // Add component list
-        JsonArray componentArr;
-        for (size_t i = 0; i < num_component; ++i) {
-            componentArr.Add(dvComponentToString(component[i])); // Add string mapping if component is enum
-        }
-        response["component"] = componentArr;
-
-        // Add context information
-        response["context"] = parseContextCaps(context_caps);
-
-    #if HAL_NOT_READY
-        delete min_values;
-        delete max_values;
-        delete[] component;
-        delete[] context_caps;
-    #endif
-
         returnResponse(true);
     }
 
@@ -5452,121 +5404,6 @@ namespace Plugin {
             LOGINFO("Exit\n");
             returnResponse(true);
         }
-    }
-    static const std::vector<std::string> kDVCalibrationComponents = {
-            "tmax", "tmin", "tgamma", "rx", "ry", "gx", "gy", "bx", "by", "wx", "wy"
-            };
-    uint32_t AVOutputTV::getDolbyVisionCalibration(const JsonObject& parameters, JsonObject& response)
-    {
-        if (!m_isDVCalibrationPlatformSupported) returnResponse(false);
-
-        tvConfigContext_t ctx = getValidContextFromGetParameters(parameters, "DolbyVisionCalibration");
-        if (ctx.pq_mode == PQ_MODE_INVALID) returnResponse(false);
-
-        JsonObject calib;
-        paramIndex_t indexInfo = { static_cast<uint8_t>(ctx.videoSrcType),
-                static_cast<uint8_t>(ctx.pq_mode),
-                static_cast<uint8_t>(ctx.videoFormatType)
-        };
-        for (const auto& comp : kDVCalibrationComponents) {
-            double val = 0.0;
-            if (getDVCalibrationParam("DolbyVisionCalibration", indexInfo, val, comp) == tvERROR_NONE) {
-                calib[comp.c_str()] = val;
-            }
-        }
-
-        std::string pq = convertPictureIndexToStringV2(indexInfo.pqmodeIndex);
-        std::string src = convertSourceIndexToStringV2(indexInfo.sourceIndex);
-        std::string fmt = convertVideoFormatToStringV2(indexInfo.formatIndex);
-        uint64_t ts = getLastDVCalibrationSetTimestamp(pq, src, fmt);
-        response = calib;
-        response["utcTimestamp"] = static_cast<double>(ts);
-        response["success"] = true;
-        returnResponse(true);
-    }
-
-    uint32_t AVOutputTV::setDolbyVisionCalibration(const JsonObject& parameters, JsonObject& response)
-    {
-        if (!m_isDVCalibrationPlatformSupported) {
-            LOGERR("DV Calibration not supported on this platform");
-            returnResponse(false);
-        }
-
-        // Extract valid contexts
-        std::vector<tvConfigContext_t> contexts = getValidContextsFromParameters(parameters, "DolbyVisionCalibration");
-        if (contexts.empty()) {
-            LOGERR("No valid context found for DV Calibration");
-            returnResponse(false);
-        }
-
-        // Validate and parse timestamp
-        if (!parameters.HasLabel("utcTimestamp")) {
-            LOGERR("Missing required parameter: utcTimestamp");
-            returnResponse(false);
-        }
-
-        Core::JSON::DecUInt64 tsField;
-        tsField.FromString(parameters["utcTimestamp"].Value().c_str());
-        uint64_t timestamp = tsField.Value();
-
-        std::map<std::string, double> overrideValues;
-        std::vector<std::string> presentFields;
-
-        // Collect override values
-        for (const auto& comp : kDVCalibrationComponents) {
-            const char* key = comp.c_str();
-            if (parameters.HasLabel(key)) {
-                Core::JSON::DecUInt64 numField;
-                numField.FromString(parameters[key].Value().c_str());
-                overrideValues[comp] = static_cast<double>(numField.Value());
-                presentFields.push_back(comp);
-            }
-        }
-
-        // Validate that either all or only one component is present
-        if (presentFields.size() != 1 && presentFields.size() != kDVCalibrationComponents.size()) {
-            LOGERR("Must provide either exactly one or all DV calibration parameters");
-            returnResponse(false);
-        }
-
-        // Apply calibration update
-        tvError_t result = updateDVCalibration(contexts, presentFields, overrideValues, "set");
-
-        // Save timestamp per context
-        for (const auto& ctx : contexts) {
-            paramIndex_t index {
-                static_cast<uint8_t>(ctx.videoSrcType),
-                static_cast<uint8_t>(ctx.pq_mode),
-                static_cast<uint8_t>(ctx.videoFormatType)
-            };
-            setDVCalibrationTimestamp(index, timestamp);
-        }
-
-        bool success = (result == tvERROR_NONE);
-        response["success"] = success;
-        returnResponse(success);
-    }
-
-    uint32_t AVOutputTV::resetDolbyVisionCalibration(const JsonObject& parameters, JsonObject& response)
-    {
-        if (!m_isDVCalibrationPlatformSupported) returnResponse(false);
-
-        std::vector<tvConfigContext_t> contexts = getValidContextsFromParameters(parameters, "DolbyVisionCalibration");
-        if (contexts.empty()) returnResponse(false);
-
-        tvError_t ret = updateDVCalibration(contexts, kDVCalibrationComponents, {}, "reset");
-
-        uint64_t now = static_cast<uint64_t>(time(nullptr));
-        for (const auto& ctx : contexts) {
-            paramIndex_t idx = {
-                static_cast<uint8_t>(ctx.videoSrcType),
-                static_cast<uint8_t>(ctx.pq_mode),
-                static_cast<uint8_t>(ctx.videoFormatType)
-            };
-            setDVCalibrationTimestamp(idx, now);
-        }
-        response["success"] = (ret == tvERROR_NONE);
-        returnResponse(ret == tvERROR_NONE);
     }
 
     uint32_t AVOutputTV::getHDRMode(const JsonObject& parameters, JsonObject& response)
