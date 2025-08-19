@@ -1,7 +1,7 @@
-# If not stated otherwise in this file or this component's license file the
-# following copyright and licenses apply:
+# If not stated otherwise in this file or this component's LICENSE
+# file the following copyright and licenses apply:
 #
-# Copyright 2020 RDK Management
+# Copyright 2025 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 set(PLUGIN_NAME HdmiCecSink)
 set(MODULE_NAME ${NAMESPACE}${PLUGIN_NAME})
 set(PLUGIN_IMPLEMENTATION ${MODULE_NAME}Implementation)
