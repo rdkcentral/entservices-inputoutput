@@ -737,5 +737,21 @@ uint32_t HdmiCecSink_L2Test::CreateHdmiCecSinkInterfaceObject()
 
 TEST_F(HdmiCecSink_L2Test, Test)
 {
-    TEST_LOG("HdmiCecSink Activation Test");
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
 }
