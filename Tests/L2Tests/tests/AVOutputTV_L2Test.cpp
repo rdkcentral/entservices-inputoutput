@@ -157,7 +157,6 @@ AVOutput_L2test::AVOutput_L2test()
             return tvERROR_NONE;
         }));
 
-// Assuming '*p_tvSettingsImplMock' is your mock class instance
 
     ON_CALL(*p_tvSettingsImplMock, SaveBrightness(::testing::_, ::testing::_, ::testing::_, ::testing::_))
         .WillByDefault(::testing::Return(tvError_t::TV_ERROR_NONE));
