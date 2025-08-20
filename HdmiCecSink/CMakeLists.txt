@@ -16,6 +16,7 @@
 # limitations under the License.
 set(PLUGIN_NAME HdmiCecSink)
 set(MODULE_NAME ${NAMESPACE}${PLUGIN_NAME})
+set(PLUGIN_IMPLEMENTATION ${MODULE_NAME}Implementation)
 
 
 set(PLUGIN_HDMICECSINK_STARTUPORDER "" CACHE STRING "To configure startup order of HdmiCecSink plugin")
@@ -26,7 +27,15 @@ add_library(${MODULE_NAME} SHARED
         HdmiCecSink.cpp
         Module.cpp)
 
+add_library(${PLUGIN_IMPLEMENTATION} SHARED
+        HdmiCecSinkImplementation.cpp
+        Module.cpp)
+
 set_target_properties(${MODULE_NAME} PROPERTIES
+        CXX_STANDARD 11
+        CXX_STANDARD_REQUIRED YES)
+
+set_target_properties(${PLUGIN_IMPLEMENTATION} PROPERTIES
         CXX_STANDARD 11
         CXX_STANDARD_REQUIRED YES)
 
@@ -34,20 +43,54 @@ target_compile_definitions(${MODULE_NAME} PRIVATE MODULE_NAME=Plugin_${PLUGIN_NA
 
 find_package(DS)
 find_package(IARMBus)
-find_package(CEC)
+
+# Only find CEC package when not building for L2 tests
+if (NOT RDK_SERVICE_L2_TEST)
+    find_package(CEC)
+endif()
 
 target_include_directories(${MODULE_NAME} PRIVATE ${IARMBUS_INCLUDE_DIRS} ../helpers)
-target_include_directories(${MODULE_NAME} PRIVATE ${CEC_INCLUDE_DIRS})
+if (NOT RDK_SERVICE_L2_TEST)
+    target_include_directories(${MODULE_NAME} PRIVATE ${CEC_INCLUDE_DIRS})
+endif()
 target_include_directories(${MODULE_NAME} PRIVATE ${DS_INCLUDE_DIRS})
 set_source_files_properties(HdmiCecSink.cpp PROPERTIES COMPILE_FLAGS "-fexceptions")
 
-target_link_libraries(${MODULE_NAME} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${CEC_LIBRARIES} ${DS_LIBRARIES} )
+
+target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${IARMBUS_INCLUDE_DIRS} ../helpers)
+if (NOT RDK_SERVICE_L2_TEST)
+    target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${CEC_INCLUDE_DIRS})
+endif()
+target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${DS_INCLUDE_DIRS})
+set_source_files_properties(HdmiCecSinkImplementation.cpp PROPERTIES COMPILE_FLAGS "-fexceptions")
+
+# Link libraries - exclude CEC libraries for L2 tests
+if (NOT RDK_SERVICE_L2_TEST)
+    target_link_libraries(${MODULE_NAME} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${CEC_LIBRARIES} ${DS_LIBRARIES} )
+    target_link_libraries(${PLUGIN_IMPLEMENTATION} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${CEC_LIBRARIES} ${DS_LIBRARIES} )
+else()
+    target_link_libraries(${MODULE_NAME} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${DS_LIBRARIES} )
+    target_link_libraries(${PLUGIN_IMPLEMENTATION} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${DS_LIBRARIES} )
+endif()
 
 if (NOT RDK_SERVICES_L1_TEST)
-    target_compile_options(${MODULE_NAME} PRIVATE -Wno-error=deprecated)
+    target_compile_options(${PLUGIN_IMPLEMENTATION} PRIVATE -Wno-error=deprecated)
 endif ()
 
+if (RDK_SERVICE_L2_TEST)
+   find_library(TESTMOCKLIB_LIBRARIES NAMES TestMocklib)
+   if (TESTMOCKLIB_LIBRARIES)
+       message ("linking mock libraries ${TESTMOCKLIB_LIBRARIES} library")
+       target_link_libraries(${PLUGIN_IMPLEMENTATION} PRIVATE ${TESTMOCKLIB_LIBRARIES})
+   else (TESTMOCKLIB_LIBRARIES)
+       message ("Require ${TESTMOCKLIB_LIBRARIES} library")
+   endif (TESTMOCKLIB_LIBRARIES)
+endif (RDK_SERVICES_L2_TEST)
+
 install(TARGETS ${MODULE_NAME}
+        DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
+
+install(TARGETS ${PLUGIN_IMPLEMENTATION}
         DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
 
 write_config(${PLUGIN_NAME})
