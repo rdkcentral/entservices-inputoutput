@@ -24,19 +24,8 @@
 #include <interfaces/json/JAVInput.h>
 #include <interfaces/json/JsonData_AVInput.h>
 
-#include "AVInputImplementation.h"
 #include "UtilsLogging.h"
 #include "tracing/Logging.h"
-
-#include "dsMgr.h"
-#include "hdmiIn.hpp"
-#include "compositeIn.hpp"
-#include "UtilsJsonRpc.h"
-#include "UtilsIarm.h"
-#include "host.hpp"
-#include "exception.hpp"
-#include <vector>
-#include <algorithm>
 
 namespace WPEFramework
 {
@@ -89,19 +78,19 @@ namespace WPEFramework
                 // }
                 // </pca>
 
-                void OnSignalChanged(const InputSignalInfo &info) override
+                void OnSignalChanged(const Exchange::IAVInput::InputSignalInfo &info) override
                 {
                     LOGINFO("OnSignalChanged: id %d, locator %s, status %s\n", info.id, info.locator.c_str(), info.status.c_str());
                     Exchange::JAVInput::Event::OnSignalChanged(_parent, info);
                 }
 
-                void OnInputStatusChanged(const InputSignalInfo &info) override
+                void OnInputStatusChanged(const Exchange::IAVInput::InputSignalInfo &info) override
                 {
                     LOGINFO("OnInputStatusChanged: id %d, locator %s, status %s\n", info.id, info.locator.c_str(), info.status.c_str());
                     Exchange::JAVInput::Event::OnInputStatusChanged(_parent, info);
                 }
 
-                void VideoStreamInfoUpdate(const InputVideoMode &videoMode) override
+                void VideoStreamInfoUpdate(const Exchange::IAVInput::InputVideoMode &videoMode) override
                 {
                     LOGINFO("VideoStreamInfoUpdate: id %d, width %d, height %d, frameRateN %d, frameRateD %d, progressive %d, locator %s\n",
                             videoMode.id, videoMode.width, videoMode.height, videoMode.frameRateN, videoMode.frameRateD,
@@ -109,7 +98,7 @@ namespace WPEFramework
                     Exchange::JAVInput::Event::VideoStreamInfoUpdate(_parent, videoMode);
                 }
 
-                void GameFeatureStatusUpdate(const GameFeatureStatus &status) override
+                void GameFeatureStatusUpdate(const Exchange::IAVInput::GameFeatureStatus &status) override
                 {
                     LOGINFO("GameFeatureStatusUpdate: id %d, gameFeature %s, allmMode %d\n",
                             status.id, status.gameFeature.c_str(), static_cast<int>(status.allmMode));
@@ -146,9 +135,6 @@ namespace WPEFramework
             string Information() const override;
 
         protected:
-            void InitializeIARM();
-            void DeinitializeIARM();
-
             void RegisterAll();
             void UnregisterAll();
 
@@ -159,14 +145,6 @@ namespace WPEFramework
             Core::Sink<Notification> _avInputNotification;
 
             void Deactivated(RPC::IRemoteConnection *connection);
-
-            static void dsAVEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            static void dsAVSignalStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            static void dsAVStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            static void dsAVVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            static void dsAVGameFeatureStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            static void dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-
         }; // AVInput
     } // namespace Plugin
 } // namespace WPEFramework

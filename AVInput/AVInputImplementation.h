@@ -21,7 +21,9 @@
 
 #include "Module.h"
 
+#include "dsMgr.h"
 #include "UtilsJsonRpc.h"
+#include "UtilsIarm.h"
 
 #include "hdmiIn.hpp"
 #include "compositeIn.hpp"
@@ -163,6 +165,9 @@ namespace WPEFramework
             int m_primVolume;
             int m_inputVolume; // Player Volume
 
+            void InitializeIARM();
+            void DeinitializeIARM();
+
             void dispatchEvent(Event, const JsonValue &params);
             void Dispatch(Event event, const JsonValue params);
 
@@ -195,6 +200,13 @@ namespace WPEFramework
             bool getALLMStatus(int iPort);
             bool getVRRStatus(int iPort, dsHdmiInVrrStatus_t *vrrStatus);
             std::string GetRawSPD(int iPort);
+
+            static void dsAVEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVSignalStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVGameFeatureStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
         public:
             static AVInputImplementation *_instance;
