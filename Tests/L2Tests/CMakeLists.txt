@@ -43,7 +43,7 @@ target_compile_definitions(${MODULE_NAME}
             MODULE_NAME=Plugin_${PLUGIN_NAME}
             THUNDER_PORT="${THUNDER_PORT}")
 
-target_compile_options(${MODULE_NAME} PRIVATE -Wno-error)
+#target_compile_options(${MODULE_NAME} PRIVATE -Wno-error)
 target_link_libraries(${MODULE_NAME} PRIVATE ${NAMESPACE}Plugins::${NAMESPACE}Plugins)
 
 if (NOT L2_TEST_OOP_RPC)
