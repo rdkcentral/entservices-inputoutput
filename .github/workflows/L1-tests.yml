@@ -1,4 +1,4 @@
-name: L1-tests
+name: L1-tests-IO
 
 on:
   workflow_call:
