@@ -113,7 +113,11 @@ jobs:
         if: contains(steps.getfile.outputs.files, 'HdmiCecSource') || contains(steps.getfile.outputs.files, 'HdmiCecSink')
       - name: Clone the Manifest and build the associated binaries
         run: |
-          apt-get install csvtool
+          sudo add-apt-repository universe
+          sudo apt update
+          sudo apt install csvtool
+
+          #apt-get install csvtool
           apt-get install meson
           apt-get update && apt-get install -y lynx
           rm -rf rdkservices
