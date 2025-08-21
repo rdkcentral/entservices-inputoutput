@@ -113,7 +113,7 @@ jobs:
         if: contains(steps.getfile.outputs.files, 'HdmiCecSource') || contains(steps.getfile.outputs.files, 'HdmiCecSink')
       - name: Clone the Manifest and build the associated binaries
         run: |
-          add-apt-repository universe
+          
           apt update
           apt install csvtool
 
