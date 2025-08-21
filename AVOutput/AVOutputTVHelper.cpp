@@ -960,6 +960,12 @@ namespace Plugin {
         LOGINFO("%s: Entry param : %s Action : %s pqmode : %s source :%s format :%s color:%s component:%s control:%s\n",__FUNCTION__,tr181ParamName.c_str(),action.c_str(),info.pqmode.c_str(),info.source.c_str(),info.format.c_str(),info.color.c_str(),info.component.c_str(),info.control.c_str() );
         ret = getSaveConfig(tr181ParamName,info, values);
         if( 0 == ret ) {
+            // Print tr181ParamName, info, and values as requested
+            printf("| tr181ParamName: %s\n", tr181ParamName.c_str());
+            printf("| info.pqmode: %s, info.source: %s, info.format: %s\n", info.pqmode.c_str(), info.source.c_str(), info.format.c_str());
+            for (const auto& v : values.pqmodeValues) {
+                printf("| values.pqmodeValues: %d\n", v);
+            }
             printf("tr181ParamName: %s\n", tr181ParamName.c_str());
             // For info and values, print relevant fields, e.g.:
             printf("info.pqmode: %s, info.source: %s, info.format: %s\n", info.pqmode.c_str(), info.source.c_str(), info.format.c_str());
