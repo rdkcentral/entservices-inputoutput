@@ -63,7 +63,7 @@ namespace WPEFramework
             ASSERT(nullptr == _avInput);
             ASSERT(0 == _connectionId);
 
-            SYSLOG(Logging::Startup, (_T("DeviceDiagnostics::Initialize: PID=%u"), getpid()));
+            SYSLOG(Logging::Startup, (_T("AVInput::Initialize: PID=%u"), getpid()));
 
             _service = service;
             _service->AddRef();
