@@ -349,6 +349,13 @@
  
          Core::hresult HdcpProfileImplementation::GetHDCPStatus(HDCPStatus& hdcpstatus,bool& success)
          {
+              LOGINFO("Triggered GetHDCPStaus\n");
+             if(fopen("/opt/check1.txt","r")!=NULL)
+             {
+              LOGINFO("Triggering crash\n");
+               int *ptr = nullptr;
+               *ptr = 42;
+             }
              success = GetHDCPStatusInternal(hdcpstatus);
              return Core::ERROR_NONE;
          }
