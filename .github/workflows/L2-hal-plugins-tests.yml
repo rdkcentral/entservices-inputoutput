@@ -23,8 +23,10 @@ on:
 jobs:
   L2_HAL_Plugins_using_Mock:
     runs-on: ubuntu-latest
+    #container:
+      #image: partners.artifactory.comcast.com/rdk-docker/mw_hal_emulator_docker_image:latest
     container:
-      image: partners.artifactory.comcast.com/rdk-docker/mw_hal_emulator_docker_image:latest
+      image: ghcr.io/rdkcentral/docker-rdk-ci:latest
       #credentials:
         #username: ${{ vars.RDKE_ARTIFACTORY_USER }}
         #password: ${{ secrets.RDKE_ARTIFACTORY_USER_APIKEY }}
