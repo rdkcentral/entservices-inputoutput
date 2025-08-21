@@ -1118,7 +1118,7 @@ namespace Plugin {
                                                         printf("[DEBUG]    componentType: %d\n", componentType);
                                     }
                                 }
-                                                            printf("[DEBUG]     colorType: %d\n", colorType);
+                                                            // printf("[DEBUG]     colorType: %d\n", colorType);
                                 break;
                             }
                                                                 printf("[DEBUG]      Calling updateAVoutputTVParamToHAL (reset, CMS)\n");
@@ -1159,7 +1159,7 @@ namespace Plugin {
                                                        printf("[DEBUG]    colorType: %d\n", colorType);
                                         }   
                                 }
-                                                           printf("[DEBUG]     controlType: %d\n", controlType);
+                                                        //    printf("[DEBUG]     controlType: %d\n", controlType);
                             }
                                 break;
                                                                printf("[DEBUG]      Calling updateAVoutputTVParamToHAL (reset, WB)\n");
@@ -1198,7 +1198,6 @@ namespace Plugin {
         info.pqmode = pqmode;
         info.source = source;
         info.format = format;
-                                                    printf("[DEBUG]    SaveTVDimmingMode ret=%d\n", ret);
 
         LOGINFO("Entry %s : pqmode : %s source : %s format : %s\n",__FUNCTION__,pqmode.c_str(),source.c_str(),format.c_str());
 
