@@ -984,17 +984,8 @@ namespace Plugin {
                             case PQ_PARAM_CONTRAST:
                             case PQ_PARAM_BACKLIGHT:
                             case PQ_PARAM_SATURATION:
-                                printf("[DEBUG] Entry updateAVoutputTVParam\n");
-                                printf("[DEBUG] action: %s, tr181ParamName: %s, pqParamIndex: %d, level: %d\n", action.c_str(), tr181ParamName.c_str(), (int)pqParamIndex, level);
-                                printf("[DEBUG] info.pqmode: %s, info.source: %s, info.format: %s, info.color: %s, info.component: %s, info.control: %s\n", info.pqmode.c_str(), info.source.c_str(), info.format.c_str(), info.color.c_str(), info.component.c_str(), info.control.c_str());
                             case PQ_PARAM_SHARPNESS:
-                                printf("[DEBUG] getSaveConfig returned: %d\n", ret);
-                                printf("[DEBUG] After getSaveConfig: info.pqmode: %s, info.source: %s, info.format: %s\n", info.pqmode.c_str(), info.source.c_str(), info.format.c_str());
-                                printf("[DEBUG] values.pqmodeValues size: %zu\n", values.pqmodeValues.size());
-                                printf("[DEBUG] values.sourceValues size: %zu\n", values.sourceValues.size());
-                                printf("[DEBUG] values.formatValues size: %zu\n", values.formatValues.size());
                             case PQ_PARAM_HUE:
-                                printf("[DEBUG] Entering main processing loop\n");
                             case PQ_PARAM_COLOR_TEMPERATURE:
                             case PQ_PARAM_DIMMINGMODE:
                             case PQ_PARAM_LOWLATENCY_STATE:
@@ -1009,15 +1000,11 @@ namespace Plugin {
                                     }
                                     level=value;
                                 }
-                                    printf("[DEBUG] sourceType: %d\n", sourceType);
                                 if(set) {
                                     ret |= updateAVoutputTVParamToHAL(tr181ParamName,paramIndex,level,true);
-                                        printf("[DEBUG]  modeType: %d\n", modeType);
                                 }
                                 break;
-                                            printf("[DEBUG]   formatType: %d\n", formatType);
                             default:
-                                            printf("[DEBUG]   paramIndex: sourceIndex=%d, pqmodeIndex=%d, formatIndex=%d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex);
                                 break;
                         }
                         switch(pqParamIndex) {
@@ -1030,11 +1017,9 @@ namespace Plugin {
                             case PQ_PARAM_SHARPNESS:
                                 ret |= SaveSharpness((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 break;
-                                                        printf("[DEBUG]    Calling updateAVoutputTVParamToHAL (reset)\n");
                             case PQ_PARAM_HUE:
                                 ret |= SaveHue((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 break;
-                                                        printf("[DEBUG]    Calling getLocalparam (sync/reset)\n");
                             case PQ_PARAM_SATURATION:
                                 ret |= SaveSaturation((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 break;
@@ -1042,10 +1027,8 @@ namespace Plugin {
                                 ret |= SaveColorTemperature((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvColorTemp_t)level);
                                 break;
                             case PQ_PARAM_BACKLIGHT:
-                                                        printf("[DEBUG]    Calling updateAVoutputTVParamToHAL (set)\n");
                                 ret |= SaveBacklight((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 break;
-                                                    printf("[DEBUG]    After HAL/set/save calls, ret=%d, level=%d\n", ret, level);
                             case PQ_PARAM_DIMMINGMODE:
                                 ret |= SaveTVDimmingMode((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDimmingMode_t)level);
                                 break;
@@ -1053,47 +1036,36 @@ namespace Plugin {
                                 ret |= SaveLowLatencyState((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 break;
                             case PQ_PARAM_DOLBY_MODE:
-                                                    printf("[DEBUG]    SaveBrightness ret=%d\n", ret);
                                  ret |= SaveTVDolbyVisionMode((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDolbyMode_t)level);
                                  break;
 
-                                                    printf("[DEBUG]    SaveContrast ret=%d\n", ret);
                             case PQ_PARAM_ASPECT_RATIO:
                                  ret |= SaveAspectRatio((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDisplayMode_t)level);
                                  break;
-                                                    printf("[DEBUG]    SaveSharpness ret=%d\n", ret);
                              
                             case PQ_PARAM_CMS_SATURATION_RED:                
                             case PQ_PARAM_CMS_SATURATION_BLUE:        
-                                                    printf("[DEBUG]    SaveHue ret=%d\n", ret);
                             case PQ_PARAM_CMS_SATURATION_GREEN:          
                             case PQ_PARAM_CMS_SATURATION_YELLOW:         
                             case PQ_PARAM_CMS_SATURATION_CYAN:         
-                                                    printf("[DEBUG]    SaveSaturation ret=%d\n", ret);
                             case PQ_PARAM_CMS_SATURATION_MAGENTA:        
                             case PQ_PARAM_CMS_HUE_RED:        
                             case PQ_PARAM_CMS_HUE_BLUE:                  
-                                                    printf("[DEBUG]    SaveColorTemperature ret=%d\n", ret);
                             case PQ_PARAM_CMS_HUE_GREEN:                 
                             case PQ_PARAM_CMS_HUE_YELLOW:                
                             case PQ_PARAM_CMS_HUE_CYAN:                
-                                                    printf("[DEBUG]    SaveBacklight ret=%d\n", ret);
                             case PQ_PARAM_CMS_HUE_MAGENTA:               
                             case PQ_PARAM_CMS_LUMA_RED:               
                             case PQ_PARAM_CMS_LUMA_BLUE:                 
-                                                    printf("[DEBUG]    SaveTVDimmingMode ret=%d\n", ret);
                             case PQ_PARAM_CMS_LUMA_GREEN:
                             case PQ_PARAM_CMS_LUMA_YELLOW:               
                             case PQ_PARAM_CMS_LUMA_CYAN:               
-                                                    printf("[DEBUG]    SaveLowLatencyState ret=%d\n", ret);
                             case PQ_PARAM_CMS_LUMA_MAGENTA:
                             {
                                 for( int componentType : values.componentValues ) {
-                                                     printf("[DEBUG]    SaveTVDolbyVisionMode ret=%d\n", ret);
                                     paramIndex.componentIndex = componentType;
                                     for( int colorType : values.colorValues ) {
                                         paramIndex.colorIndex = colorType;                     
-                                                     printf("[DEBUG]    SaveAspectRatio ret=%d\n", ret);
                                         if(reset) {
                                             ret |= updateAVoutputTVParamToHAL(tr181ParamName,paramIndex,0,false);
 		                		        }
@@ -1115,17 +1087,13 @@ namespace Plugin {
                                         if(set) {
                                             ret |= updateAVoutputTVParamToHAL(tr181ParamName,paramIndex,level,true);
                                         }
-                                                        printf("[DEBUG]    componentType: %d\n", componentType);
                                     }
                                 }
-                                                            // printf("[DEBUG]     colorType: %d\n", colorType);
                                 break;
                             }
-                                                                printf("[DEBUG]      Calling updateAVoutputTVParamToHAL (reset, CMS)\n");
                             case PQ_PARAM_WB_GAIN_RED:
                             case PQ_PARAM_WB_GAIN_GREEN:
                             case PQ_PARAM_WB_GAIN_BLUE:
-                                                                printf("[DEBUG]      Calling getLocalparam (sync/reset, CMS)\n");
                             case PQ_PARAM_WB_OFFSET_RED:
                             case PQ_PARAM_WB_OFFSET_GREEN:
                             case PQ_PARAM_WB_OFFSET_BLUE:
@@ -1139,9 +1107,7 @@ namespace Plugin {
 		                	            }
                                         if(sync || reset) {
                                             int value=0;
-                                                            printf("[DEBUG]     SaveCMS ret=%d\n", ret);
                                             if(getLocalparam(tr181ParamName,paramIndex,value,pqParamIndex,sync)) {
-                                                                printf("[DEBUG]      Calling updateAVoutputTVParamToHAL (set, CMS)\n");
 					                            continue;
 			                                }
                                             level=value;
@@ -1156,17 +1122,13 @@ namespace Plugin {
 
                                         if(set) {
                                             ret |= updateAVoutputTVParamToHAL(tr181ParamName,paramIndex,level,true);
-                                                       printf("[DEBUG]    colorType: %d\n", colorType);
                                         }   
                                 }
-                                                        //    printf("[DEBUG]     controlType: %d\n", controlType);
                             }
                                 break;
-                                                               printf("[DEBUG]      Calling updateAVoutputTVParamToHAL (reset, WB)\n");
                             }
                             case PQ_PARAM_LOCALDIMMING_LEVEL:
                              {
-                                                               printf("[DEBUG]      Calling getLocalparam (sync/reset, WB)\n");
                                 if(sync) {
                                     int value=0;
                                     getLocalparam(tr181ParamName,paramIndex,value,pqParamIndex,sync);
@@ -1180,9 +1142,7 @@ namespace Plugin {
                             default:
                                 break;
                         }
-                                                           printf("[DEBUG]     SaveCustom2PointWhiteBalance ret=%d\n", ret);
                     }
-                                                               printf("[DEBUG]      Calling updateAVoutputTVParamToHAL (set, WB)\n");
                 }
            }
 
@@ -1192,7 +1152,6 @@ namespace Plugin {
 
     tvError_t AVOutputTV::syncAvoutputTVParamsToHAL(std::string pqmode,std::string source,std::string format)
     {
-        printf("[DEBUG]    Calling getLocalparam (sync, LDIM)\n");
         int level={0};
         capDetails_t info;
         info.pqmode = pqmode;
@@ -1374,7 +1333,7 @@ namespace Plugin {
          return "UNKNOWN ERROR";
     }
 
-    int AVOutputTV::getSaveConfig(std::string param, capDetails_t &capInfo, valueVectors_t &values)
+    int AVOutputTV::getSaveConfig(std::string param, capDetails_t capInfo, valueVectors_t &values)
     {
         LOGINFO("Entry : %s pqmode : %s source :%s format :%s component : %s color : %s control:%s\n",__FUNCTION__,capInfo.pqmode.c_str(),capInfo.source.c_str(),capInfo.format.c_str(),capInfo.component.c_str(),capInfo.color.c_str(),capInfo.control.c_str());
 
