@@ -136,19 +136,19 @@ namespace WPEFramework
             Core::hresult GetSPD(int id, string &spd) override;
             Core::hresult SetEdidVersion(int id, const string &version) override;
             Core::hresult GetEdidVersion(int id, string &version) override;
-            Core::hresult SetEdid2AllmSupport(int id, const bool &allm) override;
+            Core::hresult SetEdid2AllmSupport(int id, bool allm) override;
             Core::hresult GetEdid2AllmSupport(int id, bool &allm) override;
             Core::hresult SetVRRSupport(int id, bool vrrSupport) override;
             Core::hresult GetVRRSupport(int id, bool &vrrSupport) override;
+            Core::hresult SetAudioMixerLevels(MixerLevels levels) override;
             Core::hresult GetHdmiVersion(int id, string &hdmiVersion) override;
-            Core::hresult SetMixerLevels(int id, const MixerLevels &levels) override;
-            Core::hresult StartInput(int id, int type, bool audioMix, const VideoPlaneType &planeType, bool topMostPlane) override;
+            Core::hresult StartInput(int id, int type, bool audioMix, VideoPlaneType planeType, bool topMostPlane) override;
             Core::hresult StopInput(int type) override;
             Core::hresult SetVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t type) override;
             Core::hresult CurrentVideoMode(string &currentVideoMode, string &message) override;
-            Core::hresult ContentProtected(bool &isContentProtected) override;
             Core::hresult GetSupportedGameFeatures(IStringIterator *&features) override;
             Core::hresult GetGameFeatureStatus(int id, const string &feature, bool &mode) override;
+            Core::hresult ContentProtected(bool &isContentProtected) override;
 
             void AVInputHotplug(int input, int connect, int type);
             void AVInputSignalChange(int port, int signalStatus, int type);
@@ -186,12 +186,12 @@ namespace WPEFramework
             uint32_t setVRRSupportWrapper(const JsonObject &parameters, JsonObject &response);
             uint32_t getVRRSupportWrapper(const JsonObject &parameters, JsonObject &response);
             uint32_t getVRRFrameRateWrapper(const JsonObject &parameters, JsonObject &response);
-            uint32_t StartInput(const JsonObject &parameters, JsonObject &response);
-            uint32_t StopInput(const JsonObject &parameters, JsonObject &response);
+            uint32_t setAudioMixerLevelsWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t startInputWrapper(const JsonObject &parameters, JsonObject &response);
+            uint32_t stopInputWrapper(const JsonObject &parameters, JsonObject &response);
             uint32_t setVideoRectangleWrapper(const JsonObject &parameters, JsonObject &response);
-            uint32_t GetSupportedGameFeatures(const JsonObject &parameters, JsonObject &response);
+            uint32_t getSupportedGameFeaturesWrapper(const JsonObject &parameters, JsonObject &response);
             uint32_t getGameFeatureStatusWrapper(const JsonObject &parameters, JsonObject &response);
-            uint32_t SetMixerLevels(const JsonObject &parameters, JsonObject &response);
             uint32_t getHdmiVersionWrapper(const JsonObject &parameters, JsonObject &response);
 
             Core::hresult getInputDevices(int type, std::list<WPEFramework::Exchange::IAVInput::InputDevice> devices);

@@ -33,10 +33,10 @@ endif (USE_THUNDER_R4)
 
 set(PLUGIN_AVINPUT_STARTUPORDER "" CACHE STRING "To configure startup order of AVInput plugin")
 
-add_library(${MODULE_NAME} SHARED
-        AVInput.cpp
-        Module.cpp
-        )
+# <pca>
+add_library(${MODULE_NAME} SHARED AVInput.cpp Module.cpp)
+#add_executable(${MODULE_NAME} AVInput.cpp Module.cpp)
+# </pca>
 
 set_target_properties(${MODULE_NAME} PROPERTIES
         CXX_STANDARD 11
@@ -58,10 +58,12 @@ target_link_libraries(${MODULE_NAME}
 
 install(TARGETS ${MODULE_NAME}
         DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
-
-add_library(${PLUGIN_IMPLEMENTATION} SHARED
-        AVInputImplementation.cpp
-        Module.cpp)
+# <pca>
+# add_library(${PLUGIN_IMPLEMENTATION} SHARED
+#         AVInputImplementation.cpp
+#         Module.cpp)
+add_executable(${PLUGIN_IMPLEMENTATION} AVInputImplementation.cpp Module.cpp)
+# </pca>
 
 set_target_properties(${PLUGIN_IMPLEMENTATION} PROPERTIES
         CXX_STANDARD 11

@@ -513,17 +513,29 @@ namespace WPEFramework
             returnResponse(ret == Core::ERROR_NONE);
         }
 
+        Core::hresult AVInputImplementation::ContentProtected(bool &isContentProtected)
+        {
+            // "This is the way it's done in Service Manager"
+            isContentProtected = true;
+            return Core::ERROR_NONE;
+        }
+
         uint32_t AVInputImplementation::endpoint_contentProtected(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
 
-            // "Ths is the way it's done in Service Manager"
-            response[_T("isContentProtected")] = true;
+            bool isContentProtected;
+            Core::hresult ret = ContentProtected(isContentProtected);
 
-            returnResponse(true);
+            if (ret == Core::ERROR_NONE)
+            {
+                response[_T("isContentProtected")] = isContentProtected;
+            }
+
+            returnResponse(ret == Core::ERROR_NONE);
         }
 
-        Core::hresult NumberOfInputs(uint32_t &inputCount)
+        Core::hresult AVInputImplementation::NumberOfInputs(uint32_t &inputCount)
         {
             Core::hresult ret = Core::ERROR_NONE;
 
@@ -558,7 +570,34 @@ namespace WPEFramework
             return ret;
         }
 
-        uint32_t AVInputImplementation::StartInput(const JsonObject &parameters, JsonObject &response)
+        Core::hresult AVInputImplementation::StartInput(int id, int type, bool audioMix, VideoPlaneType planeType, bool topMostPlane)
+        {
+            Core::hresult ret = Core::ERROR_NONE;
+            try
+            {
+                if (type == HDMI)
+                {
+                    device::HdmiInput::getInstance().selectPort(id, audioMix, static_cast<int>(planeType), topMostPlane);
+                }
+                else if (type == COMPOSITE)
+                {
+                    device::CompositeInput::getInstance().selectPort(id);
+                }
+                else
+                {
+                    LOGWARN("Invalid input type passed to StartInput");
+                    ret = Core::ERROR_GENERAL;
+                }
+            }
+            catch (const device::Exception &err)
+            {
+                LOG_DEVICE_EXCEPTION1(std::to_string(id));
+                ret = Core::ERROR_GENERAL;
+            }
+            return ret;
+        }
+
+        uint32_t AVInputImplementation::startInputWrapper(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
 
@@ -567,9 +606,10 @@ namespace WPEFramework
             bool audioMix = parameters["requestAudioMix"].Boolean();
             int portId = 0;
             int iType = 0;
-            planeType = 0; // planeType = 0 -  primary, 1 - secondary video plane type
+            VideoPlaneType planeTypeValue = VideoPlaneType::PRIMARY;
             bool topMostPlane = parameters["topMost"].Boolean();
             LOGINFO("topMost value in thunder: %d\n", topMostPlane);
+
             if (parameters.HasLabel("portId") && parameters.HasLabel("typeOfInput"))
             {
                 try
@@ -579,8 +619,12 @@ namespace WPEFramework
                     if (parameters.HasLabel("plane"))
                     {
                         string sPlaneType = parameters["plane"].String();
-                        planeType = stoi(sPlaneType);
-                        if (!(planeType == 0 || planeType == 1)) // planeType has to be primary(0) or secondary(1)
+                        int planeTypeInt = stoi(sPlaneType);
+                        if (planeTypeInt == 0)
+                            planeTypeValue = VideoPlaneType::PRIMARY;
+                        else if (planeTypeInt == 1)
+                            planeTypeValue = VideoPlaneType::SECONDARY;
+                        else
                         {
                             LOGWARN("planeType is invalid\n");
                             returnResponse(false);
@@ -599,26 +643,11 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            try
-            {
-                if (iType == HDMI)
-                {
-                    device::HdmiInput::getInstance().selectPort(portId, audioMix, planeType, topMostPlane);
-                }
-                else if (iType == COMPOSITE)
-                {
-                    device::CompositeInput::getInstance().selectPort(portId);
-                }
-            }
-            catch (const device::Exception &err)
-            {
-                LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-                returnResponse(false);
-            }
-            returnResponse(true);
+            Core::hresult ret = StartInput(portId, iType, audioMix, planeTypeValue, topMostPlane);
+            returnResponse(ret == Core::ERROR_NONE);
         }
 
-        uint32_t AVInputImplementation::StopInput(const JsonObject &parameters, JsonObject &response)
+        uint32_t AVInputImplementation::stopInputWrapper(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
 
@@ -626,6 +655,7 @@ namespace WPEFramework
             int iType = 0;
 
             if (parameters.HasLabel("typeOfInput"))
+            {
                 try
                 {
                     iType = getTypeOfInput(sType);
@@ -635,11 +665,20 @@ namespace WPEFramework
                     LOGWARN("Invalid Arguments");
                     returnResponse(false);
                 }
+            }
             else
             {
                 LOGWARN("Required parameters are not passed");
                 returnResponse(false);
             }
+
+            Core::hresult ret = StopInput(iType);
+            returnResponse(ret == Core::ERROR_NONE);
+        }
+
+        Core::hresult AVInputImplementation::StopInput(int type)
+        {
+            Core::hresult ret = Core::ERROR_NONE;
 
             try
             {
@@ -650,21 +689,26 @@ namespace WPEFramework
                     device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, DEFAULT_INPUT_VOL_LEVEL);
                     isAudioBalanceSet = false;
                 }
-                if (iType == HDMI)
+                if (type == HDMI)
                 {
                     device::HdmiInput::getInstance().selectPort(-1);
                 }
-                else if (iType == COMPOSITE)
+                else if (type == COMPOSITE)
                 {
                     device::CompositeInput::getInstance().selectPort(-1);
+                }
+                else
+                {
+                    LOGWARN("Invalid input type passed to StopInput");
+                    ret = Core::ERROR_GENERAL;
                 }
             }
             catch (const device::Exception &err)
             {
-                LOGWARN("AVInputService::stopInput Failed");
-                returnResponse(false);
+                LOGWARN("AVInputImplementation::StopInput Failed");
+                ret = Core::ERROR_GENERAL;
             }
-            returnResponse(true);
+            return ret;
         }
 
         uint32_t AVInputImplementation::setVideoRectangleWrapper(const JsonObject &parameters, JsonObject &response)
@@ -762,7 +806,7 @@ namespace WPEFramework
             return ret;
         }
 
-        JsonArray devicesToJson(Exchange::IAVInput::IInputDeviceIterator *devices)
+        JsonArray AVInputImplementation::devicesToJson(Exchange::IAVInput::IInputDeviceIterator *devices)
         {
             JsonArray deviceArray;
             if (devices != nullptr)
@@ -887,7 +931,7 @@ namespace WPEFramework
             }
         }
 
-        Core::hresult getInputDevices(int type, std::list<WPEFramework::Exchange::IAVInput::InputDevice> devices)
+        Core::hresult AVInputImplementation::getInputDevices(int type, std::list<WPEFramework::Exchange::IAVInput::InputDevice> devices)
         {
             Core::hresult result = Core::ERROR_NONE;
 
@@ -937,7 +981,7 @@ namespace WPEFramework
             return result;
         }
 
-        Core::hresult GetInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices)
+        Core::hresult AVInputImplementation::GetInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices)
         {
             std::list<WPEFramework::Exchange::IAVInput::InputDevice> list;
 
@@ -955,13 +999,13 @@ namespace WPEFramework
             return result;
         }
 
-        Core::hresult WriteEDID(int id, const string &edid)
+        Core::hresult AVInputImplementation::WriteEDID(int id, const string &edid)
         {
             // <pca> TODO: This wasn't implemented in the original code, do we want to implement it? </pca>
             return Core::ERROR_NONE;
         }
 
-        Core::hresult ReadEDID(int id, string &edid)
+        Core::hresult AVInputImplementation::ReadEDID(int id, string &edid)
         {
             vector<uint8_t> edidVec({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
 
@@ -1306,112 +1350,212 @@ namespace WPEFramework
             dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
         }
 
-        uint32_t AVInputImplementation::GetSupportedGameFeatures(const JsonObject &parameters, JsonObject &response)
+        Core::hresult AVInputImplementation::GetSupportedGameFeatures(IStringIterator *&features)
         {
-            LOGINFOMETHOD();
-            vector<string> supportedFeatures;
+            Core::hresult result = Core::ERROR_NONE;
+            features = nullptr;
+            std::vector<std::string> supportedFeatures;
             try
             {
                 device::HdmiInput::getInstance().getSupportedGameFeatures(supportedFeatures);
-                for (size_t i = 0; i < supportedFeatures.size(); i++)
-                {
-                    LOGINFO("Supported Game Feature [%zu]:  %s\n", i, supportedFeatures.at(i).c_str());
-                }
             }
             catch (const device::Exception &err)
             {
                 LOG_DEVICE_EXCEPTION0();
+                result = Core::ERROR_GENERAL;
             }
 
-            if (supportedFeatures.empty())
+            if (!supportedFeatures.empty() && result == Core::ERROR_NONE)
+            {
+                features = Core::Service<RPC::IteratorType<IStringIterator>>::Create<IStringIterator>(supportedFeatures);
+            }
+            else
+            {
+                result = Core::ERROR_GENERAL;
+            }
+            return result;
+        }
+
+        uint32_t AVInputImplementation::getSupportedGameFeaturesWrapper(const JsonObject &parameters, JsonObject &response)
+        {
+            LOGINFOMETHOD();
+            IStringIterator *features = nullptr;
+            Core::hresult result = GetSupportedGameFeatures(features);
+
+            if (result != Core::ERROR_NONE || features == nullptr)
             {
                 returnResponse(false);
             }
             else
             {
+                vector<string> supportedFeatures;
+                features->Reset(0);
+                string feature;
+                while (features->Next(feature))
+                {
+                    supportedFeatures.push_back(feature);
+                }
+                features->Release();
                 setResponseArray(response, "supportedGameFeatures", supportedFeatures);
                 returnResponse(true);
             }
         }
 
+        // uint32_t AVInputImplementation::getGameFeatureStatusWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     string sGameFeature = "";
+        //     string sPortId = parameters["portId"].String();
+        //     int portId = 0;
+
+        //     LOGINFOMETHOD();
+        //     if (parameters.HasLabel("portId") && parameters.HasLabel("gameFeature"))
+        //     {
+        //         try
+        //         {
+        //             portId = stoi(sPortId);
+        //             sGameFeature = parameters["gameFeature"].String();
+        //         }
+        //         catch (...)
+        //         {
+        //             LOGWARN("Invalid Arguments");
+        //             returnResponse(false);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         LOGWARN("Required parameters are not passed");
+        //         returnResponse(false);
+        //     }
+
+        //     if (strcmp(sGameFeature.c_str(), STR_ALLM) == 0)
+        //     {
+        //         bool allm = getALLMStatus(portId);
+        //         LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper ALLM MODE:%d", allm);
+        //         response["mode"] = allm;
+        //     }
+        //     else if (strcmp(sGameFeature.c_str(), VRR_TYPE_HDMI) == 0)
+        //     {
+        //         bool hdmi_vrr = false;
+        //         dsHdmiInVrrStatus_t vrrStatus;
+        //         getVRRStatus(portId, &vrrStatus);
+        //         if (vrrStatus.vrrType == dsVRR_HDMI_VRR)
+        //             hdmi_vrr = true;
+        //         LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper HDMI VRR MODE:%d", hdmi_vrr);
+        //         response["mode"] = hdmi_vrr;
+        //     }
+        //     else if (strcmp(sGameFeature.c_str(), VRR_TYPE_FREESYNC) == 0)
+        //     {
+        //         bool freesync = false;
+        //         dsHdmiInVrrStatus_t vrrStatus;
+        //         getVRRStatus(portId, &vrrStatus);
+        //         if (vrrStatus.vrrType == dsVRR_AMD_FREESYNC)
+        //             freesync = true;
+        //         LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper FREESYNC MODE:%d", freesync);
+        //         response["mode"] = freesync;
+        //     }
+        //     else if (strcmp(sGameFeature.c_str(), VRR_TYPE_FREESYNC_PREMIUM) == 0)
+        //     {
+        //         bool freesync_premium = false;
+        //         dsHdmiInVrrStatus_t vrrStatus;
+        //         getVRRStatus(portId, &vrrStatus);
+        //         if (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM)
+        //             freesync_premium = true;
+        //         LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper FREESYNC PREMIUM MODE:%d", freesync_premium);
+        //         response["mode"] = freesync_premium;
+        //     }
+        //     else if (strcmp(sGameFeature.c_str(), VRR_TYPE_FREESYNC_PREMIUM_PRO) == 0)
+        //     {
+        //         bool freesync_premium_pro = false;
+        //         dsHdmiInVrrStatus_t vrrStatus;
+        //         getVRRStatus(portId, &vrrStatus);
+        //         if (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM_PRO)
+        //             freesync_premium_pro = true;
+        //         LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper FREESYNC PREMIUM PRO MODE:%d", freesync_premium_pro);
+        //         response["mode"] = freesync_premium_pro;
+        //     }
+        //     else
+        //     {
+        //         LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper Mode is not supported. Supported mode: ALLM, VRR-HDMI, VRR-FREESYNC-PREMIUM");
+        //         returnResponse(false);
+        //     }
+        //     returnResponse(true);
+        // }
         uint32_t AVInputImplementation::getGameFeatureStatusWrapper(const JsonObject &parameters, JsonObject &response)
         {
-            string sGameFeature = "";
-            string sPortId = parameters["portId"].String();
-            int portId = 0;
-
             LOGINFOMETHOD();
-            if (parameters.HasLabel("portId") && parameters.HasLabel("gameFeature"))
-            {
-                try
-                {
-                    portId = stoi(sPortId);
-                    sGameFeature = parameters["gameFeature"].String();
-                }
-                catch (...)
-                {
-                    LOGWARN("Invalid Arguments");
-                    returnResponse(false);
-                }
-            }
-            else
+
+            if (!(parameters.HasLabel("portId") && parameters.HasLabel("gameFeature")))
             {
                 LOGWARN("Required parameters are not passed");
                 returnResponse(false);
             }
 
-            if (strcmp(sGameFeature.c_str(), STR_ALLM) == 0)
+            string sPortId = parameters["portId"].String();
+            string sGameFeature = parameters["gameFeature"].String();
+            int portId = 0;
+            try
             {
-                bool allm = getALLMStatus(portId);
-                LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper ALLM MODE:%d", allm);
-                response["mode"] = allm;
+                portId = stoi(sPortId);
             }
-            else if (strcmp(sGameFeature.c_str(), VRR_TYPE_HDMI) == 0)
+            catch (...)
             {
-                bool hdmi_vrr = false;
-                dsHdmiInVrrStatus_t vrrStatus;
-                getVRRStatus(portId, &vrrStatus);
-                if (vrrStatus.vrrType == dsVRR_HDMI_VRR)
-                    hdmi_vrr = true;
-                LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper HDMI VRR MODE:%d", hdmi_vrr);
-                response["mode"] = hdmi_vrr;
+                LOGWARN("Invalid Arguments");
+                returnResponse(false);
             }
-            else if (strcmp(sGameFeature.c_str(), VRR_TYPE_FREESYNC) == 0)
+
+            bool mode = false;
+            Core::hresult ret = GetGameFeatureStatus(portId, sGameFeature, mode);
+            if (ret == Core::ERROR_NONE)
             {
-                bool freesync = false;
-                dsHdmiInVrrStatus_t vrrStatus;
-                getVRRStatus(portId, &vrrStatus);
-                if (vrrStatus.vrrType == dsVRR_AMD_FREESYNC)
-                    freesync = true;
-                LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper FREESYNC MODE:%d", freesync);
-                response["mode"] = freesync;
-            }
-            else if (strcmp(sGameFeature.c_str(), VRR_TYPE_FREESYNC_PREMIUM) == 0)
-            {
-                bool freesync_premium = false;
-                dsHdmiInVrrStatus_t vrrStatus;
-                getVRRStatus(portId, &vrrStatus);
-                if (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM)
-                    freesync_premium = true;
-                LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper FREESYNC PREMIUM MODE:%d", freesync_premium);
-                response["mode"] = freesync_premium;
-            }
-            else if (strcmp(sGameFeature.c_str(), VRR_TYPE_FREESYNC_PREMIUM_PRO) == 0)
-            {
-                bool freesync_premium_pro = false;
-                dsHdmiInVrrStatus_t vrrStatus;
-                getVRRStatus(portId, &vrrStatus);
-                if (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM_PRO)
-                    freesync_premium_pro = true;
-                LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper FREESYNC PREMIUM PRO MODE:%d", freesync_premium_pro);
-                response["mode"] = freesync_premium_pro;
+                response["mode"] = mode;
+                returnResponse(true);
             }
             else
             {
-                LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper Mode is not supported. Supported mode: ALLM, VRR-HDMI, VRR-FREESYNC-PREMIUM");
+                LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper Mode is not supported. Supported mode: ALLM, VRR-HDMI, VRR-FREESYNC, VRR-FREESYNC-PREMIUM, VRR-FREESYNC-PREMIUM-PRO");
                 returnResponse(false);
             }
-            returnResponse(true);
+        }
+
+        Core::hresult AVInputImplementation::GetGameFeatureStatus(int id, const string &feature, bool &mode)
+        {
+            // TODO: The current docs state that the id parameter is optional, but that's not the case in existing code. Which is correct?
+
+            if (feature == STR_ALLM)
+            {
+                mode = getALLMStatus(id);
+            }
+            else if (feature == VRR_TYPE_HDMI)
+            {
+                dsHdmiInVrrStatus_t vrrStatus;
+                getVRRStatus(id, &vrrStatus);
+                mode = (vrrStatus.vrrType == dsVRR_HDMI_VRR);
+            }
+            else if (feature == VRR_TYPE_FREESYNC)
+            {
+                dsHdmiInVrrStatus_t vrrStatus;
+                getVRRStatus(id, &vrrStatus);
+                mode = (vrrStatus.vrrType == dsVRR_AMD_FREESYNC);
+            }
+            else if (feature == VRR_TYPE_FREESYNC_PREMIUM)
+            {
+                dsHdmiInVrrStatus_t vrrStatus;
+                getVRRStatus(id, &vrrStatus);
+                mode = (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM);
+            }
+            else if (feature == VRR_TYPE_FREESYNC_PREMIUM_PRO)
+            {
+                dsHdmiInVrrStatus_t vrrStatus;
+                getVRRStatus(id, &vrrStatus);
+                mode = (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM_PRO);
+            }
+            else
+            {
+                LOGWARN("AVInputImplementation::GetGameFeatureStatus Unsupported feature: %s", feature.c_str());
+                return Core::ERROR_NOT_SUPPORTED;
+            }
+
+            return Core::ERROR_NONE;
         }
 
         bool AVInputImplementation::getALLMStatus(int iPort)
@@ -1446,6 +1590,41 @@ namespace WPEFramework
             return ret;
         }
 
+        // uint32_t AVInputImplementation::getRawSPDWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     LOGINFOMETHOD();
+
+        //     string sPortId = parameters["portId"].String();
+        //     int portId = 0;
+        //     if (parameters.HasLabel("portId"))
+        //     {
+        //         try
+        //         {
+        //             portId = stoi(sPortId);
+        //         }
+        //         catch (...)
+        //         {
+        //             LOGWARN("Invalid Arguments");
+        //             returnResponse(false);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         LOGWARN("Required parameters are not passed");
+        //         returnResponse(false);
+        //     }
+
+        //     string spdInfo = GetRawSPD(portId);
+        //     response["HDMISPD"] = spdInfo;
+        //     if (spdInfo.empty())
+        //     {
+        //         returnResponse(false);
+        //     }
+        //     else
+        //     {
+        //         returnResponse(true);
+        //     }
+        // }
         uint32_t AVInputImplementation::getRawSPDWrapper(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
@@ -1470,9 +1649,10 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            string spdInfo = GetRawSPD(portId);
+            string spdInfo;
+            Core::hresult ret = GetRawSPD(portId, spdInfo);
             response["HDMISPD"] = spdInfo;
-            if (spdInfo.empty())
+            if (spdInfo.empty() || Core::ERROR_NONE != ret)
             {
                 returnResponse(false);
             }
@@ -1519,17 +1699,53 @@ namespace WPEFramework
             }
         }
 
-        std::string AVInputImplementation::GetRawSPD(int iPort)
+        // std::string AVInputImplementation::GetRawSPD(int iPort)
+        // {
+        //     LOGINFO("AVInputImplementation::getSPDInfo");
+        //     vector<uint8_t> spdVect({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
+        //     std::string spdbase64 = "";
+        //     try
+        //     {
+        //         LOGWARN("AVInputImplementation::getSPDInfo");
+        //         vector<uint8_t> spdVect2;
+        //         device::HdmiInput::getInstance().getHDMISPDInfo(iPort, spdVect2);
+        //         spdVect = spdVect2; // edidVec must be "unknown" unless we successfully get to this line
+
+        //         // convert to base64
+        //         uint16_t size = min(spdVect.size(), (size_t)numeric_limits<uint16_t>::max());
+
+        //         LOGWARN("AVInputImplementation::getSPD size:%d spdVec.size:%zu", size, spdVect.size());
+
+        //         if (spdVect.size() > (size_t)numeric_limits<uint16_t>::max())
+        //         {
+        //             LOGERR("Size too large to use ToString base64 wpe api");
+        //             return spdbase64;
+        //         }
+
+        //         LOGINFO("------------getSPD: ");
+        //         for (size_t itr = 0; itr < spdVect.size(); itr++)
+        //         {
+        //             LOGINFO("%02X ", spdVect[itr]);
+        //         }
+        //         Core::ToString((uint8_t *)&spdVect[0], size, false, spdbase64);
+        //     }
+        //     catch (const device::Exception &err)
+        //     {
+        //         LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
+        //     }
+        //     return spdbase64;
+        // }
+        Core::hresult AVInputImplementation::GetRawSPD(int id, string &spd)
         {
             LOGINFO("AVInputImplementation::getSPDInfo");
             vector<uint8_t> spdVect({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
-            std::string spdbase64 = "";
+            spd.clear();
             try
             {
                 LOGWARN("AVInputImplementation::getSPDInfo");
                 vector<uint8_t> spdVect2;
-                device::HdmiInput::getInstance().getHDMISPDInfo(iPort, spdVect2);
-                spdVect = spdVect2; // edidVec must be "unknown" unless we successfully get to this line
+                device::HdmiInput::getInstance().getHDMISPDInfo(id, spdVect2);
+                spdVect = spdVect2; // spdVect must be "unknown" unless we successfully get to this line
 
                 // convert to base64
                 uint16_t size = min(spdVect.size(), (size_t)numeric_limits<uint16_t>::max());
@@ -1539,7 +1755,7 @@ namespace WPEFramework
                 if (spdVect.size() > (size_t)numeric_limits<uint16_t>::max())
                 {
                     LOGERR("Size too large to use ToString base64 wpe api");
-                    return spdbase64;
+                    return Core::ERROR_GENERAL;
                 }
 
                 LOGINFO("------------getSPD: ");
@@ -1547,16 +1763,17 @@ namespace WPEFramework
                 {
                     LOGINFO("%02X ", spdVect[itr]);
                 }
-                Core::ToString((uint8_t *)&spdVect[0], size, false, spdbase64);
+                Core::ToString((uint8_t *)&spdVect[0], size, false, spd);
             }
             catch (const device::Exception &err)
             {
-                LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
+                LOG_DEVICE_EXCEPTION1(std::to_string(id));
+                return Core::ERROR_GENERAL;
             }
-            return spdbase64;
+            return Core::ERROR_NONE;
         }
 
-        Core::hresult GetSPD(int id, string &spd)
+        Core::hresult AVInputImplementation::GetSPD(int id, string &spd)
         {
             vector<uint8_t> spdVect({'u', 'n', 'k', 'n', 'o', 'w', 'n'});
 
@@ -1606,7 +1823,7 @@ namespace WPEFramework
             return Core::ERROR_NONE;
         }
 
-        uint32_t AVInputImplementation::SetMixerLevels(const JsonObject &parameters, JsonObject &response)
+        uint32_t AVInputImplementation::setAudioMixerLevelsWrapper(const JsonObject &parameters, JsonObject &response)
         {
             returnIfParamNotFound(parameters, "primaryVolume");
             returnIfParamNotFound(parameters, "inputVolume");
@@ -1648,24 +1865,29 @@ namespace WPEFramework
 
             LOGINFO("GLOBAL primary Volume=%d input Volume=%d \n", m_primVolume, m_inputVolume);
 
+            returnResponse(Core::ERROR_NONE == SetAudioMixerLevels({m_primVolume, m_inputVolume}));
+        }
+
+        Core::hresult AVInputImplementation::SetAudioMixerLevels(Exchange::IAVInput::MixerLevels levels)
+        {
             try
             {
-
-                device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY, primVol);
-                device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, inputVol);
+                device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY, levels.primaryVolume);
+                device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, levels.playerVolume);
             }
             catch (...)
             {
                 LOGWARN("Not setting SoC volume !!!\n");
-                returnResponse(false);
+                return Core::ERROR_GENERAL;
             }
+
             isAudioBalanceSet = true;
-            returnResponse(true);
+            return Core::ERROR_NONE;
         }
 
-        int setEdid2AllmSupport(int portId, bool allmSupport)
+        Core::hresult AVInputImplementation::SetEdid2AllmSupport(int portId, bool allmSupport)
         {
-            bool ret = true;
+            Core::hresult ret = Core::ERROR_NONE;
             try
             {
                 device::HdmiInput::getInstance().setEdid2AllmSupport(portId, allmSupport);
@@ -1674,7 +1896,7 @@ namespace WPEFramework
             catch (const device::Exception &err)
             {
                 LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-                ret = false;
+                ret = Core::ERROR_GENERAL;
             }
             return ret;
         }
@@ -1700,20 +1922,12 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            bool result = setEdid2AllmSupport(portId, allmSupport);
-            if (result == true)
-            {
-                returnResponse(true);
-            }
-            else
-            {
-                returnResponse(false);
-            }
+            returnResponse(Core::ERROR_NONE == SetEdid2AllmSupport(portId, allmSupport));
         }
 
-        bool GetEdid2AllmSupport(int portId, bool &allmSupportValue)
+        Core::hresult AVInputImplementation::GetEdid2AllmSupport(int portId, bool &allmSupportValue)
         {
-            bool ret = true;
+            Core::hresult ret = Core::ERROR_NONE;
             try
             {
                 device::HdmiInput::getInstance().getEdid2AllmSupport(portId, &allmSupportValue);
@@ -1722,7 +1936,7 @@ namespace WPEFramework
             catch (const device::Exception &err)
             {
                 LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-                ret = false;
+                ret = Core::ERROR_GENERAL;
             }
             return ret;
         }
@@ -1746,19 +1960,16 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            bool result = GetEdid2AllmSupport(portId, allmSupport);
-            if (result == true)
+            Core::hresult result = GetEdid2AllmSupport(portId, allmSupport);
+            if (Core::ERROR_NONE == result)
             {
                 response["allmSupport"] = allmSupport;
-                returnResponse(true);
             }
-            else
-            {
-                returnResponse(false);
-            }
+
+            returnResponse(Core::ERROR_NONE == result);
         }
 
-        Core::hresult GetVRRSupport(int portId, bool &vrrSupport)
+        Core::hresult AVInputImplementation::GetVRRSupport(int portId, bool &vrrSupport)
         {
             Core::hresult ret = Core::ERROR_NONE;
 
@@ -1804,7 +2015,7 @@ namespace WPEFramework
             returnResponse(Core::ERROR_NONE == result);
         }
 
-        Core::hresult SetVRRSupport(int id, bool vrrSupport)
+        Core::hresult AVInputImplementation::SetVRRSupport(int id, bool vrrSupport)
         {
             Core::hresult ret = Core::ERROR_NONE;
             try
@@ -1876,55 +2087,6 @@ namespace WPEFramework
             }
         }
 
-        // uint32_t AVInputImplementation::setEdidVersionWrapper(const JsonObject &parameters, JsonObject &response)
-        // {
-        //     LOGINFOMETHOD();
-        //     string sPortId = parameters["portId"].String();
-        //     int portId = 0;
-        //     string sVersion = "";
-        //     if (parameters.HasLabel("portId") && parameters.HasLabel("edidVersion"))
-        //     {
-        //         try
-        //         {
-        //             portId = stoi(sPortId);
-        //             sVersion = parameters["edidVersion"].String();
-        //         }
-        //         catch (...)
-        //         {
-        //             LOGWARN("Invalid Arguments");
-        //             returnResponse(false);
-        //         }
-        //     }
-        //     else
-        //     {
-        //         LOGWARN("Required parameters are not passed");
-        //         returnResponse(false);
-        //     }
-
-        //     int edidVer = -1;
-        //     if (strcmp(sVersion.c_str(), "HDMI1.4") == 0)
-        //     {
-        //         edidVer = HDMI_EDID_VER_14;
-        //     }
-        //     else if (strcmp(sVersion.c_str(), "HDMI2.0") == 0)
-        //     {
-        //         edidVer = HDMI_EDID_VER_20;
-        //     }
-
-        //     if (edidVer < 0)
-        //     {
-        //         returnResponse(false);
-        //     }
-        //     bool result = setEdidVersion(portId, edidVer);
-        //     if (result == false)
-        //     {
-        //         returnResponse(false);
-        //     }
-        //     else
-        //     {
-        //         returnResponse(true);
-        //     }
-        // }
         uint32_t AVInputImplementation::setEdidVersionWrapper(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
@@ -1953,6 +2115,97 @@ namespace WPEFramework
             returnResponse(Core::ERROR_NONE == SetEdidVersion(portId, sVersion));
         }
 
+        // uint32_t AVInputImplementation::getHdmiVersionWrapper(const JsonObject &parameters, JsonObject &response)
+        // {
+        //     LOGINFOMETHOD();
+        //     returnIfParamNotFound(parameters, "portId");
+        //     string sPortId = parameters["portId"].String();
+        //     int portId = 0;
+
+        //     try
+        //     {
+        //         portId = stoi(sPortId);
+        //     }
+        //     catch (const std::exception &err)
+        //     {
+        //         LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+        //         returnResponse(false);
+        //     }
+
+        //     dsHdmiMaxCapabilityVersion_t hdmiCapVersion = HDMI_COMPATIBILITY_VERSION_14;
+
+        //     try
+        //     {
+        //         device::HdmiInput::getInstance().getHdmiVersion(portId, &(hdmiCapVersion));
+        //         LOGWARN("AVInputImplementation::getHdmiVersion Hdmi Version:%d", hdmiCapVersion);
+        //     }
+        //     catch (const device::Exception &err)
+        //     {
+        //         LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+        //         returnResponse(false);
+        //     }
+
+        //     switch ((int)hdmiCapVersion)
+        //     {
+        //     case HDMI_COMPATIBILITY_VERSION_14:
+        //         response["HdmiCapabilityVersion"] = "1.4";
+        //         break;
+        //     case HDMI_COMPATIBILITY_VERSION_20:
+        //         response["HdmiCapabilityVersion"] = "2.0";
+        //         break;
+        //     case HDMI_COMPATIBILITY_VERSION_21:
+        //         response["HdmiCapabilityVersion"] = "2.1";
+        //         break;
+        //     }
+
+        //     if (hdmiCapVersion == HDMI_COMPATIBILITY_VERSION_MAX)
+        //     {
+        //         returnResponse(false);
+        //     }
+        //     else
+        //     {
+        //         returnResponse(true);
+        //     }
+        // }
+        Core::hresult AVInputImplementation::GetHdmiVersion(int id, string &hdmiVersion)
+        {
+            Core::hresult ret = Core::ERROR_NONE;
+            dsHdmiMaxCapabilityVersion_t hdmiCapVersion = HDMI_COMPATIBILITY_VERSION_14;
+
+            try
+            {
+                device::HdmiInput::getInstance().getHdmiVersion(id, &hdmiCapVersion);
+                LOGWARN("AVInputImplementation::GetHdmiVersion Hdmi Version:%d", hdmiCapVersion);
+            }
+            catch (const device::Exception &err)
+            {
+                LOG_DEVICE_EXCEPTION1(std::to_string(id));
+                return Core::ERROR_GENERAL;
+            }
+
+            switch ((int)hdmiCapVersion)
+            {
+            case HDMI_COMPATIBILITY_VERSION_14:
+                hdmiVersion = "1.4";
+                break;
+            case HDMI_COMPATIBILITY_VERSION_20:
+                hdmiVersion = "2.0";
+                break;
+            case HDMI_COMPATIBILITY_VERSION_21:
+                hdmiVersion = "2.1";
+                break;
+            default:
+                return Core::ERROR_GENERAL;
+            }
+
+            if (hdmiCapVersion == HDMI_COMPATIBILITY_VERSION_MAX)
+            {
+                return Core::ERROR_GENERAL;
+            }
+
+            return ret;
+        }
+
         uint32_t AVInputImplementation::getHdmiVersionWrapper(const JsonObject &parameters, JsonObject &response)
         {
             LOGINFOMETHOD();
@@ -1970,58 +2223,21 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            dsHdmiMaxCapabilityVersion_t hdmiCapVersion = HDMI_COMPATIBILITY_VERSION_14;
+            string hdmiVersion;
+            Core::hresult ret = GetHdmiVersion(portId, hdmiVersion);
 
-            try
+            if (ret == Core::ERROR_NONE)
             {
-                device::HdmiInput::getInstance().getHdmiVersion(portId, &(hdmiCapVersion));
-                LOGWARN("AVInputImplementation::getHdmiVersion Hdmi Version:%d", hdmiCapVersion);
-            }
-            catch (const device::Exception &err)
-            {
-                LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-                returnResponse(false);
-            }
-
-            switch ((int)hdmiCapVersion)
-            {
-            case HDMI_COMPATIBILITY_VERSION_14:
-                response["HdmiCapabilityVersion"] = "1.4";
-                break;
-            case HDMI_COMPATIBILITY_VERSION_20:
-                response["HdmiCapabilityVersion"] = "2.0";
-                break;
-            case HDMI_COMPATIBILITY_VERSION_21:
-                response["HdmiCapabilityVersion"] = "2.1";
-                break;
-            }
-
-            if (hdmiCapVersion == HDMI_COMPATIBILITY_VERSION_MAX)
-            {
-                returnResponse(false);
+                response["HdmiCapabilityVersion"] = hdmiVersion;
+                returnResponse(true);
             }
             else
             {
-                returnResponse(true);
+                returnResponse(false);
             }
         }
 
-        // int AVInputImplementation::setEdidVersion(int iPort, int iEdidVer)
-        // {
-        //     bool ret = true;
-        //     try
-        //     {
-        //         device::HdmiInput::getInstance().setEdidVersion(iPort, iEdidVer);
-        //         LOGWARN("AVInputImplementation::setEdidVersion EDID Version:%d", iEdidVer);
-        //     }
-        //     catch (const device::Exception &err)
-        //     {
-        //         LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
-        //         ret = false;
-        //     }
-        //     return ret;
-        // }
-        Core::hresult SetEdidVersion(int id, const string &version)
+        Core::hresult AVInputImplementation::SetEdidVersion(int id, const string &version)
         {
             Core::hresult ret = Core::ERROR_NONE;
             int edidVer = -1;
@@ -2054,50 +2270,6 @@ namespace WPEFramework
             return ret;
         }
 
-        // uint32_t AVInputImplementation::getEdidVersionWrapper(const JsonObject &parameters, JsonObject &response)
-        // {
-        //     string sPortId = parameters["portId"].String();
-        //     int portId = 0;
-
-        //     LOGINFOMETHOD();
-        //     if (parameters.HasLabel("portId"))
-        //     {
-        //         try
-        //         {
-        //             portId = stoi(sPortId);
-        //         }
-        //         catch (...)
-        //         {
-        //             LOGWARN("Invalid Arguments");
-        //             returnResponse(false);
-        //         }
-        //     }
-        //     else
-        //     {
-        //         LOGWARN("Required parameters are not passed");
-        //         returnResponse(false);
-        //     }
-
-        //     int edidVer = getEdidVersion(portId);
-        //     switch (edidVer)
-        //     {
-        //     case HDMI_EDID_VER_14:
-        //         response["edidVersion"] = "HDMI1.4";
-        //         break;
-        //     case HDMI_EDID_VER_20:
-        //         response["edidVersion"] = "HDMI2.0";
-        //         break;
-        //     }
-
-        //     if (edidVer < 0)
-        //     {
-        //         returnResponse(false);
-        //     }
-        //     else
-        //     {
-        //         returnResponse(true);
-        //     }
-        // }
         uint32_t AVInputImplementation::getEdidVersionWrapper(const JsonObject &parameters, JsonObject &response)
         {
             string sPortId = parameters["portId"].String();
@@ -2136,22 +2308,7 @@ namespace WPEFramework
             }
         }
 
-        // int AVInputImplementation::getEdidVersion(int iPort)
-        // {
-        //     int edidVersion = -1;
-
-        //     try
-        //     {
-        //         device::HdmiInput::getInstance().getEdidVersion(iPort, &edidVersion);
-        //         LOGWARN("AVInputImplementation::getEdidVersion EDID Version:%d", edidVersion);
-        //     }
-        //     catch (const device::Exception &err)
-        //     {
-        //         LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
-        //     }
-        //     return edidVersion;
-        // }
-        Core::hresult GetEdidVersion(int id, string &version)
+        Core::hresult AVInputImplementation::GetEdidVersion(int id, string &version)
         {
             Core::hresult ret = Core::ERROR_NONE;
             int edidVersion = -1;
