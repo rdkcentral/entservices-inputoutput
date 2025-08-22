@@ -1331,6 +1331,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::generateStorageIdentifier(std::string &key, std::string forParam, paramIndex_t info)
     {
+        printf("INSIDE generateStorageIdentifier\n");
         key+=std::string(AVOUTPUT_GENERIC_STRING_RFC_PARAM);
         key+=STRING_SOURCE+convertSourceIndexToString(info.sourceIndex)+std::string(".")+STRING_PICMODE+convertPictureIndexToString(info.pqmodeIndex)+std::string(".")+std::string(STRING_FORMAT)+convertVideoFormatToString(info.formatIndex)+std::string(".")+forParam;
         return tvERROR_NONE;
@@ -1338,6 +1339,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::generateStorageIdentifierCMS(std::string &key, std::string forParam, paramIndex_t info)
     {
+        printf("INSIDE generateStorageIdentifierCMS\n");
         key+=std::string(AVOUTPUT_GENERIC_STRING_RFC_PARAM);
         key+=STRING_SOURCE+convertSourceIndexToString(info.sourceIndex)+std::string(".")+STRING_PICMODE+convertPictureIndexToString(info.pqmodeIndex)+std::string(".")+std::string(STRING_FORMAT)+convertVideoFormatToString(info.formatIndex)+std::string(".")+STRING_COLOR+getCMSColorStringFromEnum((tvDataComponentColor_t)info.colorIndex)+std::string(".")+STRING_COMPONENT+getCMSComponentStringFromEnum((tvComponentType_t)info.componentIndex)+std::string(".")+forParam;
         return tvERROR_NONE;
@@ -1345,6 +1347,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::generateStorageIdentifierWB(std::string &key, std::string forParam, paramIndex_t info)
     {
+        printf("INSIDE generateStorageIdentifierWB\n");
         key+=std::string(AVOUTPUT_GENERIC_STRING_RFC_PARAM);
         key+=STRING_SOURCE+convertSourceIndexToString(info.sourceIndex)+std::string(".")+STRING_PICMODE+convertPictureIndexToString(info.pqmodeIndex)+std::string(".")+std::string(STRING_FORMAT)+convertVideoFormatToString(info.formatIndex)+std::string(".")+STRING_COLOR+getWBColorStringFromEnum((tvWBColor_t)info.colorIndex)+std::string(".")+STRING_CONTROL+getWBControlStringFromEnum((tvWBControl_t)info.controlIndex)+std::string(".")+forParam;
         return tvERROR_NONE;
@@ -1489,16 +1492,21 @@ namespace Plugin {
 
     int AVOutputTV::getLocalparam( std::string forParam,paramIndex_t indexInfo,int & value,tvPQParameterIndex_t pqParamIndex,bool sync)
     {
+        printf("INSIDE getLocalparam\n");
         string key;
         TR181_ParamData_t param={0};
         
         if( forParam.compare("CMS") == 0 ) {
+            printf("Before generateStorageIdentifierCMS\n");
             generateStorageIdentifierCMS(key,forParam,indexInfo);
         } else if( forParam.compare("WhiteBalance") == 0 ) {
+            printf("Before generateStorageIdentifierWB\n");
             generateStorageIdentifierWB(key,forParam,indexInfo);
         } else {
+            printf("Before generateStorageIdentifier\n");
             generateStorageIdentifier(key,forParam,indexInfo);
         }
+        printf("Key: %s\n", key.c_str());
 
         if(key.empty()) {
             LOGERR("generateStorageIdentifier failed\n");
@@ -1506,43 +1514,57 @@ namespace Plugin {
         }
 
         tr181ErrorCode_t err=getLocalParam(rfc_caller_id, key.c_str(), &param);
+        printf("1517:after getLocalParam\n");
 
         if ( tr181Success == err ) {//Fetch new tr181format values
             if( forParam.compare("ColorTemp") == 0 ) {
+                printf("1521:before strncmp starts\n");
                 if (strncmp(param.value, "Standard", strlen(param.value))==0) {
+                    printf("1523:before value=tvColorTemp_STANDARD\n");
                     value=tvColorTemp_STANDARD;
                 }
                 else if (strncmp(param.value, "Warm", strlen(param.value))==0) {
+                    printf("1527:before value=tvColorTemp_WARM\n");
                     value=tvColorTemp_WARM;
                 }
                 else if (strncmp(param.value, "Cold", strlen(param.value))==0) {
+                    printf("1531:before value=tvColorTemp_COLD\n");
                     value=tvColorTemp_COLD;
                 }
                 else if (strncmp(param.value, "UserDefined", strlen(param.value))==0) {
+                    printf("1535:before value=tvColorTemp_USER\n");
                     value=tvColorTemp_USER;
                 }
                 else {
+                    printf("1539:before value=tvColorTemp_STANDARD\n");
                     value=tvColorTemp_STANDARD;
 		        }
                 return 0;
             }
            else if( forParam.compare("DimmingMode") == 0 ) {
+               printf("After comparing with DimmingMode\n");
                if (strncmp(param.value, "Fixed", strlen(param.value))==0) {
+                   printf("1547:before value=tvDimmingMode_Fixed\n");
                    value=tvDimmingMode_Fixed;
 	           }
                else if (strncmp(param.value, "Local", strlen(param.value))==0) {
+                   printf("1551:before value=tvDimmingMode_Local\n");
                    value=tvDimmingMode_Local;
 	           }
                else if (strncmp(param.value, "Global", strlen(param.value))==0) {
+                   printf("1555:before value=tvDimmingMode_Global\n");
                    value=tvDimmingMode_Global;
 	           }
                return 0;
            }
            else if ( forParam.compare("DolbyVisionMode") == 0) {
+               printf("After comparing with DolbyVisionMode\n");
                if (strncmp(param.value, "Dark", strlen(param.value)) == 0) {
+                   printf("1563:before value=tvDolbyMode_Dark\n");
                    value = tvDolbyMode_Dark;
                }
                else if(strncmp(param.value, "Game", strlen(param.value)) == 0) {
+                   printf("1567:before value=tvDolbyMode_Game\n");
                    value = tvDolbyMode_Game;
                }
                else {
@@ -1551,22 +1573,29 @@ namespace Plugin {
                return 0;
            }
 	       else if ( forParam.compare("HDRMode") == 0) {
+               printf("After comparing with HDRMode\n");
                if (strncmp(param.value, "Dark", strlen(param.value)) == 0 && key.find("DV") != std::string::npos ) {
+                   printf("1563:before value=tvDolbyMode_Dark\n");
                    value = tvDolbyMode_Dark;
                }
                else if(strncmp(param.value, "Bright", strlen(param.value)) == 0 && key.find("DV") != std::string::npos ) {
+                   printf("1567:before value=tvDolbyMode_Game\n");
                    value = tvDolbyMode_Game;
                }
 	           else if(strncmp(param.value, "Dark", strlen(param.value)) == 0 && key.find("HDR10") != std::string::npos ) {
+                   printf("1586:before value=tvHDR10Mode_Dark\n");
                    value = tvHDR10Mode_Dark;
                }
 	           else if(strncmp(param.value, "Bright", strlen(param.value)) == 0 && key.find("HDR10") != std::string::npos ) {
+                   printf("1590:before value=tvHDR10Mode_Bright\n");
                    value = tvHDR10Mode_Bright;
                }
 	           else if(strncmp(param.value, "Dark", strlen(param.value)) == 0 && key.find("HLG") != std::string::npos ) {
+                   printf("1594:before value=tvHLGMode_Dark\n");
                    value = tvHLGMode_Dark;
                }
                else if(strncmp(param.value, "Bright", strlen(param.value)) == 0 && key.find("HLG") != std::string::npos ) {
+                   printf("1598:before value=tvHLGMode_Bright\n");
                    value = tvHLGMode_Bright;
                }
                else {
@@ -1583,7 +1612,9 @@ namespace Plugin {
             if( sync ) {
                 return 1;
             }
+            printf("1615:Getting default PQ params\n");
             GetDefaultPQParams(indexInfo.pqmodeIndex,(tvVideoSrcType_t)indexInfo.sourceIndex,(tvVideoFormatType_t)indexInfo.formatIndex,pqParamIndex,&value);
+            printf("1616:after GetDefaultPQParams value=%d\n", value);
             LOGINFO("Default value from DB : %s : %d \n",key.c_str(),value);
             return 0;
         }
