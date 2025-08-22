@@ -59,10 +59,8 @@ target_link_libraries(${MODULE_NAME}
 install(TARGETS ${MODULE_NAME}
         DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
 # <pca>
-# add_library(${PLUGIN_IMPLEMENTATION} SHARED
-#         AVInputImplementation.cpp
-#         Module.cpp)
-add_executable(${PLUGIN_IMPLEMENTATION} AVInputImplementation.cpp Module.cpp)
+add_library(${PLUGIN_IMPLEMENTATION} SHARED AVInputImplementation.cpp Module.cpp)
+#add_executable(${PLUGIN_IMPLEMENTATION} AVInputImplementation.cpp Module.cpp)
 # </pca>
 
 set_target_properties(${PLUGIN_IMPLEMENTATION} PROPERTIES
