@@ -925,15 +925,15 @@ namespace Plugin {
                 std::string toStore = std::to_string(value);
                 if (forParam.compare("ColorTemp") == 0) {
                     getColorTempStringFromEnum(value, toStore);
-                    printf("Saving Color Temperature for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
+                    printf("Saving Color Temperature for source %d, pqmode %d, format %d with level %d\n", indexInfo.sourceIndex, indexInfo.pqmodeIndex, indexInfo.formatIndex, value);
                 }
                 else if(forParam.compare("DimmingMode") == 0 ) {
                     getDimmingModeStringFromEnum(value, toStore);
-                    printf("Saving Dimming Mode for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
+                    printf("Saving Dimming Mode for source %d, pqmode %d, format %d with level %d\n", indexInfo.sourceIndex, indexInfo.pqmodeIndex, indexInfo.formatIndex, value);
                 }
                 else if (forParam.compare("DolbyVisionMode") == 0 || forParam.compare("HDRMode") == 0 ) {
                     toStore = getDolbyModeStringFromEnum((tvDolbyMode_t)value);
-                    printf("Saving Dolby Vision Mode for source %d, pqmode %d, format %d with level %s\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, toStore.c_str());
+                    printf("Saving Dolby Vision Mode for source %d, pqmode %d, format %d with level %s\n", indexInfo.sourceIndex, indexInfo.pqmodeIndex, indexInfo.formatIndex, toStore.c_str());
                 }
                 err = setLocalParam(rfc_caller_id, key.c_str(),toStore.c_str());
                 printf("Saving %s for %s with value %s\n", key.c_str(), forParam.c_str(), toStore.c_str());
@@ -1044,7 +1044,7 @@ namespace Plugin {
                                 break;
                             case PQ_PARAM_COLOR_TEMPERATURE:
                                 ret |= SaveColorTemperature((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvColorTemp_t)level);
-                                printf("Saving Color Temperature for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
+                                printf("Saving Color Temperature for source %d, pqmode %d, format %d with level %d\n", indexInfo.sourceIndex, indexInfo.pqmodeIndex, indexInfo.formatIndex, value);
                                 break;
                             case PQ_PARAM_BACKLIGHT:
                                 ret |= SaveBacklight((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
