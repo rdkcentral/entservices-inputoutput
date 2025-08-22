@@ -1006,11 +1006,13 @@ namespace Plugin {
                             case PQ_PARAM_LOWLATENCY_STATE:
                             case PQ_PARAM_DOLBY_MODE:
                                 if(reset) {
+                                    printf("1049:Before updateAVoutputTVParamToHAL\n");
                                     ret |= updateAVoutputTVParamToHAL(tr181ParamName,paramIndex,0,false);
                                     printf("Resetting %s to 0\n", tr181ParamName.c_str());                        
                                 }
                                 if(sync || reset) {
                                     int value=0;
+                                    printf("1015:Before getLocalparam\n");
                                     if(getLocalparam(tr181ParamName,paramIndex,value,pqParamIndex,sync)) {
                                         printf("Failed to get local param for %s\n", tr181ParamName.c_str());
                                         continue;
@@ -1018,6 +1020,7 @@ namespace Plugin {
                                     level=value;
                                 }
                                 if(set) {
+                                    printf("1023:Before updateAVoutputTVParamToHAL\n");
                                     ret |= updateAVoutputTVParamToHAL(tr181ParamName,paramIndex,level,true);
                                     printf("Setting %s to %d\n", tr181ParamName.c_str(), level);
                                 }
@@ -1027,47 +1030,58 @@ namespace Plugin {
                         }
                         switch(pqParamIndex) {
                             case PQ_PARAM_BRIGHTNESS:
+                                printf("1033:Before SaveBrightness_PQ_PARAM_BRIGHTNESS\n");
                                 ret |= SaveBrightness((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 printf("Saving Brightness for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_CONTRAST:
+                                printf("1038:Before SaveContrast_PQ_PARAM_CONTRAST\n");
                                 ret |= SaveContrast((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 printf("Saving Contrast for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_SHARPNESS:
+                                printf("1043:Before SaveSharpness_PQ_PARAM_SHARPNESS\n");
                                 ret |= SaveSharpness((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 printf("Saving Sharpness for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_HUE:
+                                printf("1048:Before SaveHue_PQ_PARAM_HUE\n");
                                 ret |= SaveHue((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 printf("Saving Hue for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_SATURATION:
+                                printf("1053:Before SaveSaturation_PQ_PARAM_SATURATION\n");
                                 ret |= SaveSaturation((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 printf("Saving Saturation for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_COLOR_TEMPERATURE:
+                                printf("1058:Before SaveColorTemperature_PQ_PARAM_COLOR_TEMPERATURE\n");
                                 ret |= SaveColorTemperature((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvColorTemp_t)level);
                                 printf("Saving Color Temperature for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_BACKLIGHT:
+                                printf("1058:Before SaveBacklight_PQ_PARAM_BACKLIGHT\n");
                                 ret |= SaveBacklight((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 printf("Saving Backlight for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_DIMMINGMODE:
+                                printf("1068:Before SaveTVDimmingMode_PQ_PARAM_DIMMINGMODE\n");
                                 ret |= SaveTVDimmingMode((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDimmingMode_t)level);
                                 printf("Saving Dimming Mode for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_LOWLATENCY_STATE:
+                                printf("1068:Before SaveLowLatencyState_PQ_PARAM_LOWLATENCY_STATE\n");
                                 ret |= SaveLowLatencyState((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
                                 printf("Saving Low Latency State for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_DOLBY_MODE:
+                                 printf("1078:Before SaveTVDolbyVisionMode_PQ_PARAM_DOLBY_MODE\n");
                                  ret |= SaveTVDolbyVisionMode((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDolbyMode_t)level);
                                  printf("Saving Dolby Vision Mode for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                  break;
 
                             case PQ_PARAM_ASPECT_RATIO:
+                                 printf("1084:Before SaveAspectRatio_PQ_PARAM_ASPECT_RATIO\n");
                                  ret |= SaveAspectRatio((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDisplayMode_t)level);
                                  printf("Saving Aspect Ratio for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                  break;
