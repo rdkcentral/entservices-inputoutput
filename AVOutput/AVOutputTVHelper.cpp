@@ -1048,7 +1048,7 @@ namespace Plugin {
                                 break;
                             case PQ_PARAM_COLOR_TEMPERATURE:
                                 ret |= SaveColorTemperature((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvColorTemp_t)level);
-                                printf("Saving Color Temperature for source %d, pqmode %d, format %d with level %d\n", indexInfo.sourceIndex, indexInfo.pqmodeIndex, indexInfo.formatIndex, value);
+                                printf("Saving Color Temperature for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_BACKLIGHT:
                                 ret |= SaveBacklight((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
