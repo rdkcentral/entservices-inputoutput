@@ -38,10 +38,19 @@
 
 #include <com/com.h>
 #include <core/core.h>
+#include <boost/variant.hpp>
 
 #define DEFAULT_PRIM_VOL_LEVEL 25
 #define MAX_PRIM_VOL_LEVEL 100
 #define DEFAULT_INPUT_VOL_LEVEL 100
+
+using ParamsType = boost::variant<string &,
+                                  WPEFramework::Exchange::IAVInput::InputSignalInfo,
+                                  WPEFramework::Exchange::IAVInput::InputStatus,
+                                  WPEFramework::Exchange::IAVInput::InputVideoMode,
+                                  WPEFramework::Exchange::IAVInput::ContentInfo,
+                                  WPEFramework::Exchange::IAVInput::GameFeatureStatus,
+                                  int>;
 
 namespace WPEFramework
 {
@@ -82,7 +91,7 @@ namespace WPEFramework
             class EXTERNAL Job : public Core::IDispatch
             {
             protected:
-                Job(AVInputImplementation *avInputImplementation, Event event, JsonValue &params)
+                Job(AVInputImplementation *avInputImplementation, Event event, ParamsType &params)
                     : _avInputImplementation(avInputImplementation), _event(event), _params(params)
                 {
                     if (_avInputImplementation != nullptr)
@@ -104,7 +113,7 @@ namespace WPEFramework
                 }
 
             public:
-                static Core::ProxyType<Core::IDispatch> Create(AVInputImplementation *avInputImplementation, Event event, JsonValue params)
+                static Core::ProxyType<Core::IDispatch> Create(AVInputImplementation *avInputImplementation, Event event, ParamsType params)
                 {
 #ifndef USE_THUNDER_R4
                     return (Core::proxy_cast<Core::IDispatch>(Core::ProxyType<Job>::Create(avInputImplementation, event, params)));
@@ -121,12 +130,22 @@ namespace WPEFramework
             private:
                 AVInputImplementation *_avInputImplementation;
                 const Event _event;
-                JsonValue _params;
+                ParamsType _params;
             };
 
         public:
-            virtual Core::hresult Register(Exchange::IAVInput::INotification *notification) override;
-            virtual Core::hresult Unregister(Exchange::IAVInput::INotification *notification) override;
+            virtual Core::hresult Register(Exchange::IAVInput::IDevicesChangedNotification *notification) override;
+            virtual Core::hresult Unregister(Exchange::IAVInput::IDevicesChangedNotification *notification) override;
+            virtual Core::hresult Register(Exchange::IAVInput::ISignalChangedNotification *notification) override;
+            virtual Core::hresult Unregister(Exchange::IAVInput::ISignalChangedNotification *notification) override;
+            virtual Core::hresult Register(Exchange::IAVInput::IInputStatusChangedNotification *notification) override;
+            virtual Core::hresult Unregister(Exchange::IAVInput::IInputStatusChangedNotification *notification) override;
+            virtual Core::hresult Register(Exchange::IAVInput::IVideoStreamInfoUpdateNotification *notification) override;
+            virtual Core::hresult Unregister(Exchange::IAVInput::IVideoStreamInfoUpdateNotification *notification) override;
+            virtual Core::hresult Register(Exchange::IAVInput::IGameFeatureStatusUpdateNotification *notification) override;
+            virtual Core::hresult Unregister(Exchange::IAVInput::IGameFeatureStatusUpdateNotification *notification) override;
+            virtual Core::hresult Register(Exchange::IAVInput::IHdmiContentTypeUpdateNotification *notification) override;
+            virtual Core::hresult Unregister(Exchange::IAVInput::IHdmiContentTypeUpdateNotification *notification) override;
 
             Core::hresult NumberOfInputs(uint32_t &inputCount) override;
             Core::hresult GetInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator *&devices) override;
@@ -142,7 +161,7 @@ namespace WPEFramework
             Core::hresult GetVRRSupport(int id, bool &vrrSupport) override;
             Core::hresult SetAudioMixerLevels(MixerLevels levels) override;
             Core::hresult GetHdmiVersion(int id, string &hdmiVersion) override;
-            Core::hresult StartInput(int id, int type, bool audioMix, VideoPlaneType planeType, bool topMostPlane) override;
+            Core::hresult StartInput(int id, int type, bool audioMix, int planeType, bool topMostPlane) override;
             Core::hresult StopInput(int type) override;
             Core::hresult SetVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t type) override;
             Core::hresult CurrentVideoMode(string &currentVideoMode, string &message) override;
@@ -161,15 +180,27 @@ namespace WPEFramework
         private:
             mutable Core::CriticalSection _adminLock;
             PluginHost::IShell *_service;
-            std::list<Exchange::IAVInput::INotification *> _avInputNotification;
+
+            template <typename T>
+            uint32_t Register(std::list<T *> &list, T *notification);
+            template <typename T>
+            uint32_t Unregister(std::list<T *> &list, T *notification);
+
+            std::list<Exchange::IAVInput::IDevicesChangedNotification *> _devicesChangedNotifications;
+            std::list<Exchange::IAVInput::ISignalChangedNotification *> _signalChangedNotifications;
+            std::list<Exchange::IAVInput::IInputStatusChangedNotification *> _inputStatusChangedNotifications;
+            std::list<Exchange::IAVInput::IVideoStreamInfoUpdateNotification *> _videoStreamInfoUpdateNotifications;
+            std::list<Exchange::IAVInput::IGameFeatureStatusUpdateNotification *> _gameFeatureStatusUpdateNotifications;
+            std::list<Exchange::IAVInput::IHdmiContentTypeUpdateNotification *> _hdmiContentTypeUpdateNotifications;
+
             int m_primVolume;
             int m_inputVolume; // Player Volume
 
             void InitializeIARM();
             void DeinitializeIARM();
 
-            void dispatchEvent(Event, const JsonValue &params);
-            void Dispatch(Event event, const JsonValue params);
+            void dispatchEvent(Event, const ParamsType params);
+            void Dispatch(Event event, const ParamsType params);
 
             static string currentVideoMode(bool &success);
 

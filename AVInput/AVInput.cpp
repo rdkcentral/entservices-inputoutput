@@ -74,7 +74,13 @@ namespace WPEFramework
             if (nullptr != _avInput)
             {
                 // Register for notifications
-                _avInput->Register(&_avInputNotification);
+                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
+                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
+                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
+                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
+                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
+                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
+
                 // Invoking Plugin API register to wpeframework
                 Exchange::JAVInput::Register(*this, _avInput);
             }
@@ -93,12 +99,18 @@ namespace WPEFramework
 
             SYSLOG(Logging::Shutdown, (string(_T("AVInput::Deinitialize"))));
 
-            // Make sure the Activated and Deactivated are no longer called before we start cleaning up..
+            // Make sure the Activated and Deactivated are no longer called before we start cleaning up.
             _service->Unregister(&_avInputNotification);
 
             if (nullptr != _avInput)
             {
-                _avInput->Unregister(&_avInputNotification);
+                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
+                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
+                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
+                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
+                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
+                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
+
                 Exchange::JAVInput::Unregister(*this);
 
                 // Stop processing:

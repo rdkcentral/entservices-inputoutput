@@ -314,148 +314,380 @@ namespace WPEFramework
             }
         }
 
-        Core::hresult AVInputImplementation::Register(Exchange::IAVInput::INotification *notification)
-        {
-            ASSERT(nullptr != notification);
+        // Core::hresult AVInputImplementation::Register(Exchange::IAVInput::INotification *notification)
+        // {
+        //     ASSERT(nullptr != notification);
 
+        //     _adminLock.Lock();
+
+        //     if (std::find(_avInputNotification.begin(), _avInputNotification.end(), notification) == _avInputNotification.end())
+        //     {
+        //         _avInputNotification.push_back(notification);
+        //         notification->AddRef();
+        //     }
+        //     else
+        //     {
+        //         LOGERR("same notification is registered already");
+        //     }
+
+        //     _adminLock.Unlock();
+
+        //     return Core::ERROR_NONE;
+        // }
+
+        // Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::INotification *notification)
+        // {
+        //     Core::hresult status = Core::ERROR_GENERAL;
+
+        //     ASSERT(nullptr != notification);
+
+        //     _adminLock.Lock();
+
+        //     auto itr = std::find(_avInputNotification.begin(), _avInputNotification.end(), notification);
+        //     if (itr != _avInputNotification.end())
+        //     {
+        //         (*itr)->Release();
+        //         _avInputNotification.erase(itr);
+        //         status = Core::ERROR_NONE;
+        //     }
+        //     else
+        //     {
+        //         LOGERR("notification not found");
+        //     }
+
+        //     _adminLock.Unlock();
+
+        //     return status;
+        // }
+        template <typename T>
+        Core::hresult AVInputImplementation::Register(std::list<T *> &list, T *notification)
+        {
+            uint32_t status = Core::ERROR_GENERAL;
+
+            ASSERT(nullptr != notification);
             _adminLock.Lock();
 
-            if (std::find(_avInputNotification.begin(), _avInputNotification.end(), notification) == _avInputNotification.end())
+            // Make sure we can't register the same notification callback multiple times
+            if (std::find(list.begin(), list.end(), notification) == list.end())
             {
-                _avInputNotification.push_back(notification);
+                list.push_back(notification);
                 notification->AddRef();
-            }
-            else
-            {
-                LOGERR("same notification is registered already");
-            }
-
-            _adminLock.Unlock();
-
-            return Core::ERROR_NONE;
-        }
-
-        Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::INotification *notification)
-        {
-            Core::hresult status = Core::ERROR_GENERAL;
-
-            ASSERT(nullptr != notification);
-
-            _adminLock.Lock();
-
-            auto itr = std::find(_avInputNotification.begin(), _avInputNotification.end(), notification);
-            if (itr != _avInputNotification.end())
-            {
-                (*itr)->Release();
-                _avInputNotification.erase(itr);
                 status = Core::ERROR_NONE;
             }
-            else
-            {
-                LOGERR("notification not found");
-            }
 
             _adminLock.Unlock();
-
             return status;
         }
 
-        void AVInputImplementation::dispatchEvent(Event event, const JsonValue &params)
+        template <typename T>
+        Core::hresult AVInputImplementation::Unregister(std::list<T *> &list, T *notification)
+        {
+            uint32_t status = Core::ERROR_GENERAL;
+
+            ASSERT(nullptr != notification);
+            _adminLock.Lock();
+
+            // Make sure we can't unregister the same notification callback multiple times
+            auto itr = std::find(list.begin(), list.end(), notification);
+            if (itr != list.end())
+            {
+                (*itr)->Release();
+                list.erase(itr);
+                status = Core::ERROR_NONE;
+            }
+
+            _adminLock.Unlock();
+            return status;
+        }
+
+        Core::hresult AVInputImplementation::Register(Exchange::IAVInput::IDevicesChangedNotification *notification)
+        {
+            Core::hresult errorCode = Register(_devicesChangedNotifications, notification);
+            LOGINFO("IDevicesChangedNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::IDevicesChangedNotification *notification)
+        {
+            Core::hresult errorCode = Unregister(_devicesChangedNotifications, notification);
+            LOGINFO("IDevicesChangedNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Register(Exchange::IAVInput::ISignalChangedNotification *notification)
+        {
+            Core::hresult errorCode = Register(_signalChangedNotifications, notification);
+            LOGINFO("ISignalChangedNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::ISignalChangedNotification *notification)
+        {
+            Core::hresult errorCode = Unregister(_signalChangedNotifications, notification);
+            LOGINFO("ISignalChangedNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Register(Exchange::IAVInput::IInputStatusChangedNotification *notification)
+        {
+            Core::hresult errorCode = Register(_inputStatusChangedNotifications, notification);
+            LOGINFO("IInputStatusChangedNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::IInputStatusChangedNotification *notification)
+        {
+            Core::hresult errorCode = Unregister(_inputStatusChangedNotifications, notification);
+            LOGINFO("IInputStatusChangedNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Register(Exchange::IAVInput::IVideoStreamInfoUpdateNotification *notification)
+        {
+            Core::hresult errorCode = Register(_videoStreamInfoUpdateNotifications, notification);
+            LOGINFO("IVideoStreamInfoUpdateNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::IVideoStreamInfoUpdateNotification *notification)
+        {
+            Core::hresult errorCode = Unregister(_videoStreamInfoUpdateNotifications, notification);
+            LOGINFO("IVideoStreamInfoUpdateNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Register(Exchange::IAVInput::IGameFeatureStatusUpdateNotification *notification)
+        {
+            Core::hresult errorCode = Register(_gameFeatureStatusUpdateNotifications, notification);
+            LOGINFO("IGameFeatureStatusUpdateNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::IGameFeatureStatusUpdateNotification *notification)
+        {
+            Core::hresult errorCode = Unregister(_gameFeatureStatusUpdateNotifications, notification);
+            LOGINFO("IGameFeatureStatusUpdateNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Register(Exchange::IAVInput::IHdmiContentTypeUpdateNotification *notification)
+        {
+            Core::hresult errorCode = Register(_hdmiContentTypeUpdateNotifications, notification);
+            LOGINFO("IHdmiContentTypeUpdateNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::IHdmiContentTypeUpdateNotification *notification)
+        {
+            Core::hresult errorCode = Unregister(_hdmiContentTypeUpdateNotifications, notification);
+            LOGINFO("IHdmiContentTypeUpdateNotification %p, errorCode: %u", notification, errorCode);
+            return errorCode;
+        }
+
+        void AVInputImplementation::dispatchEvent(Event event, const ParamsType params)
         {
             Core::IWorkerPool::Instance().Submit(Job::Create(this, event, params));
         }
 
-        void AVInputImplementation::Dispatch(Event event, const JsonValue params)
-        {
-            _adminLock.Lock();
+        // <pca> 2
+        // void AVInputImplementation::Dispatch(Event event, const JsonValue params)
+        // {
+        //     _adminLock.Lock();
 
-            std::list<Exchange::IAVInput::INotification *>::const_iterator index(_avInputNotification.begin());
+        //     std::list<Exchange::IAVInput::INotification *>::const_iterator index(_avInputNotification.begin());
+
+        //     switch (event)
+        //     {
+        //     case ON_AVINPUT_DEVICES_CHANGED:
+        //     {
+        //         // <pca> debug
+        //         string devices = params.String();
+
+        //         printf("*** _DEBUG: printf: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices.c_str());
+        //         LOGINFO("*** _DEBUG: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices.c_str());
+
+        //         while (index != _avInputNotification.end())
+        //         {
+        //             (*index)->OnDevicesChanged(devices);
+        //             ++index;
+        //         }
+        //         // </pca>
+        //         break;
+        //     }
+        //     case ON_AVINPUT_SIGNAL_CHANGED:
+        //     {
+        //         uint8_t id = params.Object()["id"].Number();
+        //         string locator = params.Object()["locator"].String();
+        //         string status = params.Object()["signalStatus"].String();
+        //         InputSignalInfo inputSignalInfo = {id, locator, status};
+
+        //         while (index != _avInputNotification.end())
+        //         {
+        //             (*index)->OnSignalChanged(inputSignalInfo);
+        //             ++index;
+        //         }
+        //         break;
+        //     }
+        //     case ON_AVINPUT_STATUS_CHANGED:
+        //     {
+        //         uint8_t id = params.Object()["id"].Number();
+        //         string locator = params.Object()["locator"].String();
+        //         string status = params.Object()["signalStatus"].String();
+        //         InputSignalInfo inputSignalInfo = {id, locator, status};
+
+        //         while (index != _avInputNotification.end())
+        //         {
+        //             (*index)->OnInputStatusChanged(inputSignalInfo);
+        //             ++index;
+        //         }
+        //         break;
+        //     }
+        //     case ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE:
+        //     {
+        //         uint8_t id = params.Object()["id"].Number();
+        //         string locator = params.Object()["locator"].String();
+        //         uint32_t width = params.Object()["width"].Number();
+        //         uint32_t height = params.Object()["height"].Number();
+        //         bool progressive = params.Object()["progressive"].Boolean();
+        //         uint32_t frameRateN = params.Object()["frameRateN"].Number();
+        //         uint32_t frameRateD = params.Object()["frameRateD"].Number();
+        //         InputVideoMode videoMode = {id, locator, width, height, progressive, frameRateN, frameRateD};
+
+        //         while (index != _avInputNotification.end())
+        //         {
+        //             (*index)->VideoStreamInfoUpdate(videoMode);
+        //             ++index;
+        //         }
+        //         break;
+        //     }
+        //     case ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE:
+        //     {
+        //         uint8_t id = params.Object()["id"].Number();
+        //         string gameFeature = params.Object()["gameFeature"].String();
+        //         bool allmMode = params.Object()["allmMode"].Boolean();
+        //         GameFeatureStatus status = {id, gameFeature, allmMode};
+
+        //         while (index != _avInputNotification.end())
+        //         {
+        //             (*index)->GameFeatureStatusUpdate(status);
+        //             ++index;
+        //         }
+        //         break;
+        //     }
+        //     case ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE:
+        //     {
+        //         int contentType = params.Number();
+        //         while (index != _avInputNotification.end())
+        //         {
+        //             (*index)->HdmiContentTypeUpdate(contentType);
+        //             ++index;
+        //         }
+        //         break;
+        //     }
+
+        //     default:
+        //     {
+        //         LOGWARN("Event[%u] not handled", event);
+        //         break;
+        //     }
+        //     }
+        //     _adminLock.Unlock();
+        // }
+        void AVInputImplementation::Dispatch(Event event, const ParamsType params)
+        {
+            using namespace WPEFramework::Exchange;
+
+            _adminLock.Lock();
 
             switch (event)
             {
             case ON_AVINPUT_DEVICES_CHANGED:
             {
-                // <pca> debug
-                string devices = params.String();
-
-                printf("*** _DEBUG: printf: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices.c_str());
-                LOGINFO("*** _DEBUG: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices.c_str());
-
-                while (index != _avInputNotification.end())
+                if (const string *devices = boost::get<string>(&params))
                 {
-                    (*index)->OnDevicesChanged(devices);
-                    ++index;
+
+                    std::list<IAVInput::IDevicesChangedNotification *>::const_iterator index(_devicesChangedNotifications.begin());
+
+                    printf("*** _DEBUG: printf: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices->c_str());
+                    LOGINFO("*** _DEBUG: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices->c_str());
+
+                    while (index != _devicesChangedNotifications.end())
+                    {
+                        (*index)->OnDevicesChanged(*devices);
+                        ++index;
+                    }
                 }
-                // </pca>
                 break;
             }
             case ON_AVINPUT_SIGNAL_CHANGED:
             {
-                uint8_t id = params.Object()["id"].Number();
-                string locator = params.Object()["locator"].String();
-                string status = params.Object()["signalStatus"].String();
-                InputSignalInfo inputSignalInfo = {id, locator, status};
 
-                while (index != _avInputNotification.end())
+                if (const IAVInput::InputSignalInfo *inputSignalInfo = boost::get<IAVInput::InputSignalInfo>(&params))
                 {
-                    (*index)->OnSignalChanged(inputSignalInfo);
-                    ++index;
+                    std::list<IAVInput::ISignalChangedNotification *>::const_iterator index(_signalChangedNotifications.begin());
+
+                    while (index != _signalChangedNotifications.end())
+                    {
+                        (*index)->OnSignalChanged(*inputSignalInfo);
+                        ++index;
+                    }
                 }
                 break;
             }
             case ON_AVINPUT_STATUS_CHANGED:
             {
-                uint8_t id = params.Object()["id"].Number();
-                string locator = params.Object()["locator"].String();
-                string status = params.Object()["signalStatus"].String();
-                InputSignalInfo inputSignalInfo = {id, locator, status};
 
-                while (index != _avInputNotification.end())
+                if (const IAVInput::InputStatus *inputStatus = boost::get<IAVInput::InputStatus>(&params))
                 {
-                    (*index)->OnInputStatusChanged(inputSignalInfo);
-                    ++index;
+                    std::list<IAVInput::IInputStatusChangedNotification *>::const_iterator index(_inputStatusChangedNotifications.begin());
+
+                    while (index != _inputStatusChangedNotifications.end())
+                    {
+                        (*index)->OnInputStatusChanged(*inputStatus);
+                        ++index;
+                    }
                 }
                 break;
             }
             case ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE:
             {
-                uint8_t id = params.Object()["id"].Number();
-                string locator = params.Object()["locator"].String();
-                uint32_t width = params.Object()["width"].Number();
-                uint32_t height = params.Object()["height"].Number();
-                bool progressive = params.Object()["progressive"].Boolean();
-                uint32_t frameRateN = params.Object()["frameRateN"].Number();
-                uint32_t frameRateD = params.Object()["frameRateD"].Number();
-                InputVideoMode videoMode = {id, locator, width, height, progressive, frameRateN, frameRateD};
-
-                while (index != _avInputNotification.end())
+                if (const IAVInput::InputVideoMode *inputVideoMode = boost::get<IAVInput::InputVideoMode>(&params))
                 {
-                    (*index)->VideoStreamInfoUpdate(videoMode);
-                    ++index;
+                    std::list<IAVInput::IVideoStreamInfoUpdateNotification *>::const_iterator index(_videoStreamInfoUpdateNotifications.begin());
+
+                    while (index != _videoStreamInfoUpdateNotifications.end())
+                    {
+                        (*index)->VideoStreamInfoUpdate(*inputVideoMode);
+                        ++index;
+                    }
                 }
                 break;
             }
             case ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE:
             {
-                uint8_t id = params.Object()["id"].Number();
-                string gameFeature = params.Object()["gameFeature"].String();
-                bool allmMode = params.Object()["allmMode"].Boolean();
-                GameFeatureStatus status = {id, gameFeature, allmMode};
-
-                while (index != _avInputNotification.end())
+                if (const IAVInput::GameFeatureStatus *gameFeatureStatus = boost::get<IAVInput::GameFeatureStatus>(&params))
                 {
-                    (*index)->GameFeatureStatusUpdate(status);
-                    ++index;
+                    std::list<IAVInput::IGameFeatureStatusUpdateNotification *>::const_iterator index(_gameFeatureStatusUpdateNotifications.begin());
+
+                    while (index != _gameFeatureStatusUpdateNotifications.end())
+                    {
+                        (*index)->GameFeatureStatusUpdate(*gameFeatureStatus);
+                        ++index;
+                    }
                 }
                 break;
             }
             case ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE:
             {
-                int contentType = params.Number();
-                while (index != _avInputNotification.end())
+                if (const IAVInput::ContentInfo *contentInfo = boost::get<IAVInput::ContentInfo>(&params))
                 {
-                    (*index)->HdmiContentTypeUpdate(contentType);
-                    ++index;
+                    std::list<IHdmiContentTypeUpdateNotification *>::const_iterator index(_hdmiContentTypeUpdateNotifications.begin());
+
+                    while (index != _hdmiContentTypeUpdateNotifications.end())
+                    {
+                        (*index)->HdmiContentTypeUpdate(*contentInfo);
+                        ++index;
+                    }
                 }
                 break;
             }
@@ -468,6 +700,7 @@ namespace WPEFramework
             }
             _adminLock.Unlock();
         }
+        // </pca>
 
         void setResponseArray(JsonObject &response, const char *key, const vector<string> &items)
         {
@@ -570,14 +803,14 @@ namespace WPEFramework
             return ret;
         }
 
-        Core::hresult AVInputImplementation::StartInput(int id, int type, bool audioMix, VideoPlaneType planeType, bool topMostPlane)
+        Core::hresult AVInputImplementation::StartInput(int id, int type, bool audioMix, int planeType, bool topMostPlane)
         {
             Core::hresult ret = Core::ERROR_NONE;
             try
             {
                 if (type == HDMI)
                 {
-                    device::HdmiInput::getInstance().selectPort(id, audioMix, static_cast<int>(planeType), topMostPlane);
+                    device::HdmiInput::getInstance().selectPort(id, audioMix, planeType, topMostPlane);
                 }
                 else if (type == COMPOSITE)
                 {
@@ -606,7 +839,7 @@ namespace WPEFramework
             bool audioMix = parameters["requestAudioMix"].Boolean();
             int portId = 0;
             int iType = 0;
-            VideoPlaneType planeTypeValue = VideoPlaneType::PRIMARY;
+            int planeType = 0;
             bool topMostPlane = parameters["topMost"].Boolean();
             LOGINFO("topMost value in thunder: %d\n", topMostPlane);
 
@@ -618,17 +851,7 @@ namespace WPEFramework
                     iType = getTypeOfInput(sType);
                     if (parameters.HasLabel("plane"))
                     {
-                        string sPlaneType = parameters["plane"].String();
-                        int planeTypeInt = stoi(sPlaneType);
-                        if (planeTypeInt == 0)
-                            planeTypeValue = VideoPlaneType::PRIMARY;
-                        else if (planeTypeInt == 1)
-                            planeTypeValue = VideoPlaneType::SECONDARY;
-                        else
-                        {
-                            LOGWARN("planeType is invalid\n");
-                            returnResponse(false);
-                        }
+                        planeType = stoi(parameters["plane"].String());
                     }
                 }
                 catch (...)
@@ -643,7 +866,7 @@ namespace WPEFramework
                 returnResponse(false);
             }
 
-            Core::hresult ret = StartInput(portId, iType, audioMix, planeTypeValue, topMostPlane);
+            Core::hresult ret = StartInput(portId, iType, audioMix, planeType, topMostPlane);
             returnResponse(ret == Core::ERROR_NONE);
         }
 
@@ -829,7 +1052,7 @@ namespace WPEFramework
 
         uint32_t AVInputImplementation::getInputDevicesWrapper(const JsonObject &parameters, JsonObject &response)
         {
-            Exchange::IAVInput::IInputDeviceIterator *devices = nullptr;
+            IInputDeviceIterator *devices = nullptr;
             Core::hresult result;
 
             LOGINFOMETHOD();
@@ -865,7 +1088,7 @@ namespace WPEFramework
                     {
                         std::list<WPEFramework::Exchange::IAVInput::InputDevice> combinedDevices = hdmiDevices;
                         combinedDevices.insert(combinedDevices.end(), compositeDevices.begin(), compositeDevices.end());
-                        devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(combinedDevices);
+                        devices = Core::Service<RPC::IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(combinedDevices);
                     }
                 }
             }
@@ -989,7 +1212,7 @@ namespace WPEFramework
 
             if (Core::ERROR_NONE == result)
             {
-                devices = Core::Service<RPC::IteratorType<Exchange::IAVInput::IInputDeviceIterator>>::Create<Exchange::IAVInput::IInputDeviceIterator>(list);
+                devices = Core::Service<RPC::IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(list);
             }
             else
             {
@@ -1042,11 +1265,32 @@ namespace WPEFramework
          * @param[in] input Number of input port integer.
          * @param[in] connection status of input port integer.
          */
+        // void AVInputImplementation::AVInputHotplug(int input, int connect, int type)
+        // {
+        //     LOGWARN("AVInputHotplug [%d, %d, %d]", input, connect, type);
+
+        //     IInputDeviceIterator *devices;
+
+        //     Core::hresult result = GetInputDevices(type, devices);
+        //     if (Core::ERROR_NONE != result)
+        //     {
+        //         LOGERR("AVInputHotplug [%d, %d, %d]: Failed to get devices", input, connect, type);
+        //         return;
+        //     }
+
+        //     // <pca> 2
+        //     // JsonObject params;
+        //     // params["devices"] = devicesToJson(devices);
+        //     // dispatchEvent(ON_AVINPUT_STATUS_CHANGED, params);
+        //     ParamsType params = devices;
+        //     dispatchEvent(ON_AVINPUT_STATUS_CHANGED, params);
+        //     // </pca>
+        // }
         void AVInputImplementation::AVInputHotplug(int input, int connect, int type)
         {
             LOGWARN("AVInputHotplug [%d, %d, %d]", input, connect, type);
 
-            Exchange::IAVInput::IInputDeviceIterator *devices;
+            IInputDeviceIterator *devices;
 
             Core::hresult result = GetInputDevices(type, devices);
             if (Core::ERROR_NONE != result)
@@ -1055,9 +1299,12 @@ namespace WPEFramework
                 return;
             }
 
-            JsonObject params;
-            params["devices"] = devicesToJson(devices);
+            JsonArray jsonArray = devicesToJson(devices);
+            string jsonString;
+            jsonArray.ToString(jsonString);
+            ParamsType params = jsonString;
             dispatchEvent(ON_AVINPUT_STATUS_CHANGED, params);
+            // </pca>
         }
 
         /**
@@ -1067,12 +1314,56 @@ namespace WPEFramework
          * @param[in] port HDMI/COMPOSITE In port id.
          * @param[in] signalStatus signal status of HDMI/COMPOSITE In port.
          */
+        // <pca> 2
+        // void AVInputImplementation::AVInputSignalChange(int port, int signalStatus, int type)
+        // {
+        //     LOGWARN("AVInputSignalStatus [%d, %d, %d]", port, signalStatus, type);
+
+        //     JsonObject params;
+        //     params["id"] = port;
+        //     std::stringstream locator;
+        //     if (type == HDMI)
+        //     {
+        //         locator << "hdmiin://localhost/deviceid/" << port;
+        //     }
+        //     else
+        //     {
+        //         locator << "cvbsin://localhost/deviceid/" << port;
+        //     }
+        //     params["locator"] = locator.str();
+        //     /* values of dsHdmiInSignalStatus_t and dsCompInSignalStatus_t are same
+        //    Hence used only HDMI macro for case statement */
+        //     switch (signalStatus)
+        //     {
+        //     case dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL:
+        //         params["signalStatus"] = "noSignal";
+        //         break;
+
+        //     case dsHDMI_IN_SIGNAL_STATUS_UNSTABLE:
+        //         params["signalStatus"] = "unstableSignal";
+        //         break;
+
+        //     case dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED:
+        //         params["signalStatus"] = "notSupportedSignal";
+        //         break;
+
+        //     case dsHDMI_IN_SIGNAL_STATUS_STABLE:
+        //         params["signalStatus"] = "stableSignal";
+        //         break;
+
+        //     default:
+        //         params["signalStatus"] = "none";
+        //         break;
+        //     }
+        //     dispatchEvent(ON_AVINPUT_SIGNAL_CHANGED, params);
+        // }
         void AVInputImplementation::AVInputSignalChange(int port, int signalStatus, int type)
         {
             LOGWARN("AVInputSignalStatus [%d, %d, %d]", port, signalStatus, type);
 
-            JsonObject params;
-            params["id"] = port;
+            Exchange::IAVInput::InputSignalInfo signalInfo;
+            signalInfo.id = port;
+
             std::stringstream locator;
             if (type == HDMI)
             {
@@ -1082,33 +1373,38 @@ namespace WPEFramework
             {
                 locator << "cvbsin://localhost/deviceid/" << port;
             }
-            params["locator"] = locator.str();
+
+            signalInfo.locator = locator.str();
+
             /* values of dsHdmiInSignalStatus_t and dsCompInSignalStatus_t are same
            Hence used only HDMI macro for case statement */
             switch (signalStatus)
             {
             case dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL:
-                params["signalStatus"] = "noSignal";
+                signalInfo.status = "noSignal";
                 break;
 
             case dsHDMI_IN_SIGNAL_STATUS_UNSTABLE:
-                params["signalStatus"] = "unstableSignal";
+                signalInfo.status = "unstableSignal";
                 break;
 
             case dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED:
-                params["signalStatus"] = "notSupportedSignal";
+                signalInfo.status = "notSupportedSignal";
                 break;
 
             case dsHDMI_IN_SIGNAL_STATUS_STABLE:
-                params["signalStatus"] = "stableSignal";
+                signalInfo.status = "stableSignal";
                 break;
 
             default:
-                params["signalStatus"] = "none";
+                signalInfo.status = "none";
                 break;
             }
+
+            ParamsType params = signalInfo;
             dispatchEvent(ON_AVINPUT_SIGNAL_CHANGED, params);
         }
+        // </pca>
 
         /**
          * @brief This function is used to translate HDMI/COMPOSITE input status change to
@@ -1117,13 +1413,44 @@ namespace WPEFramework
          * @param[in] port HDMI/COMPOSITE In port id.
          * @param[bool] isPresented HDMI/COMPOSITE In presentation started/stopped.
          */
+        // <pca> 2
+        // void AVInputImplementation::AVInputStatusChange(int port, bool isPresented, int type)
+        // {
+        //     LOGWARN("avInputStatus [%d, %d, %d]", port, isPresented, type);
+
+        //     JsonObject params;
+        //     params["id"] = port;
+        //     std::stringstream locator;
+        //     if (type == HDMI)
+        //     {
+        //         locator << "hdmiin://localhost/deviceid/" << port;
+        //     }
+        //     else if (type == COMPOSITE)
+        //     {
+        //         locator << "cvbsin://localhost/deviceid/" << port;
+        //     }
+        //     params["locator"] = locator.str();
+
+        //     if (isPresented)
+        //     {
+        //         params["status"] = "started";
+        //     }
+        //     else
+        //     {
+        //         params["status"] = "stopped";
+        //     }
+        //     params["plane"] = planeType;
+        //     dispatchEvent(ON_AVINPUT_STATUS_CHANGED, params);
+        // }
         void AVInputImplementation::AVInputStatusChange(int port, bool isPresented, int type)
         {
             LOGWARN("avInputStatus [%d, %d, %d]", port, isPresented, type);
 
-            JsonObject params;
-            params["id"] = port;
             std::stringstream locator;
+            Exchange::IAVInput::InputSignalInfo inputSignalInfo;
+
+            inputSignalInfo.id = port;
+
             if (type == HDMI)
             {
                 locator << "hdmiin://localhost/deviceid/" << port;
@@ -1132,19 +1459,26 @@ namespace WPEFramework
             {
                 locator << "cvbsin://localhost/deviceid/" << port;
             }
-            params["locator"] = locator.str();
+
+            inputSignalInfo.locator = locator.str();
 
             if (isPresented)
             {
-                params["status"] = "started";
+                inputSignalInfo.status = "started";
             }
             else
             {
-                params["status"] = "stopped";
+                inputSignalInfo.status = "stopped";
             }
-            params["plane"] = planeType;
+
+            Exchange::IAVInput::InputStatus status;
+            status.info = inputSignalInfo;
+            status.plane = planeType;
+            ParamsType params = status;
+
             dispatchEvent(ON_AVINPUT_STATUS_CHANGED, params);
         }
+        // </pca>
 
         /**
          * @brief This function is used to translate HDMI input video mode change to
@@ -1153,200 +1487,361 @@ namespace WPEFramework
          * @param[in] port HDMI In port id.
          * @param[dsVideoPortResolution_t] video resolution data
          */
+        // void AVInputImplementation::AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type)
+        // {
+        //     LOGWARN("AVInputVideoModeUpdate [%d]", port);
+
+        //     JsonObject params;
+        //     params["id"] = port;
+        //     std::stringstream locator;
+        //     if (type == HDMI)
+        //     {
+
+        //         locator << "hdmiin://localhost/deviceid/" << port;
+        //         switch (resolution.pixelResolution)
+        //         {
+
+        //         case dsVIDEO_PIXELRES_720x480:
+        //             params["width"] = 720;
+        //             params["height"] = 480;
+        //             break;
+
+        //         case dsVIDEO_PIXELRES_720x576:
+        //             params["width"] = 720;
+        //             params["height"] = 576;
+        //             break;
+
+        //         case dsVIDEO_PIXELRES_1280x720:
+        //             params["width"] = 1280;
+        //             params["height"] = 720;
+        //             break;
+
+        //         case dsVIDEO_PIXELRES_1920x1080:
+        //             params["width"] = 1920;
+        //             params["height"] = 1080;
+        //             break;
+
+        //         case dsVIDEO_PIXELRES_3840x2160:
+        //             params["width"] = 3840;
+        //             params["height"] = 2160;
+        //             break;
+
+        //         case dsVIDEO_PIXELRES_4096x2160:
+        //             params["width"] = 4096;
+        //             params["height"] = 2160;
+        //             break;
+
+        //         default:
+        //             params["width"] = 1920;
+        //             params["height"] = 1080;
+        //             break;
+        //         }
+        //         params["progressive"] = (!resolution.interlaced);
+        //     }
+        //     else if (type == COMPOSITE)
+        //     {
+        //         locator << "cvbsin://localhost/deviceid/" << port;
+        //         switch (resolution.pixelResolution)
+        //         {
+        //         case dsVIDEO_PIXELRES_720x480:
+        //             params["width"] = 720;
+        //             params["height"] = 480;
+        //             break;
+        //         case dsVIDEO_PIXELRES_720x576:
+        //             params["width"] = 720;
+        //             params["height"] = 576;
+        //             break;
+        //         default:
+        //             params["width"] = 720;
+        //             params["height"] = 576;
+        //             break;
+        //         }
+
+        //         params["progressive"] = false;
+        //     }
+
+        //     params["locator"] = locator.str();
+        //     switch (resolution.frameRate)
+        //     {
+        //     case dsVIDEO_FRAMERATE_24:
+        //         params["frameRateN"] = 24000;
+        //         params["frameRateD"] = 1000;
+        //         break;
+
+        //     case dsVIDEO_FRAMERATE_25:
+        //         params["frameRateN"] = 25000;
+        //         params["frameRateD"] = 1000;
+        //         break;
+
+        //     case dsVIDEO_FRAMERATE_30:
+        //         params["frameRateN"] = 30000;
+        //         params["frameRateD"] = 1000;
+        //         break;
+
+        //     case dsVIDEO_FRAMERATE_50:
+        //         params["frameRateN"] = 50000;
+        //         params["frameRateD"] = 1000;
+        //         break;
+
+        //     case dsVIDEO_FRAMERATE_60:
+        //         params["frameRateN"] = 60000;
+        //         params["frameRateD"] = 1000;
+        //         break;
+
+        //     case dsVIDEO_FRAMERATE_23dot98:
+        //         params["frameRateN"] = 24000;
+        //         params["frameRateD"] = 1001;
+        //         break;
+
+        //     case dsVIDEO_FRAMERATE_29dot97:
+        //         params["frameRateN"] = 30000;
+        //         params["frameRateD"] = 1001;
+        //         break;
+
+        //     case dsVIDEO_FRAMERATE_59dot94:
+        //         params["frameRateN"] = 60000;
+        //         params["frameRateD"] = 1001;
+        //         break;
+        //     case dsVIDEO_FRAMERATE_100:
+        //         params["frameRateN"] = 100000;
+        //         params["frameRateD"] = 1000;
+        //         break;
+        //     case dsVIDEO_FRAMERATE_119dot88:
+        //         params["frameRateN"] = 120000;
+        //         params["frameRateD"] = 1001;
+        //         break;
+        //     case dsVIDEO_FRAMERATE_120:
+        //         params["frameRateN"] = 120000;
+        //         params["frameRateD"] = 1000;
+        //         break;
+        //     case dsVIDEO_FRAMERATE_200:
+        //         params["frameRateN"] = 200000;
+        //         params["frameRateD"] = 1000;
+        //         break;
+        //     case dsVIDEO_FRAMERATE_239dot76:
+        //         params["frameRateN"] = 240000;
+        //         params["frameRateD"] = 1001;
+        //         break;
+        //     case dsVIDEO_FRAMERATE_240:
+        //         params["frameRateN"] = 240000;
+        //         params["frameRateD"] = 100;
+        //         break;
+        //     default:
+        //         params["frameRateN"] = 60000;
+        //         params["frameRateD"] = 1000;
+        //         break;
+        //     }
+
+        //     dispatchEvent(ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE, params);
+        // }
         void AVInputImplementation::AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type)
         {
+            WPEFramework::Exchange::IAVInput::InputVideoMode inputVideoMode;
+            inputVideoMode.id = port;
+            std::stringstream locator;
+
             LOGWARN("AVInputVideoModeUpdate [%d]", port);
 
-            JsonObject params;
-            params["id"] = port;
-            std::stringstream locator;
             if (type == HDMI)
             {
-
                 locator << "hdmiin://localhost/deviceid/" << port;
+
                 switch (resolution.pixelResolution)
                 {
 
                 case dsVIDEO_PIXELRES_720x480:
-                    params["width"] = 720;
-                    params["height"] = 480;
+                    inputVideoMode.width = 720;
+                    inputVideoMode.height = 480;
                     break;
 
                 case dsVIDEO_PIXELRES_720x576:
-                    params["width"] = 720;
-                    params["height"] = 576;
+                    inputVideoMode.width = 720;
+                    inputVideoMode.height = 576;
                     break;
 
                 case dsVIDEO_PIXELRES_1280x720:
-                    params["width"] = 1280;
-                    params["height"] = 720;
+                    inputVideoMode.width = 1280;
+                    inputVideoMode.height = 720;
                     break;
 
                 case dsVIDEO_PIXELRES_1920x1080:
-                    params["width"] = 1920;
-                    params["height"] = 1080;
+                    inputVideoMode.width = 1920;
+                    inputVideoMode.height = 1080;
                     break;
 
                 case dsVIDEO_PIXELRES_3840x2160:
-                    params["width"] = 3840;
-                    params["height"] = 2160;
+                    inputVideoMode.width = 3840;
+                    inputVideoMode.height = 2160;
                     break;
 
                 case dsVIDEO_PIXELRES_4096x2160:
-                    params["width"] = 4096;
-                    params["height"] = 2160;
+                    inputVideoMode.width = 4096;
+                    inputVideoMode.height = 2160;
                     break;
 
                 default:
-                    params["width"] = 1920;
-                    params["height"] = 1080;
+                    inputVideoMode.width = 1920;
+                    inputVideoMode.height = 1080;
                     break;
                 }
-                params["progressive"] = (!resolution.interlaced);
+                inputVideoMode.progressive = (!resolution.interlaced);
             }
             else if (type == COMPOSITE)
             {
                 locator << "cvbsin://localhost/deviceid/" << port;
+
                 switch (resolution.pixelResolution)
                 {
                 case dsVIDEO_PIXELRES_720x480:
-                    params["width"] = 720;
-                    params["height"] = 480;
+                    inputVideoMode.width = 720;
+                    inputVideoMode.height = 480;
                     break;
+
                 case dsVIDEO_PIXELRES_720x576:
-                    params["width"] = 720;
-                    params["height"] = 576;
+                    inputVideoMode.width = 720;
+                    inputVideoMode.height = 576;
                     break;
+
                 default:
-                    params["width"] = 720;
-                    params["height"] = 576;
+                    inputVideoMode.width = 720;
+                    inputVideoMode.height = 576;
                     break;
                 }
 
-                params["progressive"] = false;
+                inputVideoMode.progressive = false;
             }
 
-            params["locator"] = locator.str();
+            inputVideoMode.locator = locator.str();
+
             switch (resolution.frameRate)
             {
             case dsVIDEO_FRAMERATE_24:
-                params["frameRateN"] = 24000;
-                params["frameRateD"] = 1000;
+                inputVideoMode.frameRateN = 24000;
+                inputVideoMode.frameRateD = 1000;
                 break;
 
             case dsVIDEO_FRAMERATE_25:
-                params["frameRateN"] = 25000;
-                params["frameRateD"] = 1000;
+                inputVideoMode.frameRateN = 25000;
+                inputVideoMode.frameRateD = 1000;
                 break;
 
             case dsVIDEO_FRAMERATE_30:
-                params["frameRateN"] = 30000;
-                params["frameRateD"] = 1000;
+                inputVideoMode.frameRateN = 30000;
+                inputVideoMode.frameRateD = 1000;
                 break;
 
             case dsVIDEO_FRAMERATE_50:
-                params["frameRateN"] = 50000;
-                params["frameRateD"] = 1000;
+                inputVideoMode.frameRateN = 50000;
+                inputVideoMode.frameRateD = 1000;
                 break;
 
             case dsVIDEO_FRAMERATE_60:
-                params["frameRateN"] = 60000;
-                params["frameRateD"] = 1000;
+                inputVideoMode.frameRateN = 60000;
+                inputVideoMode.frameRateD = 1000;
                 break;
 
             case dsVIDEO_FRAMERATE_23dot98:
-                params["frameRateN"] = 24000;
-                params["frameRateD"] = 1001;
+                inputVideoMode.frameRateN = 24000;
+                inputVideoMode.frameRateD = 1001;
                 break;
 
             case dsVIDEO_FRAMERATE_29dot97:
-                params["frameRateN"] = 30000;
-                params["frameRateD"] = 1001;
+                inputVideoMode.frameRateN = 30000;
+                inputVideoMode.frameRateD = 1001;
                 break;
 
             case dsVIDEO_FRAMERATE_59dot94:
-                params["frameRateN"] = 60000;
-                params["frameRateD"] = 1001;
+                inputVideoMode.frameRateN = 60000;
+                inputVideoMode.frameRateD = 1001;
                 break;
+
             case dsVIDEO_FRAMERATE_100:
-                params["frameRateN"] = 100000;
-                params["frameRateD"] = 1000;
+                inputVideoMode.frameRateN = 100000;
+                inputVideoMode.frameRateD = 1000;
                 break;
+
             case dsVIDEO_FRAMERATE_119dot88:
-                params["frameRateN"] = 120000;
-                params["frameRateD"] = 1001;
+                inputVideoMode.frameRateN = 120000;
+                inputVideoMode.frameRateD = 1001;
                 break;
+
             case dsVIDEO_FRAMERATE_120:
-                params["frameRateN"] = 120000;
-                params["frameRateD"] = 1000;
+                inputVideoMode.frameRateN = 120000;
+                inputVideoMode.frameRateD = 1000;
                 break;
+
             case dsVIDEO_FRAMERATE_200:
-                params["frameRateN"] = 200000;
-                params["frameRateD"] = 1000;
+                inputVideoMode.frameRateN = 200000;
+                inputVideoMode.frameRateD = 1000;
                 break;
+
             case dsVIDEO_FRAMERATE_239dot76:
-                params["frameRateN"] = 240000;
-                params["frameRateD"] = 1001;
+                inputVideoMode.frameRateN = 240000;
+                inputVideoMode.frameRateD = 1001;
                 break;
+
             case dsVIDEO_FRAMERATE_240:
-                params["frameRateN"] = 240000;
-                params["frameRateD"] = 100;
+                inputVideoMode.frameRateN = 240000;
+                inputVideoMode.frameRateD = 1000;
                 break;
+
             default:
-                params["frameRateN"] = 60000;
-                params["frameRateD"] = 1000;
+                inputVideoMode.frameRateN = 60000;
+                inputVideoMode.frameRateD = 1000;
                 break;
             }
+
+            ParamsType params = inputVideoMode;
 
             dispatchEvent(ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE, params);
         }
 
         void AVInputImplementation::hdmiInputAviContentTypeChange(int port, int content_type)
         {
-            JsonObject params;
-            params["id"] = port;
-            params["aviContentType"] = content_type;
+            WPEFramework::Exchange::IAVInput::ContentInfo contentInfo;
+            contentInfo.id = port;
+            contentInfo.contentType = content_type;
+
+            ParamsType params = contentInfo;
             dispatchEvent(ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE, params);
         }
 
         void AVInputImplementation::AVInputALLMChange(int port, bool allm_mode)
         {
-            JsonObject params;
-            params["id"] = port;
-            params["gameFeature"] = STR_ALLM;
-            params["mode"] = allm_mode;
+            WPEFramework::Exchange::IAVInput::GameFeatureStatus status;
+            status.id = port;
+            status.gameFeature = STR_ALLM;
+            status.allmMode = allm_mode;
 
+            ParamsType params = status;
             dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
         }
 
         void AVInputImplementation::AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode)
         {
-            JsonObject params;
+            WPEFramework::Exchange::IAVInput::GameFeatureStatus status;
+            status.id = port;
+            status.allmMode = vrr_mode;
+
             switch (vrr_type)
             {
             case dsVRR_HDMI_VRR:
-                params["id"] = port;
-                params["gameFeature"] = VRR_TYPE_HDMI;
-                params["mode"] = vrr_mode;
+                status.gameFeature = VRR_TYPE_HDMI;
                 break;
             case dsVRR_AMD_FREESYNC:
-                params["id"] = port;
-                params["gameFeature"] = VRR_TYPE_FREESYNC;
-                params["mode"] = vrr_mode;
+                status.gameFeature = VRR_TYPE_FREESYNC;
                 break;
             case dsVRR_AMD_FREESYNC_PREMIUM:
-                params["id"] = port;
-                params["gameFeature"] = VRR_TYPE_FREESYNC_PREMIUM;
-                params["mode"] = vrr_mode;
+                status.gameFeature = VRR_TYPE_FREESYNC_PREMIUM;
                 break;
             case dsVRR_AMD_FREESYNC_PREMIUM_PRO:
-                params["id"] = port;
-                params["gameFeature"] = VRR_TYPE_FREESYNC_PREMIUM_PRO;
-                params["mode"] = vrr_mode;
+                status.gameFeature = VRR_TYPE_FREESYNC_PREMIUM_PRO;
                 break;
             default:
                 break;
             }
+
+            ParamsType params = status;
             dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
         }
 

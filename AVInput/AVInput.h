@@ -23,6 +23,7 @@
 #include <interfaces/IAVInput.h>
 #include <interfaces/json/JAVInput.h>
 #include <interfaces/json/JsonData_AVInput.h>
+#include <core/JSON.h>
 
 #include "UtilsLogging.h"
 #include "tracing/Logging.h"
@@ -34,7 +35,13 @@ namespace WPEFramework
         class AVInput : public PluginHost::IPlugin, public PluginHost::JSONRPC
         {
         private:
-            class Notification : public RPC::IRemoteConnection::INotification, public Exchange::IAVInput::INotification
+            class Notification : public RPC::IRemoteConnection::INotification,
+                                 public Exchange::IAVInput::IDevicesChangedNotification,
+                                 public Exchange::IAVInput::ISignalChangedNotification,
+                                 public Exchange::IAVInput::IInputStatusChangedNotification,
+                                 public Exchange::IAVInput::IVideoStreamInfoUpdateNotification,
+                                 public Exchange::IAVInput::IGameFeatureStatusUpdateNotification,
+                                 public Exchange::IAVInput::IHdmiContentTypeUpdateNotification
             {
             private:
                 Notification() = delete;
@@ -52,8 +59,20 @@ namespace WPEFramework
                 {
                 }
 
+                template <typename T>
+                T *baseInterface()
+                {
+                    static_assert(std::is_base_of<T, Notification>(), "base type mismatch");
+                    return static_cast<T *>(this);
+                }
+
                 BEGIN_INTERFACE_MAP(Notification)
-                INTERFACE_ENTRY(Exchange::IAVInput::INotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IDevicesChangedNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::ISignalChangedNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IInputStatusChangedNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IVideoStreamInfoUpdateNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IGameFeatureStatusUpdateNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IHdmiContentTypeUpdateNotification)
                 INTERFACE_ENTRY(RPC::IRemoteConnection::INotification)
                 END_INTERFACE_MAP
 
@@ -66,17 +85,11 @@ namespace WPEFramework
                     _parent.Deactivated(connection);
                 }
 
-                // <pca> debug
                 void OnDevicesChanged(const string &devices) override
                 {
                     LOGINFO("OnDevicesChanged: devices %s\n", devices.c_str());
                     Exchange::JAVInput::Event::OnDevicesChanged(_parent, devices);
                 }
-                // void OnDevicesChanged(const InputDevice &inputDevice, IInputDeviceIterator *const devices) override
-                // {
-                //     Exchange::JAVInput::Event::OnDevicesChanged(_parent, devices);
-                // }
-                // </pca>
 
                 void OnSignalChanged(const Exchange::IAVInput::InputSignalInfo &info) override
                 {
@@ -84,10 +97,10 @@ namespace WPEFramework
                     Exchange::JAVInput::Event::OnSignalChanged(_parent, info);
                 }
 
-                void OnInputStatusChanged(const Exchange::IAVInput::InputSignalInfo &info) override
+                void OnInputStatusChanged(const Exchange::IAVInput::InputStatus &status) override
                 {
-                    LOGINFO("OnInputStatusChanged: id %d, locator %s, status %s\n", info.id, info.locator.c_str(), info.status.c_str());
-                    Exchange::JAVInput::Event::OnInputStatusChanged(_parent, info);
+                    LOGINFO("OnInputStatusChanged: id %d, locator %s, status %s, plane %d\n", status.info.id, status.info.locator.c_str(), status.info.status.c_str(), status.plane);
+                    Exchange::JAVInput::Event::OnInputStatusChanged(_parent, status);
                 }
 
                 void VideoStreamInfoUpdate(const Exchange::IAVInput::InputVideoMode &videoMode) override
@@ -105,10 +118,10 @@ namespace WPEFramework
                     Exchange::JAVInput::Event::GameFeatureStatusUpdate(_parent, status);
                 }
 
-                void HdmiContentTypeUpdate(int contentType) override
+                void HdmiContentTypeUpdate(const Exchange::IAVInput::ContentInfo &contentInfo) override
                 {
-                    LOGINFO("HdmiContentTypeUpdate: contentType %d\n", contentType);
-                    Exchange::JAVInput::Event::HdmiContentTypeUpdate(_parent, contentType);
+                    LOGINFO("HdmiContentTypeUpdate: id %d, contentType %d\n", contentInfo.id, contentInfo.contentType);
+                    Exchange::JAVInput::Event::HdmiContentTypeUpdate(_parent, contentInfo);
                 }
 
             private:
