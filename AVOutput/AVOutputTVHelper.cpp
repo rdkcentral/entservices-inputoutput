@@ -1395,7 +1395,7 @@ namespace Plugin {
          return "UNKNOWN ERROR";
     }
 
-    int AVOutputTV::getSaveConfig(std::string param, capDetails_t &capInfo, valueVectors_t &values)
+    int AVOutputTV::getSaveConfig(std::string param, capDetails_t capInfo, valueVectors_t &values)
     {
         LOGINFO("Entry : %s pqmode : %s source :%s format :%s component : %s color : %s control:%s\n",__FUNCTION__,capInfo.pqmode.c_str(),capInfo.source.c_str(),capInfo.format.c_str(),capInfo.component.c_str(),capInfo.color.c_str(),capInfo.control.c_str());
 
