@@ -1018,6 +1018,7 @@ namespace Plugin {
                                         continue;
                                     }
                                     level=value;
+                                    printf("Synchronized %s to %d\n", tr181ParamName.c_str(), level);
                                 }
                                 if(set) {
                                     printf("1023:Before updateAVoutputTVParamToHAL\n");
