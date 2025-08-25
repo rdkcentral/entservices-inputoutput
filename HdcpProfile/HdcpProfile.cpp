@@ -166,7 +166,7 @@ namespace WPEFramework
 
 		uint32_t HdcpProfile::OnJSONRPCError(const Core::JSONRPC::Context&, const string& method, const string& parameters, const uint32_t errorcode, string& errormessage) {
             LOGINFO("DBG:OnJSONRPCERROR");
-            if(method == _T("getHDCPStatus"))
+            if(method == _T("getHDCPStatus") && (errorcode >= static_cast<uint32_t>(ERROR_BASE) && errorcode  < static_cast<uint32_t>(MAX_ERROR_CODE) ))
             {
                 LOGINFO("DBG-Inside If");
                 errormessage = ERROR_MESSAGE(errorcode);
