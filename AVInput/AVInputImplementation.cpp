@@ -774,7 +774,14 @@ namespace WPEFramework
 
             try
             {
+                printf("AVInputImplementation::NumberOfInputs: Calling HdmiInput::getNumberOfInputs...\n");
                 inputCount = device::HdmiInput::getInstance().getNumberOfInputs();
+                printf("AVInputImplementation::NumberOfInputs: inputCount=%d\n", inputCount);
+            }
+            catch (const std::exception &ex)
+            {
+                LOGERR("Exception caught: %s", ex.what());
+                ret = Core::ERROR_GENERAL;
             }
             catch (...)
             {
@@ -793,6 +800,11 @@ namespace WPEFramework
             {
                 currentVideoMode = device::HdmiInput::getInstance().getCurrentVideoMode();
                 // TODO: How is message set?
+            }
+            catch (const std::exception &ex)
+            {
+                LOGERR("std::exception caught: %s", ex.what());
+                ret = Core::ERROR_GENERAL;
             }
             catch (...)
             {
