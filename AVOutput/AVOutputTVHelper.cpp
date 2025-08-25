@@ -1013,10 +1013,23 @@ namespace Plugin {
                                 if(sync || reset) {
                                     int value=0;
                                     printf("1015:Before getLocalparam\n");
+                                    // Print all parameters to be passed to getLocalparam
+                                    printf("Calling getLocalparam with: tr181ParamName='%s', paramIndex={sourceIndex=%d, pqmodeIndex=%d, formatIndex=%d, colorIndex=%d, componentIndex=%d, controlIndex=%d}, value(ptr)=%p, pqParamIndex=%d, sync=%d\n",
+                                        tr181ParamName.c_str(),
+                                        paramIndex.sourceIndex,
+                                        paramIndex.pqmodeIndex,
+                                        paramIndex.formatIndex,
+                                        paramIndex.colorIndex,
+                                        paramIndex.componentIndex,
+                                        paramIndex.controlIndex,
+                                        (void*)&value,
+                                        pqParamIndex,
+                                        (int)sync);
                                     if(getLocalparam(tr181ParamName,paramIndex,value,pqParamIndex,sync)) {
                                         printf("Failed to get local param for %s\n", tr181ParamName.c_str());
                                         continue;
                                     }
+                                    printf("Value: %d\n", value);
                                     level=value;
                                     printf("Synchronized %s to %d\n", tr181ParamName.c_str(), level);
                                 }
