@@ -23,150 +23,142 @@
 #define API_VERSION_NUMBER_MINOR 7
 #define API_VERSION_NUMBER_PATCH 1
 
-namespace WPEFramework
-{
-    namespace
-    {
+namespace WPEFramework {
+namespace {
 
-        static Plugin::Metadata<Plugin::AVInput> metadata(
-            // Version (Major, Minor, Patch)
-            API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH,
-            // Preconditions
-            {},
-            // Terminations
-            {},
-            // Controls
-            {});
+    static Plugin::Metadata<Plugin::AVInput> metadata(
+        // Version (Major, Minor, Patch)
+        API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH,
+        // Preconditions
+        {},
+        // Terminations
+        {},
+        // Controls
+        {});
+}
+
+namespace Plugin {
+
+    SERVICE_REGISTRATION(AVInput, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
+
+    AVInput::AVInput()
+        : _service(nullptr)
+        , _connectionId(0)
+        , _avInput(nullptr)
+        , _avInputNotification(this)
+    {
+        SYSLOG(Logging::Startup, (_T("AVInput Constructor")));
     }
 
-    namespace Plugin
+    AVInput::~AVInput()
     {
+        SYSLOG(Logging::Shutdown, (string(_T("AVInput Destructor"))));
+    }
 
-        SERVICE_REGISTRATION(AVInput, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
+    const string AVInput::Initialize(PluginHost::IShell* service)
+    {
+        string message = "";
 
-        AVInput::AVInput() : _service(nullptr), _connectionId(0), _avInput(nullptr), _avInputNotification(this)
-        {
-            SYSLOG(Logging::Startup, (_T("AVInput Constructor")));
+        ASSERT(nullptr != service);
+        ASSERT(nullptr == _service);
+        ASSERT(nullptr == _avInput);
+        ASSERT(0 == _connectionId);
+
+        SYSLOG(Logging::Startup, (_T("AVInput::Initialize: PID=%u"), getpid()));
+
+        _service = service;
+        _service->AddRef();
+        _service->Register(&_avInputNotification);
+
+        _avInput = service->Root<Exchange::IAVInput>(_connectionId, 5000, _T("AVInputImplementation"));
+
+        if (nullptr != _avInput) {
+            // Register for notifications
+            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
+            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
+            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
+            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
+            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
+            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
+
+            // Invoking Plugin API register to wpeframework
+            Exchange::JAVInput::Register(*this, _avInput);
+        } else {
+            SYSLOG(Logging::Startup, (_T("AVInput::Initialize: Failed to initialize AVInput plugin")));
+            message = _T("AVInput plugin could not be initialized");
         }
 
-        AVInput::~AVInput()
-        {
-            SYSLOG(Logging::Shutdown, (string(_T("AVInput Destructor"))));
-        }
+        return message;
+    }
 
-        const string AVInput::Initialize(PluginHost::IShell *service)
-        {
-            string message = "";
+    void AVInput::Deinitialize(PluginHost::IShell* service)
+    {
+        ASSERT(_service == service);
 
-            ASSERT(nullptr != service);
-            ASSERT(nullptr == _service);
-            ASSERT(nullptr == _avInput);
-            ASSERT(0 == _connectionId);
+        SYSLOG(Logging::Shutdown, (string(_T("AVInput::Deinitialize"))));
 
-            SYSLOG(Logging::Startup, (_T("AVInput::Initialize: PID=%u"), getpid()));
+        // Make sure the Activated and Deactivated are no longer called before we start cleaning up.
+        _service->Unregister(&_avInputNotification);
 
-            _service = service;
-            _service->AddRef();
-            _service->Register(&_avInputNotification);
+        if (nullptr != _avInput) {
+            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
+            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
+            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
+            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
+            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
+            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
 
-            _avInput = service->Root<Exchange::IAVInput>(_connectionId, 5000, _T("AVInputImplementation"));
+            Exchange::JAVInput::Unregister(*this);
 
-            if (nullptr != _avInput)
-            {
-                // Register for notifications
-                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
-                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
-                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
-                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
-                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
-                _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
+            // Stop processing:
+            RPC::IRemoteConnection* connection = service->RemoteConnection(_connectionId);
+            VARIABLE_IS_NOT_USED uint32_t result = _avInput->Release();
 
-                // Invoking Plugin API register to wpeframework
-                Exchange::JAVInput::Register(*this, _avInput);
-            }
-            else
-            {
-                SYSLOG(Logging::Startup, (_T("AVInput::Initialize: Failed to initialize AVInput plugin")));
-                message = _T("AVInput plugin could not be initialized");
-            }
+            _avInput = nullptr;
 
-            return message;
-        }
+            // It should have been the last reference we are releasing,
+            // so it should endup in a DESTRUCTION_SUCCEEDED, if not we
+            // are leaking...
+            ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
 
-        void AVInput::Deinitialize(PluginHost::IShell *service)
-        {
-            ASSERT(_service == service);
-
-            SYSLOG(Logging::Shutdown, (string(_T("AVInput::Deinitialize"))));
-
-            // Make sure the Activated and Deactivated are no longer called before we start cleaning up.
-            _service->Unregister(&_avInputNotification);
-
-            if (nullptr != _avInput)
-            {
-                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
-                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
-                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
-                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
-                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
-                _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
-
-                Exchange::JAVInput::Unregister(*this);
-
-                // Stop processing:
-                RPC::IRemoteConnection *connection = service->RemoteConnection(_connectionId);
-                VARIABLE_IS_NOT_USED uint32_t result = _avInput->Release();
-
-                _avInput = nullptr;
-
-                // It should have been the last reference we are releasing,
-                // so it should endup in a DESTRUCTION_SUCCEEDED, if not we
-                // are leaking...
-                ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
-
-                // If this was running in a (container) process...
-                if (nullptr != connection)
-                {
-                    // Lets trigger the cleanup sequence for
-                    // out-of-process code. Which will guard
-                    // that unwilling processes, get shot if
-                    // not stopped friendly :-)
-                    try
-                    {
-                        connection->Terminate();
-                        // Log success if needed
-                        LOGWARN("Connection terminated successfully.");
-                    }
-                    catch (const std::exception &e)
-                    {
-                        std::string errorMessage = "Failed to terminate connection: ";
-                        errorMessage += e.what();
-                        LOGWARN("%s", errorMessage.c_str());
-                    }
-
-                    connection->Release();
+            // If this was running in a (container) process...
+            if (nullptr != connection) {
+                // Lets trigger the cleanup sequence for
+                // out-of-process code. Which will guard
+                // that unwilling processes, get shot if
+                // not stopped friendly :-)
+                try {
+                    connection->Terminate();
+                    // Log success if needed
+                    LOGWARN("Connection terminated successfully.");
+                } catch (const std::exception& e) {
+                    std::string errorMessage = "Failed to terminate connection: ";
+                    errorMessage += e.what();
+                    LOGWARN("%s", errorMessage.c_str());
                 }
-            }
 
-            _connectionId = 0;
-            _service->Release();
-            _service = nullptr;
-            SYSLOG(Logging::Shutdown, (string(_T("AVInput de-initialised"))));
-        }
-
-        string AVInput::Information() const
-        {
-            return (string());
-        }
-
-        void AVInput::Deactivated(RPC::IRemoteConnection *connection)
-        {
-            if (connection->Id() == _connectionId)
-            {
-                ASSERT(nullptr != _service);
-                Core::IWorkerPool::Instance().Submit(PluginHost::IShell::Job::Create(_service, PluginHost::IShell::DEACTIVATED, PluginHost::IShell::FAILURE));
+                connection->Release();
             }
         }
 
-    } // namespace Plugin
+        _connectionId = 0;
+        _service->Release();
+        _service = nullptr;
+        SYSLOG(Logging::Shutdown, (string(_T("AVInput de-initialised"))));
+    }
+
+    string AVInput::Information() const
+    {
+        return (string());
+    }
+
+    void AVInput::Deactivated(RPC::IRemoteConnection* connection)
+    {
+        if (connection->Id() == _connectionId) {
+            ASSERT(nullptr != _service);
+            Core::IWorkerPool::Instance().Submit(PluginHost::IShell::Job::Create(_service, PluginHost::IShell::DEACTIVATED, PluginHost::IShell::FAILURE));
+        }
+    }
+
+} // namespace Plugin
 } // namespace WPEFramework
