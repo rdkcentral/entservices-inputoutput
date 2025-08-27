@@ -131,10 +131,10 @@ jobs:
           mv peru.yaml ..
           #cp -r peru.yaml __w/rdkservices/rdkservices/rdkservices/L2HalMock
           cd ..
-          #sed -i 's/USERNAME_PLACEHOLDER/${{ secrets.PERU_USERNAME }}/g' peru.yaml
-          #sed -i 's/PASSWORD_PLACEHOLDER/${{ secrets.PERU_PASSWORD }}/g' peru.yaml
-          #sed -i 's/L2HAL_USERNAME_PLACEHOLDER/${{ secrets.L2HAL_USERNAME }}/g' peru.yaml
-          #sed -i 's/L2HAL_PASSWORD_PLACEHOLDER/${{ secrets.L2HAL_PASSWORD }}/g' peru.yaml
+          sed -i 's/USERNAME_PLACEHOLDER/${{ secrets.RDK_E_MANIFEST_USERNAME }}/g' peru.yaml
+          sed -i 's/PASSWORD_PLACEHOLDER/${{ secrets.RDK_E_MANIFEST_USERNAME }}/g' peru.yaml
+          sed -i 's/CENTRAL_USERNAME_PLACEHOLDER/${{ secrets.HAL_EMULATOR_MANIFEST_USERNAME }}/g' peru.yaml
+          sed -i 's/CENTRAL_PASSWORD_PLACEHOLDER/${{ secrets.HAL_EMULATOR_MANIFEST_PASSWORD }}/g' peru.yaml
           chmod -Rf 777 build.sh
           ./build.sh $PLUGIN_NAME
         shell: bash
