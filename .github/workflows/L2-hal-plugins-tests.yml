@@ -116,7 +116,7 @@ jobs:
           
           apt update
           apt install csvtool
-
+          apt-get install -y peru
           #apt-get install csvtool
           apt-get install meson
           apt-get update && apt-get install -y lynx
