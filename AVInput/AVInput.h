@@ -63,9 +63,6 @@ namespace Plugin {
         PluginHost::IShell* _service {};
         uint32_t _connectionId {};
         Exchange::IAVInput* _avInput {};
-        Core::Sink<Notification> _avInputNotification;
-
-        void Deactivated(RPC::IRemoteConnection* connection);
 
         class Notification : public RPC::IRemoteConnection::INotification,
                              public Exchange::IAVInput::IDevicesChangedNotification,
@@ -159,6 +156,10 @@ namespace Plugin {
             Notification(const Notification&) = delete;
             Notification& operator=(const Notification&) = delete;
         };
+
+        Core::Sink<Notification> _avInputNotification;
+
+        void Deactivated(RPC::IRemoteConnection* connection);
 
     }; // AVInput
 } // namespace Plugin
