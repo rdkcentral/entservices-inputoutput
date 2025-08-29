@@ -34,6 +34,8 @@
     fprintf(stderr, "\033[1;32m[%s:%d](%s)<PID:%d><TID:%d>" x "\n\033[0m", __FILE__, __LINE__, __FUNCTION__, getpid(), gettid(), ##__VA_ARGS__); \
     fflush(stderr);
 
+#define TR181_HDMICECSINK_CEC_VERSION "Device.DeviceInfo.X_RDKCENTRAL-COM_RFC.Feature.HdmiCecSink.CecVersion"
+
 using ::testing::NiceMock;
 using namespace WPEFramework;
 using testing::StrictMock;
