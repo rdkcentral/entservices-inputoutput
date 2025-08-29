@@ -18,6 +18,8 @@
  */
 #include "L2Tests.h"
 #include "L2TestsMock.h"
+#include "MfrMock.h"
+#include "PowerManagerHalMock.h"
 #include <condition_variable>
 #include <fstream>
 #include <gmock/gmock.h>
@@ -36,7 +38,7 @@ using ::testing::NiceMock;
 using namespace WPEFramework;
 using testing::StrictMock;
 using HdmiCecSinkSuccess = WPEFramework::Exchange::IHdmiCecSink::HdmiCecSinkSuccess;
-using HdmiCecSinkDevice = WPEFramework::Exchange::IHdmiCecSink::HdmiCecSinkDevice;
+using HdmiCecSinkDevice = WPEFramework::Exchange::IHdmiCecSink::HdmiCecSinkDevices;
 using HdmiCecSinkActivePath = WPEFramework::Exchange::IHdmiCecSink::HdmiCecSinkActivePath;
 using IHdmiCecSinkDeviceListIterator = WPEFramework::Exchange::IHdmiCecSink::IHdmiCecSinkDeviceListIterator;
 using IHdmiCecSinkActivePathIterator = WPEFramework::Exchange::IHdmiCecSink::IHdmiCecSinkActivePathIterator;
@@ -54,8 +56,6 @@ static void removeFile(const char* fileName)
 
 static void createFile(const char* fileName, const char* fileContent)
 {
-    removeFile(fileName);
-
     std::ofstream fileContentStream(fileName);
     fileContentStream << fileContent;
     fileContentStream << "\n";
@@ -76,10 +76,10 @@ typedef enum : uint32_t {
     ARC_INITIATION_EVENT = 0x00000100,
     ARC_TERMINATION_EVENT = 0x00000200,
     REPORT_AUDIO_DEVICE_CONNECTED = 0x00000400,
-    REPORT_AUDIO_STATUS = 0x00000800,
-    REPORT_FEATURE_ABORT = 0x00001000,
-    REPORT_CEC_ENABLED = 0x00002000,
-    SET_SYSTEM_AUDIO_MODE = 0x00004000,
+    ON_REPORT_AUDIO_STATUS = 0x10000000, // Unique value to avoid overlap
+    REPORT_FEATURE_ABORT = 0x20000000, // Unique value to avoid overlap
+    REPORT_CEC_ENABLED = 0x40000000, // Unique value to avoid overlap
+    ON_SET_SYSTEM_AUDIO_MODE = 0x80000000, // Unique value to avoid overlap
     SHORT_AUDIO_DESCRIPTOR = 0x00008000,
     STANDBY_MESSAGE_RECEIVED = 0x00010000,
     REPORT_AUDIO_DEVICE_POWER_STATUS = 0x00020000,
@@ -196,7 +196,7 @@ public:
     {
         TEST_LOG("ReportAudioStatusEvent - muteStatus: %d, volumeLevel: %d", muteStatus, volumeLevel);
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_event_signalled |= REPORT_AUDIO_STATUS;
+        m_event_signalled |= ON_REPORT_AUDIO_STATUS;
         m_condition_variable.notify_one();
     }
 
@@ -221,7 +221,7 @@ public:
     {
         TEST_LOG("SetSystemAudioModeEvent - audioMode: %s", audioMode.c_str());
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_event_signalled |= SET_SYSTEM_AUDIO_MODE;
+        m_event_signalled |= ON_SET_SYSTEM_AUDIO_MODE;
         m_condition_variable.notify_one();
     }
 
@@ -339,17 +339,84 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
 {
     uint32_t status = Core::ERROR_GENERAL;
     m_event_signalled = HDMICECSINK_STATUS_INVALID;
-
-    removeFile("/etc/device.properties");
+    IARM_EventHandler_t dsHdmiEventHandler;
     createFile("/etc/device.properties", "RDK_PROFILE=TV");
 
-    ON_CALL(*p_connectionImplMock, poll(::testing::_, ::testing::_))
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_INIT())
+        .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](PWRMgr_PowerState_t* powerState) {
+                *powerState = PWRMGR_POWERSTATE_ON; // Default to ON state
+                return PWRMGR_SUCCESS;
+            }));
+
+    ON_CALL(*p_rfcApiImplMock, getRFCParameter(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [](char* pcCallerID, const char* pcParameterName, RFC_ParamData_t* pstParamData) {
+                if (strcmp("RFC_DATA_ThermalProtection_POLL_INTERVAL", pcParameterName) == 0) {
+                    strcpy(pstParamData->value, "2");
+                    return WDMP_SUCCESS;
+                } else if (strcmp("RFC_ENABLE_ThermalProtection", pcParameterName) == 0) {
+                    strcpy(pstParamData->value, "true");
+                    return WDMP_SUCCESS;
+                } else if (strcmp("RFC_DATA_ThermalProtection_DEEPSLEEP_GRACE_INTERVAL", pcParameterName) == 0) {
+                    strcpy(pstParamData->value, "6");
+                    return WDMP_SUCCESS;
+                } else {
+                    /* The default threshold values will assign, if RFC call failed */
+                    return WDMP_FAILURE;
+                }
+            }));
+
+    EXPECT_CALL(mfrMock::Mock(), mfrSetTempThresholds(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](int high, int critical) {
+                EXPECT_EQ(high, 100);
+                EXPECT_EQ(critical, 110);
+                return mfrERR_NONE;
+            }));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](PWRMgr_PowerState_t* powerState) {
+                *powerState = PWRMGR_POWERSTATE_OFF; // by default over boot up, return PowerState OFF
+                return PWRMGR_SUCCESS;
+            }));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](PWRMgr_PowerState_t powerState) {
+                // All tests are run without settings file
+                // so default expected power state is ON
+                return PWRMGR_SUCCESS;
+            }));
+
+    EXPECT_CALL(mfrMock::Mock(), mfrGetTemperature(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&](mfrTemperatureState_t* curState, int* curTemperature, int* wifiTemperature) {
+                *curTemperature = 90; // safe temperature
+                *curState = (mfrTemperatureState_t)0;
+                *wifiTemperature = 25;
+                return mfrERR_NONE;
+            }));
+
+    ON_CALL(*p_connectionMock, poll(::testing::_, ::testing::_))
         .WillByDefault(::testing::Invoke(
             [&](const LogicalAddress& from, const Throw_e& doThrow) {
                 throw CECNoAckException();
             }));
 
-    EXPECT_CALL(*p_libCCECImplMock, getPhysicalAddress(::testing::_))
+    ON_CALL(*p_rfcApiImplMock, getRFCParameter(::testing::_, ::testing::StrEq(TR181_HDMICECSINK_CEC_VERSION), ::testing::_))
+    .WillByDefault(::testing::Invoke(
+        [](char* pcCallerID, const char* pcParameterName, RFC_ParamData_t* pstParamData) {
+            strcpy(pstParamData->value, "1.4");
+            pstParamData->type = WDMP_STRING;
+            return WDMP_SUCCESS;
+        }));
+
+    EXPECT_CALL(*p_libCCECMock, getPhysicalAddress(::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [&](uint32_t* physAddress) {
                 *physAddress = (uint32_t)0x12345678;
@@ -370,7 +437,7 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
                 return IARM_RESULT_SUCCESS;
             }));
 
-    ON_CALL(*p_connectionImplMock, open())
+    ON_CALL(*p_connectionMock, open())
         .WillByDefault(::testing::Return());
 
     ON_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
@@ -396,7 +463,11 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
                 }
                 return IARM_RESULT_SUCCESS;
             });
+
     /* Activate plugin in constructor */
+    status = ActivateService("org.rdk.PowerManager");
+    EXPECT_EQ(Core::ERROR_NONE, status);
+
     status = ActivateService("org.rdk.HdmiCecSink");
     EXPECT_EQ(Core::ERROR_NONE, status);
 }
@@ -404,10 +475,23 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
 HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
 {
     uint32_t status = Core::ERROR_GENERAL;
-    removeFile("/etc/device.properties");
 
+    ON_CALL(*p_connectionMock, close())
+        .WillByDefault(::testing::Return());
+
+    sleep(5);
+
+    // Deactivate services in reverse order
     status = DeactivateService("org.rdk.HdmiCecSink");
     EXPECT_EQ(Core::ERROR_NONE, status);
+
+    status = DeactivateService("org.rdk.PowerManager");
+    EXPECT_EQ(Core::ERROR_NONE, status);
+
+    removeFile("/etc/device.properties");
+
+    PowerManagerHalMock::Delete();
+    mfrMock::Delete();
 }
 
 void HdmiCecSink_L2Test::ArcInitiationEvent(const JsonObject& message)
@@ -586,7 +670,7 @@ void HdmiCecSink_L2Test::ReportAudioStatusEvent(const JsonObject& message)
     TEST_LOG("ReportAudioStatusEvent received: %s\n", str.c_str());
 
     /* Notify the requester thread. */
-    m_event_signalled |= REPORT_AUDIO_STATUS;
+    m_event_signalled |= ON_REPORT_AUDIO_STATUS;
     m_condition_variable.notify_one();
 }
 
@@ -631,7 +715,7 @@ void HdmiCecSink_L2Test::SetSystemAudioModeEvent(const JsonObject& message)
     TEST_LOG("SetSystemAudioModeEvent received: %s\n", str.c_str());
 
     /* Notify the requester thread. */
-    m_event_signalled |= SET_SYSTEM_AUDIO_MODE;
+    m_event_signalled |= ON_SET_SYSTEM_AUDIO_MODE;
     m_condition_variable.notify_one();
 }
 
@@ -680,7 +764,7 @@ void HdmiCecSink_L2Test::ReportAudioDevicePowerStatus(const JsonObject& message)
     m_condition_variable.notify_one();
 }
 
-HdmiCecSink_L2Test::WaitForRequestStatus(uint32_t timeout_ms, HdmiCecSinkL2test_async_events_t expected_status)
+uint32_t HdmiCecSink_L2Test::WaitForRequestStatus(uint32_t timeout_ms, HdmiCecSinkL2test_async_events_t expected_status)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     auto now = std::chrono::system_clock::now();
@@ -735,7 +819,7 @@ uint32_t HdmiCecSink_L2Test::CreateHdmiCecSinkInterfaceObject()
     return return_value;
 }
 
-TEST_F(HdmiCecSink_L2Test, Test)
+TEST_F(HdmiCecSink_L2Test, Set_And_Get_OSDName_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
         TEST_LOG("Invalid HdmiCecSink_Client");
@@ -746,12 +830,788 @@ TEST_F(HdmiCecSink_L2Test, Test)
             if (m_cecSinkPlugin) {
                 m_cecSinkPlugin->AddRef();
 
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                string name = "TEST", osdname;
+                bool success;
+                status = m_cecSinkPlugin->SetOSDName(name, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                status = m_cecSinkPlugin->GetOSDName(osdname, success);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(success);
+                EXPECT_EQ(osdname, "TEST");
+
                 m_cecSinkPlugin->Release();
             } else {
                 TEST_LOG("m_cecSinkPlugin is NULL");
             }
+            m_controller_cecSink->Release();
         } else {
             TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, Set_And_Get_Enabled_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                bool success, enabled = false, response;
+                status = m_cecSinkPlugin->SetEnabled(enabled, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                status = m_cecSinkPlugin->GetEnabled(response, success);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(success);
+                EXPECT_FALSE(response);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, Set_And_Get_VendorId_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                std::string vendorId = "0xAABBCC", getVendorId;
+                bool success;
+
+                status = m_cecSinkPlugin->SetVendorId(vendorId, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                status = m_cecSinkPlugin->GetVendorId(getVendorId, success);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(success);
+                EXPECT_EQ(getVendorId, "aabbcc");
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, GetAudioDeviceConnectedStatus_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                bool connected, success;
+
+                status = m_cecSinkPlugin->GetAudioDeviceConnectedStatus(connected, success);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_FALSE(connected);
+                EXPECT_TRUE(success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, PrintDeviceList_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                bool printed, success;
+
+                status = m_cecSinkPlugin->PrintDeviceList(printed, success);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(printed);
+                EXPECT_TRUE(success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, RequestActiveSource_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+
+                status = m_cecSinkPlugin->RequestActiveSource(result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, RequestShortAudioDescriptor_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+
+                status = m_cecSinkPlugin->RequestShortAudioDescriptor(result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SendAudioDevicePowerOnMessage_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+
+                status = m_cecSinkPlugin->SendAudioDevicePowerOnMessage(result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SendGetAudioStatusMessage_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+
+                status = m_cecSinkPlugin->SendGetAudioStatusMessage(result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SendKeyPressEvent_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                uint32_t logicaladdr = 0x1, keycode = 0x41;
+
+                status = m_cecSinkPlugin->SendKeyPressEvent(logicaladdr, keycode, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SendUserControlPressed_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                uint32_t logicaladdr = 0x1, keycode = 0x41;
+
+                status = m_cecSinkPlugin->SendUserControlPressed(logicaladdr, keycode, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SendUserControlReleased_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                uint32_t logicaladdr = 0x1;
+
+                status = m_cecSinkPlugin->SendUserControlReleased(logicaladdr, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SendStandbyMessage_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+
+                status = m_cecSinkPlugin->SendStandbyMessage(result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SetActivePath_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                string activepath = "1.0.0.0";
+
+                status = m_cecSinkPlugin->SetActivePath(activepath, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SetActiveSource_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+
+                status = m_cecSinkPlugin->SetActiveSource(result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SetMenuLanguage_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                string lang = "eng";
+
+                status = m_cecSinkPlugin->SetMenuLanguage(lang, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SetRoutingChange_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                string oldport = "HDMI0", newport = "HDMI1";
+
+                status = m_cecSinkPlugin->SetRoutingChange(oldport, newport, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SetupARCRouting_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                bool enabled = true;
+
+                EXPECT_CALL(*p_connectionMock, sendTo(testing::_, testing::_, testing::_)).Times(testing::AtLeast(1));
+
+                status = m_cecSinkPlugin->SetupARCRouting(enabled, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, SetLatencyInfo_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+                string videolatency = "2", lowLatencyMode = "1", audioOutputCompensated = "1", audioOutputDelay = "20";
+
+                EXPECT_CALL(*p_connectionMock, sendTo(testing::_, testing::_, testing::_))
+                    .Times(testing::AtLeast(1));
+
+                status = m_cecSinkPlugin->SetLatencyInfo(videolatency, lowLatencyMode, audioOutputCompensated, audioOutputDelay, result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, RequestAudioDevicePowerStatus_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                Core::hresult status = Core::ERROR_GENERAL;
+                HdmiCecSinkSuccess result;
+
+                status = m_cecSinkPlugin->RequestAudioDevicePowerStatus(result);
+                EXPECT_EQ(status, Core::ERROR_NONE);
+                if (status != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(status) + " (" + std::string(Core::ErrorToString(status)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(result.success);
+
+                m_cecSinkPlugin->Release();
+            } else {
+                TEST_LOG("m_cecSinkPlugin is NULL");
+            }
+            m_controller_cecSink->Release();
+        } else {
+            TEST_LOG("m_controller_cecSink is NULL");
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, GetActiveSource_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                // Call GetActiveSource
+                bool available;
+                uint8_t logicalAddress;
+                string physicalAddress, deviceType, cecVersion, osdname, vendID, powerStatus, port;
+                bool success;
+
+                auto result = m_cecSinkPlugin->GetActiveSource(available, logicalAddress,
+                    physicalAddress, deviceType, cecVersion, osdname, vendID,
+                    powerStatus, port, success);
+
+                // Verify results
+                EXPECT_EQ(result, Core::ERROR_NONE);
+                EXPECT_TRUE(success);
+
+                m_cecSinkPlugin->Release();
+            }
+            m_controller_cecSink->Release();
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, GetActiveRoute_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                // Call GetActiveRoute
+                bool available,success;
+                uint8_t length;
+                IHdmiCecSinkActivePathIterator* list;
+                string Activeroute;
+
+                auto result = m_cecSinkPlugin->GetActiveRoute(available, length, list, Activeroute, success);
+
+                // Verify results
+                EXPECT_EQ(result, Core::ERROR_NONE);
+                EXPECT_TRUE(success);
+                EXPECT_FALSE(available);
+
+                m_cecSinkPlugin->Release();
+            }
+            m_controller_cecSink->Release();
+        }
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, GetDeviceList_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+                m_cecSinkPlugin->AddRef();
+
+                // Call GetDeviceList
+                bool success;
+                uint32_t numberofdevices;
+                IHdmiCecSinkDeviceListIterator* devicelist;
+
+                auto result = m_cecSinkPlugin->GetDeviceList(numberofdevices, devicelist,success);
+
+                // Verify results
+                EXPECT_EQ(result, Core::ERROR_NONE);
+                EXPECT_TRUE(success);
+
+                m_cecSinkPlugin->Release();
+            }
+            m_controller_cecSink->Release();
         }
     }
 }
