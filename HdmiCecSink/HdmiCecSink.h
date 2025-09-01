@@ -563,6 +563,7 @@ private:
 			void sendFeatureAbort(const LogicalAddress logicalAddress, const OpCode feature, const AbortReason reason);
 			void reportFeatureAbortEvent(const LogicalAddress logicalAddress, const OpCode feature, const AbortReason reason);
 			void systemAudioModeRequest();
+			void systemAVRAudioMuteRequest();
                         void SendStandbyMsgEvent(const int logicalAddress);
                         void requestAudioDevicePowerStatus();
                         void reportAudioDevicePowerStatusInfo(const int logicalAddress, const int powerStatus);
@@ -642,6 +643,7 @@ private:
                         uint32_t requestShortAudioDescriptorWrapper(const JsonObject& parameters, JsonObject& response);
                         uint32_t sendStandbyMessageWrapper(const JsonObject& parameters, JsonObject& response);
 			uint32_t sendAudioDevicePowerOnMsgWrapper(const JsonObject& parameters, JsonObject& response);
+			uint32_t sendAVRMuteMsgWrapper(const JsonObject& parameters, JsonObject& response);
                         uint32_t sendRemoteKeyPressWrapper(const JsonObject& parameters, JsonObject& response);
 			uint32_t sendUserControlPressedWrapper(const JsonObject& parameters, JsonObject& response);
                         uint32_t sendUserControlReleasedWrapper(const JsonObject& parameters, JsonObject& response);
