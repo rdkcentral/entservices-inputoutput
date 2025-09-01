@@ -18,7 +18,7 @@
 **/
 
 #include "AVInput.h"
-#include "dsMgr.h"
+//#include "dsMgr.h"
 #include "hdmiIn.hpp"
 #include "compositeIn.hpp"
 
@@ -126,22 +126,15 @@ AVInput::~AVInput()
 const string AVInput::Initialize(PluginHost::IShell * /* service */)
 {
     AVInput::_instance = this;
-    InitializeIARM();
+    InitializeDeviceManager();
 
     return (string());
 }
 
 void AVInput::Deinitialize(PluginHost::IShell * /* service */)
 {
-    _registeredHostEventHandlers = false;
 
-    if (_hostListener != nullptr)
-        {
-            delete _hostListener;
-            _hostListener = nullptr;
-        }
-
-    DeinitializeIARM();
+    DeInitializeDeviceManager();
     _registeredHostEventHandlers = false;
 
     AVInput::_instance = nullptr;
@@ -1727,7 +1720,7 @@ int AVInput::getEdidVersion(int iPort)
     return edidVersion;
 }
 
-void DisplaySettings::registerHostEventHandlers()
+void AVInput::registerHostEventHandlers()
 {
     LOGINFO("registerHostEventHandlers");
     if(!_registeredHostEventHandlers)
@@ -1740,7 +1733,7 @@ void DisplaySettings::registerHostEventHandlers()
 
 /* HDMIInEventsNotification*/
 
-void AVInput::OnHdmiInAVIContentType(HDMIInPort port, HDMIInAviContentType aviContentType)
+void AVInput::OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType)
 {
     LOGINFO("Received OnHdmiInAVIContentType callback, port: %d, Content Type: %d", port, aviContentType);
 
@@ -1776,7 +1769,7 @@ void AVInput::OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented)
     }
 }
 
-void AVInput::OnHdmiInVideoModeUpdate(HDMIInPort port, const HDMIVideoPortResolution& videoPortResolution)
+void AVInput::OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution)
 {
     LOGINFO("Received OnHdmiInVideoModeUpdate callback, port: %d, pixelResolution: %d, interlaced: %d, frameRate: %d",
             port,
@@ -1789,7 +1782,7 @@ void AVInput::OnHdmiInVideoModeUpdate(HDMIInPort port, const HDMIVideoPortResolu
     }
 }
 
-void AVInput::OnHdmiInAllmStatus(HDMIInPort port, bool allmStatus)
+void AVInput::OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus)
 {
     LOGINFO("Received OnHdmiInAllmStatus callback, port: %d, ALLM Mode: %s",
             port, allmStatus ? "true" : "false");
@@ -1799,7 +1792,7 @@ void AVInput::OnHdmiInAllmStatus(HDMIInPort port, bool allmStatus)
     }
 }
 
-void AVInput::OnHdmiInVRRStatus(HDMIInPort port, HDMIInVRRType vrrType)
+void AVInput::OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType)
 {
     LOGINFO("Received OnHdmiInVRRStatus callback, port: %d, VRR Type: %d",
             port, vrrType);
