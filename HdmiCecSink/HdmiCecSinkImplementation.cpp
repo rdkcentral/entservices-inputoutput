@@ -123,6 +123,7 @@ namespace WPEFramework
                 size_t len = 0;
 
                 in.getBuffer(&buf, &len);
+                LOGINFO("HdmiCecSinkFrameListener::notify called. Frame size: %zu, Opcode: 0x%02X", len, len > 1 ? buf[1] : 0xFF);
                 for (unsigned int i = 0; i < len; i++) {
                    snprintf(strBuffer + (i*3) , sizeof(strBuffer) - (i*3), "%02X ",(uint8_t) *(buf + i));
                 }
@@ -3056,6 +3057,7 @@ namespace WPEFramework
             }
             msgProcessor = new HdmiCecSinkProcessor(*smConnection);
             msgFrameListener = new HdmiCecSinkFrameListener(*msgProcessor);
+            LOGINFO("FrameListener registered: %p", msgFrameListener);
             if(smConnection)
             {
                    LOGWARN("Start Thread %p", smConnection );
