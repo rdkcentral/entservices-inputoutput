@@ -129,7 +129,7 @@ private:
             _parent.OnCompositeInStatus(activePort,isPresented); 
         }
 
-        OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override
+        void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override
         {
             _parent.OnCompositeInVideoModeUpdate(activePort,videoResolution); 
         }
@@ -168,7 +168,7 @@ public:
 
 protected:
     void InitializeDeviceManager();
-    void DeinitializeDeviceManager();
+    void DeInitializeDeviceManager();
 
     void RegisterAll();
     void UnregisterAll();

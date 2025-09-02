@@ -113,6 +113,7 @@ AVInput* AVInput::_instance = nullptr;
 
 AVInput::AVInput()
     : PluginHost::JSONRPC()
+    , _hostListener(device::Host::getInstance())
     , _hdmiEventNotification(*this) 
     , _compositeinEventNotification(*this)
     , _registeredHostEventHandlers(false)
