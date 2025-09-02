@@ -327,6 +327,7 @@ protected:
     IARM_EventHandler_t dsHdmiEventHandler;
     IARM_EventHandler_t powerEventHandler = nullptr;
     FrameListener* registeredListener = nullptr;
+    std::vector<FrameListener*> listeners;
 
     Core::ProxyType<RPC::InvokeServerType<1, 0, 4>> HdmiCecSink_Engine;
     Core::ProxyType<RPC::CommunicatorClient> HdmiCecSink_Client;
@@ -443,12 +444,11 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
                 return IARM_RESULT_SUCCESS;
             }));
 
-    EXPECT_CALL(*p_connectionMock, addFrameListener(testing::_))
-        .WillOnce(::testing::Invoke([&](FrameListener* listener) {
+    ON_CALL(*p_connectionMock, addFrameListener(::testing::_))
+        .WillByDefault([this](FrameListener* listener) {
             printf("[TEST] addFrameListener called with address: %p\n", static_cast<void*>(listener));
-            fflush(stdout);
-            registeredListener = listener;
-        }));
+            this->listeners.push_back(listener);
+        });
 
     ON_CALL(*p_connectionMock, open())
         .WillByDefault(::testing::Return());
@@ -1817,6 +1817,213 @@ TEST_F(HdmiCecSink_L2Test, SendKeyPressEvent_JSONRPC)
     EXPECT_EQ(Core::ERROR_NONE, status);
     EXPECT_TRUE(result.HasLabel("success"));
     EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 0;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 1;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 2;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 3;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 4;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 9;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 13;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 32;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 33;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 34;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 35;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 36;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 37;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 38;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 39;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 40;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 41;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 66;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 67;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 101;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 102;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 108;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 109;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendKeyPressEvent", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
 }
 
 TEST_F(HdmiCecSink_L2Test, SendUserControlPressed_JSONRPC)
@@ -1827,6 +2034,213 @@ TEST_F(HdmiCecSink_L2Test, SendUserControlPressed_JSONRPC)
 
     params["logicalAddress"] = 4;
     params["keyCode"] = 65;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 0;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 1;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 2;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 3;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 4;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 9;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 13;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 32;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 33;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 34;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 35;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 36;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 37;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 38;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 39;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 40;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 41;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 66;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 67;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 101;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 102;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 108;
+
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
+
+    params.Clear();
+    params["logicalAddress"] = 4;
+    params["keyCode"] = 109;
 
     status = InvokeServiceMethod("org.rdk.HdmiCecSink", "sendUserControlPressed", params, result);
     EXPECT_EQ(Core::ERROR_NONE, status);
@@ -2029,21 +2443,21 @@ TEST_F(HdmiCecSink_L2Test, Set_And_Get_Enabled_JSONRPC)
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
     uint32_t status = Core::ERROR_GENERAL;
     JsonObject params, result, expected_status;
-     StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
-     std::string message;
-     uint32_t signalled = HDMICECSINK_STATUS_INVALID;
+    StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
+    std::string message;
+    uint32_t signalled = HDMICECSINK_STATUS_INVALID;
 
     /* Register for reportCecEnabledEvent event. */
-     status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
-         _T("reportCecEnabledEvent"),
-         &AsyncHandlerMock_HdmiCecSink::reportCecEnabledEvent,
-         &async_handler);
-     EXPECT_EQ(Core::ERROR_NONE, status);
+    status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
+        _T("reportCecEnabledEvent"),
+        &AsyncHandlerMock_HdmiCecSink::reportCecEnabledEvent,
+        &async_handler);
+    EXPECT_EQ(Core::ERROR_NONE, status);
 
-     message = "{\"cecEnable\":false}";
-     expected_status.FromString(message);
-     EXPECT_CALL(async_handler, reportCecEnabledEvent(testing::_))
-         .WillRepeatedly(Invoke(this, &HdmiCecSink_L2Test::reportCecEnabledEvent));
+    message = "{\"cecEnable\":false}";
+    expected_status.FromString(message);
+    EXPECT_CALL(async_handler, reportCecEnabledEvent(testing::_))
+        .WillRepeatedly(Invoke(this, &HdmiCecSink_L2Test::reportCecEnabledEvent));
 
     // Test SetEnabled
     params["enabled"] = false;
