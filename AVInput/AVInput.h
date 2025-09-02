@@ -167,8 +167,8 @@ public:
     virtual string Information() const override;
 
 protected:
-    void InitializeIARM();
-    void DeinitializeIARM();
+    void InitializeDeviceManager();
+    void DeinitializeDeviceManager();
 
     void RegisterAll();
     void UnregisterAll();
