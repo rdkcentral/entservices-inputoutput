@@ -928,7 +928,7 @@ namespace Plugin {
             std::map<std::string, std::function<void(int, std::string&)>> fnMap = {
                 {"ColorTemp", [this](int v, std::string& s) { getColorTempStringFromEnum(v, s); }},
                 {"DimmingMode", [this](int v, std::string& s) { getDimmingModeStringFromEnum(v, s); }},
-                {"AspectRatio", [this](int v, std::string& s) { getDisplayModeStringFromEnum(v, s); }},
+                {"ZoomMode", [this](int v, std::string& s) { getDisplayModeStringFromEnum(v, s); }},
                 {"BacklightMode", [this](int v, std::string& s) { getBacklightModeStringFromEnum(v, s); }},
                 {"SDRGamma", [this](int v, std::string& s) { getSdrGammaStringFromEnum(static_cast<tvSdrGamma_t>(v), s); }}
             };
@@ -1810,6 +1810,47 @@ namespace Plugin {
                 }
                 return 0;
             }
+            else if (forParam.compare("ZoomMode") == 0) {
+                if (strncmp(param.value, "TV 16X9 STRETCH", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_16x9;
+                }
+                else if (strncmp(param.value, "TV 4X3 PILLARBOX", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_4x3;
+                }
+                else if (strncmp(param.value, "TV NORMAL", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_NORMAL;
+                }
+                else if (strncmp(param.value, "TV DIRECT", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_DIRECT;
+                }
+                else if (strncmp(param.value, "TV AUTO", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_AUTO;
+                }
+                else if (strncmp(param.value, "TV ZOOM", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_ZOOM;
+                }
+                else if (strncmp(param.value, "TV FULL", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_FULL;
+                }
+                // Handle legacy formats without "TV" prefix
+                else if (strncmp(param.value, "16:9", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_16x9;
+                }
+                else if (strncmp(param.value, "4:3", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_4x3;
+                }
+                else if (strncmp(param.value, "Normal", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_NORMAL;
+                }
+                else if (strncmp(param.value, "Full", strlen(param.value)) == 0) {
+                    value = tvDisplayMode_FULL;
+                }
+                else {
+                    LOGWARN("Unknown ZoomMode value '%s', defaulting to TV AUTO", param.value);
+                    value = tvDisplayMode_AUTO;
+                }
+                return 0;
+            }
            else {
                value=std::stoi(param.value);
                return 0;  
@@ -2196,7 +2237,7 @@ namespace Plugin {
     tvError_t AVOutputTV::setAspectRatioZoomSettings(tvDisplayMode_t mode)
     {
         tvError_t ret = tvERROR_GENERAL;
-        LOGERR("%s: mode selected is: %d", __FUNCTION__, m_videoZoomMode);
+        LOGINFO("%s: mode selected is: %d", __FUNCTION__, m_videoZoomMode);
 #if !defined (HDMIIN_4K_ZOOM)
         if (AVOutputTV::instance->m_isDisabledHdmiIn4KZoom) {
             if (AVOutputTV::instance->m_currentHdmiInResoluton<dsVIDEO_PIXELRES_3840x2160 ||
@@ -2288,7 +2329,7 @@ namespace Plugin {
                     LOGINFO("Aspect Ratio initialized successfully, value: %s\n", param.value);
                 }
                 else {
-                    updateAVoutputTVParamV2("set", "AspectRatio", paramJson, PQ_PARAM_ASPECT_RATIO,mode);
+                    updateAVoutputTVParamV2("set", "ZoomMode", paramJson, PQ_PARAM_ASPECT_RATIO,mode);
                 }
             }
 
@@ -2976,7 +3017,7 @@ namespace Plugin {
         else if (paramName == "ColorTemp") caps = m_colortempCaps;
         else if (paramName == "DimmingMode") caps = m_dimmingModeCaps;
         else if (paramName == "PictureMode") caps = m_pictureModeCaps;
-        else if (paramName == "AspectRatio") caps = m_aspectRatioCaps;
+        else if (paramName == "ZoomMode") caps = m_aspectRatioCaps;
         else if (paramName == "LowLatencyState") caps = m_lowLatencyStateCaps;
         else if (paramName == "PrecisionDetail") caps = m_precisionDetailCaps;
         else if (paramName == "LocalContrastEnhancement") caps = m_localContrastEnhancementCaps;
