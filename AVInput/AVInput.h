@@ -22,10 +22,8 @@
 #include "Module.h"
 #include "libIBus.h"
 
-#if 1 
 #include "dsTypes.h"
 #include "host.hpp"
-#endif
 
 #define DEFAULT_PRIM_VOL_LEVEL 25
 #define MAX_PRIM_VOL_LEVEL 100
@@ -34,114 +32,10 @@
 namespace WPEFramework {
 namespace Plugin {
 
-class AVInput: public PluginHost::IPlugin, public PluginHost::JSONRPC
-{
+class AVInput: public PluginHost::IPlugin, public PluginHost::JSONRPC,
+                public device::Host::IHdmiInEvents, public device::Host::ICompositeInEvents{
+
 private:
-
-#if 1 /* HDMIIn Events from libds Library */
-
-    class HdmiInEventNotification : public device::Host::IHdmiInEvents {
-    private:
-        HdmiInEventNotification(const HdmiInEventNotification&) = delete;
-        HdmiInEventNotification& operator=(const HdmiInEventNotification&) = delete;
-
-    public:
-        explicit HdmiInEventNotification(AVInput& parent)
-            : _parent(parent)
-            {
-            }
-            ~HdmiInEventNotification() override = default;
-
-    public:
-        void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override
-        {
-            _parent.OnHdmiInEventHotPlug(port,isConnected); 
-        }
-
-        void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override
-        {
-            _parent.OnHdmiInEventSignalStatus(port,signalStatus); 
-        }
-
-        void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented) override
-        {
-            _parent.OnHdmiInEventStatus(activePort,isPresented); 
-        }
-
-        void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override
-        {
-            _parent.OnHdmiInVideoModeUpdate(port,videoPortResolution); 
-        }
-
-        void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override
-        {
-            _parent.OnHdmiInAllmStatus(port,allmStatus); 
-        }
-
-        void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override
-        {
-            _parent.OnHdmiInAVIContentType(port, aviContentType); 
-        }
-
-        void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override
-        {
-            _parent.OnHdmiInVRRStatus(port, vrrType); 
-        }
-
-        void OnHdmiInAVLatency(int audioDelay, int videoDelay) override
-        {
-            _parent.OnHdmiInAVLatency(audioDelay, videoDelay); 
-        }
-
-        BEGIN_INTERFACE_MAP(HdmiInEventNotification)
-        INTERFACE_ENTRY(device::Host::IHDMIInEvents)
-        END_INTERFACE_MAP
-
-    private:
-        AVInput& _parent;
-    };
-
-    class CompositeInEventNotification : public device::Host::ICompositeInEvents {
-    private:
-        CompositeInEventNotification(const CompositeInEventNotification&) = delete;
-        CompositeInEventNotification& operator=(const CompositeInEventNotification&) = delete;
-
-    public:
-        explicit CompositeInEventNotification(AVInput& parent)
-            : _parent(parent)
-        {
-        }
-        ~CompositeInEventNotification() override = default;
-
-    public:
-        void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override
-        {
-            _parent.OnCompositeInHotPlug(port,isConnected); 
-        }
-
-        void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override
-        {
-            _parent.OnCompositeInSignalStatus(port,signalStatus); 
-        }
-
-        void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override
-        {
-            _parent.OnCompositeInStatus(activePort,isPresented); 
-        }
-
-        void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override
-        {
-            _parent.OnCompositeInVideoModeUpdate(activePort,videoResolution); 
-        }
-
-        BEGIN_INTERFACE_MAP(CompositeInEventNotification)
-        INTERFACE_ENTRY(device::Host::ICompositeInEvents)
-        END_INTERFACE_MAP
-
-    private:
-        AVInput& _parent;
-    };
-#endif
 
     AVInput(const AVInput &) = delete;
     AVInput &operator=(const AVInput &) = delete;
@@ -236,14 +130,14 @@ private:
     static void dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
 private:
-    device::Host &_hostListener;
-    HdmiInEventNotification _hdmiEventNotification;
-    CompositeInEventNotification _compositeinEventNotification;
 
-    bool _registeredHostEventHandlers;
+    device::Host::IHdmiInEvents *m_HdmiInEventsNotification;
+    device::Host::ICompositeInEvents *m_CompositeInEventsNotification;
+
+    bool _registeredDsEventHandlers;
 
 public:
-    void registerHostEventHandlers();
+    void registerDsEventHandlers();
 
     /* HdmiInEventNotification*/
 

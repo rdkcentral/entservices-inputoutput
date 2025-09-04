@@ -113,10 +113,9 @@ AVInput* AVInput::_instance = nullptr;
 
 AVInput::AVInput()
     : PluginHost::JSONRPC()
-    , _hostListener(device::Host::getInstance())
-    , _hdmiEventNotification(*this) 
-    , _compositeinEventNotification(*this)
-    , _registeredHostEventHandlers(false)
+    , _registeredDsEventHandlers(false)
+    , m_HdmiInEventsNotification(this) 
+    , m_CompositeInEventsNotification(this)
 {
     RegisterAll();
 }
@@ -137,8 +136,10 @@ const string AVInput::Initialize(PluginHost::IShell * /* service */)
 void AVInput::Deinitialize(PluginHost::IShell * /* service */)
 {
 
+    device::Host::getInstance().UnRegister(m_HdmiInEventsNotification);
+    device::Host::getInstance().UnRegister(m_CompositeInEventsNotification);
+    _registeredDsEventHandlers = false;
     DeInitializeDeviceManager();
-    _registeredHostEventHandlers = false;
 
     AVInput::_instance = nullptr;
 }
@@ -150,7 +151,7 @@ string AVInput::Information() const
 
 void AVInput::InitializeDeviceManager()
 {
-    registerHostEventHandlers();
+    registerDsEventHandlers();
 }
 
 void AVInput::DeInitializeDeviceManager()
@@ -1723,14 +1724,14 @@ int AVInput::getEdidVersion(int iPort)
     return edidVersion;
 }
 
-void AVInput::registerHostEventHandlers()
+void AVInput::registerDsEventHandlers()
 {
-    LOGINFO("registerHostEventHandlers");
-    if(!_registeredHostEventHandlers)
+    LOGINFO("registerDsEventHandlers");
+    if(!_registeredDsEventHandlers)
     {
-        _registeredHostEventHandlers = true;
-        device::Host::getInstance().Register(_hdmiEventNotification);
-        device::Host::getInstance().Register(_compositeinEventNotification);
+        _registeredDsEventHandlers = true;
+        device::Host::getInstance().Register(m_HdmiInEventsNotification);
+        device::Host::getInstance().Register(m_CompositeInEventsNotification);
     }
 }
 
