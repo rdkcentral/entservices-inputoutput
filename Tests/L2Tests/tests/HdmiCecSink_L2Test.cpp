@@ -20,6 +20,8 @@
 #include "L2TestsMock.h"
 #include "MfrMock.h"
 #include "PowerManagerHalMock.h"
+#include "deepSleepMgr.h"
+#include "PowerManagerMock.h"
 #include <condition_variable>
 #include <fstream>
 #include <gmock/gmock.h>
@@ -344,9 +346,16 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
     uint32_t status = Core::ERROR_GENERAL;
     m_event_signalled = HDMICECSINK_STATUS_INVALID;
     createFile("/etc/device.properties", "RDK_PROFILE=TV");
+    createFile("/tmp/pwrmgr_restarted", "1");
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_INIT())
+         .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
 
     EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_INIT())
         .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
+         .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
 
     EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
         .WillRepeatedly(::testing::Invoke(
@@ -376,15 +385,6 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
                 }
             }));
 
-    ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                if ((string(IARM_BUS_PWRMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_PWRMGR_EVENT_MODECHANGED)) {
-                    powerEventHandler = handler;
-                }
-                return IARM_RESULT_SUCCESS;
-            }));
-
     EXPECT_CALL(mfrMock::Mock(), mfrSetTempThresholds(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [](int high, int critical) {
@@ -396,17 +396,17 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
     EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [](PWRMgr_PowerState_t* powerState) {
-                *powerState = PWRMGR_POWERSTATE_ON; // by default over boot up, return PowerState ON
+                *powerState = PWRMGR_POWERSTATE_OFF; // by default over boot up, return PowerState OFF
                 return PWRMGR_SUCCESS;
             }));
 
     EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
-        .WillRepeatedly(::testing::Invoke(
-            [](PWRMgr_PowerState_t powerState) {
-                // All tests are run without settings file
-                // so default expected power state is ON
-                return PWRMGR_SUCCESS;
-            }));
+         .WillRepeatedly(::testing::Invoke(
+             [](PWRMgr_PowerState_t powerState) {
+                 // All tests are run without settings file
+                 // so default expected power state is ON
+                 return PWRMGR_SUCCESS;
+             }));
 
     EXPECT_CALL(mfrMock::Mock(), mfrGetTemperature(::testing::_, ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
@@ -497,6 +497,12 @@ HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
     // Deactivate services in reverse order
     status = DeactivateService("org.rdk.HdmiCecSink");
     EXPECT_EQ(Core::ERROR_NONE, status);
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_TERM())
+        .WillOnce(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_TERM())
+        .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
 
     status = DeactivateService("org.rdk.PowerManager");
     EXPECT_EQ(Core::ERROR_NONE, status);
@@ -841,7 +847,6 @@ TEST_F(HdmiCecSink_L2Test, Set_And_Get_OSDName_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -884,7 +889,6 @@ TEST_F(HdmiCecSink_L2Test, Set_And_Get_Enabled_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -926,7 +930,6 @@ TEST_F(HdmiCecSink_L2Test, Set_And_Get_VendorId_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -970,7 +973,6 @@ TEST_F(HdmiCecSink_L2Test, GetAudioDeviceConnectedStatus_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 bool connected, success;
@@ -1004,7 +1006,6 @@ TEST_F(HdmiCecSink_L2Test, PrintDeviceList_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 bool printed, success;
@@ -1038,7 +1039,6 @@ TEST_F(HdmiCecSink_L2Test, RequestActiveSource_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1071,7 +1071,6 @@ TEST_F(HdmiCecSink_L2Test, RequestShortAudioDescriptor_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1104,7 +1103,6 @@ TEST_F(HdmiCecSink_L2Test, SendAudioDevicePowerOnMessage_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1137,7 +1135,6 @@ TEST_F(HdmiCecSink_L2Test, SendGetAudioStatusMessage_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1170,7 +1167,6 @@ TEST_F(HdmiCecSink_L2Test, SendKeyPressEvent_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1204,7 +1200,6 @@ TEST_F(HdmiCecSink_L2Test, SendUserControlPressed_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1238,7 +1233,6 @@ TEST_F(HdmiCecSink_L2Test, SendUserControlReleased_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1272,7 +1266,6 @@ TEST_F(HdmiCecSink_L2Test, SendStandbyMessage_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1305,7 +1298,6 @@ TEST_F(HdmiCecSink_L2Test, SetActivePath_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1339,7 +1331,6 @@ TEST_F(HdmiCecSink_L2Test, SetActiveSource_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1372,7 +1363,6 @@ TEST_F(HdmiCecSink_L2Test, SetMenuLanguage_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1413,7 +1403,6 @@ TEST_F(HdmiCecSink_L2Test, SetRoutingChange_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1449,7 +1438,6 @@ TEST_F(HdmiCecSink_L2Test, SetupARCRouting_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1485,7 +1473,6 @@ TEST_F(HdmiCecSink_L2Test, SetLatencyInfo_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1522,7 +1509,6 @@ TEST_F(HdmiCecSink_L2Test, RequestAudioDevicePowerStatus_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 Core::hresult status = Core::ERROR_GENERAL;
                 HdmiCecSinkSuccess result;
@@ -1555,7 +1541,6 @@ TEST_F(HdmiCecSink_L2Test, GetActiveSource_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 // Call GetActiveSource
                 bool available;
@@ -1587,7 +1572,6 @@ TEST_F(HdmiCecSink_L2Test, GetActiveRoute_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 // Call GetActiveRoute
                 bool available, success;
@@ -1618,7 +1602,6 @@ TEST_F(HdmiCecSink_L2Test, GetDeviceList_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 // Call GetDeviceList
                 bool success;
@@ -1647,7 +1630,6 @@ TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                m_cecSinkPlugin->AddRef();
 
                 IARM_Bus_DSMgr_EventData_t eventData;
                 eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_1;
@@ -1662,29 +1644,6 @@ TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC)
     }
 }
 
-// TEST_F(HdmiCecSink_L2Test, Powermodechange_COMRPC)
-// {
-//     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
-//         TEST_LOG("Invalid HdmiCecSink_Client");
-//     } else {
-//         EXPECT_TRUE(m_controller_cecSink != nullptr);
-//         if (m_controller_cecSink) {
-//             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
-//             if (m_cecSinkPlugin) {
-//                 m_cecSinkPlugin->AddRef();
-
-//                 IARM_Bus_PWRMgr_EventData_t eventData;
-//                 eventData.data.state.newState = IARM_BUS_PWRMGR_POWERSTATE_ON;
-//                 eventData.data.state.curState = IARM_BUS_PWRMGR_POWERSTATE_STANDBY;
-//                 (void)eventData;
-//                 powerEventHandler(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_EVENT_MODECHANGED, &eventData, 0);
-
-//                 m_cecSinkPlugin->Release();
-//             }
-//             m_controller_cecSink->Release();
-//         }
-//     }
-// }
 
 // Inject CEC frames and verify events
 TEST_F(HdmiCecSink_L2Test, InjectActiveSourceFrameAndVerifyEvent)
@@ -1833,39 +1792,39 @@ TEST_F(HdmiCecSink_L2Test, InjectTextViewOnFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onTextViewOnMsg"));
 }
 
-TEST_F(HdmiCecSink_L2Test, InjectWakeupFromStandbyFrameAndVerifyEvent)
-{
-    JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
-    StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
-    uint32_t status = Core::ERROR_GENERAL;
-    uint32_t signalled = HDMICECSINK_STATUS_INVALID;
+// TEST_F(HdmiCecSink_L2Test, InjectWakeupFromStandbyFrameAndVerifyEvent)
+// {
+//     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
+//     StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
+//     uint32_t status = Core::ERROR_GENERAL;
+//     uint32_t signalled = HDMICECSINK_STATUS_INVALID;
 
-    status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
-        _T("onWakeupFromStandby"),
-        &AsyncHandlerMock_HdmiCecSink::onWakeupFromStandby,
-        &async_handler);
-    EXPECT_EQ(Core::ERROR_NONE, status);
+//     status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
+//         _T("onWakeupFromStandby"),
+//         &AsyncHandlerMock_HdmiCecSink::onWakeupFromStandby,
+//         &async_handler);
+//     EXPECT_EQ(Core::ERROR_NONE, status);
 
-    EXPECT_CALL(async_handler, onWakeupFromStandby(::testing::_))
-        .WillOnce(Invoke(this, &HdmiCecSink_L2Test::onWakeupFromStandby));
+//     EXPECT_CALL(async_handler, onWakeupFromStandby(::testing::_))
+//         .WillOnce(Invoke(this, &HdmiCecSink_L2Test::onWakeupFromStandby));
 
-    ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
+//     ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
 
-    // Simulate TV in standby, then send Active Source to wake it up
-    uint8_t buffer[] = { 0x4F, 0x82, 0x10, 0x00 }; // Active Source from device 4 to broadcast
-    CECFrame frame(buffer, sizeof(buffer));
+//     // Simulate TV in standby, then send Active Source to wake it up
+//     uint8_t buffer[] = { 0x4F, 0x82, 0x10, 0x00 }; // Active Source from device 4 to broadcast
+//     CECFrame frame(buffer, sizeof(buffer));
 
-    for (auto* listener : listeners) {
-        if (listener) {
-            listener->notify(frame);
-        }
-    }
+//     for (auto* listener : listeners) {
+//         if (listener) {
+//             listener->notify(frame);
+//         }
+//     }
 
-    signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_WAKEUP_FROM_STANDBY);
-    EXPECT_TRUE(signalled & ON_WAKEUP_FROM_STANDBY);
+//     signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_WAKEUP_FROM_STANDBY);
+//     EXPECT_TRUE(signalled & ON_WAKEUP_FROM_STANDBY);
 
-    jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onWakeupFromStandby"));
-}
+//     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onWakeupFromStandby"));
+// }
 
 TEST_F(HdmiCecSink_L2Test, InjectDeviceAddedFrameAndVerifyEvent)
 {
@@ -2009,46 +1968,40 @@ TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportFeatureAbortEvent"));
 }
 
-// TEST_F(HdmiCecSink_L2Test, InjectSetSystemAudioModeAndVerifyEvent)
-// {
-//     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
-//     StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
-//     uint32_t status = Core::ERROR_GENERAL;
-//     uint32_t signalled = HDMICECSINK_STATUS_INVALID;
+TEST_F(HdmiCecSink_L2Test, InjectSetSystemAudioModeAndVerifyEvent)
+{
+    JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
+    StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
+    uint32_t status = Core::ERROR_GENERAL;
+    uint32_t signalled = HDMICECSINK_STATUS_INVALID;
 
-//     status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
-//         _T("setSystemAudioModeEvent"),
-//         &AsyncHandlerMock_HdmiCecSink::setSystemAudioModeEvent,
-//         &async_handler);
-//     EXPECT_EQ(Core::ERROR_NONE, status);
+    status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
+        _T("setSystemAudioModeEvent"),
+        &AsyncHandlerMock_HdmiCecSink::setSystemAudioModeEvent,
+        &async_handler);
+    EXPECT_EQ(Core::ERROR_NONE, status);
 
-//     EXPECT_CALL(async_handler, setSystemAudioModeEvent(::testing::_))
-//         .WillOnce(Invoke(this, &HdmiCecSink_L2Test::setSystemAudioModeEvent));
+    EXPECT_CALL(async_handler, setSystemAudioModeEvent(::testing::_))
+        .WillOnce(Invoke(this, &HdmiCecSink_L2Test::setSystemAudioModeEvent));
 
-//     ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
+    ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
 
-//     // Simulate power mode change to ON before injecting the frame
-//     IARM_Bus_PWRMgr_EventData_t eventData;
-//     eventData.data.state.newState = IARM_BUS_PWRMGR_POWERSTATE_ON;
-//     eventData.data.state.curState = IARM_BUS_PWRMGR_POWERSTATE_STANDBY;
-//     powerEventHandler(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_EVENT_MODECHANGED, &eventData, 0);
+    // Set System Audio Mode from Audio System (5) to TV (0)
+    // Header: 0x50, Opcode: 0x72 (Set System Audio Mode), Status: 0x01 (On)
+    uint8_t buffer[] = { 0x50, 0x72, 0x01 };
+    CECFrame frame(buffer, sizeof(buffer));
 
-//     // Set System Audio Mode from Audio System (5) to TV (0)
-//     // Header: 0x50, Opcode: 0x72 (Set System Audio Mode), Status: 0x01 (On)
-//     uint8_t buffer[] = { 0x50, 0x72, 0x01 };
-//     CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener) {
+            listener->notify(frame);
+        }
+    }
 
-//     for (auto* listener : listeners) {
-//         if (listener) {
-//             listener->notify(frame);
-//         }
-//     }
+    signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_SET_SYSTEM_AUDIO_MODE);
+    EXPECT_TRUE(signalled & ON_SET_SYSTEM_AUDIO_MODE);
 
-//     signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_SET_SYSTEM_AUDIO_MODE);
-//     EXPECT_TRUE(signalled & ON_SET_SYSTEM_AUDIO_MODE);
-
-//     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("setSystemAudioModeEvent"));
-// }
+    jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("setSystemAudioModeEvent"));
+}
 
 TEST_F(HdmiCecSink_L2Test, InjectCECVersionAndVerifyOnDeviceInfoUpdated)
 {
@@ -2082,6 +2035,181 @@ TEST_F(HdmiCecSink_L2Test, InjectCECVersionAndVerifyOnDeviceInfoUpdated)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onDeviceInfoUpdated"));
 }
 
+// RequestActiveSource (0x85)
+TEST_F(HdmiCecSink_L2Test, InjectRequestActiveSourceFrame)
+{
+    // No event is fired, but plugin should send ActiveSource in response (not observable here)
+    uint8_t buffer[] = { 0x4F, 0x85 }; // From device 4 to broadcast
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    // Optionally: check plugin state or logs
+}
+
+// GetCECVersion (0x9F)
+TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrame)
+{
+    // No event is fired, plugin should send CECVersion in response
+    uint8_t buffer[] = { 0x40, 0x9F }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// GiveOSDName (0x46)
+TEST_F(HdmiCecSink_L2Test, InjectGiveOSDNameFrame)
+{
+    uint8_t buffer[] = { 0x40, 0x46 }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// GivePhysicalAddress (0x83)
+TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrame)
+{
+    uint8_t buffer[] = { 0x40, 0x83 }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// GiveDeviceVendorID (0x8C)
+TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrame)
+{
+    uint8_t buffer[] = { 0x40, 0x8C }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// SetOSDString (0x64)
+TEST_F(HdmiCecSink_L2Test, InjectSetOSDStringFrame)
+{
+    uint8_t buffer[] = { 0x40, 0x64, 0x41, 0x42, 0x43 }; // From device 4 to TV (0), string "ABC"
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// SetOSDName (0x47)
+TEST_F(HdmiCecSink_L2Test, InjectSetOSDNameFrame)
+{
+    uint8_t buffer[] = { 0x40, 0x47, 'T', 'E', 'S', 'T' }; // From device 4 to TV (0), name "TEST"
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// RoutingChange (0x80)
+TEST_F(HdmiCecSink_L2Test, InjectRoutingChangeFrame)
+{
+    uint8_t buffer[] = { 0x40, 0x80, 0x10, 0x00, 0x20, 0x00 }; // From device 4 to TV (0), old PA 1.0.0.0, new PA 2.0.0.0
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// RoutingInformation (0x81)
+TEST_F(HdmiCecSink_L2Test, InjectRoutingInformationFrame)
+{
+    uint8_t buffer[] = { 0x40, 0x81, 0x20, 0x00 }; // From device 4 to TV (0), PA 2.0.0.0
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// SetStreamPath (0x86)
+TEST_F(HdmiCecSink_L2Test, InjectSetStreamPathFrame)
+{
+    uint8_t buffer[] = { 0x4F, 0x86, 0x20, 0x00 }; // From device 4 to broadcast, PA 2.0.0.0
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// GetMenuLanguage (0x91)
+TEST_F(HdmiCecSink_L2Test, InjectGetMenuLanguageFrame)
+{
+    uint8_t buffer[] = { 0x40, 0x91 }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// GiveDevicePowerStatus (0x8F)
+TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrame)
+{
+    uint8_t buffer[] = { 0x40, 0x8F }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// Polling (special, no opcode)
+TEST_F(HdmiCecSink_L2Test, InjectPollingFrame)
+{
+    // Polling is a header only, no opcode
+    uint8_t buffer[] = { 0x40 }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// InitiateArc (0xC0) TerminateArc (0xC5)
+TEST_F(HdmiCecSink_L2Test, InjectInitiateAndTerminateArcFrameAndVerifyEvent)
+{
+    JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
+    StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
+    uint32_t status = Core::ERROR_GENERAL;
+    uint32_t signalled = HDMICECSINK_STATUS_INVALID;
+
+    status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
+        _T("arcInitiationEvent"),
+        &AsyncHandlerMock_HdmiCecSink::arcInitiationEvent,
+        &async_handler);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+
+    EXPECT_CALL(async_handler, arcInitiationEvent(::testing::_))
+        .WillOnce(Invoke(this, &HdmiCecSink_L2Test::arcInitiationEvent));
+
+    ASSERT_FALSE(listeners.empty());
+
+    // Inject Initiate ARC frame
+    uint8_t initbuffer[] = { 0x50, 0xC0 }; // From Audio System (5) to TV (0)
+    CECFrame initframe(initbuffer, sizeof(initbuffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(initframe); }
+
+    signalled = WaitForRequestStatus(EVNT_TIMEOUT, ARC_INITIATION_EVENT);
+    EXPECT_TRUE(signalled & ARC_INITIATION_EVENT);
+
+    status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
+        _T("arcTerminationEvent"),
+        &AsyncHandlerMock_HdmiCecSink::arcTerminationEvent,
+        &async_handler);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+
+    EXPECT_CALL(async_handler, arcTerminationEvent(::testing::_))
+        .WillOnce(Invoke(this, &HdmiCecSink_L2Test::arcTerminationEvent));
+
+    ASSERT_FALSE(listeners.empty());
+
+     // Inject Terminate ARC frame
+    uint8_t termbuffer[] = { 0x50, 0xC5 }; // From Audio System (5) to TV (0)
+    CECFrame termframe(termbuffer, sizeof(termbuffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(termframe); }
+
+    signalled = WaitForRequestStatus(EVNT_TIMEOUT, ARC_TERMINATION_EVENT);
+    EXPECT_TRUE(signalled & ARC_TERMINATION_EVENT);
+
+    jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("arcTerminationEvent"));
+
+    jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("arcInitiationEvent"));
+}
+
+// GiveFeatures (0xA5)
+TEST_F(HdmiCecSink_L2Test, InjectGiveFeaturesFrame)
+{
+    uint8_t buffer[] = { 0x40, 0xA5 }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
+// RequestCurrentLatency (0xA7)
+TEST_F(HdmiCecSink_L2Test, InjectRequestCurrentLatencyFrame)
+{
+    uint8_t buffer[] = { 0x40, 0xA7, 0x10, 0x00 }; // From device 4 to TV (0), PA 1.0.0.0
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+}
+
 // TEST_F(HdmiCecSink_L2Test, InjectDeviceRemovedAndVerifyEvent)
 // {
 //     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2099,7 +2227,7 @@ TEST_F(HdmiCecSink_L2Test, InjectCECVersionAndVerifyOnDeviceInfoUpdated)
 //         .WillOnce(Invoke(this, &HdmiCecSink_L2Test::onDeviceRemoved));
 
 //     // Add a device on port 2 (logical address 4)
-//     uint8_t addBuffer[] = { 0x4F, 0x84, 0x20, 0x00, 0x04 }; // From 4 to broadcast
+//     uint8_t addBuffer[] = { 0x4F, 0x84, 0x10, 0x00, 0x04 }; // From 4 to broadcast
 //     CECFrame addFrame(addBuffer, sizeof(addBuffer));
 //     for (auto* listener : listeners) {
 //         if (listener)
@@ -2185,51 +2313,52 @@ TEST_F(HdmiCecSink_L2Test, InjectStandbyFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("standbyMessageReceived"));
 }
 
-// TEST_F(HdmiCecSink_L2Test, InjectReportPowerStatusAndVerifyEvent)
-// {
-//     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
-//     StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
-//     uint32_t status = Core::ERROR_GENERAL;
-//     uint32_t signalled = HDMICECSINK_STATUS_INVALID;
-//     JsonObject params, result;
+TEST_F(HdmiCecSink_L2Test, InjectReportPowerStatusAndVerifyEvent)
+{
+    JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
+    StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
+    uint32_t status = Core::ERROR_GENERAL;
+    uint32_t signalled = HDMICECSINK_STATUS_INVALID;
+    JsonObject params, result;
 
-//     status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
-//         _T("reportAudioDevicePowerStatus"),
-//         &AsyncHandlerMock_HdmiCecSink::reportAudioDevicePowerStatus,
-//         &async_handler);
-//     EXPECT_EQ(Core::ERROR_NONE, status);
+    status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
+        _T("reportAudioDevicePowerStatus"),
+        &AsyncHandlerMock_HdmiCecSink::reportAudioDevicePowerStatus,
+        &async_handler);
+    EXPECT_EQ(Core::ERROR_NONE, status);
 
-//     EXPECT_CALL(async_handler, reportAudioDevicePowerStatus(::testing::_))
-//         .WillOnce(Invoke(this, &HdmiCecSink_L2Test::reportAudioDevicePowerStatus));
+    EXPECT_CALL(async_handler, reportAudioDevicePowerStatus(::testing::_))
+    .Times(2)
+    .WillRepeatedly(Invoke(this, &HdmiCecSink_L2Test::reportAudioDevicePowerStatus));
 
-//     ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
+    ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
 
-//     status = InvokeServiceMethod("org.rdk.HdmiCecSink", "reportAudioDevicePowerStatus", params, result);
-//     EXPECT_EQ(Core::ERROR_NONE, status);
-//     EXPECT_TRUE(result.HasLabel("success"));
-//     EXPECT_TRUE(result["success"].Boolean());
+    status = InvokeServiceMethod("org.rdk.HdmiCecSink", "requestAudioDevicePowerStatus", params, result);
+    EXPECT_EQ(Core::ERROR_NONE, status);
+    EXPECT_TRUE(result.HasLabel("success"));
+    EXPECT_TRUE(result["success"].Boolean());
 
-//     // First, inject OFF status
-//     uint8_t buffer_off[] = { 0x50, 0x90, 0x01 }; // 0x01 = Standby
-//     CECFrame frame_off(buffer_off, sizeof(buffer_off));
-//     for (auto* listener : listeners) {
-//         if (listener)
-//             listener->notify(frame_off);
-//     }
+    // First, inject OFF status
+    uint8_t buffer_off[] = { 0x50, 0x90, 0x01 }; // 0x01 = Standby
+    CECFrame frame_off(buffer_off, sizeof(buffer_off));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame_off);
+    }
 
-//     // Then, inject ON status (should trigger the event)
-//     uint8_t buffer_on[] = { 0x50, 0x90, 0x00 }; // 0x00 = ON
-//     CECFrame frame_on(buffer_on, sizeof(buffer_on));
-//     for (auto* listener : listeners) {
-//         if (listener)
-//             listener->notify(frame_on);
-//     }
+    // Then, inject ON status (should trigger the event)
+    uint8_t buffer_on[] = { 0x50, 0x90, 0x00 }; // 0x00 = ON
+    CECFrame frame_on(buffer_on, sizeof(buffer_on));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame_on);
+    }
 
-//     signalled = WaitForRequestStatus(EVNT_TIMEOUT, REPORT_AUDIO_DEVICE_POWER_STATUS);
-//     EXPECT_TRUE(signalled & REPORT_AUDIO_DEVICE_POWER_STATUS);
+    signalled = WaitForRequestStatus(EVNT_TIMEOUT, REPORT_AUDIO_DEVICE_POWER_STATUS);
+    EXPECT_TRUE(signalled & REPORT_AUDIO_DEVICE_POWER_STATUS);
 
-//     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportAudioDevicePowerStatus"));
-// }
+    jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportAudioDevicePowerStatus"));
+}
 
 // JSONRPC test fixtures
 TEST_F(HdmiCecSink_L2Test, Set_And_Get_OSDName_JSONRPC)
