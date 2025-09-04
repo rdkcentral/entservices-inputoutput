@@ -41,6 +41,8 @@
 #include "UtilsLogging.h"
 #include <interfaces/IPowerManager.h>
 #include "PowerManagerInterface.h"
+#include "host.hpp"
+
 
 using namespace WPEFramework;
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
