@@ -482,7 +482,7 @@ private:
 		// As the registration/unregistration of notifications is realized by the class PluginHost::JSONRPC,
 		// this class exposes a public method called, Notify(), using this methods, all subscribed clients
 		// will receive a JSONRPC message as a notification, in case this method is called.
-        class HdmiCecSink : public PluginHost::IPlugin, public PluginHost::JSONRPC {
+        class HdmiCecSink : public PluginHost::IPlugin, public PluginHost::JSONRPC, device::Host::IHdmiInEvents {
 
 		enum {
 			POLL_THREAD_STATE_NONE,
@@ -530,6 +530,7 @@ private:
             virtual const string Initialize(PluginHost::IShell* shell) override;
             virtual void Deinitialize(PluginHost::IShell* service) override;
             virtual string Information() const override { return {}; }
+            virtual void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
             static HdmiCecSink* _instance;
 			CECDeviceParams deviceList[16];
 			std::vector<HdmiPortMap> hdmiInputs;
