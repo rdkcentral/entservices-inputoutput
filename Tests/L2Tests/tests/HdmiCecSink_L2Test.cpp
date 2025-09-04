@@ -2297,14 +2297,6 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrame)
     for (auto* listener : listeners) { if (listener) listener->notify(frame); }
 }
 
-// Polling (special, no opcode)
-TEST_F(HdmiCecSink_L2Test, InjectPollingFrame)
-{
-    // Polling is a header only, no opcode
-    uint8_t buffer[] = { 0x40 }; // From device 4 to TV (0)
-    CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
-}
 
 // InitiateArc (0xC0) TerminateArc (0xC5)
 TEST_F(HdmiCecSink_L2Test, InjectInitiateAndTerminateArcFrameAndVerifyEvent)
@@ -2613,13 +2605,6 @@ TEST_F(HdmiCecSink_L2Test, RequestShortAudioDescriptor_JSONRPC)
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
     uint32_t status = Core::ERROR_GENERAL;
     JsonObject params, result;
-
-    // EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_, ::testing::_))
-    //     .WillRepeatedly(::testing::Invoke(
-    //         [&](const LogicalAddress& to, const CECFrame& frame, int timeout) {
-    //             EXPECT_EQ(to.toInt(), LogicalAddress::AUDIO_SYSTEM);
-    //             EXPECT_EQ(timeout, 1000);
-    //         }));
 
     status = InvokeServiceMethod("org.rdk.HdmiCecSink", "requestShortAudioDescriptor", params, result);
     EXPECT_EQ(Core::ERROR_NONE, status);
@@ -3093,13 +3078,6 @@ TEST_F(HdmiCecSink_L2Test, SetActivePath_JSONRPC)
 
     params["activePath"] = "2.0.0.0";
 
-    // EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_, ::testing::_))
-    //     .WillRepeatedly(::testing::Invoke(
-    //         [&](const LogicalAddress& to, const CECFrame& frame, int timeout) {
-    //             EXPECT_EQ(to.toInt(), LogicalAddress::BROADCAST);
-    //             EXPECT_GT(timeout, 0);
-    //         }));
-
     status = InvokeServiceMethod("org.rdk.HdmiCecSink", "setActivePath", params, result);
     EXPECT_EQ(Core::ERROR_NONE, status);
     EXPECT_TRUE(result.HasLabel("success"));
@@ -3148,13 +3126,6 @@ TEST_F(HdmiCecSink_L2Test, SetRoutingChange_JSONRPC)
     params["newPort"] = "TV";
 
     std::this_thread::sleep_for(std::chrono::seconds(30));
-
-    // EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_, ::testing::_))
-    //     .WillRepeatedly(::testing::Invoke(
-    //         [&](const LogicalAddress& to, const CECFrame& frame, int timeout) {
-    //             EXPECT_EQ(to.toInt(), LogicalAddress::BROADCAST);
-    //             EXPECT_GT(timeout, 0);
-    //         }));
 
     status = InvokeServiceMethod("org.rdk.HdmiCecSink", "setRoutingChange", params, result);
     EXPECT_EQ(Core::ERROR_NONE, status);
@@ -3406,7 +3377,6 @@ TEST_F(HdmiCecSink_L2Test, InjectAbortFrame)
         if (listener)
             listener->notify(frame);
     }
-    // Optionally: check logs or mock for FeatureAbort sent
 }
 
 TEST_F(HdmiCecSink_L2Test, InjectPollingFrame)
