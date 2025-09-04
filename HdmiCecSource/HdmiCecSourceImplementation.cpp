@@ -390,7 +390,12 @@ namespace WPEFramework
            }
            _registeredEventHandlers = false;
 
+#ifdef IO_HCEC_ENABLE_IARM
            DeinitializeIARM();
+#else
+           device::Host::getInstance().UnRegister(this);
+#endif /* IO_HCEC_ENABLE_IARM */
+
     }
 
     Core::hresult HdmiCecSourceImplementation::Configure(PluginHost::IShell* service)
@@ -409,7 +414,9 @@ namespace WPEFramework
             logicalAddress = 0xFF;
 
             //CEC plugin functionalities will only work if CECmgr is available. If plugin Initialize failure upper layer will call dtor directly.
+#ifdef IO_HCEC_ENABLE_IARM
             InitializeIARM();
+#endif /* IO_HCEC_ENABLE_IARM */
             InitializePowerManager(service);
 
             // load persistence setting
@@ -418,6 +425,11 @@ namespace WPEFramework
             {
                 //TODO(MROLLINS) this is probably per process so we either need to be running in our own process or be carefull no other plugin is calling it
                 device::Manager::Initialize();
+
+#ifndef IO_HCEC_ENABLE_IARM
+                device::Host::getInstance().Register(this, "WPE[HdmiCecSource]");
+#endif /* IO_HCEC_ENABLE_IARM */
+
                 std::string strVideoPort = device::Host::getInstance().getDefaultVideoPortName();
                 device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(strVideoPort.c_str());
                 if (vPort.isDisplayConnected())
@@ -759,6 +771,7 @@ namespace WPEFramework
             LOGINFO("Exit threadHotPlugEventHandler \r\n");
         }
 
+#ifdef IO_HCEC_ENABLE_IARM
        void HdmiCecSourceImplementation::dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
        {
             if(!HdmiCecSourceImplementation::_instance  || !_instance->cecEnableStatus)
@@ -779,7 +792,24 @@ namespace WPEFramework
                 }
             }
        }
+#else
+       void HdmiCecSourceImplementation::OnDisplayHDMIHotPlug(dsDisplayEvent_t displayEvent)
+       {
+           LOGINFO("OnDisplayHDMIHotPlug : displayEvent = %d ", displayEvent);
 
+           if(!HdmiCecSourceImplementation::_instance  || !_instance->cecEnableStatus)
+           {
+               LOGINFO("Return from dsHdmiEventHandler due HdmiCecSourceImplementation::_instance:%p cecEnableStatus:%d  \r\n", HdmiCecSourceImplementation::_instance, _instance->cecEnableStatus);
+               return;
+           }
+
+           int hdmi_hotplug_event = (int) displayEvent;
+           LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG  event data:%d \r\n", hdmi_hotplug_event);
+           std::thread worker(threadHotPlugEventHandler,hdmi_hotplug_event);
+           worker.detach();
+
+       }
+#endif /* IO_HCEC_ENABLE_IARM */
        void HdmiCecSourceImplementation::onPowerModeChanged(const PowerState currentState, const PowerState newState)
        {
             if(!HdmiCecSourceImplementation::_instance)

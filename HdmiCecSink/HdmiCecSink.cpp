@@ -753,7 +753,11 @@ namespace WPEFramework
 
            int err;
            dsHdmiInGetNumberOfInputsParam_t hdmiInput;
+#ifdef IO_HCEC_ENABLE_IARM
            InitializeIARM();
+#else
+           device::Host::getInstance().Register(this, "WPE[HdmiCecSink]");
+#endif /* IO_HCEC_ENABLE_IARM */
            m_sendKeyEventThreadExit = false;
            m_sendKeyEventThread = std::thread(threadSendKeyEvent);
 
@@ -879,7 +883,12 @@ namespace WPEFramework
 	    }
 
             HdmiCecSink::_instance = nullptr;
-            DeinitializeIARM();
+#ifdef IO_HCEC_ENABLE_IARM
+           DeinitializeIARM();
+#else
+           device::Host::getInstance().UnRegister(this);
+#endif /* IO_HCEC_ENABLE_IARM */
+
 	    LOGWARN(" HdmiCecSink Deinitialize() Done");
        }
 
@@ -920,6 +929,7 @@ namespace WPEFramework
            }
        }
 
+#ifdef IO_HCEC_ENABLE_IARM
        void HdmiCecSink::dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
        {
             if(!HdmiCecSink::_instance)
@@ -934,6 +944,16 @@ namespace WPEFramework
                 HdmiCecSink::_instance->onHdmiHotPlug(portId,isHdmiConnected);
             }
        }
+#else
+        void HdmiCecSink::OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected)
+        {
+            if(!HdmiCecSink::_instance)
+                return;
+
+            LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG event port: %d isConnected: %d \r\n", port, isConnected);
+            HdmiCecSink::_instance->onHdmiHotPlug((int) port, (int) isConnected);
+        }
+#endif /* IO_HCEC_ENABLE_IARM */
 
        void HdmiCecSink::onPowerModeChanged(const PowerState currentState, const PowerState newState)
        {
