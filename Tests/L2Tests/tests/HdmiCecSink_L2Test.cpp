@@ -679,6 +679,8 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
     status = ActivateService("org.rdk.PowerManager");
     EXPECT_EQ(Core::ERROR_NONE, status);
 
+    createFile("/tmp/pwrmgr_restarted", "1");
+
     status = ActivateService("org.rdk.HdmiCecSink");
     EXPECT_EQ(Core::ERROR_NONE, status);
 }
