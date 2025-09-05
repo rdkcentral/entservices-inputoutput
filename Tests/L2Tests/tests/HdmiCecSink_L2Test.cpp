@@ -20,8 +20,8 @@
 #include "L2TestsMock.h"
 #include "MfrMock.h"
 #include "PowerManagerHalMock.h"
-#include "deepSleepMgr.h"
 #include "PowerManagerMock.h"
+#include "deepSleepMgr.h"
 #include <condition_variable>
 #include <fstream>
 #include <gmock/gmock.h>
@@ -312,7 +312,6 @@ public:
     void onImageViewOnMsg(const JsonObject& message);
     void onInActiveSource(const JsonObject& message);
     void onTextViewOnMsg(const JsonObject& message);
-    void onWakeupFromStandby(const JsonObject& message);
     void reportAudioDeviceConnectedStatus(const JsonObject& message);
     void reportAudioStatusEvent(const JsonObject& message);
     void reportFeatureAbortEvent(const JsonObject& message);
@@ -512,6 +511,206 @@ HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
     mfrMock::Delete();
 }
 
+class HdmiCecSink_L2Test_STANDBY : public L2TestMocks {
+protected:
+    HdmiCecSink_L2Test_STANDBY();
+    virtual ~HdmiCecSink_L2Test_STANDBY() override;
+
+public:
+    uint32_t CreateHdmiCecSinkInterfaceObject();
+    uint32_t WaitForRequestStatus(uint32_t timeout_ms, HdmiCecSinkL2test_async_events_t expected_status);
+    void onWakeupFromStandby(const JsonObject& message);
+
+protected:
+    Exchange::IHdmiCecSink* m_cecSinkPlugin = nullptr;
+    PluginHost::IShell* m_controller_cecSink = nullptr;
+    Core::Sink<HdmiCecSinkNotificationHandler> m_notificationHandler;
+    IARM_EventHandler_t dsHdmiEventHandler;
+    IARM_EventHandler_t powerEventHandler = nullptr;
+    FrameListener* registeredListener = nullptr;
+    std::vector<FrameListener*> listeners;
+
+    Core::ProxyType<RPC::InvokeServerType<1, 0, 4>> HdmiCecSink_Engine;
+    Core::ProxyType<RPC::CommunicatorClient> HdmiCecSink_Client;
+
+private:
+    std::mutex m_mutex;
+    std::condition_variable m_condition_variable;
+    uint32_t m_event_signalled = HDMICECSINK_STATUS_INVALID;
+};
+
+HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
+    : L2TestMocks()
+{
+    uint32_t status = Core::ERROR_GENERAL;
+    removeFile("/tmp/pwrmgr_restarted");
+    createFile("/etc/device.properties", "RDK_PROFILE=TV");
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_INIT())
+        .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_INIT())
+        .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](PWRMgr_PowerState_t* powerState) {
+                *powerState = PWRMGR_POWERSTATE_ON; // Default to ON state
+                return PWRMGR_SUCCESS;
+            }));
+
+    ON_CALL(*p_rfcApiImplMock, getRFCParameter(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [](char* pcCallerID, const char* pcParameterName, RFC_ParamData_t* pstParamData) {
+                if (strcmp("RFC_DATA_ThermalProtection_POLL_INTERVAL", pcParameterName) == 0) {
+                    strcpy(pstParamData->value, "2");
+                    return WDMP_SUCCESS;
+                } else if (strcmp("RFC_ENABLE_ThermalProtection", pcParameterName) == 0) {
+                    strcpy(pstParamData->value, "true");
+                    return WDMP_SUCCESS;
+                } else if (strcmp("RFC_DATA_ThermalProtection_DEEPSLEEP_GRACE_INTERVAL", pcParameterName) == 0) {
+                    strcpy(pstParamData->value, "6");
+                    return WDMP_SUCCESS;
+                } else if (strcmp("Device.DeviceInfo.X_RDKCENTRAL-COM_RFC.Feature.HdmiCecSink.CECVersion", pcParameterName) == 0) {
+                    strncpy(pstParamData->value, "1.4", sizeof(pstParamData->value));
+                    return WDMP_SUCCESS;
+                } else {
+                    /* The default threshold values will assign, if RFC call failed */
+                    return WDMP_FAILURE;
+                }
+            }));
+
+    EXPECT_CALL(mfrMock::Mock(), mfrSetTempThresholds(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](int high, int critical) {
+                EXPECT_EQ(high, 100);
+                EXPECT_EQ(critical, 110);
+                return mfrERR_NONE;
+            }));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](PWRMgr_PowerState_t* powerState) {
+                *powerState = PWRMGR_POWERSTATE_OFF; // by default over boot up, return PowerState OFF
+                return PWRMGR_SUCCESS;
+            }));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](PWRMgr_PowerState_t powerState) {
+                // All tests are run without settings file
+                // so default expected power state is ON
+                return PWRMGR_SUCCESS;
+            }));
+
+    EXPECT_CALL(mfrMock::Mock(), mfrGetTemperature(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&](mfrTemperatureState_t* curState, int* curTemperature, int* wifiTemperature) {
+                *curTemperature = 90; // safe temperature
+                *curState = (mfrTemperatureState_t)0;
+                *wifiTemperature = 25;
+                return mfrERR_NONE;
+            }));
+
+    ON_CALL(*p_connectionMock, poll(::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](const LogicalAddress& from, const Throw_e& doThrow) {
+                throw CECNoAckException();
+            }));
+
+    EXPECT_CALL(*p_libCCECMock, getPhysicalAddress(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&](uint32_t* physAddress) {
+                *physAddress = (uint32_t)0x12345678;
+            }));
+
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const DataBlock&>(::testing::_)))
+        .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+
+    ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
+                if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
+                    EXPECT_TRUE(handler != nullptr);
+                    dsHdmiEventHandler = handler;
+                }
+                return IARM_RESULT_SUCCESS;
+            }));
+
+    ON_CALL(*p_connectionMock, addFrameListener(::testing::_))
+        .WillByDefault([this](FrameListener* listener) {
+            printf("[TEST] addFrameListener called with address: %p\n", static_cast<void*>(listener));
+            this->listeners.push_back(listener);
+        });
+
+    ON_CALL(*p_connectionMock, open())
+        .WillByDefault(::testing::Return());
+
+    ON_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
+        .WillByDefault(
+            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
+                if (strcmp(methodName, IARM_BUS_PWRMGR_API_GetPowerState) == 0) {
+                    auto* param = static_cast<IARM_Bus_PWRMgr_GetPowerState_Param_t*>(arg);
+                    param->curState = IARM_BUS_PWRMGR_POWERSTATE_ON;
+                }
+                if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetNumberOfInputs) == 0) {
+                    auto* param = static_cast<dsHdmiInGetNumberOfInputsParam_t*>(arg);
+                    param->result = dsERR_NONE;
+                    param->numHdmiInputs = 3;
+                }
+                if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetStatus) == 0) {
+                    auto* param = static_cast<dsHdmiInGetStatusParam_t*>(arg);
+                    param->result = dsERR_NONE;
+                    param->status.isPortConnected[1] = 1;
+                }
+                if (strcmp(methodName, IARM_BUS_DSMGR_API_dsGetHDMIARCPortId) == 0) {
+                    auto* param = static_cast<dsGetHDMIARCPortIdParam_t*>(arg);
+                    param->portId = 1;
+                }
+                return IARM_RESULT_SUCCESS;
+            });
+
+    /* Activate plugin in constructor */
+    status = ActivateService("org.rdk.PowerManager");
+    EXPECT_EQ(Core::ERROR_NONE, status);
+
+    status = ActivateService("org.rdk.HdmiCecSink");
+    EXPECT_EQ(Core::ERROR_NONE, status);
+}
+
+HdmiCecSink_L2Test_STANDBY::~HdmiCecSink_L2Test_STANDBY()
+{
+    uint32_t status = Core::ERROR_GENERAL;
+
+    ON_CALL(*p_connectionMock, close())
+        .WillByDefault(::testing::Return());
+
+    sleep(5);
+
+    // Deactivate services in reverse order
+    status = DeactivateService("org.rdk.HdmiCecSink");
+    EXPECT_EQ(Core::ERROR_NONE, status);
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_TERM())
+        .WillOnce(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_TERM())
+        .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
+
+    status = DeactivateService("org.rdk.PowerManager");
+    EXPECT_EQ(Core::ERROR_NONE, status);
+
+    removeFile("/etc/device.properties");
+
+    PowerManagerHalMock::Delete();
+    mfrMock::Delete();
+}
+
 void HdmiCecSink_L2Test::arcInitiationEvent(const JsonObject& message)
 {
     TEST_LOG("arcInitiation event triggered ***\n");
@@ -647,7 +846,7 @@ void HdmiCecSink_L2Test::onTextViewOnMsg(const JsonObject& message)
     m_condition_variable.notify_one();
 }
 
-void HdmiCecSink_L2Test::onWakeupFromStandby(const JsonObject& message)
+void HdmiCecSink_L2Test_STANDBY::onWakeupFromStandby(const JsonObject& message)
 {
     TEST_LOG("onWakeupFromStandby event triggered ***\n");
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -783,6 +982,23 @@ void HdmiCecSink_L2Test::reportAudioDevicePowerStatus(const JsonObject& message)
 }
 
 uint32_t HdmiCecSink_L2Test::WaitForRequestStatus(uint32_t timeout_ms, HdmiCecSinkL2test_async_events_t expected_status)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    auto now = std::chrono::system_clock::now();
+    std::chrono::milliseconds timeout(timeout_ms);
+    uint32_t signalled = HDMICECSINK_STATUS_INVALID;
+
+    while (!(expected_status & m_event_signalled)) {
+        if (m_condition_variable.wait_until(lock, now + timeout) == std::cv_status::timeout) {
+            TEST_LOG("Timeout waiting for request status event");
+            break;
+        }
+    }
+    signalled = m_event_signalled;
+    return signalled;
+}
+
+uint32_t HdmiCecSink_L2Test_STANDBY::WaitForRequestStatus(uint32_t timeout_ms, HdmiCecSinkL2test_async_events_t expected_status)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     auto now = std::chrono::system_clock::now();
@@ -2814,7 +3030,10 @@ TEST_F(HdmiCecSink_L2Test, InjectRequestActiveSourceFrame)
     // No event is fired, but plugin should send ActiveSource in response (not observable here)
     uint8_t buffer[] = { 0x4F, 0x85 }; // From device 4 to broadcast
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
     // Optionally: check plugin state or logs
 }
 
@@ -2824,7 +3043,10 @@ TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrame)
     // No event is fired, plugin should send CECVersion in response
     uint8_t buffer[] = { 0x40, 0x9F }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // GiveOSDName (0x46)
@@ -2832,7 +3054,10 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveOSDNameFrame)
 {
     uint8_t buffer[] = { 0x40, 0x46 }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // GivePhysicalAddress (0x83)
@@ -2840,7 +3065,10 @@ TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrame)
 {
     uint8_t buffer[] = { 0x40, 0x83 }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // GiveDeviceVendorID (0x8C)
@@ -2848,7 +3076,10 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrame)
 {
     uint8_t buffer[] = { 0x40, 0x8C }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // SetOSDString (0x64)
@@ -2856,7 +3087,10 @@ TEST_F(HdmiCecSink_L2Test, InjectSetOSDStringFrame)
 {
     uint8_t buffer[] = { 0x40, 0x64, 0x41, 0x42, 0x43 }; // From device 4 to TV (0), string "ABC"
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // SetOSDName (0x47)
@@ -2864,7 +3098,10 @@ TEST_F(HdmiCecSink_L2Test, InjectSetOSDNameFrame)
 {
     uint8_t buffer[] = { 0x40, 0x47, 'T', 'E', 'S', 'T' }; // From device 4 to TV (0), name "TEST"
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // RoutingChange (0x80)
@@ -2872,7 +3109,10 @@ TEST_F(HdmiCecSink_L2Test, InjectRoutingChangeFrame)
 {
     uint8_t buffer[] = { 0x40, 0x80, 0x10, 0x00, 0x20, 0x00 }; // From device 4 to TV (0), old PA 1.0.0.0, new PA 2.0.0.0
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // RoutingInformation (0x81)
@@ -2880,7 +3120,10 @@ TEST_F(HdmiCecSink_L2Test, InjectRoutingInformationFrame)
 {
     uint8_t buffer[] = { 0x40, 0x81, 0x20, 0x00 }; // From device 4 to TV (0), PA 2.0.0.0
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // SetStreamPath (0x86)
@@ -2888,7 +3131,10 @@ TEST_F(HdmiCecSink_L2Test, InjectSetStreamPathFrame)
 {
     uint8_t buffer[] = { 0x4F, 0x86, 0x20, 0x00 }; // From device 4 to broadcast, PA 2.0.0.0
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // GetMenuLanguage (0x91)
@@ -2896,7 +3142,10 @@ TEST_F(HdmiCecSink_L2Test, InjectGetMenuLanguageFrame)
 {
     uint8_t buffer[] = { 0x40, 0x91 }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // GiveDevicePowerStatus (0x8F)
@@ -2904,9 +3153,11 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrame)
 {
     uint8_t buffer[] = { 0x40, 0x8F }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
-
 
 // InitiateArc (0xC0) TerminateArc (0xC5)
 TEST_F(HdmiCecSink_L2Test, InjectInitiateAndTerminateArcFrameAndVerifyEvent)
@@ -2930,7 +3181,10 @@ TEST_F(HdmiCecSink_L2Test, InjectInitiateAndTerminateArcFrameAndVerifyEvent)
     // Inject Initiate ARC frame
     uint8_t initbuffer[] = { 0x50, 0xC0 }; // From Audio System (5) to TV (0)
     CECFrame initframe(initbuffer, sizeof(initbuffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(initframe); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(initframe);
+    }
 
     signalled = WaitForRequestStatus(EVNT_TIMEOUT, ARC_INITIATION_EVENT);
     EXPECT_TRUE(signalled & ARC_INITIATION_EVENT);
@@ -2946,10 +3200,13 @@ TEST_F(HdmiCecSink_L2Test, InjectInitiateAndTerminateArcFrameAndVerifyEvent)
 
     ASSERT_FALSE(listeners.empty());
 
-     // Inject Terminate ARC frame
+    // Inject Terminate ARC frame
     uint8_t termbuffer[] = { 0x50, 0xC5 }; // From Audio System (5) to TV (0)
     CECFrame termframe(termbuffer, sizeof(termbuffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(termframe); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(termframe);
+    }
 
     signalled = WaitForRequestStatus(EVNT_TIMEOUT, ARC_TERMINATION_EVENT);
     EXPECT_TRUE(signalled & ARC_TERMINATION_EVENT);
@@ -2964,7 +3221,10 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveFeaturesFrame)
 {
     uint8_t buffer[] = { 0x40, 0xA5 }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // RequestCurrentLatency (0xA7)
@@ -2972,7 +3232,10 @@ TEST_F(HdmiCecSink_L2Test, InjectRequestCurrentLatencyFrame)
 {
     uint8_t buffer[] = { 0x40, 0xA7, 0x10, 0x00 }; // From device 4 to TV (0), PA 1.0.0.0
     CECFrame frame(buffer, sizeof(buffer));
-    for (auto* listener : listeners) { if (listener) listener->notify(frame); }
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 TEST_F(HdmiCecSink_L2Test, DISABLED_InjectDeviceRemovedAndVerifyEvent)
@@ -3093,8 +3356,8 @@ TEST_F(HdmiCecSink_L2Test, InjectReportPowerStatusAndVerifyEvent)
     EXPECT_EQ(Core::ERROR_NONE, status);
 
     EXPECT_CALL(async_handler, reportAudioDevicePowerStatus(::testing::_))
-    .Times(2)
-    .WillRepeatedly(Invoke(this, &HdmiCecSink_L2Test::reportAudioDevicePowerStatus));
+        .Times(2)
+        .WillRepeatedly(Invoke(this, &HdmiCecSink_L2Test::reportAudioDevicePowerStatus));
 
     ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
 
@@ -3191,167 +3454,12 @@ TEST_F(HdmiCecSink_L2Test, InjectPollingFrame)
     }
 }
 
-TEST_F(HdmiCecSink_L2Test, DISABLED_InjectWakeupFromStandbyFrameAndVerifyEvent)
+TEST_F(HdmiCecSink_L2Test_STANDBY, InjectWakeupFromStandbyFrameAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
     StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
     uint32_t status = Core::ERROR_GENERAL;
     uint32_t signalled = HDMICECSINK_STATUS_INVALID;
-    {
-        // Deactivate plugins to change the state of power state to standby
-        ON_CALL(*p_connectionMock, close())
-            .WillByDefault(::testing::Return());
-
-        sleep(5);
-
-        // Deactivate services in reverse order
-        status = DeactivateService("org.rdk.HdmiCecSink");
-        EXPECT_EQ(Core::ERROR_NONE, status);
-
-        EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_TERM())
-            .WillOnce(::testing::Return(PWRMGR_SUCCESS));
-
-        EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_TERM())
-            .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
-
-        status = DeactivateService("org.rdk.PowerManager");
-        EXPECT_EQ(Core::ERROR_NONE, status);
-
-        PowerManagerHalMock::Delete();
-        mfrMock::Delete();
-
-        // Reactivate the PLugins with STANDBY powerstate
-        EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_INIT())
-            .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
-
-        EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_INIT())
-            .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
-
-        EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
-            .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
-
-        EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
-            .WillRepeatedly(::testing::Invoke(
-                [](PWRMgr_PowerState_t* powerState) {
-                    *powerState = PWRMGR_POWERSTATE_ON; // Default to ON state
-                    return PWRMGR_SUCCESS;
-                }));
-
-        ON_CALL(*p_rfcApiImplMock, getRFCParameter(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [](char* pcCallerID, const char* pcParameterName, RFC_ParamData_t* pstParamData) {
-                    if (strcmp("RFC_DATA_ThermalProtection_POLL_INTERVAL", pcParameterName) == 0) {
-                        strcpy(pstParamData->value, "2");
-                        return WDMP_SUCCESS;
-                    } else if (strcmp("RFC_ENABLE_ThermalProtection", pcParameterName) == 0) {
-                        strcpy(pstParamData->value, "true");
-                        return WDMP_SUCCESS;
-                    } else if (strcmp("RFC_DATA_ThermalProtection_DEEPSLEEP_GRACE_INTERVAL", pcParameterName) == 0) {
-                        strcpy(pstParamData->value, "6");
-                        return WDMP_SUCCESS;
-                    } else if (strcmp("Device.DeviceInfo.X_RDKCENTRAL-COM_RFC.Feature.HdmiCecSink.CECVersion", pcParameterName) == 0) {
-                        strncpy(pstParamData->value, "1.4", sizeof(pstParamData->value));
-                        return WDMP_SUCCESS;
-                    } else {
-                        /* The default threshold values will assign, if RFC call failed */
-                        return WDMP_FAILURE;
-                    }
-                }));
-
-        EXPECT_CALL(mfrMock::Mock(), mfrSetTempThresholds(::testing::_, ::testing::_))
-            .WillRepeatedly(::testing::Invoke(
-                [](int high, int critical) {
-                    EXPECT_EQ(high, 100);
-                    EXPECT_EQ(critical, 110);
-                    return mfrERR_NONE;
-                }));
-
-        EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
-            .WillRepeatedly(::testing::Invoke(
-                [](PWRMgr_PowerState_t powerState) {
-                    // All tests are run without settings file
-                    // so default expected power state is ON
-                    return PWRMGR_SUCCESS;
-                }));
-
-        EXPECT_CALL(mfrMock::Mock(), mfrGetTemperature(::testing::_, ::testing::_, ::testing::_))
-            .WillRepeatedly(::testing::Invoke(
-                [&](mfrTemperatureState_t* curState, int* curTemperature, int* wifiTemperature) {
-                    *curTemperature = 90; // safe temperature
-                    *curState = (mfrTemperatureState_t)0;
-                    *wifiTemperature = 25;
-                    return mfrERR_NONE;
-                }));
-
-        ON_CALL(*p_connectionMock, poll(::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](const LogicalAddress& from, const Throw_e& doThrow) {
-                    throw CECNoAckException();
-                }));
-
-        EXPECT_CALL(*p_libCCECMock, getPhysicalAddress(::testing::_))
-            .WillRepeatedly(::testing::Invoke(
-                [&](uint32_t* physAddress) {
-                    *physAddress = (uint32_t)0x12345678;
-                }));
-
-        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const DataBlock&>(::testing::_)))
-            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
-        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
-            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
-
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsHdmiEventHandler = handler;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                }));
-
-        ON_CALL(*p_connectionMock, addFrameListener(::testing::_))
-            .WillByDefault([this](FrameListener* listener) {
-                printf("[TEST] addFrameListener called with address: %p\n", static_cast<void*>(listener));
-                this->listeners.push_back(listener);
-            });
-
-        ON_CALL(*p_connectionMock, open())
-            .WillByDefault(::testing::Return());
-
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-            .WillByDefault(
-                [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                    if (strcmp(methodName, IARM_BUS_PWRMGR_API_GetPowerState) == 0) {
-                        auto* param = static_cast<IARM_Bus_PWRMgr_GetPowerState_Param_t*>(arg);
-                        param->curState = IARM_BUS_PWRMGR_POWERSTATE_ON;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetNumberOfInputs) == 0) {
-                        auto* param = static_cast<dsHdmiInGetNumberOfInputsParam_t*>(arg);
-                        param->result = dsERR_NONE;
-                        param->numHdmiInputs = 3;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetStatus) == 0) {
-                        auto* param = static_cast<dsHdmiInGetStatusParam_t*>(arg);
-                        param->result = dsERR_NONE;
-                        param->status.isPortConnected[1] = 1;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsGetHDMIARCPortId) == 0) {
-                        auto* param = static_cast<dsGetHDMIARCPortIdParam_t*>(arg);
-                        param->portId = 1;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                });
-
-        /* Activate plugin in constructor */
-        status = ActivateService("org.rdk.PowerManager");
-        EXPECT_EQ(Core::ERROR_NONE, status);
-
-        status = ActivateService("org.rdk.HdmiCecSink");
-        EXPECT_EQ(Core::ERROR_NONE, status);
-
-        sleep(1);
-    }
 
     status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
         _T("onWakeupFromStandby"),
@@ -3360,8 +3468,7 @@ TEST_F(HdmiCecSink_L2Test, DISABLED_InjectWakeupFromStandbyFrameAndVerifyEvent)
     EXPECT_EQ(Core::ERROR_NONE, status);
 
     EXPECT_CALL(async_handler, onWakeupFromStandby(::testing::_))
-    .Times(2)
-    .WillRepeatedly(Invoke(this, &HdmiCecSink_L2Test::onWakeupFromStandby));
+        .WillOnce(Invoke(this, &HdmiCecSink_L2Test_STANDBY::onWakeupFromStandby));
 
     ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
 
