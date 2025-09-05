@@ -151,13 +151,31 @@ string AVInput::Information() const
 
 void AVInput::InitializeDeviceManager()
 {
-    registerDsEventHandlers();
+    try
+        {
+            device::Manager::Initialize();
+            LOGINFO("device::Manager::Initialize success");
+            registerDsEventHandlers();
+        }
+    catch(...)
+        {
+            LOGINFO("device::Manager::Initialize failed");
+        }
+        
 }
 
 void AVInput::DeInitializeDeviceManager()
 {
-    device::Host::getInstance().Unregister(_hdmiEventNotification);
-    device::Host::getInstance().Unregister(_compositeinEventNotification);
+
+    try
+        {
+            device::Manager::DeInitialize();
+            LOGINFO("device::Manager::DeInitialize success");
+        }
+    catch(...)
+        {
+            LOGINFO("device::Manager::DeInitialize failed");
+        }
 }
 
 void AVInput::RegisterAll()
