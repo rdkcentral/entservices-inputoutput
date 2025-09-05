@@ -148,7 +148,6 @@ public:
     void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus);
     void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType);
     void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType);
-    void OnHdmiInAVLatency(int audioDelay, int videoDelay);
 
     /* CompositeInEventNotification */
 

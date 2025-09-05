@@ -113,9 +113,9 @@ AVInput* AVInput::_instance = nullptr;
 
 AVInput::AVInput()
     : PluginHost::JSONRPC()
-    , _registeredDsEventHandlers(false)
-    , m_HdmiInEventsNotification(this) 
+    , m_HdmiInEventsNotification(this)
     , m_CompositeInEventsNotification(this)
+    , _registeredDsEventHandlers(false)
 {
     RegisterAll();
 }
