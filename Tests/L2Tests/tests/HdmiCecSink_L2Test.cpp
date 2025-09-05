@@ -477,9 +477,8 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
 
     struct stat buffer;
     bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
-    printf("[TEST DEBUG] %s: /tmp/pwrmgr_restarted exists = %s\n", 
-       (this->GetParam() ? "Standby fixture" : "Main fixture"), 
-       fileExists ? "YES" : "NO");
+    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n", 
+           fileExists ? "YES" : "NO");
 }
 
 HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
@@ -679,9 +678,8 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
 
     struct stat buffer;
     bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
-    printf("[TEST DEBUG] %s: /tmp/pwrmgr_restarted exists = %s\n", 
-       (this->GetParam() ? "Standby fixture" : "Main fixture"), 
-       fileExists ? "YES" : "NO");
+    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n", 
+           fileExists ? "YES" : "NO");
 }
 
 HdmiCecSink_L2Test_STANDBY::~HdmiCecSink_L2Test_STANDBY()
