@@ -3217,8 +3217,6 @@ TEST_F(HdmiCecSink_L2Test, InjectWakeupFromStandbyFrameAndVerifyEvent)
         status = DeactivateService("org.rdk.PowerManager");
         EXPECT_EQ(Core::ERROR_NONE, status);
 
-        removeFile("/tmp/pwrmgr_restarted");
-
         PowerManagerHalMock::Delete();
         mfrMock::Delete();
 
