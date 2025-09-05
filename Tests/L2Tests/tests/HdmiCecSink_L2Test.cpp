@@ -391,13 +391,6 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
                 return mfrERR_NONE;
             }));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
-        .WillRepeatedly(::testing::Invoke(
-            [](PWRMgr_PowerState_t* powerState) {
-                *powerState = PWRMGR_POWERSTATE_OFF; // by default over boot up, return PowerState OFF
-                return PWRMGR_SUCCESS;
-            }));
-
     EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [](PWRMgr_PowerState_t powerState) {
@@ -555,13 +548,6 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
 
     EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
-
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
-        .WillRepeatedly(::testing::Invoke(
-            [](PWRMgr_PowerState_t* powerState) {
-                *powerState = PWRMGR_POWERSTATE_ON; // Default to ON state
-                return PWRMGR_SUCCESS;
-            }));
 
     ON_CALL(*p_rfcApiImplMock, getRFCParameter(::testing::_, ::testing::_, ::testing::_))
         .WillByDefault(::testing::Invoke(
