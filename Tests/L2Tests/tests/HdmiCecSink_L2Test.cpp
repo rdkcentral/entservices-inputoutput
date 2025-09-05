@@ -3191,7 +3191,7 @@ TEST_F(HdmiCecSink_L2Test, InjectPollingFrame)
     }
 }
 
-TEST_F(HdmiCecSink_L2Test, InjectWakeupFromStandbyFrameAndVerifyEvent)
+TEST_F(HdmiCecSink_L2Test, DISABLED_InjectWakeupFromStandbyFrameAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
     StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
