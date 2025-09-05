@@ -506,6 +506,7 @@ HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
     EXPECT_EQ(Core::ERROR_NONE, status);
 
     removeFile("/etc/device.properties");
+    removeFile("/tmp/pwrmgr_restarted");
 
     PowerManagerHalMock::Delete();
     mfrMock::Delete();
