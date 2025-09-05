@@ -24,6 +24,10 @@ find_package(${NAMESPACE}Plugins REQUIRED)
 
 set(SRC_FILES tests/test_foo_IN.cpp)
 
+if(PLUGIN_HDMICECSINK)
+    set(SRC_FILES ${SRC_FILES} tests/HdmiCecSink_L2Test.cpp)
+endif()
+
 if(PLUGIN_AVOUTPUT)
     set(SRC_FILES ${SRC_FILES} tests/AVOutputTV_L2Test.cpp)
 endif()
@@ -39,7 +43,7 @@ target_compile_definitions(${MODULE_NAME}
             MODULE_NAME=Plugin_${PLUGIN_NAME}
             THUNDER_PORT="${THUNDER_PORT}")
 
-# target_compile_options(${MODULE_NAME} PRIVATE -Wno-error)
+target_compile_options(${MODULE_NAME} PRIVATE -Wno-error)
 target_link_libraries(${MODULE_NAME} PRIVATE ${NAMESPACE}Plugins::${NAMESPACE}Plugins)
 
 if (NOT L2_TEST_OOP_RPC)
