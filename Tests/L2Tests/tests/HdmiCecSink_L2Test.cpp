@@ -392,6 +392,13 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
                 return mfrERR_NONE;
             }));
 
+    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](PWRMgr_PowerState_t* powerState) {
+                *powerState = PWRMGR_POWERSTATE_OFF; // by default over boot up, return PowerState OFF
+                return PWRMGR_SUCCESS;
+            }));
+
     EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [](PWRMgr_PowerState_t powerState) {
