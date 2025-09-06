@@ -21,6 +21,7 @@
 //#include "dsMgr.h"
 #include "hdmiIn.hpp"
 #include "compositeIn.hpp"
+#include "manager.hpp"
 
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
