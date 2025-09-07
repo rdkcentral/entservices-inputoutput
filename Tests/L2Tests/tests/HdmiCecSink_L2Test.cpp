@@ -346,6 +346,14 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
     createFile("/etc/device.properties", "RDK_PROFILE=TV");
     createFile("/tmp/pwrmgr_restarted", "1");
 
+    struct stat buffer;
+    bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
+    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n", 
+           fileExists ? "YES" : "NO");
+
+    // Add sleep to ensure file is properly written to disk
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_INIT())
         .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
 
@@ -474,11 +482,6 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
 
     status = ActivateService("org.rdk.HdmiCecSink");
     EXPECT_EQ(Core::ERROR_NONE, status);
-
-    struct stat buffer;
-    bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
-    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n", 
-           fileExists ? "YES" : "NO");
 }
 
 HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
@@ -544,6 +547,14 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
     uint32_t status = Core::ERROR_GENERAL;
     removeFile("/tmp/pwrmgr_restarted");
     createFile("/etc/device.properties", "RDK_PROFILE=TV");
+
+    // Add sleep to ensure file is properly written to disk
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    struct stat buffer;
+    bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
+    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n", 
+           fileExists ? "YES" : "NO");
 
     EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_INIT())
         .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
