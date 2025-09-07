@@ -344,7 +344,6 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
 {
     uint32_t status = Core::ERROR_GENERAL;
     createFile("/etc/device.properties", "RDK_PROFILE=TV");
-    createFile("/tmp/pwrmgr_restarted", "1");
 
     struct stat buffer;
     bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
@@ -507,7 +506,6 @@ HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
     EXPECT_EQ(Core::ERROR_NONE, status);
 
     removeFile("/etc/device.properties");
-    removeFile("/tmp/pwrmgr_restarted");
 
     PowerManagerHalMock::Delete();
     mfrMock::Delete();
