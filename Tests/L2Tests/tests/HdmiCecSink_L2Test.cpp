@@ -682,15 +682,8 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
     status = ActivateService("org.rdk.PowerManager");
     EXPECT_EQ(Core::ERROR_NONE, status);
 
-    createFile("/tmp/pwrmgr_restarted", "1");
-
     status = ActivateService("org.rdk.HdmiCecSink");
     EXPECT_EQ(Core::ERROR_NONE, status);
-
-    struct stat buffer;
-    bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
-    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n", 
-           fileExists ? "YES" : "NO");
 }
 
 HdmiCecSink_L2Test_STANDBY::~HdmiCecSink_L2Test_STANDBY()
