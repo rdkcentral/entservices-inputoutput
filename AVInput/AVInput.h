@@ -55,7 +55,7 @@ public:
     template <typename T>
             T* baseInterface()
             {
-                static_assert(std::is_base_of<T, DisplaySettings>(), "base type mismatch");
+                static_assert(std::is_base_of<T, AVInput>(), "base type mismatch");
                 return static_cast<T*>(this);
             }
 

@@ -112,8 +112,6 @@ AVInput* AVInput::_instance = nullptr;
 
 AVInput::AVInput()
     : PluginHost::JSONRPC()
-    , m_HdmiInEventsNotification(this)
-    , m_CompositeInEventsNotification(this)
     , _registeredDsEventHandlers(false)
 {
     RegisterAll();
@@ -133,7 +131,7 @@ const string AVInput::Initialize(PluginHost::IShell * /* service */)
             LOGINFO("device::Manager::Initialize success");
             registerDsEventHandlers();
         }
-    catch(...)
+    catch(const device::Exception& err)
         {
             LOGINFO("device::Manager::Initialize failed");
             LOG_DEVICE_EXCEPTION0();
@@ -153,11 +151,11 @@ void AVInput::Deinitialize(PluginHost::IShell * /* service */)
             device::Manager::DeInitialize();
             LOGINFO("device::Manager::DeInitialize success");
         }
-    catch(...)
+    catch(const device::Exception& err)
         {
             LOGINFO("device::Manager::DeInitialize failed");
+            LOG_DEVICE_EXCEPTION0();
         }
-    DeInitializeDeviceManager();
 
     AVInput::_instance = nullptr;
 }
