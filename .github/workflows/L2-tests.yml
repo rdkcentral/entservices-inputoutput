@@ -107,7 +107,7 @@ jobs:
         with:
           repository: rdkcentral/entservices-inputoutput
           path: entservices-inputoutput
-          ref: feature/RDKEMW-6331
+          ref: feature/RDKEMW-55553
 
       - name: Checkout entservices-testframework
         uses: actions/checkout@v3
@@ -512,6 +512,7 @@ jobs:
           -DCMAKE_DISABLE_FIND_PACKAGE_Udev=ON
           -DCMAKE_DISABLE_FIND_PACKAGE_RFC=ON
           -DCMAKE_DISABLE_FIND_PACKAGE_RBus=ON
+          -DCMAKE_DISABLE_FIND_PACKAGE_CEC=ON
           -DPLUGIN_AVINPUT=OFF
           -DPLUGIN_AVOUTPUT=OFF
           -DPLUGIN_HDMICECSINK=ON

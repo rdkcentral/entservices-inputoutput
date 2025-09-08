@@ -24,6 +24,8 @@
 
 
 #include "HdmiCecSink.h"
+#include "HdmiCecSinkImplementation.h"
+#include "HdmiCecSinkMock.h"
 #include "FactoriesImplementation.h"
 #include "IarmBusMock.h"
 #include "ServiceMock.h"
