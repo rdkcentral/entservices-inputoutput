@@ -18,14 +18,12 @@
 **/
 
 #include "AVInput.h"
-//#include "dsMgr.h"
+
 #include "hdmiIn.hpp"
 #include "compositeIn.hpp"
-#include "manager.hpp"
 
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
-#include "host.hpp"
 
 #include "exception.hpp"
 #include <vector>
@@ -129,29 +127,6 @@ AVInput::~AVInput()
 const string AVInput::Initialize(PluginHost::IShell * /* service */)
 {
     AVInput::_instance = this;
-    InitializeDeviceManager();
-
-    return (string());
-}
-
-void AVInput::Deinitialize(PluginHost::IShell * /* service */)
-{
-
-    device::Host::getInstance().UnRegister(m_HdmiInEventsNotification);
-    device::Host::getInstance().UnRegister(m_CompositeInEventsNotification);
-    _registeredDsEventHandlers = false;
-    DeInitializeDeviceManager();
-
-    AVInput::_instance = nullptr;
-}
-
-string AVInput::Information() const
-{
-    return (string());
-}
-
-void AVInput::InitializeDeviceManager()
-{
     try
         {
             device::Manager::Initialize();
@@ -161,13 +136,18 @@ void AVInput::InitializeDeviceManager()
     catch(...)
         {
             LOGINFO("device::Manager::Initialize failed");
+            LOG_DEVICE_EXCEPTION0();
         }
-        
+
+    return (string());
 }
 
-void AVInput::DeInitializeDeviceManager()
+void AVInput::Deinitialize(PluginHost::IShell * /* service */)
 {
 
+    device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+    device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
+    _registeredDsEventHandlers = false;
     try
         {
             device::Manager::DeInitialize();
@@ -177,6 +157,14 @@ void AVInput::DeInitializeDeviceManager()
         {
             LOGINFO("device::Manager::DeInitialize failed");
         }
+    DeInitializeDeviceManager();
+
+    AVInput::_instance = nullptr;
+}
+
+string AVInput::Information() const
+{
+    return (string());
 }
 
 void AVInput::RegisterAll()
@@ -1749,8 +1737,8 @@ void AVInput::registerDsEventHandlers()
     if(!_registeredDsEventHandlers)
     {
         _registeredDsEventHandlers = true;
-        device::Host::getInstance().Register(m_HdmiInEventsNotification);
-        device::Host::getInstance().Register(m_CompositeInEventsNotification);
+        device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>());
+        device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>());
     }
 }
 

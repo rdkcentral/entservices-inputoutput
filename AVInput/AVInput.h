@@ -24,6 +24,9 @@
 
 #include "dsTypes.h"
 #include "host.hpp"
+#include "manager.hpp"
+#include "dsRpc.h"
+
 
 #define DEFAULT_PRIM_VOL_LEVEL 25
 #define MAX_PRIM_VOL_LEVEL 100
@@ -49,6 +52,13 @@ public:
     INTERFACE_ENTRY(PluginHost::IDispatcher)
     END_INTERFACE_MAP
 
+    template <typename T>
+            T* baseInterface()
+            {
+                static_assert(std::is_base_of<T, DisplaySettings>(), "base type mismatch");
+                return static_cast<T*>(this);
+            }
+
     int m_primVolume;
     int m_inputVolume; //Player Volume
 
@@ -61,9 +71,7 @@ public:
     virtual string Information() const override;
 
 protected:
-    void InitializeDeviceManager();
-    void DeInitializeDeviceManager();
-
+    
     void RegisterAll();
     void UnregisterAll();
 
@@ -130,9 +138,6 @@ private:
     static void dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
 private:
-
-    device::Host::IHdmiInEvents *m_HdmiInEventsNotification;
-    device::Host::ICompositeInEvents *m_CompositeInEventsNotification;
 
     bool _registeredDsEventHandlers;
 
