@@ -438,7 +438,6 @@ jobs:
           -include $GITHUB_WORKSPACE/entservices-testframework/Tests/mocks/gdialservice.h
           -include $GITHUB_WORKSPACE/entservices-testframework/Tests/mocks/HdmiCec.h
           -include $GITHUB_WORKSPACE/entservices-testframework/Tests/mocks/HdmiCecSinkMock.h
-          -include $GITHUB_WORKSPACE/entservices-inputoutput/HdmiCecSink/HdmiCecSinkImplementation.h
           --coverage
           -Wall -Wno-unused-result -Wno-deprecated-declarations -Wno-error=format=
           -Wl,-wrap,system -Wl,-wrap,popen -Wl,-wrap,syslog -Wl,-wrap,v_secure_system -Wl,-wrap,v_secure_popen -Wl,-wrap,v_secure_pclose -Wl,-wrap,unlink
