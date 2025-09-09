@@ -3074,6 +3074,33 @@ TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrame)
     }
 }
 
+TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrameroadcastIgnoreTest)
+{
+    // No event is fired, plugin should send CECVersion in response
+    uint8_t buffer[] = { 0x4F, 0x9F }; // From device 4 to broadcast
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrameException)
+{
+    EXPECT_CALL(*p_connectionMock, sendToAsync(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&](const LogicalAddress& to, const CECFrame& frame) {
+                throw Exception();
+            }));
+    // No event is fired, plugin should send CECVersion in response
+    uint8_t buffer[] = { 0x40, 0x9F }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
 // GiveOSDName (0x46)
 TEST_F(HdmiCecSink_L2Test, InjectGiveOSDNameFrame)
 {
@@ -3122,6 +3149,23 @@ TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrame)
             listener->notify(frame);
     }
 }
+
+TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrameException)
+{
+    EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&](const LogicalAddress& to, const CECFrame& frame) {
+                throw Exception();
+            }));
+
+    uint8_t buffer[] = { 0x40, 0x83 }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
 
 // GiveDeviceVendorID (0x8C)
 TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrame)
@@ -3373,11 +3417,6 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveFeaturesFrame)
 
 TEST_F(HdmiCecSink_L2Test, InjectGiveFeaturesFrameBroadcastIgnoreTest)
 {
-    EXPECT_CALL(*p_connectionMock, sendToAsync(::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke(
-            [&](const LogicalAddress& to, const CECFrame& frame) {
-                throw Exception();
-            }));
 
     // Simulate a CECVersion message from logical address 4 to us (0)
     uint8_t buffer1[] = { 0x40, 0x9E, 0x06 }; // 0x06 = Version 2.0
@@ -3386,6 +3425,12 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveFeaturesFrameBroadcastIgnoreTest)
         if (listener)
             listener->notify(frame1);
     }
+
+    EXPECT_CALL(*p_connectionMock, sendToAsync(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&](const LogicalAddress& to, const CECFrame& frame) {
+                throw Exception();
+            }));
 
     uint8_t buffer2[] = { 0x4F, 0xA5 }; // From device 4 to TV (0)
     CECFrame frame2(buffer2, sizeof(buffer2));
