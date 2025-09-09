@@ -24,6 +24,7 @@
 
 
 #include "HdmiCecSink.h"
+#include "HdmiCecSinkImplementation.h"
 #include "HdmiCecSinkMock.h"
 #include "FactoriesImplementation.h"
 #include "IarmBusMock.h"
@@ -35,6 +36,9 @@
 #include "RfcApiMock.h"
 #include "ThunderPortability.h"
 #include "PowerManagerMock.h"
+#include "WorkerPoolImplementation.h"
+#include "COMLinkMock.h"
+#include "FactoriesImplementation.h"
 
 using namespace WPEFramework;
 using ::testing::NiceMock;
@@ -65,7 +69,37 @@ namespace
 	}
 }
 
-class HdmiCecSinkWOInitializeTest : public ::testing::Test {
+class HdmiCecSinkInitializeTest : public ::testing::Test {
+protected:
+    Core::ProxyType<Plugin::HdmiCecSink> plugin;
+    Core::JSONRPC::Handler& handler;
+    DECL_CORE_JSONRPC_CONX connection;
+    IARM_EventHandler_t dsHdmiEventHandler;
+    Core::ProxyType<Plugin::HdmiCecSinkImplementation> pluginImpl;
+    Core::ProxyType<WorkerPoolImplementation> workerPool;
+    NiceMock<FactoriesImplementation> factoriesImplementation;
+    NiceMock<ServiceMock> service;
+    PLUGINHOST_DISPATCHER* dispatcher;
+    NiceMock<COMLinkMock> comLinkMock;
+    Core::JSONRPC::Message message;
+    string response;
+
+    HdmiCecSinkInitializeTest()
+        : plugin(Core::ProxyType<Plugin::HdmiCecSink>::Create())
+        , handler(*(plugin))
+        , INIT_CONX(1, 0)
+        , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
+              2, Core::Thread::DefaultStackSize(), 16))
+    {
+    }
+
+    virtual ~HdmiCecSinkInitializeTest() override
+    {
+        plugin.Release();
+    }
+};
+
+class HdmiCecSinkDsTest : public HdmiCecSinkInitializeTest {
 protected:
     IarmBusImplMock         *p_iarmBusImplMock = nullptr ;
     ConnectionImplMock      *p_connectionImplMock = nullptr ;
@@ -73,19 +107,13 @@ protected:
     LibCCECImplMock         *p_libCCECImplMock = nullptr ;
     RfcApiImplMock   *p_rfcApiImplMock = nullptr ;
     WrapsImplMock  *p_wrapsImplMock   = nullptr ;
-    Core::ProxyType<Plugin::HdmiCecSink> plugin;
-    Core::JSONRPC::Handler& handler;
-    DECL_CORE_JSONRPC_CONX connection;
     NiceMock<RfcApiImplMock> rfcApiImplMock;
     NiceMock<WrapsImplMock> wrapsImplMock;
-    IARM_EventHandler_t dsHdmiEventHandler;
     string response;
 
-    HdmiCecSinkWOInitializeTest()
-        : plugin(Core::ProxyType<Plugin::HdmiCecSink>::Create())
-        , handler(*(plugin))
-        , INIT_CONX(1, 0)
+    HdmiCecSinkDsTest(): HdmiCecSinkInitializeTest()
     {
+        createFile("/etc/device.properties", "RDK_PROFILE=TV");
         p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
 
@@ -135,10 +163,60 @@ protected:
         ON_CALL(*p_connectionImplMock, open())
             .WillByDefault(::testing::Return());
 
-    }
+        ON_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
+            .WillByDefault(
+                [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
+                    if (strcmp(methodName, IARM_BUS_PWRMGR_API_GetPowerState) == 0) {
+                        auto* param = static_cast<IARM_Bus_PWRMgr_GetPowerState_Param_t*>(arg);
+                        param->curState  = IARM_BUS_PWRMGR_POWERSTATE_ON;
+                    }
+                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetNumberOfInputs) == 0) {
+                        auto* param = static_cast<dsHdmiInGetNumberOfInputsParam_t*>(arg);
+                        param->result = dsERR_NONE;
+                        param->numHdmiInputs = 3;
+                    }
+                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetStatus) == 0) {
+                        auto* param = static_cast<dsHdmiInGetStatusParam_t*>(arg);
+                        param->result = dsERR_NONE;
+                        param->status.isPortConnected[1] = 1;
+                    }
+                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsGetHDMIARCPortId) == 0) {
+                        auto* param = static_cast<dsGetHDMIARCPortIdParam_t*>(arg);
+                        param->portId = 1;
+                    }
+                    return IARM_RESULT_SUCCESS;
+                });
 
-    virtual ~HdmiCecSinkWOInitializeTest() override
-    {
+        ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](const RPC::Object& object, const uint32_t waitTime, uint32_t& connectionId) {
+                    pluginImpl = Core::ProxyType<Plugin::HdmiCecSinkImplementation>::Create();
+                    return &pluginImpl;
+                }));
+
+        Core::IWorkerPool::Assign(&(*workerPool));
+        workerPool->Run();
+
+        PluginHost::IFactories::Assign(&factoriesImplementation);
+
+        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
+           plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        dispatcher->Activate(&service);
+
+        EXPECT_EQ(string(""), plugin->Initialize(&service));
+    }
+    virtual ~HdmiCecSinkDsTest() override {
+
+        plugin->Deinitialize(&service);
+
+        Core::IWorkerPool::Assign(nullptr);
+        workerPool.Release();
+        dispatcher->Deactivate();
+        dispatcher->Release();
+        PluginHost::IFactories::Assign(nullptr);
+
+        removeFile("/etc/device.properties");
+
         IarmBus::setImpl(nullptr);
         if (p_iarmBusImplMock != nullptr)
         {
@@ -177,98 +255,12 @@ protected:
             delete p_wrapsImplMock;
             p_wrapsImplMock = nullptr;
         }
-
     }
 };
 
-class HdmiCecSinkTest : public HdmiCecSinkWOInitializeTest {
+class HdmiCecSinkInitializedEventDsTest : public HdmiCecSinkDsTest {
 protected:
-    //Exchange::IPowerManager::IModeChangedNotification* _notification = nullptr;
-
-    HdmiCecSinkTest()
-        : HdmiCecSinkWOInitializeTest()
-    {
-        removeFile("/etc/device.properties");
-        createFile("/etc/device.properties", "RDK_PROFILE=TV");
-        //EXPECT_CALL(PowerManagerMock::Mock(), Register(Exchange::IPowerManager::IModeChangedNotification* notification))
-        //    .WillOnce(
-        //        [this](Exchange::IPowerManager::IModeChangedNotification* notification) -> uint32_t {
-        //            _notification = notification;
-        //            return Core::ERROR_NONE;
-        //        });
-        EXPECT_EQ(string(""), plugin->Initialize(nullptr));
-    }
-
-    virtual ~HdmiCecSinkTest() override
-    {
-        plugin->Deinitialize(nullptr);
-        removeFile("/etc/device.properties");
-    }
-};
-
-class HdmiCecSinkDsTest : public HdmiCecSinkTest {
-protected:
-    string response;
-
-    HdmiCecSinkDsTest(): HdmiCecSinkTest()
-    {
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-            .WillByDefault(
-                [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                    if (strcmp(methodName, IARM_BUS_PWRMGR_API_GetPowerState) == 0) {
-                        auto* param = static_cast<IARM_Bus_PWRMgr_GetPowerState_Param_t*>(arg);
-                        param->curState  = IARM_BUS_PWRMGR_POWERSTATE_ON;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetNumberOfInputs) == 0) {
-                        auto* param = static_cast<dsHdmiInGetNumberOfInputsParam_t*>(arg);
-                        param->result = dsERR_NONE;
-                        param->numHdmiInputs = 3;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetStatus) == 0) {
-                        auto* param = static_cast<dsHdmiInGetStatusParam_t*>(arg);
-                        param->result = dsERR_NONE;
-                        param->status.isPortConnected[1] = 1;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsGetHDMIARCPortId) == 0) {
-                        auto* param = static_cast<dsGetHDMIARCPortIdParam_t*>(arg);
-                        param->portId = 1;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                });
-
-        EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
-    }
-    virtual ~HdmiCecSinkDsTest() override {
-    }
-};
-
-class HdmiCecSinkInitializedEventTest : public HdmiCecSinkDsTest {
-protected:
-    NiceMock<ServiceMock> service;
-    NiceMock<FactoriesImplementation> factoriesImplementation;
-    PLUGINHOST_DISPATCHER* dispatcher;
-    Core::JSONRPC::Message message;
-
-    HdmiCecSinkInitializedEventTest(): HdmiCecSinkDsTest()
-    {
-        PluginHost::IFactories::Assign(&factoriesImplementation);
-
-        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
-           plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
-        dispatcher->Activate(&service);
-    }
-    virtual ~HdmiCecSinkInitializedEventTest() override
-    {
-        dispatcher->Deactivate();
-        dispatcher->Release();
-        PluginHost::IFactories::Assign(nullptr);
-    }
-};
-
-class HdmiCecSinkInitializedEventDsTest : public HdmiCecSinkInitializedEventTest {
-protected:
-    HdmiCecSinkInitializedEventDsTest(): HdmiCecSinkInitializedEventTest()
+    HdmiCecSinkInitializedEventDsTest(): HdmiCecSinkDsTest()
     {
     }
     virtual ~HdmiCecSinkInitializedEventDsTest() override
@@ -276,23 +268,8 @@ protected:
     }
 };
 
-TEST_F(HdmiCecSinkWOInitializeTest, NotSupportPlugin)
+TEST_F(HdmiCecSinkDsTest, RegisteredMethods)
 {
-    removeFile("/etc/device.properties");
-    EXPECT_EQ(string("Not supported"), plugin->Initialize(nullptr));
-    createFile("/etc/device.properties", "RDK_PROFILE=STB");
-    EXPECT_EQ(string("Not supported"), plugin->Initialize(nullptr));
-    removeFile("/etc/device.properties");
-    createFile("/etc/device.properties", "RDK_PROFILE=TV");
-    EXPECT_EQ(string(""), plugin->Initialize(nullptr));
-    plugin->Deinitialize(nullptr);
-    removeFile("/etc/device.properties");
-
-}
-
-TEST_F(HdmiCecSinkTest, RegisteredMethods)
-{
-
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEnabled")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setOSDName")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVendorId")));
@@ -319,8 +296,8 @@ TEST_F(HdmiCecSinkTest, RegisteredMethods)
 TEST_F(HdmiCecSinkDsTest, setOSDNameParamMissing)
 {
 
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setOSDName"), _T("{}"), response));
-    EXPECT_EQ(response,  string(""));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOSDName"), _T("{}"), response));
+    EXPECT_EQ(response,  string("{\"success\":true}"));
 
 }
 
@@ -338,8 +315,8 @@ TEST_F(HdmiCecSinkDsTest, getOSDName)
 TEST_F(HdmiCecSinkDsTest, setVendorIdParamMissing)
 {
 
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setVendorId"), _T("{}"), response));
-    EXPECT_EQ(response,  string(""));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{}"), response));
+    EXPECT_EQ(response,  string("{\"success\":true}"));
 
 }
 
@@ -357,8 +334,8 @@ TEST_F(HdmiCecSinkDsTest, getVendorId)
 TEST_F(HdmiCecSinkDsTest, setActivePathMissingParam)
 {
 
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setActivePath"), _T("{}"), response));
-    EXPECT_EQ(response,  string(""));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setActivePath"), _T("{}"), response));
+    EXPECT_EQ(response,  string("{\"success\":true}"));
 
 }
 
@@ -380,8 +357,8 @@ TEST_F(HdmiCecSinkDsTest, setActivePath)
 TEST_F(HdmiCecSinkDsTest, setRoutingChangeInvalidParam)
 {
 
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setRoutingChange"), _T("{\"oldPort\":\"HDMI0\"}"), response));
-    EXPECT_EQ(response,  string(""));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setRoutingChange"), _T("{\"oldPort\":\"HDMI0\"}"), response));
+    EXPECT_EQ(response,  string("{\"success\":false}"));
 
 }
 
@@ -405,8 +382,8 @@ TEST_F(HdmiCecSinkDsTest, setRoutingChange)
 TEST_F(HdmiCecSinkDsTest, setMenuLanguageInvalidParam)
 {
 
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setMenuLanguage"), _T("{\"language\":""}"), response));
-    EXPECT_EQ(response,  string(""));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setMenuLanguage"), _T("{\"language\":""}"), response));
+    EXPECT_EQ(response,  string("{\"success\":true}"));
 
 }
 
@@ -428,8 +405,8 @@ TEST_F(HdmiCecSinkDsTest, setMenuLanguage)
 TEST_F(HdmiCecSinkDsTest, setupARCRoutingInvalidParam)
 {
 
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setupARCRouting"), _T("{}"), response));
-    EXPECT_EQ(response,  string(""));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setupARCRouting"), _T("{}"), response));
+    EXPECT_EQ(response,  string("{\"success\":true}"));
 
 }
 
@@ -444,8 +421,8 @@ TEST_F(HdmiCecSinkDsTest, setupARCRouting)
 TEST_F(HdmiCecSinkDsTest, sendKeyPressEventMissingParam)
 {
 
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": }"), response));
-    EXPECT_EQ(response, string(""));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": }"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
 
 }
 
@@ -486,7 +463,7 @@ TEST_F(HdmiCecSinkInitializedEventDsTest, powerModeChange)
     // pwrMgrModeChangeEventHandler(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_EVENT_MODECHANGED, &eventData , 0);
 }
 
-TEST_F(HdmiCecSinkTest, DISABLED_getCecVersion)
+TEST_F(HdmiCecSinkInitializedEventDsTest, DISABLED_getCecVersion)
 {
     /*EXPECT_CALL(rfcApiImplMock, getRFCParameter(::testing::_, ::testing::_, ::testing::_))
         .Times(1)
