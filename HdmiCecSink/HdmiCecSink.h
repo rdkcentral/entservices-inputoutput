@@ -484,7 +484,7 @@ private:
 		// As the registration/unregistration of notifications is realized by the class PluginHost::JSONRPC,
 		// this class exposes a public method called, Notify(), using this methods, all subscribed clients
 		// will receive a JSONRPC message as a notification, in case this method is called.
-        class HdmiCecSink : public PluginHost::IPlugin, public PluginHost::JSONRPC, device::Host::IHdmiInEvents {
+        class HdmiCecSink : public PluginHost::IPlugin, public PluginHost::JSONRPC, public device::Host::IHdmiInEvents {
 
 		enum {
 			POLL_THREAD_STATE_NONE,
@@ -589,6 +589,13 @@ private:
             END_INTERFACE_MAP
 
         private:
+            template <typename T>
+            T* baseInterface()
+            {
+                static_assert(std::is_base_of<T, HdmiCecSink>(), "base type mismatch");
+                return static_cast<T*>(this);
+            }
+
             class PowerManagerNotification : public Exchange::IPowerManager::IModeChangedNotification {
             private:
                 PowerManagerNotification(const PowerManagerNotification&) = delete;
