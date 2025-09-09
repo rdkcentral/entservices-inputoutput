@@ -18,10 +18,6 @@
  */
 #include "L2Tests.h"
 #include "L2TestsMock.h"
-#include "MfrMock.h"
-#include "PowerManagerHalMock.h"
-#include "PowerManagerMock.h"
-#include "deepSleepMgr.h"
 #include <condition_variable>
 #include <fstream>
 #include <gmock/gmock.h>
@@ -354,16 +350,16 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
     // Add sleep to ensure file is properly written to disk
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_INIT())
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
         .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_INIT())
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_INIT())
         .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_GetPowerState(::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [](PWRMgr_PowerState_t* powerState) {
                 *powerState = PWRMGR_POWERSTATE_ON; // Default to ON state
@@ -391,7 +387,7 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
                 }
             }));
 
-    EXPECT_CALL(mfrMock::Mock(), mfrSetTempThresholds(::testing::_, ::testing::_))
+    EXPECT_CALL(*p_mfrMock, mfrSetTempThresholds(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [](int high, int critical) {
                 EXPECT_EQ(high, 100);
@@ -399,7 +395,7 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
                 return mfrERR_NONE;
             }));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetPowerState(::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [](PWRMgr_PowerState_t powerState) {
                 // All tests are run without settings file
@@ -407,7 +403,7 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
                 return PWRMGR_SUCCESS;
             }));
 
-    EXPECT_CALL(mfrMock::Mock(), mfrGetTemperature(::testing::_, ::testing::_, ::testing::_))
+    EXPECT_CALL(*p_mfrMock, mfrGetTemperature(::testing::_, ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [&](mfrTemperatureState_t* curState, int* curTemperature, int* wifiTemperature) {
                 *curTemperature = 90; // safe temperature
@@ -497,10 +493,10 @@ HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
     status = DeactivateService("org.rdk.HdmiCecSink");
     EXPECT_EQ(Core::ERROR_NONE, status);
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_TERM())
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_TERM())
         .WillOnce(::testing::Return(PWRMGR_SUCCESS));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_TERM())
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_TERM())
         .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
 
     status = DeactivateService("org.rdk.PowerManager");
@@ -508,9 +504,6 @@ HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
 
     removeFile("/tmp/pwrmgr_restarted");
     removeFile("/etc/device.properties");
-
-    PowerManagerHalMock::Delete();
-    mfrMock::Delete();
 }
 
 class HdmiCecSink_L2Test_STANDBY : public L2TestMocks {
@@ -556,13 +549,13 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
     printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n", 
            fileExists ? "YES" : "NO");
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_INIT())
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
         .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_INIT())
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_INIT())
         .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
 
     ON_CALL(*p_rfcApiImplMock, getRFCParameter(::testing::_, ::testing::_, ::testing::_))
@@ -586,7 +579,7 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
                 }
             }));
 
-    EXPECT_CALL(mfrMock::Mock(), mfrSetTempThresholds(::testing::_, ::testing::_))
+    EXPECT_CALL(*p_mfrMock, mfrSetTempThresholds(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [](int high, int critical) {
                 EXPECT_EQ(high, 100);
@@ -594,14 +587,14 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
                 return mfrERR_NONE;
             }));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_GetPowerState(::testing::_))
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_GetPowerState(::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [](PWRMgr_PowerState_t* powerState) {
                 *powerState = PWRMGR_POWERSTATE_OFF; // by default over boot up, return PowerState OFF
                 return PWRMGR_SUCCESS;
             }));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetPowerState(::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [](PWRMgr_PowerState_t powerState) {
                 // All tests are run without settings file
@@ -609,7 +602,7 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
                 return PWRMGR_SUCCESS;
             }));
 
-    EXPECT_CALL(mfrMock::Mock(), mfrGetTemperature(::testing::_, ::testing::_, ::testing::_))
+    EXPECT_CALL(*p_mfrMock, mfrGetTemperature(::testing::_, ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [&](mfrTemperatureState_t* curState, int* curTemperature, int* wifiTemperature) {
                 *curTemperature = 90; // safe temperature
@@ -699,19 +692,16 @@ HdmiCecSink_L2Test_STANDBY::~HdmiCecSink_L2Test_STANDBY()
     status = DeactivateService("org.rdk.HdmiCecSink");
     EXPECT_EQ(Core::ERROR_NONE, status);
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_TERM())
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_TERM())
         .WillOnce(::testing::Return(PWRMGR_SUCCESS));
 
-    EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_DS_TERM())
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_TERM())
         .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
 
     status = DeactivateService("org.rdk.PowerManager");
     EXPECT_EQ(Core::ERROR_NONE, status);
 
     removeFile("/etc/device.properties");
-
-    PowerManagerHalMock::Delete();
-    mfrMock::Delete();
 }
 
 void HdmiCecSink_L2Test::arcInitiationEvent(const JsonObject& message)

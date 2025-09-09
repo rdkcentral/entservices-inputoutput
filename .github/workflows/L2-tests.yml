@@ -523,7 +523,7 @@ jobs:
           -DDS_FOUND=ON
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
           &&
-          cmake --build build/entservices-inputoutput -j8
+          cmake --build build/entservices-inputoutput
           &&
           cmake --install build/entservices-inputoutput
 
