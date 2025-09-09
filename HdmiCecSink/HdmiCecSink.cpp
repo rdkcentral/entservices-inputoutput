@@ -697,11 +697,11 @@ namespace WPEFramework
            try
            {
                 device::Manager::Initialize();
-                LOGINFO("device::Manager::Initialize success");
+                LOGINFO("HdmiCecSink plugin device::Manager::Initialize success");
            }
            catch(const device::Exception& err)
            {
-                LOGINFO("device::Manager::Initialize failed");
+                LOGINFO("HdmiCecSink plugin device::Manager::Initialize failed");
                 msg = "HdmiCecSink plugin Initialize failed";
                 LOG_DEVICE_EXCEPTION0();
            }
@@ -915,11 +915,11 @@ namespace WPEFramework
         try
         {
             device::Manager::DeInitialize();
-            LOGINFO("device::Manager::DeInitialize success");
+            LOGINFO("HdmiCecSink plugin device::Manager::DeInitialize success");
         }
         catch(const device::Exception& err)
         {
-            LOGINFO("device::Manager::DeInitialize failed");
+            LOGINFO("HdmiCecSink plugin device::Manager::DeInitialize failed");
             LOG_DEVICE_EXCEPTION0();
         }
 
