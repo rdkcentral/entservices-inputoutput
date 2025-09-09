@@ -340,12 +340,13 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
 {
     uint32_t status = Core::ERROR_GENERAL;
     createFile("/etc/device.properties", "RDK_PROFILE=TV");
+    createFile("/opt/persistent/ds/cecData_2.json", "0");
     createFile("/tmp/pwrmgr_restarted", "1");
 
     struct stat buffer;
     bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
-    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n", 
-           fileExists ? "YES" : "NO");
+    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n",
+        fileExists ? "YES" : "NO");
 
     // Add sleep to ensure file is properly written to disk
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -504,6 +505,7 @@ HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
 
     removeFile("/tmp/pwrmgr_restarted");
     removeFile("/etc/device.properties");
+    removeFile("/opt/persistent/ds/cecData_2.json");
 }
 
 class HdmiCecSink_L2Test_STANDBY : public L2TestMocks {
@@ -546,8 +548,8 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
 
     struct stat buffer;
     bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
-    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n", 
-           fileExists ? "YES" : "NO");
+    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n",
+        fileExists ? "YES" : "NO");
 
     EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
         .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
@@ -2915,6 +2917,20 @@ TEST_F(HdmiCecSink_L2Test, InjectReportAudioStatusAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportAudioStatusEvent"));
 }
 
+// Report Audio Status
+TEST_F(HdmiCecSink_L2Test, InjectReportAudioStatusAndVerifyEventBroadcastIgnoreTest)
+{
+    // Header: 0x50, Opcode: 0x7A (Report Audio Status), Status: 0x50 (Volume 80, not muted)
+    uint8_t buffer[] = { 0x5F, 0x7A, 0x50 };
+    CECFrame frame(buffer, sizeof(buffer));
+
+    for (auto* listener : listeners) {
+        if (listener) {
+            listener->notify(frame);
+        }
+    }
+}
+
 TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2948,6 +2964,22 @@ TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortAndVerifyEvent)
     EXPECT_TRUE(signalled & REPORT_FEATURE_ABORT);
 
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportFeatureAbortEvent"));
+}
+
+//Feature Abort
+TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortFrameBroadcastIgnoreTest)
+{
+    ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
+    // Feature Abort from device 4 to TV (0)
+    // Header: 0x40, Opcode: 0x00 (Feature Abort), Rejected Opcode: 0x82, Reason: 0x04 (Refused)
+    uint8_t buffer[] = { 0x4F, 0x00, 0x82, 0x04 };
+    CECFrame frame(buffer, sizeof(buffer));
+
+    for (auto* listener : listeners) {
+        if (listener) {
+            listener->notify(frame);
+        }
+    }
 }
 
 TEST_F(HdmiCecSink_L2Test, InjectSetSystemAudioModeAndVerifyEvent)
@@ -3053,6 +3085,33 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveOSDNameFrame)
     }
 }
 
+TEST_F(HdmiCecSink_L2Test, InjectGiveOSDNameFrameException)
+{
+    uint8_t buffer[] = { 0x40, 0x46 }; // From device 4 to TV (0)
+
+    EXPECT_CALL(*p_connectionMock, sendToAsync(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&](const LogicalAddress& to, const CECFrame& frame) {
+                throw Exception();
+            }));
+
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, InjectGiveOSDNameFrameBroadcastIgnoreTest)
+{
+    uint8_t buffer[] = { 0x4F, 0x46 }; // From device 4 to broadcast
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
 // GivePhysicalAddress (0x83)
 TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrame)
 {
@@ -3075,6 +3134,33 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrame)
     }
 }
 
+TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrameBroadcastIgnoreTest)
+{
+    uint8_t buffer[] = { 0x4F, 0x8C }; // From device 4 to broadcast
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrameBroadcastException)
+{
+    uint8_t buffer[] = { 0x40, 0x8C }; // From device 4 to TV (0)
+
+    EXPECT_CALL(*p_connectionMock, sendToAsync(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&](const LogicalAddress& to, const CECFrame& frame) {
+                throw Exception();
+            }));
+
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
 // SetOSDString (0x64)
 TEST_F(HdmiCecSink_L2Test, InjectSetOSDStringFrame)
 {
@@ -3090,6 +3176,16 @@ TEST_F(HdmiCecSink_L2Test, InjectSetOSDStringFrame)
 TEST_F(HdmiCecSink_L2Test, InjectSetOSDNameFrame)
 {
     uint8_t buffer[] = { 0x40, 0x47, 'T', 'E', 'S', 'T' }; // From device 4 to TV (0), name "TEST"
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, InjectSetOSDNameBroadcastIgnoreTest)
+{
+    uint8_t buffer[] = { 0x4F, 0x47, 'T', 'E', 'S', 'T' }; // From device 4 to broadcast, name "TEST"
     CECFrame frame(buffer, sizeof(buffer));
     for (auto* listener : listeners) {
         if (listener)
@@ -3141,10 +3237,47 @@ TEST_F(HdmiCecSink_L2Test, InjectGetMenuLanguageFrame)
     }
 }
 
+TEST_F(HdmiCecSink_L2Test, InjectGetMenuLanguageFrameBroadcastIgnoreTest)
+{
+    uint8_t buffer[] = { 0x4F, 0x91 }; // From device 4 to broadcast
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
 // GiveDevicePowerStatus (0x8F)
 TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrame)
 {
     uint8_t buffer[] = { 0x40, 0x8F }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrameBroadcastIgnoreTest)
+{
+    uint8_t buffer[] = { 0x4F, 0x8F }; // From device 4 to broadcast
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrameException)
+{
+    uint8_t buffer[] = { 0x40, 0x8F }; // From device 4 to TV (0)
+
+    EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&](const LogicalAddress& to, const CECFrame& frame) {
+                throw Exception();
+            }));
+
     CECFrame frame(buffer, sizeof(buffer));
     for (auto* listener : listeners) {
         if (listener)
@@ -3209,6 +3342,24 @@ TEST_F(HdmiCecSink_L2Test, InjectInitiateAndTerminateArcFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("arcInitiationEvent"));
 }
 
+// Initiate & Terminate ARC frame
+TEST_F(HdmiCecSink_L2Test, InjectInitiateArcFrameBroadcastIgnoreTest)
+{
+    uint8_t initbuffer[] = { 0x5F, 0xC0 }; // From Audio System (5) to TV (0)
+    CECFrame initframe(initbuffer, sizeof(initbuffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(initframe);
+    }
+
+    uint8_t termbuffer[] = { 0x5F, 0xC5 }; // From Audio System (5) to TV (0)
+    CECFrame termframe(termbuffer, sizeof(termbuffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(termframe);
+    }
+}
+
 // GiveFeatures (0xA5)
 TEST_F(HdmiCecSink_L2Test, InjectGiveFeaturesFrame)
 {
@@ -3217,6 +3368,30 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveFeaturesFrame)
     for (auto* listener : listeners) {
         if (listener)
             listener->notify(frame);
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, InjectGiveFeaturesFrameBroadcastIgnoreTest)
+{
+    EXPECT_CALL(*p_connectionMock, sendToAsync(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&](const LogicalAddress& to, const CECFrame& frame) {
+                throw Exception();
+            }));
+
+    // Simulate a CECVersion message from logical address 4 to us (0)
+    uint8_t buffer1[] = { 0x40, 0x9E, 0x06 }; // 0x06 = Version 2.0
+    CECFrame frame1(buffer1, sizeof(buffer1));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame1);
+    }
+
+    uint8_t buffer2[] = { 0x4F, 0xA5 }; // From device 4 to TV (0)
+    CECFrame frame2(buffer2, sizeof(buffer2));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame2);
     }
 }
 
@@ -3381,6 +3556,17 @@ TEST_F(HdmiCecSink_L2Test, InjectReportPowerStatusAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportAudioDevicePowerStatus"));
 }
 
+TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrameBroadcastIgnoreTest1)
+{
+    // Then, inject ON status (should trigger the event)
+    uint8_t buffer_on[] = { 0x5F, 0x90, 0x00 }; // 0x00 = ON
+    CECFrame frame_on(buffer_on, sizeof(buffer_on));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame_on);
+    }
+}
+
 TEST_F(HdmiCecSink_L2Test, InjectSetMenuLanguageFrame)
 {
     // Set Menu Language: opcode 0x32, language "eng"
@@ -3423,6 +3609,18 @@ TEST_F(HdmiCecSink_L2Test, InjectDeviceVendorIDFrameAndVerifyEvent)
     EXPECT_TRUE(signalled & ON_DEVICE_INFO_UPDATED);
 
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onDeviceInfoUpdated"));
+}
+
+// DeviceVendorID (0x87)
+TEST_F(HdmiCecSink_L2Test, InjectDeviceVendorIDFrameBroadcastIgnoreTest)
+{
+    // Device Vendor ID: opcode 0x87, vendor ID 0x00 0x19 0xFB
+    uint8_t buffer[] = { 0x4F, 0x87, 0x00, 0x19, 0xFB };
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 TEST_F(HdmiCecSink_L2Test, InjectAbortFrame)
