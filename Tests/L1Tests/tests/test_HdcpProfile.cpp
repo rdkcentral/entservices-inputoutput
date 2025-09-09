@@ -378,6 +378,7 @@ TEST_F(HDCPProfileDsTest, getSettopHDCPSupport_Hdcp_v2x)
                                                      "\\}")));
 }
 
+
 TEST_F(HDCPProfileEventIarmTest, onDisplayConnectionChanged)
 {
     ASSERT_TRUE(dsHdmiEventHandler != nullptr);
