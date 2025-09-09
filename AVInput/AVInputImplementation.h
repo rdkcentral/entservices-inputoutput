@@ -44,13 +44,14 @@
 #define MAX_PRIM_VOL_LEVEL 100
 #define DEFAULT_INPUT_VOL_LEVEL 100
 
-using ParamsType = boost::variant<string&,
-    WPEFramework::Exchange::IAVInput::InputSignalInfo,
-    WPEFramework::Exchange::IAVInput::InputStatus,
-    WPEFramework::Exchange::IAVInput::InputVideoMode,
-    WPEFramework::Exchange::IAVInput::ContentInfo,
-    WPEFramework::Exchange::IAVInput::GameFeatureStatus,
-    int>;
+using ParamsType = boost::variant<
+    string&,                                            // OnDevicesChanged
+    std::tuple<int, string, string>,                    // OnSignalChanged
+    std::tuple<int, string, string, int>,               // OnInputStatusChanged
+    std::tuple<int, string, int, int, bool, int, int>,  // VideoStreamInfoUpdate
+    std::tuple<int, string, bool>,                      // GameFeatureStatusUpdate
+    std::tuple<int, int>                                // HdmiContentTypeUpdate
+>;
 
 namespace WPEFramework {
 namespace Plugin {
@@ -144,27 +145,27 @@ namespace Plugin {
         virtual Core::hresult Register(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
         virtual Core::hresult Unregister(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
 
-        Core::hresult NumberOfInputs(uint32_t& inputCount) override;
-        Core::hresult GetInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator*& devices) override;
-        Core::hresult WriteEDID(int id, const string& edid) override;
-        Core::hresult ReadEDID(int id, string& edid) override;
-        Core::hresult GetRawSPD(int id, string& spd) override;
-        Core::hresult GetSPD(int id, string& spd) override;
-        Core::hresult SetEdidVersion(int id, const string& version) override;
-        Core::hresult GetEdidVersion(int id, string& version) override;
-        Core::hresult SetEdid2AllmSupport(int id, bool allm) override;
-        Core::hresult GetEdid2AllmSupport(int id, bool& allm) override;
-        Core::hresult SetVRRSupport(int id, bool vrrSupport) override;
-        Core::hresult GetVRRSupport(int id, bool& vrrSupport) override;
-        Core::hresult SetAudioMixerLevels(MixerLevels levels) override;
-        Core::hresult GetHdmiVersion(int id, string& hdmiVersion) override;
-        Core::hresult StartInput(int id, int type, bool audioMix, int planeType, bool topMostPlane) override;
-        Core::hresult StopInput(int type) override;
-        Core::hresult SetVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t type) override;
-        Core::hresult CurrentVideoMode(string& currentVideoMode, string& message) override;
+        Core::hresult NumberOfInputs(uint32_t& numberOfInputs, string& message, bool& success) override;
+        Core::hresult GetInputDevices(const int typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices) override;
+        Core::hresult WriteEDID(const int portId, const string& message) override;
+        Core::hresult ReadEDID(const int portId, string& EDID) override;
+        Core::hresult GetRawSPD(const int portId, string& HDMISPD) override;
+        Core::hresult GetSPD(const int portId, string& HDMISPD) override;
+        Core::hresult SetEdidVersion(const int portId, const string& edidVersion) override;
+        Core::hresult GetEdidVersion(const int portId, string& edidVersion) override;
+        Core::hresult SetEdid2AllmSupport(const int portId, const bool allmSupport) override;
+        Core::hresult GetEdid2AllmSupport(const int portId, bool& allmSupport, bool& success) override;
+        Core::hresult SetVRRSupport(const int portId, const bool vrrSupport) override;
+        Core::hresult GetVRRSupport(const int portId, bool& vrrSupport) override;
+        Core::hresult GetHdmiVersion(const int portId, string& HdmiCapabilityVersion, bool& success) override;
+        Core::hresult SetAudioMixerLevels(const int primaryVolume, const int inputVolume) override;
+        Core::hresult StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost) override;
+        Core::hresult StopInput(const int typeOfInput) override;
+        Core::hresult SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput) override;
+        Core::hresult CurrentVideoMode(string& currentVideoMode, string& message, bool& success) override;
+        Core::hresult ContentProtected(bool& isContentProtected, bool& success) override;
         Core::hresult GetSupportedGameFeatures(IStringIterator*& features) override;
-        Core::hresult GetGameFeatureStatus(int id, const string& feature, bool& mode) override;
-        Core::hresult ContentProtected(bool& isContentProtected) override;
+        Core::hresult GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode) override;
 
         void AVInputHotplug(int input, int connect, int type);
         void AVInputSignalChange(int port, int signalStatus, int type);
@@ -230,7 +231,6 @@ namespace Plugin {
         uint32_t getGameFeatureStatusWrapper(const JsonObject& parameters, JsonObject& response);
         uint32_t getHdmiVersionWrapper(const JsonObject& parameters, JsonObject& response);
 
-        Core::hresult getInputDevices(int type, std::list<WPEFramework::Exchange::IAVInput::InputDevice> devices);
         JsonArray devicesToJson(Exchange::IAVInput::IInputDeviceIterator* devices);
 
         bool getALLMStatus(int iPort);

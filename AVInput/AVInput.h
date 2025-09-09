@@ -116,37 +116,36 @@ namespace Plugin {
                 Exchange::JAVInput::Event::OnDevicesChanged(_parent, devices);
             }
 
-            void OnSignalChanged(const Exchange::IAVInput::InputSignalInfo& info) override
+            void OnSignalChanged(const int id, const string& locator, const string& signalStatus) override
             {
-                LOGINFO("OnSignalChanged: id %d, locator %s, status %s\n", info.id, info.locator.c_str(), info.status.c_str());
-                Exchange::JAVInput::Event::OnSignalChanged(_parent, info);
+                LOGINFO("OnSignalChanged: id %d, locator %s, status %s\n", id, locator.c_str(), signalStatus.c_str());
+                Exchange::JAVInput::Event::OnSignalChanged(_parent, id, locator, signalStatus);
             }
 
-            void OnInputStatusChanged(const Exchange::IAVInput::InputStatus& status) override
+            void OnInputStatusChanged(const int id, const string& locator, const string& status, const int plane) override
             {
-                LOGINFO("OnInputStatusChanged: id %d, locator %s, status %s, plane %d\n", status.info.id, status.info.locator.c_str(), status.info.status.c_str(), status.plane);
-                Exchange::JAVInput::Event::OnInputStatusChanged(_parent, status);
+                LOGINFO("OnInputStatusChanged: id %d, locator %s, status %s, plane %d\n", id, locator.c_str(), status.c_str(), plane);
+                Exchange::JAVInput::Event::OnInputStatusChanged(_parent, id, locator, status, plane);
             }
 
-            void VideoStreamInfoUpdate(const Exchange::IAVInput::InputVideoMode& videoMode) override
+            void VideoStreamInfoUpdate(const int id, const string& locator, const int width, const int height, const bool progressive, const int frameRateN, const int frameRateD) override
             {
                 LOGINFO("VideoStreamInfoUpdate: id %d, width %d, height %d, frameRateN %d, frameRateD %d, progressive %d, locator %s\n",
-                    videoMode.id, videoMode.width, videoMode.height, videoMode.frameRateN, videoMode.frameRateD,
-                    videoMode.progressive, videoMode.locator.c_str());
-                Exchange::JAVInput::Event::VideoStreamInfoUpdate(_parent, videoMode);
+                    id, width, height, frameRateN, frameRateD, progressive, locator.c_str());
+                Exchange::JAVInput::Event::VideoStreamInfoUpdate(_parent, id, locator, width, height, progressive, frameRateN, frameRateD);
             }
 
-            void GameFeatureStatusUpdate(const Exchange::IAVInput::GameFeatureStatus& status) override
+            void GameFeatureStatusUpdate(const int id, const string& gameFeature, const bool mode) override
             {
-                LOGINFO("GameFeatureStatusUpdate: id %d, gameFeature %s, allmMode %d\n",
-                    status.id, status.gameFeature.c_str(), static_cast<int>(status.allmMode));
-                Exchange::JAVInput::Event::GameFeatureStatusUpdate(_parent, status);
+                LOGINFO("GameFeatureStatusUpdate: id %d, gameFeature %s, mode %d\n",
+                    id, gameFeature.c_str(), static_cast<int>(mode));
+                Exchange::JAVInput::Event::GameFeatureStatusUpdate(_parent, id, gameFeature, mode);
             }
 
-            void HdmiContentTypeUpdate(const Exchange::IAVInput::ContentInfo& contentInfo) override
+            void HdmiContentTypeUpdate(const int id, const int aviContentType) override
             {
-                LOGINFO("HdmiContentTypeUpdate: id %d, contentType %d\n", contentInfo.id, contentInfo.contentType);
-                Exchange::JAVInput::Event::HdmiContentTypeUpdate(_parent, contentInfo);
+                LOGINFO("HdmiContentTypeUpdate: id %d, contentType %d\n", id, aviContentType);
+                Exchange::JAVInput::Event::HdmiContentTypeUpdate(_parent, id, aviContentType);
             }
 
         private:

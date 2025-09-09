@@ -444,11 +444,15 @@ namespace Plugin {
         }
         case ON_AVINPUT_SIGNAL_CHANGED: {
 
-            if (const IAVInput::InputSignalInfo* inputSignalInfo = boost::get<IAVInput::InputSignalInfo>(&params)) {
+            if (const auto* tupleValue = boost::get<std::tuple<int, string, string>>(&params)) {
+                int id = std::get<0>(*tupleValue);
+                string locator = std::get<1>(*tupleValue);
+                string signalStatus = std::get<2>(*tupleValue);
+
                 std::list<IAVInput::ISignalChangedNotification*>::const_iterator index(_signalChangedNotifications.begin());
 
                 while (index != _signalChangedNotifications.end()) {
-                    (*index)->OnSignalChanged(*inputSignalInfo);
+                    (*index)->OnSignalChanged(id, locator, signalStatus);
                     ++index;
                 }
             }
@@ -456,44 +460,64 @@ namespace Plugin {
         }
         case ON_AVINPUT_STATUS_CHANGED: {
 
-            if (const IAVInput::InputStatus* inputStatus = boost::get<IAVInput::InputStatus>(&params)) {
+            if (const auto* tupleValue = boost::get<std::tuple<int, string, string, int>>(&params)) {
+                int id = std::get<0>(*tupleValue);
+                string locator = std::get<1>(*tupleValue);
+                string status = std::get<2>(*tupleValue);
+                int plane = std::get<3>(*tupleValue);
+
                 std::list<IAVInput::IInputStatusChangedNotification*>::const_iterator index(_inputStatusChangedNotifications.begin());
 
                 while (index != _inputStatusChangedNotifications.end()) {
-                    (*index)->OnInputStatusChanged(*inputStatus);
+                    (*index)->OnInputStatusChanged(id, locator, status, plane);
                     ++index;
                 }
             }
             break;
         }
         case ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE: {
-            if (const IAVInput::InputVideoMode* inputVideoMode = boost::get<IAVInput::InputVideoMode>(&params)) {
+            if (const auto* tupleValue = boost::get<std::tuple<int, string, int, int, bool, int, int>>(&params)) {
+                int id = std::get<0>(*tupleValue);
+                string locator = std::get<1>(*tupleValue);
+                int width = std::get<2>(*tupleValue);
+                int height = std::get<3>(*tupleValue);
+                bool progressive = std::get<4>(*tupleValue);
+                int frameRateN = std::get<5>(*tupleValue);
+                int frameRateD = std::get<6>(*tupleValue);
+
                 std::list<IAVInput::IVideoStreamInfoUpdateNotification*>::const_iterator index(_videoStreamInfoUpdateNotifications.begin());
 
                 while (index != _videoStreamInfoUpdateNotifications.end()) {
-                    (*index)->VideoStreamInfoUpdate(*inputVideoMode);
+                    (*index)->VideoStreamInfoUpdate(id, locator, width, height, progressive, frameRateN, frameRateD);
                     ++index;
                 }
             }
             break;
         }
         case ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE: {
-            if (const IAVInput::GameFeatureStatus* gameFeatureStatus = boost::get<IAVInput::GameFeatureStatus>(&params)) {
+            if (const auto* tupleValue = boost::get<std::tuple<int, string, bool>>(&params)) {
+                int id = std::get<0>(*tupleValue);
+                string gameFeature = std::get<1>(*tupleValue);
+                bool mode = std::get<2>(*tupleValue);
+
                 std::list<IAVInput::IGameFeatureStatusUpdateNotification*>::const_iterator index(_gameFeatureStatusUpdateNotifications.begin());
 
                 while (index != _gameFeatureStatusUpdateNotifications.end()) {
-                    (*index)->GameFeatureStatusUpdate(*gameFeatureStatus);
+                    (*index)->GameFeatureStatusUpdate(id, gameFeature, mode);
                     ++index;
                 }
             }
             break;
         }
         case ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE: {
-            if (const IAVInput::ContentInfo* contentInfo = boost::get<IAVInput::ContentInfo>(&params)) {
+            if (const auto* tupleValue = boost::get<std::tuple<int, int>>(&params)) {
+                int id = std::get<0>(*tupleValue);
+                int aviContentType = std::get<1>(*tupleValue);
+
                 std::list<IHdmiContentTypeUpdateNotification*>::const_iterator index(_hdmiContentTypeUpdateNotifications.begin());
 
                 while (index != _hdmiContentTypeUpdateNotifications.end()) {
-                    (*index)->HdmiContentTypeUpdate(*contentInfo);
+                    (*index)->HdmiContentTypeUpdate(id, aviContentType);
                     ++index;
                 }
             }
@@ -526,7 +550,9 @@ namespace Plugin {
         LOGINFOMETHOD();
 
         uint32_t count;
-        Core::hresult ret = NumberOfInputs(count);
+        string message;
+        bool success;
+        Core::hresult ret = NumberOfInputs(count, message, success);
 
         if (ret == Core::ERROR_NONE) {
             response[_T("numberOfInputs")] = count;
@@ -541,8 +567,10 @@ namespace Plugin {
 
         string mode;
         string message;
+        bool success;
 
-        Core::hresult ret = CurrentVideoMode(mode, message);
+        Core::hresult ret = CurrentVideoMode(mode, message, success);
+
         if (ret == Core::ERROR_NONE) {
             response[_T("currentVideoMode")] = mode;
         }
@@ -550,10 +578,11 @@ namespace Plugin {
         returnResponse(ret == Core::ERROR_NONE);
     }
 
-    Core::hresult AVInputImplementation::ContentProtected(bool& isContentProtected)
+    Core::hresult AVInputImplementation::ContentProtected(bool& isContentProtected, bool& success)
     {
         // "This is the way it's done in Service Manager"
         isContentProtected = true;
+        success = true;
         return Core::ERROR_NONE;
     }
 
@@ -562,7 +591,8 @@ namespace Plugin {
         LOGINFOMETHOD();
 
         bool isContentProtected;
-        Core::hresult ret = ContentProtected(isContentProtected);
+        bool success;
+        Core::hresult ret = ContentProtected(isContentProtected, success);
 
         if (ret == Core::ERROR_NONE) {
             response[_T("isContentProtected")] = isContentProtected;
@@ -571,57 +601,58 @@ namespace Plugin {
         returnResponse(ret == Core::ERROR_NONE);
     }
 
-    Core::hresult AVInputImplementation::NumberOfInputs(uint32_t& inputCount)
+    Core::hresult AVInputImplementation::NumberOfInputs(uint32_t& numberOfInputs, string& message, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
 
         try {
             printf("AVInputImplementation::NumberOfInputs: Calling HdmiInput::getNumberOfInputs...\n");
-            inputCount = device::HdmiInput::getInstance().getNumberOfInputs();
-            printf("AVInputImplementation::NumberOfInputs: inputCount=%d\n", inputCount);
-        } catch (const std::exception& ex) {
-            LOGERR("Exception caught: %s", ex.what());
-            ret = Core::ERROR_GENERAL;
+            numberOfInputs = device::HdmiInput::getInstance().getNumberOfInputs();
+            success = true;
+            message = "Success";
+            printf("AVInputImplementation::NumberOfInputs: numberOfInputs=%d\n", numberOfInputs);
         } catch (...) {
             LOGERR("Exception caught");
             ret = Core::ERROR_GENERAL;
+            success = false;
+            message = "org.rdk.HdmiInput plugin is not ready";
         }
 
         return ret;
     }
 
-    Core::hresult AVInputImplementation::CurrentVideoMode(string& currentVideoMode, string& message)
+    Core::hresult AVInputImplementation::CurrentVideoMode(string& currentVideoMode, string& message, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
 
         try {
             currentVideoMode = device::HdmiInput::getInstance().getCurrentVideoMode();
-            // TODO: How is message set?
-        } catch (const std::exception& ex) {
-            LOGERR("std::exception caught: %s", ex.what());
-            ret = Core::ERROR_GENERAL;
+            success = true;
+            message = "Success";
         } catch (...) {
             LOGERR("Exception caught");
             ret = Core::ERROR_GENERAL;
+            success = false;
+            message = "org.rdk.HdmiInput plugin is not ready";
         }
 
         return ret;
     }
 
-    Core::hresult AVInputImplementation::StartInput(int id, int type, bool audioMix, int planeType, bool topMostPlane)
+    Core::hresult AVInputImplementation::StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost)
     {
         Core::hresult ret = Core::ERROR_NONE;
         try {
-            if (type == HDMI) {
-                device::HdmiInput::getInstance().selectPort(id, audioMix, planeType, topMostPlane);
-            } else if (type == COMPOSITE) {
-                device::CompositeInput::getInstance().selectPort(id);
+            if (typeOfInput == HDMI) {
+                device::HdmiInput::getInstance().selectPort(portId, audioMix, planeType, topMost);
+            } else if (typeOfInput == COMPOSITE) {
+                device::CompositeInput::getInstance().selectPort(portId);
             } else {
                 LOGWARN("Invalid input type passed to StartInput");
                 ret = Core::ERROR_GENERAL;
             }
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(id));
+            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             ret = Core::ERROR_GENERAL;
         }
         return ret;
@@ -683,7 +714,7 @@ namespace Plugin {
         returnResponse(ret == Core::ERROR_NONE);
     }
 
-    Core::hresult AVInputImplementation::StopInput(int type)
+    Core::hresult AVInputImplementation::StopInput(const int typeOfInput)
     {
         Core::hresult ret = Core::ERROR_NONE;
 
@@ -694,9 +725,9 @@ namespace Plugin {
                 device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, DEFAULT_INPUT_VOL_LEVEL);
                 isAudioBalanceSet = false;
             }
-            if (type == HDMI) {
+            if (typeOfInput == HDMI) {
                 device::HdmiInput::getInstance().selectPort(-1);
-            } else if (type == COMPOSITE) {
+            } else if (typeOfInput == COMPOSITE) {
                 device::CompositeInput::getInstance().selectPort(-1);
             } else {
                 LOGWARN("Invalid input type passed to StopInput");
@@ -768,15 +799,15 @@ namespace Plugin {
         returnResponse(false);
     }
 
-    Core::hresult AVInputImplementation::SetVideoRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t type)
+    Core::hresult AVInputImplementation::SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput)
     {
         Core::hresult ret = Core::ERROR_NONE;
 
         try {
-            if (type == HDMI) {
-                device::HdmiInput::getInstance().scaleVideo(x, y, width, height);
+            if (typeOfInput == HDMI) {
+                device::HdmiInput::getInstance().scaleVideo(x, y, w, h);
             } else {
-                device::CompositeInput::getInstance().scaleVideo(x, y, width, height);
+                device::CompositeInput::getInstance().scaleVideo(x, y, w, h);
             }
         } catch (const device::Exception& err) {
             ret = Core::ERROR_GENERAL;
@@ -890,15 +921,16 @@ namespace Plugin {
         }
     }
 
-    Core::hresult AVInputImplementation::getInputDevices(int type, std::list<WPEFramework::Exchange::IAVInput::InputDevice> devices)
+    Core::hresult AVInputImplementation::GetInputDevices(const int typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices)
     {
         Core::hresult result = Core::ERROR_NONE;
+        int num = 0;
+        std::list<WPEFramework::Exchange::IAVInput::InputDevice> inputDeviceList;
 
         try {
-            int num = 0;
-            if (type == HDMI) {
+            if (typeOfInput == HDMI) {
                 num = device::HdmiInput::getInstance().getNumberOfInputs();
-            } else if (type == COMPOSITE) {
+            } else if (typeOfInput == COMPOSITE) {
                 num = device::CompositeInput::getInstance().getNumberOfInputs();
             }
             if (num > 0) {
@@ -909,54 +941,42 @@ namespace Plugin {
 
                     inputDevice.id = i;
                     std::stringstream locator;
-                    if (type == HDMI) {
+                    if (typeOfInput == HDMI) {
                         locator << "hdmiin://localhost/deviceid/" << i;
                         inputDevice.connected = device::HdmiInput::getInstance().isPortConnected(i);
-                    } else if (type == COMPOSITE) {
+                    } else if (typeOfInput == COMPOSITE) {
                         locator << "cvbsin://localhost/deviceid/" << i;
                         inputDevice.connected = device::CompositeInput::getInstance().isPortConnected(i);
                     }
                     inputDevice.locator = locator.str();
                     LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, inputDevice.locator.c_str(), inputDevice.connected);
-                    devices.push_back(inputDevice);
+                    inputDeviceList.push_back(inputDevice);
                 }
             }
         } catch (const std::exception& e) {
             LOGWARN("AVInputService::getInputDevices Failed");
             result = Core::ERROR_GENERAL;
-        }
-
-        return result;
-    }
-
-    Core::hresult AVInputImplementation::GetInputDevices(int type, Exchange::IAVInput::IInputDeviceIterator*& devices)
-    {
-        std::list<WPEFramework::Exchange::IAVInput::InputDevice> list;
-
-        Core::hresult result = getInputDevices(type, list);
-
-        if (Core::ERROR_NONE == result) {
-            devices = Core::Service<RPC::IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(list);
-        } else {
             devices = nullptr;
         }
 
+        devices = Core::Service<RPC::IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(inputDeviceList);
+
         return result;
     }
 
-    Core::hresult AVInputImplementation::WriteEDID(int id, const string& edid)
+    Core::hresult AVInputImplementation::WriteEDID(const int portId, const string& message)
     {
         // TODO: This wasn't implemented in the original code, do we want to implement it?
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::ReadEDID(int id, string& edid)
+    Core::hresult AVInputImplementation::ReadEDID(const int portId, string& EDID)
     {
         vector<uint8_t> edidVec({ 'u', 'n', 'k', 'n', 'o', 'w', 'n' });
 
         try {
             vector<uint8_t> edidVec2;
-            device::HdmiInput::getInstance().getEDIDBytesInfo(id, edidVec2);
+            device::HdmiInput::getInstance().getEDIDBytesInfo(portId, edidVec2);
             edidVec = edidVec2; // edidVec must be "unknown" unless we successfully get to this line
 
             // convert to base64
@@ -967,9 +987,9 @@ namespace Plugin {
                 LOGERR("Size too large to use ToString base64 wpe api");
                 return Core::ERROR_GENERAL;
             }
-            Core::ToString((uint8_t*)&edidVec[0], size, true, edid);
+            Core::ToString((uint8_t*)&edidVec[0], size, true, EDID);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(id));
+            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             return Core::ERROR_GENERAL;
         }
 
@@ -1008,13 +1028,13 @@ namespace Plugin {
      *
      * @param[in] port HDMI/COMPOSITE In port id.
      * @param[in] signalStatus signal status of HDMI/COMPOSITE In port.
+     * @param[in] type HDMI/COMPOSITE In type.
      */
     void AVInputImplementation::AVInputSignalChange(int port, int signalStatus, int type)
     {
         LOGWARN("AVInputSignalStatus [%d, %d, %d]", port, signalStatus, type);
 
-        Exchange::IAVInput::InputSignalInfo signalInfo;
-        signalInfo.id = port;
+        string signalStatusStr;
 
         std::stringstream locator;
         if (type == HDMI) {
@@ -1023,33 +1043,31 @@ namespace Plugin {
             locator << "cvbsin://localhost/deviceid/" << port;
         }
 
-        signalInfo.locator = locator.str();
-
         /* values of dsHdmiInSignalStatus_t and dsCompInSignalStatus_t are same
        Hence used only HDMI macro for case statement */
         switch (signalStatus) {
         case dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL:
-            signalInfo.status = "noSignal";
+            signalStatusStr = "noSignal";
             break;
 
         case dsHDMI_IN_SIGNAL_STATUS_UNSTABLE:
-            signalInfo.status = "unstableSignal";
+            signalStatusStr = "unstableSignal";
             break;
 
         case dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED:
-            signalInfo.status = "notSupportedSignal";
+            signalStatusStr = "notSupportedSignal";
             break;
 
         case dsHDMI_IN_SIGNAL_STATUS_STABLE:
-            signalInfo.status = "stableSignal";
+            signalStatusStr = "stableSignal";
             break;
 
         default:
-            signalInfo.status = "none";
+            signalStatusStr = "none";
             break;
         }
 
-        ParamsType params = signalInfo;
+        ParamsType params = std::make_tuple(port, locator.str(), signalStatusStr);
         dispatchEvent(ON_AVINPUT_SIGNAL_CHANGED, params);
     }
 
@@ -1058,16 +1076,14 @@ namespace Plugin {
      * inputStatusChanged event.
      *
      * @param[in] port HDMI/COMPOSITE In port id.
-     * @param[bool] isPresented HDMI/COMPOSITE In presentation started/stopped.
+     * @param[in] isPresented HDMI/COMPOSITE In presentation started/stopped.
+     * @param[in] type HDMI/COMPOSITE In type.
      */
     void AVInputImplementation::AVInputStatusChange(int port, bool isPresented, int type)
     {
         LOGWARN("avInputStatus [%d, %d, %d]", port, isPresented, type);
 
         std::stringstream locator;
-        Exchange::IAVInput::InputSignalInfo inputSignalInfo;
-
-        inputSignalInfo.id = port;
 
         if (type == HDMI) {
             locator << "hdmiin://localhost/deviceid/" << port;
@@ -1075,19 +1091,8 @@ namespace Plugin {
             locator << "cvbsin://localhost/deviceid/" << port;
         }
 
-        inputSignalInfo.locator = locator.str();
-
-        if (isPresented) {
-            inputSignalInfo.status = "started";
-        } else {
-            inputSignalInfo.status = "stopped";
-        }
-
-        Exchange::IAVInput::InputStatus status;
-        status.info = inputSignalInfo;
-        status.plane = planeType;
-        ParamsType params = status;
-
+        string status = isPresented ? "started" : "stopped";
+        ParamsType params = std::make_tuple(port, locator.str(), status, planeType);
         dispatchEvent(ON_AVINPUT_STATUS_CHANGED, params);
     }
 
@@ -1096,12 +1101,17 @@ namespace Plugin {
      * videoStreamInfoUpdate event.
      *
      * @param[in] port HDMI In port id.
-     * @param[dsVideoPortResolution_t] video resolution data
+     * @param[in] resolution resolution of HDMI In port.
+     * @param[in] type HDMI/COMPOSITE In type.
      */
-    void AVInputImplementation::AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type)
+        void AVInputImplementation::AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type)
     {
-        WPEFramework::Exchange::IAVInput::InputVideoMode inputVideoMode;
-        inputVideoMode.id = port;
+        int width;
+        int height;
+        bool progressive;
+        int frameRateN;
+        int frameRateD;
+
         std::stringstream locator;
 
         LOGWARN("AVInputVideoModeUpdate [%d]", port);
@@ -1112,193 +1122,182 @@ namespace Plugin {
             switch (resolution.pixelResolution) {
 
             case dsVIDEO_PIXELRES_720x480:
-                inputVideoMode.width = 720;
-                inputVideoMode.height = 480;
+                width = 720;
+                height = 480;
                 break;
 
             case dsVIDEO_PIXELRES_720x576:
-                inputVideoMode.width = 720;
-                inputVideoMode.height = 576;
+                width = 720;
+                height = 576;
                 break;
 
             case dsVIDEO_PIXELRES_1280x720:
-                inputVideoMode.width = 1280;
-                inputVideoMode.height = 720;
+                width = 1280;
+                height = 720;
                 break;
 
             case dsVIDEO_PIXELRES_1920x1080:
-                inputVideoMode.width = 1920;
-                inputVideoMode.height = 1080;
+                width = 1920;
+                height = 1080;
                 break;
 
             case dsVIDEO_PIXELRES_3840x2160:
-                inputVideoMode.width = 3840;
-                inputVideoMode.height = 2160;
+                width = 3840;
+                height = 2160;
                 break;
 
             case dsVIDEO_PIXELRES_4096x2160:
-                inputVideoMode.width = 4096;
-                inputVideoMode.height = 2160;
+                width = 4096;
+                height = 2160;
                 break;
 
             default:
-                inputVideoMode.width = 1920;
-                inputVideoMode.height = 1080;
+                width = 1920;
+                height = 1080;
                 break;
             }
-            inputVideoMode.progressive = (!resolution.interlaced);
+
+            progressive = (!resolution.interlaced);
+
         } else if (type == COMPOSITE) {
             locator << "cvbsin://localhost/deviceid/" << port;
 
             switch (resolution.pixelResolution) {
             case dsVIDEO_PIXELRES_720x480:
-                inputVideoMode.width = 720;
-                inputVideoMode.height = 480;
+                width = 720;
+                height = 480;
                 break;
 
             case dsVIDEO_PIXELRES_720x576:
-                inputVideoMode.width = 720;
-                inputVideoMode.height = 576;
+                width = 720;
+                height = 576;
                 break;
 
             default:
-                inputVideoMode.width = 720;
-                inputVideoMode.height = 576;
+                width = 720;
+                height = 576;
                 break;
             }
 
-            inputVideoMode.progressive = false;
+            progressive = false;
         }
-
-        inputVideoMode.locator = locator.str();
 
         switch (resolution.frameRate) {
         case dsVIDEO_FRAMERATE_24:
-            inputVideoMode.frameRateN = 24000;
-            inputVideoMode.frameRateD = 1000;
+            frameRateN = 24000;
+            frameRateD = 1000;
             break;
 
         case dsVIDEO_FRAMERATE_25:
-            inputVideoMode.frameRateN = 25000;
-            inputVideoMode.frameRateD = 1000;
+            frameRateN = 25000;
+            frameRateD = 1000;
             break;
 
         case dsVIDEO_FRAMERATE_30:
-            inputVideoMode.frameRateN = 30000;
-            inputVideoMode.frameRateD = 1000;
+            frameRateN = 30000;
+            frameRateD = 1000;
             break;
 
         case dsVIDEO_FRAMERATE_50:
-            inputVideoMode.frameRateN = 50000;
-            inputVideoMode.frameRateD = 1000;
+            frameRateN = 50000;
+            frameRateD = 1000;
             break;
 
         case dsVIDEO_FRAMERATE_60:
-            inputVideoMode.frameRateN = 60000;
-            inputVideoMode.frameRateD = 1000;
+            frameRateN = 60000;
+            frameRateD = 1000;
             break;
 
         case dsVIDEO_FRAMERATE_23dot98:
-            inputVideoMode.frameRateN = 24000;
-            inputVideoMode.frameRateD = 1001;
+            frameRateN = 24000;
+            frameRateD = 1001;
             break;
 
         case dsVIDEO_FRAMERATE_29dot97:
-            inputVideoMode.frameRateN = 30000;
-            inputVideoMode.frameRateD = 1001;
+            frameRateN = 30000;
+            frameRateD = 1001;
             break;
 
         case dsVIDEO_FRAMERATE_59dot94:
-            inputVideoMode.frameRateN = 60000;
-            inputVideoMode.frameRateD = 1001;
+            frameRateN = 60000;
+            frameRateD = 1001;
             break;
 
         case dsVIDEO_FRAMERATE_100:
-            inputVideoMode.frameRateN = 100000;
-            inputVideoMode.frameRateD = 1000;
+            frameRateN = 100000;
+            frameRateD = 1000;
             break;
 
         case dsVIDEO_FRAMERATE_119dot88:
-            inputVideoMode.frameRateN = 120000;
-            inputVideoMode.frameRateD = 1001;
+            frameRateN = 120000;
+            frameRateD = 1001;
             break;
 
         case dsVIDEO_FRAMERATE_120:
-            inputVideoMode.frameRateN = 120000;
-            inputVideoMode.frameRateD = 1000;
+            frameRateN = 120000;
+            frameRateD = 1000;
             break;
 
         case dsVIDEO_FRAMERATE_200:
-            inputVideoMode.frameRateN = 200000;
-            inputVideoMode.frameRateD = 1000;
+            frameRateN = 200000;
+            frameRateD = 1000;
             break;
 
         case dsVIDEO_FRAMERATE_239dot76:
-            inputVideoMode.frameRateN = 240000;
-            inputVideoMode.frameRateD = 1001;
+            frameRateN = 240000;
+            frameRateD = 1001;
             break;
 
         case dsVIDEO_FRAMERATE_240:
-            inputVideoMode.frameRateN = 240000;
-            inputVideoMode.frameRateD = 1000;
+            frameRateN = 240000;
+            frameRateD = 1000;
             break;
 
         default:
-            inputVideoMode.frameRateN = 60000;
-            inputVideoMode.frameRateD = 1000;
+            frameRateN = 60000;
+            frameRateD = 1000;
             break;
         }
 
-        ParamsType params = inputVideoMode;
-
+        ParamsType params = std::make_tuple(port, locator.str(), width, height, progressive, frameRateN, frameRateD);
         dispatchEvent(ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE, params);
     }
 
+
     void AVInputImplementation::hdmiInputAviContentTypeChange(int port, int content_type)
     {
-        WPEFramework::Exchange::IAVInput::ContentInfo contentInfo;
-        contentInfo.id = port;
-        contentInfo.contentType = content_type;
-
-        ParamsType params = contentInfo;
+        ParamsType params = std::make_tuple(port, content_type);
         dispatchEvent(ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE, params);
     }
 
     void AVInputImplementation::AVInputALLMChange(int port, bool allm_mode)
     {
-        WPEFramework::Exchange::IAVInput::GameFeatureStatus status;
-        status.id = port;
-        status.gameFeature = STR_ALLM;
-        status.allmMode = allm_mode;
-
-        ParamsType params = status;
+        ParamsType params = std::make_tuple(port, STR_ALLM, allm_mode);
         dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
     }
 
     void AVInputImplementation::AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode)
     {
-        WPEFramework::Exchange::IAVInput::GameFeatureStatus status;
-        status.id = port;
-        status.allmMode = vrr_mode;
+        string gameFeature;
 
         switch (vrr_type) {
         case dsVRR_HDMI_VRR:
-            status.gameFeature = VRR_TYPE_HDMI;
+            gameFeature = VRR_TYPE_HDMI;
             break;
         case dsVRR_AMD_FREESYNC:
-            status.gameFeature = VRR_TYPE_FREESYNC;
+            gameFeature = VRR_TYPE_FREESYNC;
             break;
         case dsVRR_AMD_FREESYNC_PREMIUM:
-            status.gameFeature = VRR_TYPE_FREESYNC_PREMIUM;
+            gameFeature = VRR_TYPE_FREESYNC_PREMIUM;
             break;
         case dsVRR_AMD_FREESYNC_PREMIUM_PRO:
-            status.gameFeature = VRR_TYPE_FREESYNC_PREMIUM_PRO;
+            gameFeature = VRR_TYPE_FREESYNC_PREMIUM_PRO;
             break;
         default:
             break;
         }
 
-        ParamsType params = status;
+        ParamsType params = std::make_tuple(port, gameFeature, vrr_mode);
         dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
     }
 
@@ -1373,30 +1372,30 @@ namespace Plugin {
         }
     }
 
-    Core::hresult AVInputImplementation::GetGameFeatureStatus(int id, const string& feature, bool& mode)
+    Core::hresult AVInputImplementation::GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode)
     {
         // TODO: The current docs state that the id parameter is optional, but that's not the case in existing code. Which is correct?
 
-        if (feature == STR_ALLM) {
-            mode = getALLMStatus(id);
-        } else if (feature == VRR_TYPE_HDMI) {
+        if (gameFeature == STR_ALLM) {
+            mode = getALLMStatus(portId);
+        } else if (gameFeature == VRR_TYPE_HDMI) {
             dsHdmiInVrrStatus_t vrrStatus;
-            getVRRStatus(id, &vrrStatus);
+            getVRRStatus(portId, &vrrStatus);
             mode = (vrrStatus.vrrType == dsVRR_HDMI_VRR);
-        } else if (feature == VRR_TYPE_FREESYNC) {
+        } else if (gameFeature == VRR_TYPE_FREESYNC) {
             dsHdmiInVrrStatus_t vrrStatus;
-            getVRRStatus(id, &vrrStatus);
+            getVRRStatus(portId, &vrrStatus);
             mode = (vrrStatus.vrrType == dsVRR_AMD_FREESYNC);
-        } else if (feature == VRR_TYPE_FREESYNC_PREMIUM) {
+        } else if (gameFeature == VRR_TYPE_FREESYNC_PREMIUM) {
             dsHdmiInVrrStatus_t vrrStatus;
-            getVRRStatus(id, &vrrStatus);
+            getVRRStatus(portId, &vrrStatus);
             mode = (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM);
-        } else if (feature == VRR_TYPE_FREESYNC_PREMIUM_PRO) {
+        } else if (gameFeature == VRR_TYPE_FREESYNC_PREMIUM_PRO) {
             dsHdmiInVrrStatus_t vrrStatus;
-            getVRRStatus(id, &vrrStatus);
+            getVRRStatus(portId, &vrrStatus);
             mode = (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM_PRO);
         } else {
-            LOGWARN("AVInputImplementation::GetGameFeatureStatus Unsupported feature: %s", feature.c_str());
+            LOGWARN("AVInputImplementation::GetGameFeatureStatus Unsupported feature: %s", gameFeature.c_str());
             return Core::ERROR_NOT_SUPPORTED;
         }
 
@@ -1485,15 +1484,15 @@ namespace Plugin {
         }
     }
 
-    Core::hresult AVInputImplementation::GetRawSPD(int id, string& spd)
+    Core::hresult AVInputImplementation::GetRawSPD(const int portId, string& HDMISPD)
     {
         LOGINFO("AVInputImplementation::getSPDInfo");
         vector<uint8_t> spdVect({ 'u', 'n', 'k', 'n', 'o', 'w', 'n' });
-        spd.clear();
+        HDMISPD.clear();
         try {
             LOGWARN("AVInputImplementation::getSPDInfo");
             vector<uint8_t> spdVect2;
-            device::HdmiInput::getInstance().getHDMISPDInfo(id, spdVect2);
+            device::HdmiInput::getInstance().getHDMISPDInfo(portId, spdVect2);
             spdVect = spdVect2; // spdVect must be "unknown" unless we successfully get to this line
 
             // convert to base64
@@ -1510,15 +1509,15 @@ namespace Plugin {
             for (size_t itr = 0; itr < spdVect.size(); itr++) {
                 LOGINFO("%02X ", spdVect[itr]);
             }
-            Core::ToString((uint8_t*)&spdVect[0], size, false, spd);
+            Core::ToString((uint8_t*)&spdVect[0], size, false, HDMISPD);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(id));
+            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             return Core::ERROR_GENERAL;
         }
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetSPD(int id, string& spd)
+    Core::hresult AVInputImplementation::GetSPD(const int portId, string& HDMISPD)
     {
         vector<uint8_t> spdVect({ 'u', 'n', 'k', 'n', 'o', 'w', 'n' });
 
@@ -1527,7 +1526,7 @@ namespace Plugin {
         try {
             LOGWARN("AVInputImplementation::getSPDInfo");
             vector<uint8_t> spdVect2;
-            device::HdmiInput::getInstance().getHDMISPDInfo(id, spdVect2);
+            device::HdmiInput::getInstance().getHDMISPDInfo(portId, spdVect2);
             spdVect = spdVect2; // edidVec must be "unknown" unless we successfully get to this line
 
             // convert to base64
@@ -1552,10 +1551,10 @@ namespace Plugin {
                 char str[200] = { 0 };
                 snprintf(str, sizeof(str), "Packet Type:%02X,Version:%u,Length:%u,vendor name:%s,product des:%s,source info:%02X",
                     pre.pkttype, pre.version, pre.length, pre.vendor_name, pre.product_des, pre.source_info);
-                spd = str;
+                HDMISPD = str;
             }
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(id));
+            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             return Core::ERROR_GENERAL;
         }
 
@@ -1596,14 +1595,14 @@ namespace Plugin {
 
         LOGINFO("GLOBAL primary Volume=%d input Volume=%d \n", m_primVolume, m_inputVolume);
 
-        returnResponse(Core::ERROR_NONE == SetAudioMixerLevels({ m_primVolume, m_inputVolume }));
+        returnResponse(Core::ERROR_NONE == SetAudioMixerLevels(m_primVolume, m_inputVolume));
     }
 
-    Core::hresult AVInputImplementation::SetAudioMixerLevels(Exchange::IAVInput::MixerLevels levels)
+    Core::hresult AVInputImplementation::SetAudioMixerLevels(const int primaryVolume, const int inputVolume)
     {
         try {
-            device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY, levels.primaryVolume);
-            device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, levels.playerVolume);
+            device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY, primaryVolume);
+            device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, inputVolume);
         } catch (...) {
             LOGWARN("Not setting SoC volume !!!\n");
             return Core::ERROR_GENERAL;
@@ -1613,7 +1612,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::SetEdid2AllmSupport(int portId, bool allmSupport)
+    Core::hresult AVInputImplementation::SetEdid2AllmSupport(const int portId, const bool allmSupport)
     {
         Core::hresult ret = Core::ERROR_NONE;
         try {
@@ -1647,15 +1646,17 @@ namespace Plugin {
         returnResponse(Core::ERROR_NONE == SetEdid2AllmSupport(portId, allmSupport));
     }
 
-    Core::hresult AVInputImplementation::GetEdid2AllmSupport(int portId, bool& allmSupportValue)
+    Core::hresult AVInputImplementation::GetEdid2AllmSupport(const int portId, bool& allmSupport, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
         try {
-            device::HdmiInput::getInstance().getEdid2AllmSupport(portId, &allmSupportValue);
-            LOGINFO("AVInput - getEdid2AllmSupport:%d", allmSupportValue);
+            device::HdmiInput::getInstance().getEdid2AllmSupport(portId, &allmSupport);
+            success = true;
+            LOGINFO("AVInput - getEdid2AllmSupport:%d", allmSupport);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             ret = Core::ERROR_GENERAL;
+            success = false;
         }
         return ret;
     }
@@ -1667,6 +1668,7 @@ namespace Plugin {
 
         int portId = 0;
         bool allmSupport = true;
+        bool success;
         returnIfParamNotFound(parameters, "portId");
 
         try {
@@ -1676,7 +1678,7 @@ namespace Plugin {
             returnResponse(false);
         }
 
-        Core::hresult result = GetEdid2AllmSupport(portId, allmSupport);
+        Core::hresult result = GetEdid2AllmSupport(portId, allmSupport, success);
         if (Core::ERROR_NONE == result) {
             response["allmSupport"] = allmSupport;
         }
@@ -1684,7 +1686,7 @@ namespace Plugin {
         returnResponse(Core::ERROR_NONE == result);
     }
 
-    Core::hresult AVInputImplementation::GetVRRSupport(int portId, bool& vrrSupport)
+    Core::hresult AVInputImplementation::GetVRRSupport(const int portId, bool& vrrSupport)
     {
         Core::hresult ret = Core::ERROR_NONE;
 
@@ -1723,14 +1725,14 @@ namespace Plugin {
         returnResponse(Core::ERROR_NONE == result);
     }
 
-    Core::hresult AVInputImplementation::SetVRRSupport(int id, bool vrrSupport)
+    Core::hresult AVInputImplementation::SetVRRSupport(const int portId, const bool vrrSupport)
     {
         Core::hresult ret = Core::ERROR_NONE;
         try {
-            device::HdmiInput::getInstance().setVRRSupport(id, vrrSupport);
+            device::HdmiInput::getInstance().setVRRSupport(portId, vrrSupport);
             LOGWARN("AVInput -  vrrSupport:%d", vrrSupport);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(id));
+            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             ret = Core::ERROR_GENERAL;
         }
         return ret;
@@ -1805,34 +1807,39 @@ namespace Plugin {
         returnResponse(Core::ERROR_NONE == SetEdidVersion(portId, sVersion));
     }
 
-    Core::hresult AVInputImplementation::GetHdmiVersion(int id, string& hdmiVersion)
+    Core::hresult AVInputImplementation::GetHdmiVersion(const int portId, string& HdmiCapabilityVersion, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
         dsHdmiMaxCapabilityVersion_t hdmiCapVersion = HDMI_COMPATIBILITY_VERSION_14;
 
         try {
-            device::HdmiInput::getInstance().getHdmiVersion(id, &hdmiCapVersion);
+            device::HdmiInput::getInstance().getHdmiVersion(portId, &hdmiCapVersion);
             LOGWARN("AVInputImplementation::GetHdmiVersion Hdmi Version:%d", hdmiCapVersion);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(id));
+            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             return Core::ERROR_GENERAL;
         }
 
         switch ((int)hdmiCapVersion) {
         case HDMI_COMPATIBILITY_VERSION_14:
-            hdmiVersion = "1.4";
+            HdmiCapabilityVersion = "1.4";
+            success = true;
             break;
         case HDMI_COMPATIBILITY_VERSION_20:
-            hdmiVersion = "2.0";
+            HdmiCapabilityVersion = "2.0";
+            success = true;
             break;
         case HDMI_COMPATIBILITY_VERSION_21:
-            hdmiVersion = "2.1";
+            HdmiCapabilityVersion = "2.1";
+            success = true;
             break;
         default:
+            success = false;
             return Core::ERROR_GENERAL;
         }
 
         if (hdmiCapVersion == HDMI_COMPATIBILITY_VERSION_MAX) {
+            success = false;
             return Core::ERROR_GENERAL;
         }
 
@@ -1854,7 +1861,8 @@ namespace Plugin {
         }
 
         string hdmiVersion;
-        Core::hresult ret = GetHdmiVersion(portId, hdmiVersion);
+        bool success;
+        Core::hresult ret = GetHdmiVersion(portId, hdmiVersion, success);
 
         if (ret == Core::ERROR_NONE) {
             response["HdmiCapabilityVersion"] = hdmiVersion;
@@ -1864,25 +1872,25 @@ namespace Plugin {
         }
     }
 
-    Core::hresult AVInputImplementation::SetEdidVersion(int id, const string& version)
+    Core::hresult AVInputImplementation::SetEdidVersion(const int portId, const string& edidVersion)
     {
         Core::hresult ret = Core::ERROR_NONE;
         int edidVer = -1;
 
-        if (strcmp(version.c_str(), "HDMI1.4") == 0) {
+        if (strcmp(edidVersion.c_str(), "HDMI1.4") == 0) {
             edidVer = HDMI_EDID_VER_14;
-        } else if (strcmp(version.c_str(), "HDMI2.0") == 0) {
+        } else if (strcmp(edidVersion.c_str(), "HDMI2.0") == 0) {
             edidVer = HDMI_EDID_VER_20;
         } else {
-            LOGERR("Invalid EDID Version: %s", version.c_str());
+            LOGERR("Invalid EDID Version: %s", edidVersion.c_str());
             return Core::ERROR_GENERAL;
         }
 
         try {
-            device::HdmiInput::getInstance().setEdidVersion(id, edidVer);
-            LOGWARN("AVInputImplementation::setEdidVersion EDID Version: %s", version.c_str());
+            device::HdmiInput::getInstance().setEdidVersion(portId, edidVer);
+            LOGWARN("AVInputImplementation::setEdidVersion EDID Version: %s", edidVersion.c_str());
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(id));
+            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             ret = Core::ERROR_GENERAL;
         }
 
@@ -1918,25 +1926,25 @@ namespace Plugin {
         }
     }
 
-    Core::hresult AVInputImplementation::GetEdidVersion(int id, string& version)
+    Core::hresult AVInputImplementation::GetEdidVersion(const int portId, string& edidVersion)
     {
         Core::hresult ret = Core::ERROR_NONE;
-        int edidVersion = -1;
+        int version = -1;
 
         try {
-            device::HdmiInput::getInstance().getEdidVersion(id, &edidVersion);
-            LOGWARN("AVInputImplementation::getEdidVersion EDID Version:%d", edidVersion);
+            device::HdmiInput::getInstance().getEdidVersion(portId, &version);
+            LOGWARN("AVInputImplementation::getEdidVersion EDID Version:%d", version);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(id));
+            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             return Core::ERROR_GENERAL;
         }
 
-        switch (edidVersion) {
+        switch (version) {
         case HDMI_EDID_VER_14:
-            version = "HDMI1.4";
+            edidVersion = "HDMI1.4";
             break;
         case HDMI_EDID_VER_20:
-            version = "HDMI2.0";
+            edidVersion = "HDMI2.0";
             break;
         default:
             return Core::ERROR_GENERAL;
