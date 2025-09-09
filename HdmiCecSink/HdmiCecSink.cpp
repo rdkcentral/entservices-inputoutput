@@ -692,139 +692,159 @@ namespace WPEFramework
        }
        const std::string HdmiCecSink::Initialize(PluginHost::IShell *service)
        {
-            InitializePowerManager(service);
-		   profileType = searchRdkProfile();
+           string msg = "";
 
-		   if (profileType == STB || profileType == NOT_FOUND)
-		   {
-			   LOGINFO("Invalid profile type for TV \n");
-			   return (std::string("Not supported"));
-		   }
-
-           HdmiCecSink::_instance = this;
-		   smConnection=NULL;
-		   cecEnableStatus = false;
-		   HdmiCecSink::_instance->m_numberOfDevices = 0;
-		   m_logicalAddressAllocated = LogicalAddress::UNREGISTERED;
-		   m_currentActiveSource = -1;
-		   m_isHdmiInConnected = false;
-		   hdmiCecAudioDeviceConnected = false;
-		   m_isAudioStatusInfoUpdated = false;
-		   m_audioStatusRequestedCount = 0;
-		   m_audioStatusReceived = false;
-		   m_audioStatusTimerStarted = false;
-                   m_audioDevicePowerStatusRequested = false;
-		   m_pollNextState = POLL_THREAD_STATE_NONE;
-		   m_pollThreadState = POLL_THREAD_STATE_NONE;
-		   m_video_latency = DEFAULT_VIDEO_LATENCY;
-		   m_latency_flags = DEFAULT_LATENCY_FLAGS ;
-		   m_audio_output_delay = DEFAULT_AUDIO_OUTPUT_DELAY;
-
-           Register(HDMICECSINK_METHOD_SET_ENABLED, &HdmiCecSink::setEnabledWrapper, this);
-           Register(HDMICECSINK_METHOD_GET_ENABLED, &HdmiCecSink::getEnabledWrapper, this);
-           Register(HDMICECSINK_METHOD_SET_OSD_NAME, &HdmiCecSink::setOSDNameWrapper, this);
-           Register(HDMICECSINK_METHOD_GET_OSD_NAME, &HdmiCecSink::getOSDNameWrapper, this);
-           Register(HDMICECSINK_METHOD_SET_VENDOR_ID, &HdmiCecSink::setVendorIdWrapper, this);
-           Register(HDMICECSINK_METHOD_GET_VENDOR_ID, &HdmiCecSink::getVendorIdWrapper, this);
-		   Register(HDMICECSINK_METHOD_PRINT_DEVICE_LIST, &HdmiCecSink::printDeviceListWrapper, this);
-		   Register(HDMICECSINK_METHOD_SET_ACTIVE_PATH, &HdmiCecSink::setActivePathWrapper, this);
-		   Register(HDMICECSINK_METHOD_SET_ROUTING_CHANGE, &HdmiCecSink::setRoutingChangeWrapper, this); 
-		   Register(HDMICECSINK_METHOD_GET_DEVICE_LIST, &HdmiCecSink::getDeviceListWrapper, this);
-		   Register(HDMICECSINK_METHOD_GET_ACTIVE_SOURCE, &HdmiCecSink::getActiveSourceWrapper, this);
-		   Register(HDMICECSINK_METHOD_SET_ACTIVE_SOURCE, &HdmiCecSink::setActiveSourceWrapper, this);
-	       Register(HDMICECSINK_METHOD_GET_ACTIVE_ROUTE, &HdmiCecSink::getActiveRouteWrapper, this);
-		   Register(HDMICECSINK_METHOD_REQUEST_ACTIVE_SOURCE, &HdmiCecSink::requestActiveSourceWrapper, this);
-           Register(HDMICECSINK_METHOD_SETUP_ARC, &HdmiCecSink::setArcEnableDisableWrapper, this);
-		   Register(HDMICECSINK_METHOD_SET_MENU_LANGUAGE, &HdmiCecSink::setMenuLanguageWrapper, this);
-           Register(HDMICECSINK_METHOD_REQUEST_SHORT_AUDIO_DESCRIPTOR, &HdmiCecSink::requestShortAudioDescriptorWrapper, this);
-           Register(HDMICECSINK_METHOD_SEND_STANDBY_MESSAGE, &HdmiCecSink::sendStandbyMessageWrapper, this);	   
-		   Register(HDMICECSINK_METHOD_SEND_AUDIO_DEVICE_POWER_ON, &HdmiCecSink::sendAudioDevicePowerOnMsgWrapper, this);
-		   Register(HDMICECSINK_METHOD_SEND_KEY_PRESS,&HdmiCecSink::sendRemoteKeyPressWrapper,this);
-		   Register(HDMICECSINK_METHOD_SEND_USER_CONTROL_PRESSED,&HdmiCecSink::sendUserControlPressedWrapper,this);
-		   Register(HDMICECSINK_METHOD_SEND_USER_CONTROL_RELEASED,&HdmiCecSink::sendUserControlReleasedWrapper,this);
-		   Register(HDMICECSINK_METHOD_SEND_GIVE_AUDIO_STATUS,&HdmiCecSink::sendGiveAudioStatusWrapper,this);
-		   Register(HDMICECSINK_METHOD_GET_AUDIO_DEVICE_CONNECTED_STATUS,&HdmiCecSink::getAudioDeviceConnectedStatusWrapper,this);
-		   Register(HDMICECSINK_METHOD_REQUEST_AUDIO_DEVICE_POWER_STATUS,&HdmiCecSink::requestAudioDevicePowerStatusWrapper,this);
-		   Register(HDMICECSINK_METHOD_SET_LATENCY_INFO, &HdmiCecSink::setLatencyInfoWrapper, this);
-           logicalAddressDeviceType = "None";
-           logicalAddress = 0xFF;
-           // load persistence setting
-           loadSettings();
-
-           int err;
-           dsHdmiInGetNumberOfInputsParam_t hdmiInput;
-#ifdef IO_HCEC_ENABLE_IARM
-           InitializeIARM();
-#else
-           device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE[HdmiCecSink]");
-#endif /* IO_HCEC_ENABLE_IARM */
-           m_sendKeyEventThreadExit = false;
-           m_sendKeyEventThread = std::thread(threadSendKeyEvent);
-
-           m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
-           m_semSignaltoArcRoutingThread.acquire();
-           m_arcRoutingThread = std::thread(threadArcRouting);
-
-	   m_audioStatusDetectionTimer.connect( std::bind( &HdmiCecSink::audioStatusTimerFunction, this ) );
-	   m_audioStatusDetectionTimer.setSingleShot(true);
-           m_arcStartStopTimer.connect( std::bind( &HdmiCecSink::arcStartStopTimerFunction, this ) );
-           m_arcStartStopTimer.setSingleShot(true);
-            // get power state:
-            Core::hresult res = Core::ERROR_GENERAL;
-            PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
-            PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
-
-            ASSERT (_powerManagerPlugin);
-            if (_powerManagerPlugin) {
-                res = _powerManagerPlugin->GetPowerState(pwrStateCur, pwrStatePrev);
-                if (Core::ERROR_NONE == res) {
-                    powerState = (pwrStateCur == WPEFramework::Exchange::IPowerManager::POWER_STATE_ON) ? DEVICE_POWER_STATE_ON : DEVICE_POWER_STATE_OFF;
-                    LOGINFO("Current state is PowerManagerPlugin: (%d) powerState :%d \n", pwrStateCur, powerState);
-                }
-            }
-
-#ifdef IO_HCEC_ENABLE_IARM
-            err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
-                            IARM_BUS_DSMGR_API_dsHdmiInGetNumberOfInputs,
-                            (void *)&hdmiInput,
-                            sizeof(hdmiInput));
-
-           if (err == IARM_RESULT_SUCCESS && hdmiInput.result == dsERR_NONE)
+           try
            {
-				LOGINFO("Number of Inputs [%d] \n", hdmiInput.numHdmiInputs );
-            	m_numofHdmiInput = hdmiInput.numHdmiInputs;
-           }else{
-				LOGINFO("Not able to get Numebr of inputs so defaulting to 3 \n");
-				m_numofHdmiInput = 3;
-			}
+                device::Manager::Initialize();
+                LOGINFO("device::Manager::Initialize success");
+           }
+           catch(const device::Exception& err)
+           {
+                LOGINFO("device::Manager::Initialize failed");
+                msg = "HdmiCecSink plugin Initialize failed";
+                LOG_DEVICE_EXCEPTION0();
+           }
+
+           if (0 == msg.length())
+           {
+              InitializePowerManager(service);
+              profileType = searchRdkProfile();
+
+              if (profileType == STB || profileType == NOT_FOUND)
+              {
+                  LOGINFO("Invalid profile type for TV \n");
+                  msg = "Not supported";
+                  return msg;
+              }
+
+              HdmiCecSink::_instance = this;
+              smConnection=NULL;
+              cecEnableStatus = false;
+              HdmiCecSink::_instance->m_numberOfDevices = 0;
+              m_logicalAddressAllocated = LogicalAddress::UNREGISTERED;
+              m_currentActiveSource = -1;
+              m_isHdmiInConnected = false;
+              hdmiCecAudioDeviceConnected = false;
+              m_isAudioStatusInfoUpdated = false;
+              m_audioStatusRequestedCount = 0;
+              m_audioStatusReceived = false;
+              m_audioStatusTimerStarted = false;
+                      m_audioDevicePowerStatusRequested = false;
+              m_pollNextState = POLL_THREAD_STATE_NONE;
+              m_pollThreadState = POLL_THREAD_STATE_NONE;
+              m_video_latency = DEFAULT_VIDEO_LATENCY;
+              m_latency_flags = DEFAULT_LATENCY_FLAGS ;
+              m_audio_output_delay = DEFAULT_AUDIO_OUTPUT_DELAY;
+
+              Register(HDMICECSINK_METHOD_SET_ENABLED, &HdmiCecSink::setEnabledWrapper, this);
+              Register(HDMICECSINK_METHOD_GET_ENABLED, &HdmiCecSink::getEnabledWrapper, this);
+              Register(HDMICECSINK_METHOD_SET_OSD_NAME, &HdmiCecSink::setOSDNameWrapper, this);
+              Register(HDMICECSINK_METHOD_GET_OSD_NAME, &HdmiCecSink::getOSDNameWrapper, this);
+              Register(HDMICECSINK_METHOD_SET_VENDOR_ID, &HdmiCecSink::setVendorIdWrapper, this);
+              Register(HDMICECSINK_METHOD_GET_VENDOR_ID, &HdmiCecSink::getVendorIdWrapper, this);
+              Register(HDMICECSINK_METHOD_PRINT_DEVICE_LIST, &HdmiCecSink::printDeviceListWrapper, this);
+              Register(HDMICECSINK_METHOD_SET_ACTIVE_PATH, &HdmiCecSink::setActivePathWrapper, this);
+              Register(HDMICECSINK_METHOD_SET_ROUTING_CHANGE, &HdmiCecSink::setRoutingChangeWrapper, this); 
+              Register(HDMICECSINK_METHOD_GET_DEVICE_LIST, &HdmiCecSink::getDeviceListWrapper, this);
+              Register(HDMICECSINK_METHOD_GET_ACTIVE_SOURCE, &HdmiCecSink::getActiveSourceWrapper, this);
+              Register(HDMICECSINK_METHOD_SET_ACTIVE_SOURCE, &HdmiCecSink::setActiveSourceWrapper, this);
+              Register(HDMICECSINK_METHOD_GET_ACTIVE_ROUTE, &HdmiCecSink::getActiveRouteWrapper, this);
+              Register(HDMICECSINK_METHOD_REQUEST_ACTIVE_SOURCE, &HdmiCecSink::requestActiveSourceWrapper, this);
+              Register(HDMICECSINK_METHOD_SETUP_ARC, &HdmiCecSink::setArcEnableDisableWrapper, this);
+              Register(HDMICECSINK_METHOD_SET_MENU_LANGUAGE, &HdmiCecSink::setMenuLanguageWrapper, this);
+              Register(HDMICECSINK_METHOD_REQUEST_SHORT_AUDIO_DESCRIPTOR, &HdmiCecSink::requestShortAudioDescriptorWrapper, this);
+              Register(HDMICECSINK_METHOD_SEND_STANDBY_MESSAGE, &HdmiCecSink::sendStandbyMessageWrapper, this);       
+              Register(HDMICECSINK_METHOD_SEND_AUDIO_DEVICE_POWER_ON, &HdmiCecSink::sendAudioDevicePowerOnMsgWrapper, this);
+              Register(HDMICECSINK_METHOD_SEND_KEY_PRESS,&HdmiCecSink::sendRemoteKeyPressWrapper,this);
+              Register(HDMICECSINK_METHOD_SEND_USER_CONTROL_PRESSED,&HdmiCecSink::sendUserControlPressedWrapper,this);
+              Register(HDMICECSINK_METHOD_SEND_USER_CONTROL_RELEASED,&HdmiCecSink::sendUserControlReleasedWrapper,this);
+              Register(HDMICECSINK_METHOD_SEND_GIVE_AUDIO_STATUS,&HdmiCecSink::sendGiveAudioStatusWrapper,this);
+              Register(HDMICECSINK_METHOD_GET_AUDIO_DEVICE_CONNECTED_STATUS,&HdmiCecSink::getAudioDeviceConnectedStatusWrapper,this);
+              Register(HDMICECSINK_METHOD_REQUEST_AUDIO_DEVICE_POWER_STATUS,&HdmiCecSink::requestAudioDevicePowerStatusWrapper,this);
+              Register(HDMICECSINK_METHOD_SET_LATENCY_INFO, &HdmiCecSink::setLatencyInfoWrapper, this);
+              logicalAddressDeviceType = "None";
+              logicalAddress = 0xFF;
+              // load persistence setting
+              loadSettings();
+
+              int err;
+              dsHdmiInGetNumberOfInputsParam_t hdmiInput;
+#ifdef IO_HCEC_ENABLE_IARM
+              InitializeIARM();
 #else
-            m_numofHdmiInput = device::HdmiInput::getInstance().getNumberOfInputs();
+              device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE[HdmiCecSink]");
 #endif /* IO_HCEC_ENABLE_IARM */
-			LOGINFO("initalize inputs \n");
+              m_sendKeyEventThreadExit = false;
+              m_sendKeyEventThread = std::thread(threadSendKeyEvent);
 
-           for (int i = 0; i < m_numofHdmiInput; i++){
-				HdmiPortMap hdmiPort((uint8_t)i);
-				LOGINFO(" Add to vector [%d] \n", i);
-				hdmiInputs.push_back(hdmiPort);
-			}
+              m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+              m_semSignaltoArcRoutingThread.acquire();
+              m_arcRoutingThread = std::thread(threadArcRouting);
 
-			LOGINFO("Check the HDMI State \n");
+              m_audioStatusDetectionTimer.connect( std::bind( &HdmiCecSink::audioStatusTimerFunction, this ) );
+              m_audioStatusDetectionTimer.setSingleShot(true);
+              m_arcStartStopTimer.connect( std::bind( &HdmiCecSink::arcStartStopTimerFunction, this ) );
+              m_arcStartStopTimer.setSingleShot(true);
+               // get power state:
+               Core::hresult res = Core::ERROR_GENERAL;
+               PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
+               PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
 
-			CheckHdmiInState();
-			if (cecSettingEnabled)
-            {
-               try
-               {
-                   CECEnable();
+               ASSERT (_powerManagerPlugin);
+               if (_powerManagerPlugin) {
+                   res = _powerManagerPlugin->GetPowerState(pwrStateCur, pwrStatePrev);
+                   if (Core::ERROR_NONE == res) {
+                       powerState = (pwrStateCur == WPEFramework::Exchange::IPowerManager::POWER_STATE_ON) ? DEVICE_POWER_STATE_ON : DEVICE_POWER_STATE_OFF;
+                       LOGINFO("Current state is PowerManagerPlugin: (%d) powerState :%d \n", pwrStateCur, powerState);
+                   }
                }
-               catch(...)
-               {
-                   LOGWARN("Exception while enabling CEC settings .\r\n");
+
+#ifdef IO_HCEC_ENABLE_IARM
+               err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
+                               IARM_BUS_DSMGR_API_dsHdmiInGetNumberOfInputs,
+                               (void *)&hdmiInput,
+                               sizeof(hdmiInput));
+
+              if (err == IARM_RESULT_SUCCESS && hdmiInput.result == dsERR_NONE)
+              {
+                   LOGINFO("Number of Inputs [%d] \n", hdmiInput.numHdmiInputs );
+                   m_numofHdmiInput = hdmiInput.numHdmiInputs;
+              }else{
+                   LOGINFO("Not able to get Numebr of inputs so defaulting to 3 \n");
+                   m_numofHdmiInput = 3;
                }
-            }
-            getCecVersion();
-	   LOGINFO(" HdmiCecSink plugin Initialize completed \n");
-           return (std::string());
+#else
+               m_numofHdmiInput = device::HdmiInput::getInstance().getNumberOfInputs();
+#endif /* IO_HCEC_ENABLE_IARM */
+               LOGINFO("initalize inputs \n");
+
+              for (int i = 0; i < m_numofHdmiInput; i++){
+                   HdmiPortMap hdmiPort((uint8_t)i);
+                   LOGINFO(" Add to vector [%d] \n", i);
+                   hdmiInputs.push_back(hdmiPort);
+               }
+
+               LOGINFO("Check the HDMI State \n");
+
+               CheckHdmiInState();
+               if (cecSettingEnabled)
+               {
+                  try
+                  {
+                      CECEnable();
+                  }
+                  catch(...)
+                  {
+                      LOGWARN("Exception while enabling CEC settings .\r\n");
+                      msg = "Exception while enabling CEC settings";
+                  }
+               }
+               getCecVersion();
+           }
+
+           LOGINFO(" HdmiCecSink plugin Initialize completed \n");
+           return msg;
 
        }
 
@@ -891,6 +911,17 @@ namespace WPEFramework
 #else
            device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
 #endif /* IO_HCEC_ENABLE_IARM */
+
+        try
+        {
+            device::Manager::DeInitialize();
+            LOGINFO("device::Manager::DeInitialize success");
+        }
+        catch(const device::Exception& err)
+        {
+            LOGINFO("device::Manager::DeInitialize failed");
+            LOG_DEVICE_EXCEPTION0();
+        }
 
 	    LOGWARN(" HdmiCecSink Deinitialize() Done");
        }
@@ -3607,22 +3638,6 @@ namespace WPEFramework
         } while(retryCount++ <= 6);
       }
 #else
-
-#ifdef TBD_IN_DS_CLIENT
-    void HdmiInput::getHDMIARCPortId(int *portId)
-    {
-        if(NULL != portId)
-        {
-            dsError_t error = dsERR_GENERAL;
-            error = dsGetHDMIARCPortId(portId);
-            if(dsERR_NONE != error)
-            {
-                *portId = -1;
-            }
-        }
-    }
-#endif /* TBD_IN_DS_CLIENT */
-
     void HdmiCecSink::getHdmiArcPortID()
     {
        int portId;
@@ -3630,11 +3645,11 @@ namespace WPEFramework
        do {
           usleep(50000); // Sleep for 50ms before retrying
           portId = -1;
-#ifdef TBD_IN_DS_CLIENT
+#if 0 //just to verify compilation
           device::HdmiInput::getInstance().getHDMIARCPortId(&portId);
 #else
-          portId = 0; // just for compilation & testing
-#endif /* TBD_IN_DS_CLIENT */
+          portId = 0;
+#endif
           if (-1 != portId)
           {
               LOGINFO("HDMI ARC port ID HdmiArcPortID[%d] on retry count[%d]", portId, retryCount);
@@ -3647,7 +3662,6 @@ namespace WPEFramework
           }
       } while(retryCount++ <= 6);
     }
-
 #endif /* IO_HCEC_ENABLE_IARM */
 
 
