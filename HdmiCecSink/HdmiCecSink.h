@@ -41,6 +41,8 @@
 #include "UtilsLogging.h"
 #include <interfaces/IPowerManager.h>
 #include "PowerManagerInterface.h"
+#include "host.hpp"
+
 
 using namespace WPEFramework;
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
@@ -482,7 +484,7 @@ private:
 		// As the registration/unregistration of notifications is realized by the class PluginHost::JSONRPC,
 		// this class exposes a public method called, Notify(), using this methods, all subscribed clients
 		// will receive a JSONRPC message as a notification, in case this method is called.
-        class HdmiCecSink : public PluginHost::IPlugin, public PluginHost::JSONRPC {
+        class HdmiCecSink : public PluginHost::IPlugin, public PluginHost::JSONRPC, public device::Host::IHdmiInEvents {
 
 		enum {
 			POLL_THREAD_STATE_NONE,
@@ -530,6 +532,7 @@ private:
             virtual const string Initialize(PluginHost::IShell* shell) override;
             virtual void Deinitialize(PluginHost::IShell* service) override;
             virtual string Information() const override { return {}; }
+            virtual void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
             static HdmiCecSink* _instance;
 			CECDeviceParams deviceList[16];
 			std::vector<HdmiPortMap> hdmiInputs;
@@ -586,6 +589,13 @@ private:
             END_INTERFACE_MAP
 
         private:
+            template <typename T>
+            T* baseInterface()
+            {
+                static_assert(std::is_base_of<T, HdmiCecSink>(), "base type mismatch");
+                return static_cast<T*>(this);
+            }
+
             class PowerManagerNotification : public Exchange::IPowerManager::IModeChangedNotification {
             private:
                 PowerManagerNotification(const PowerManagerNotification&) = delete;
