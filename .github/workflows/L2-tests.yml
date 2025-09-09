@@ -707,13 +707,13 @@ jobs:
           export PATH="$GITHUB_WORKSPACE/install/usr/bin:${PATH}"
           $GITHUB_WORKSPACE/entservices-testframework/Tests/L2Tests/pact/install-verifier-cli.sh
 
-      - name: Run unit tests without valgrind
-        run: >
-          PATH=$GITHUB_WORKSPACE/install/usr/bin:${PATH}
-          LD_LIBRARY_PATH=$GITHUB_WORKSPACE/install/usr/lib:$GITHUB_WORKSPACE/install/usr/lib/wpeframework/plugins:${LD_LIBRARY_PATH}
-          RdkServicesL2Test &&
-          cp -rf $(pwd)/rdkL2TestResults.json $GITHUB_WORKSPACE/rdkL2TestResultsWithoutValgrind.json &&
-          rm -rf $(pwd)/rdkL2TestResults.json
+      # - name: Run unit tests without valgrind
+      #   run: >
+      #     PATH=$GITHUB_WORKSPACE/install/usr/bin:${PATH}
+      #     LD_LIBRARY_PATH=$GITHUB_WORKSPACE/install/usr/lib:$GITHUB_WORKSPACE/install/usr/lib/wpeframework/plugins:${LD_LIBRARY_PATH}
+      #     RdkServicesL2Test &&
+      #     cp -rf $(pwd)/rdkL2TestResults.json $GITHUB_WORKSPACE/rdkL2TestResultsWithoutValgrind.json &&
+      #     rm -rf $(pwd)/rdkL2TestResults.json
 
       - name: Run unit tests with valgrind
         if: ${{ !env.ACT }}
