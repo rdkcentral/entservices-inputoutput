@@ -393,7 +393,7 @@ namespace WPEFramework
 #ifdef IO_HCEC_ENABLE_IARM
            DeinitializeIARM();
 #else
-           device::Host::getInstance().UnRegister(this);
+           device::Host::getInstance().UnRegister(baseInterface<device::Host::IDisplayDeviceEvents>());
 #endif /* IO_HCEC_ENABLE_IARM */
 
     }
@@ -427,7 +427,7 @@ namespace WPEFramework
                 device::Manager::Initialize();
 
 #ifndef IO_HCEC_ENABLE_IARM
-                device::Host::getInstance().Register(this, "WPE[HdmiCecSource]");
+                device::Host::getInstance().Register(baseInterface<device::Host::IDisplayDeviceEvents>(), "WPE[HdmiCecSource]");
 #endif /* IO_HCEC_ENABLE_IARM */
 
                 std::string strVideoPort = device::Host::getInstance().getDefaultVideoPortName();

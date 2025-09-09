@@ -172,7 +172,7 @@ namespace WPEFramework {
 		// As the registration/unregistration of notifications is realized by the class PluginHost::JSONRPC,
 		// this class exposes a public method called, Notify(), using this methods, all subscribed clients
 		// will receive a JSONRPC message as a notification, in case this method is called.
-        class HdmiCecSourceImplementation : public Exchange::IHdmiCecSource, device::Host::IDisplayDeviceEvents {
+        class HdmiCecSourceImplementation : public Exchange::IHdmiCecSource, public device::Host::IDisplayDeviceEvents {
 		enum {
 				VOLUME_UP     = 0x41,
 				VOLUME_DOWN   = 0x42,
@@ -229,6 +229,13 @@ namespace WPEFramework {
 
 
         private:
+            template <typename T>
+            T* baseInterface()
+            {
+                static_assert(std::is_base_of<T, HdmiCecSourceImplementation>(), "base type mismatch");
+                return static_cast<T*>(this);
+            }
+
             class PowerManagerNotification : public Exchange::IPowerManager::IModeChangedNotification {
             private:
                 PowerManagerNotification(const PowerManagerNotification&) = delete;
