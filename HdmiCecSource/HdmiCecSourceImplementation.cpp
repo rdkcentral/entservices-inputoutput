@@ -795,11 +795,11 @@ namespace WPEFramework
 #else
        void HdmiCecSourceImplementation::OnDisplayHDMIHotPlug(dsDisplayEvent_t displayEvent)
        {
-           LOGINFO("OnDisplayHDMIHotPlug : displayEvent = %d ", displayEvent);
+           LOGINFO("HdmiCecSourceImplementation::OnDisplayHDMIHotPlug : displayEvent = %d ", displayEvent);
 
            if(!HdmiCecSourceImplementation::_instance  || !_instance->cecEnableStatus)
            {
-               LOGINFO("Return from dsHdmiEventHandler due HdmiCecSourceImplementation::_instance:%p cecEnableStatus:%d  \r\n", HdmiCecSourceImplementation::_instance, _instance->cecEnableStatus);
+               LOGINFO("HdmiCecSourceImplementation::OnDisplayHDMIHotPlug failed _instance:%p cecEnableStatus:%d  \r\n", HdmiCecSourceImplementation::_instance, _instance->cecEnableStatus);
                return;
            }
 

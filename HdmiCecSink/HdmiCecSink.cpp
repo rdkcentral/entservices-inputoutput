@@ -954,7 +954,7 @@ namespace WPEFramework
                 return;
 
             LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG event port: %d isConnected: %d \r\n", port, isConnected);
-            HdmiCecSink::_instance->onHdmiHotPlug((int) port, (int) isConnected);
+            HdmiCecSink::_instance->onHdmiHotPlug((int) port, isConnected);
         }
 #endif /* IO_HCEC_ENABLE_IARM */
 
