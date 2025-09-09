@@ -25,8 +25,6 @@
 #include "dsTypes.h"
 #include "host.hpp"
 #include "manager.hpp"
-#include "dsRpc.h"
-
 
 #define DEFAULT_PRIM_VOL_LEVEL 25
 #define MAX_PRIM_VOL_LEVEL 100
@@ -35,8 +33,10 @@
 namespace WPEFramework {
 namespace Plugin {
 
-class AVInput: public PluginHost::IPlugin, public PluginHost::JSONRPC,
-                public device::Host::IHdmiInEvents, public device::Host::ICompositeInEvents{
+class AVInput: public PluginHost::IPlugin, 
+               public PluginHost::JSONRPC,
+               public device::Host::IHdmiInEvents, 
+               public device::Host::ICompositeInEvents{
 
 private:
 
@@ -52,12 +52,14 @@ public:
     INTERFACE_ENTRY(PluginHost::IDispatcher)
     END_INTERFACE_MAP
 
+private:
+
     template <typename T>
-            T* baseInterface()
-            {
-                static_assert(std::is_base_of<T, AVInput>(), "base type mismatch");
-                return static_cast<T*>(this);
-            }
+    T* baseInterface()
+    {
+        static_assert(std::is_base_of<T, AVInput>(), "base type mismatch");
+        return static_cast<T*>(this);
+    }
 
     int m_primVolume;
     int m_inputVolume; //Player Volume
@@ -142,24 +144,23 @@ private:
     bool _registeredDsEventHandlers;
 
 public:
-    void registerDsEventHandlers();
 
     /* HdmiInEventNotification*/
 
-    void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected);
-    void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus);    
+    void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
+    void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;   
     void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented);
-    void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution);
-    void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus);
-    void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType);
-    void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType);
+    void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
+    void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
+    void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
+    void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
 
     /* CompositeInEventNotification */
 
-    void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected);
-    void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus);
-    void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented);
-    void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution);
+    void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
+    void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
+    void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
+    void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) ;
     
 public:
     static AVInput* _instance;
