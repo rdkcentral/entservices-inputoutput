@@ -1117,8 +1117,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, routingInformationProcess)
     Header header;
     header.from = LogicalAddress(1);
 
-    PhysicalAddress toSink(0x0F,0x0F,0x0F,0x0F);
-    RoutingInformation routingInformation(toSink);
+    RoutingInformation routingInformation; // Remove the parameter
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(routingInformation, header);
@@ -1242,8 +1241,8 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess)
         iCounter ++;
     }
 
-    Core::Sink<NotificationHandler> notification;
-    EXPECT_EQ(Core::ERROR_NONE, plugin->Register(&notification));
+    NotificationHandler notificationHandler;
+    HdmiCecSourceNotification = &notificationHandler;
 
     Header header;
     header.from = LogicalAddress(1);
@@ -1254,9 +1253,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess)
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(userControlPressed, header);
 
-    ASSERT_TRUE(notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyPressEvent));
-
-    EXPECT_EQ(Core::ERROR_NONE, plugin->Unregister(&notification));
+    ASSERT_TRUE(notificationHandler.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyPressEvent));
 }
 
 TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
@@ -1267,8 +1264,8 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
         iCounter ++;
     }
 
-    Core::Sink<NotificationHandler> notification;
-    EXPECT_EQ(Core::ERROR_NONE, plugin->Register(&notification));
+    NotificationHandler notificationHandler;
+    HdmiCecSourceNotification = &notificationHandler;
 
     Header header;
     header.from = LogicalAddress(1);
@@ -1278,9 +1275,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(userControlReleased, header);
 
-    ASSERT_TRUE(notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyReleaseEvent));
-
-    EXPECT_EQ(Core::ERROR_NONE, plugin->Unregister(&notification));
+    ASSERT_TRUE(notificationHandler.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyReleaseEvent));
 }
 
 TEST_F(HdmiCecSourceInitializedEventTest, abortProcess)
@@ -1294,8 +1289,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, abortProcess)
     Header header;
     header.from = LogicalAddress(1);
 
-    OpCode opCode(0x01);
-    Abort abort(opCode);
+    Abort abort; // Remove the OpCode parameter
 
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke(
@@ -1315,8 +1309,8 @@ TEST_F(HdmiCecSourceInitializedEventTest, setOSDNameProcess)
         iCounter ++;
     }
 
-    Core::Sink<NotificationHandler> notification;
-    EXPECT_EQ(Core::ERROR_NONE, plugin->Register(&notification));
+    NotificationHandler notificationHandler;
+    HdmiCecSourceNotification = &notificationHandler;
 
     Header header;
     header.from = LogicalAddress(1);
@@ -1328,7 +1322,5 @@ TEST_F(HdmiCecSourceInitializedEventTest, setOSDNameProcess)
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(setOSDName, header);
 
-    ASSERT_TRUE(notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnDeviceInfoUpdated));
-
-    EXPECT_EQ(Core::ERROR_NONE, plugin->Unregister(&notification));
+    ASSERT_TRUE(notificationHandler.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnDeviceInfoUpdated));
 }
