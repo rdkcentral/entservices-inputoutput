@@ -1241,8 +1241,10 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess)
         iCounter ++;
     }
 
-    NotificationHandler notificationHandler;
-    HdmiCecSourceNotification = &notificationHandler;
+    Core::Sink<NotificationHandler> notification;
+    uint32_t signalled = false;
+    p_hdmiCecSourceMock->AddRef();
+    p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
     header.from = LogicalAddress(1);
@@ -1253,7 +1255,9 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess)
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(userControlPressed, header);
 
-    ASSERT_TRUE(notificationHandler.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyPressEvent));
+    signalled = notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyPressEvent);
+
+    EXPECT_TRUE(signalled);
 }
 
 TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
@@ -1264,8 +1268,10 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
         iCounter ++;
     }
 
-    NotificationHandler notificationHandler;
-    HdmiCecSourceNotification = &notificationHandler;
+    Core::Sink<NotificationHandler> notification;
+    uint32_t signalled = false;
+    p_hdmiCecSourceMock->AddRef();
+    p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
     header.from = LogicalAddress(1);
@@ -1275,7 +1281,9 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(userControlReleased, header);
 
-    ASSERT_TRUE(notificationHandler.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyReleaseEvent));
+    signalled = notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyReleaseEvent);
+
+    EXPECT_TRUE(signalled);
 }
 
 TEST_F(HdmiCecSourceInitializedEventTest, abortProcess)
@@ -1309,8 +1317,10 @@ TEST_F(HdmiCecSourceInitializedEventTest, setOSDNameProcess)
         iCounter ++;
     }
 
-    NotificationHandler notificationHandler;
-    HdmiCecSourceNotification = &notificationHandler;
+    Core::Sink<NotificationHandler> notification;
+    uint32_t signalled = false;
+    p_hdmiCecSourceMock->AddRef();
+    p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
     header.from = LogicalAddress(1);
@@ -1322,5 +1332,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, setOSDNameProcess)
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(setOSDName, header);
 
-    ASSERT_TRUE(notificationHandler.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnDeviceInfoUpdated));
+    signalled = notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnDeviceInfoUpdated);
+
+    EXPECT_TRUE(signalled);
 }
