@@ -521,3 +521,23 @@ TEST_F(HdmiCecSourceInitializedTest, setEnabled_EnablesCecSuccessfully)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
+
+TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatus_ReturnsCorrectStatus)
+{
+    // Test getActiveSourceStatus method
+    string response;
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T("{}"), response));
+    
+    // Verify successful response structure
+    EXPECT_THAT(response, ::testing::HasSubstr("\"success\":true"));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"isActiveSource\":"));
+    
+    // Verify response contains boolean value for isActiveSource
+    EXPECT_TRUE((response.find("\"isActiveSource\":true") != string::npos) || 
+                (response.find("\"isActiveSource\":false") != string::npos));
+    
+    // Test multiple calls to ensure consistency (since it's a simple getter)
+    string response2;
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T("{}"), response2));
+    EXPECT_EQ(response, response2);
+}
