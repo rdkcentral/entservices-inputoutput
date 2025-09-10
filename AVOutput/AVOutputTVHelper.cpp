@@ -132,6 +132,84 @@ namespace Plugin {
 
         return 0;
     }
+    int AVOutputTV::getParamIndexV2(std::string param, capDetails_t& paramInfo, paramIndex_t& indexInfo)
+    {
+        LOGINFO("Entry : %s  param : %s pqmode : %s source : %s format : %s\n",
+            __FUNCTION__, param.c_str(), paramInfo.pqmode.c_str(), paramInfo.source.c_str(), paramInfo.format.c_str());
+        initializeReverseMaps();
+        if (paramInfo.source == "none" || paramInfo.source == "Current") {
+            tvVideoSrcType_t currentSource = VIDEO_SOURCE_IP;
+            GetCurrentVideoSource(&currentSource);
+            indexInfo.sourceIndex = static_cast<int>(currentSource);
+        } else {
+            auto it = videoSrcReverseMap.find(paramInfo.source);
+            indexInfo.sourceIndex = (it != videoSrcReverseMap.end()) ? static_cast<int>(it->second) : -1;
+        }
+        if (paramInfo.pqmode == "none" || paramInfo.pqmode == "Current") {
+            char picMode[PIC_MODE_NAME_MAX] = {0};
+            if (!getCurrentPictureMode(picMode)) {
+                LOGERR("Failed to get the Current picture mode\n");
+                indexInfo.pqmodeIndex = -1;
+            } else {
+                std::string local = picMode;
+                auto it = pqModeReverseMap.find(local);
+                indexInfo.pqmodeIndex = (it != pqModeReverseMap.end()) ? static_cast<int>(it->second) : -1;
+            }
+        } else {
+            auto it = pqModeReverseMap.find(paramInfo.pqmode);
+            indexInfo.pqmodeIndex = (it != pqModeReverseMap.end()) ? static_cast<int>(it->second) : -1;
+        }
+        if (paramInfo.format == "none" || paramInfo.format == "Current") {
+            tvVideoFormatType_t currentFormat = VIDEO_FORMAT_NONE;
+            GetCurrentVideoFormat(&currentFormat);
+            if (currentFormat == VIDEO_FORMAT_NONE) {
+                indexInfo.formatIndex = VIDEO_FORMAT_SDR; // Legacy default
+            } else {
+                indexInfo.formatIndex = static_cast<int>(currentFormat);
+            }
+        } else {
+            auto it = videoFormatReverseMap.find(paramInfo.format);
+            indexInfo.formatIndex = (it != videoFormatReverseMap.end()) ? static_cast<int>(it->second) : -1;
+        }
+        if (param == "CMS") {
+            tvDataComponentColor_t level = tvDataColor_NONE;
+            if (getCMSColorEnumFromString(paramInfo.color, level) == -1) {
+                LOGERR("%s : GetColorEnumFromString Failed!!! ", __FUNCTION__);
+                return -1;
+            }
+            indexInfo.colorIndex = level;
+            tvComponentType_t componentLevel;
+            if (getCMSComponentEnumFromString(paramInfo.component, componentLevel) == -1) {
+                LOGERR("%s : GetComponentEnumFromString Failed!!! ", __FUNCTION__);
+                return -1;
+            }
+            indexInfo.componentIndex = componentLevel;
+            LOGINFO("%s colorIndex : %d , componentIndex : %d\n",
+                __FUNCTION__, indexInfo.colorIndex, indexInfo.componentIndex);
+        }
+        if (param == "WhiteBalance") {
+            tvWBColor_t level;
+            if (getWBColorEnumFromString(paramInfo.color, level) == -1) {
+                LOGERR("%s : GetColorEnumFromString Failed!!! ", __FUNCTION__);
+                return -1;
+            }
+            indexInfo.colorIndex = level;
+            tvWBControl_t controlLevel;
+            if (getWBControlEnumFromString(paramInfo.control, controlLevel) == -1) {
+                LOGERR("%s : GetComponentEnumFromString Failed!!! ", __FUNCTION__);
+                return -1;
+            }
+            indexInfo.controlIndex = controlLevel;
+            LOGINFO("%s colorIndex : %d , controlIndex : %d\n",
+                __FUNCTION__, indexInfo.colorIndex, indexInfo.controlIndex);
+        }
+        if (indexInfo.sourceIndex == -1 || indexInfo.pqmodeIndex == -1 || indexInfo.formatIndex == -1) {
+            return -1;
+        }
+        LOGINFO("%s: Exit sourceIndex = %d pqmodeIndex = %d formatIndex = %d\n",
+            __FUNCTION__, indexInfo.sourceIndex, indexInfo.pqmodeIndex, indexInfo.formatIndex);
+        return 0;
+    }
 
     int AVOutputTV::getParamIndex(std::string param, capDetails_t& paramInfo, paramIndex_t& indexInfo)
     {
@@ -2682,7 +2760,7 @@ namespace Plugin {
         return 0;
     }
 //JSON Based V2 Helpers
-    const std::map<int, std::string> AVOutputTV::pqModeMap = {
+    const std::unordered_map<int, std::string> AVOutputTV::pqModeMap = {
         {PQ_MODE_SPORTS, "Sports"},
         {PQ_MODE_THEATER, "Theater"},
         {PQ_MODE_GAME, "Game"},
@@ -2696,7 +2774,7 @@ namespace Plugin {
         {PQ_MODE_CUSTOM, "Custom"}
     };
 
-    const std::map<int, std::string> AVOutputTV::videoFormatMap = {
+    const std::unordered_map<int, std::string> AVOutputTV::videoFormatMap = {
         {VIDEO_FORMAT_NONE, "None"},
         {VIDEO_FORMAT_SDR, "SDR"},
         {VIDEO_FORMAT_HDR10, "HDR10"},
@@ -2705,7 +2783,7 @@ namespace Plugin {
         {VIDEO_FORMAT_HLG, "HLG"}
     };
 
-    const std::map<int, std::string> AVOutputTV::videoSrcMap = {
+    const std::unordered_map<int, std::string> AVOutputTV::videoSrcMap = {
         {VIDEO_SOURCE_COMPOSITE1, "Composite1"},
         {VIDEO_SOURCE_HDMI1, "HDMI1"},
         {VIDEO_SOURCE_HDMI2, "HDMI2"},

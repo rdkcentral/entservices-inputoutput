@@ -1948,7 +1948,7 @@ namespace Plugin {
             inputInfo.source = "Current";
             inputInfo.format = "Current";
 
-            if (getParamIndex(paramName, inputInfo, indexInfo) == 0 &&
+            if (getParamIndexV2(paramName, inputInfo, indexInfo) == 0 &&
                 getLocalparam(paramName, indexInfo, intVal, pqIndex) == 0)
             {
                 LOGINFO("%s: getLocalparam success for %s [format=%d, source=%d, mode=%d] → value=%d\n",
@@ -2004,7 +2004,7 @@ namespace Plugin {
             inputInfo.source = "Current";
             inputInfo.format = "Current";
 
-            if (getParamIndex(paramName, inputInfo, indexInfo) == 0 &&
+            if (getParamIndexV2(paramName, inputInfo, indexInfo) == 0 &&
                 getLocalparam(paramName, indexInfo, level, pqIndex) == 0)
             {
                 LOGINFO("%s: getLocalparam success for %s: format=%d, source=%d, mode=%d, value=%d\n",
@@ -2061,7 +2061,7 @@ namespace Plugin {
             inputInfo.source = "Current";
             inputInfo.format = "Current";
 
-            if (getParamIndex(paramName, inputInfo, indexInfo) == 0 &&
+            if (getParamIndexV2(paramName, inputInfo, indexInfo) == 0 &&
                 getLocalparam(paramName, indexInfo, level, pqIndex) == 0)
             {
                 LOGINFO("%s: getLocalparam success for %s: format=%d, source=%d, mode=%d, value=%d\n",
