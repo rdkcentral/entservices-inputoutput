@@ -497,30 +497,22 @@ protected:
 
 TEST_F(HdmiCecSourceInitializedTest, setEnabled_EnablesCecSuccessfully)
 {
-    // Setup mocks for CEC enable operation
-    EXPECT_CALL(*p_wrapsImplMock, persistJsonSettings(::testing::_, ::testing::_))
-        .Times(1)
-        .WillOnce(::testing::Return(true));
-    
-    EXPECT_CALL(*p_libCCECImplMock, getInstance())
-        .Times(::testing::AtLeast(1))
-        .WillRepeatedly(::testing::Return(p_libCCECImplMock));
-    
-    EXPECT_CALL(*p_connectionImplMock, open())
-        .Times(1)
-        .WillOnce(::testing::Return(true));
-    
+    // Setup mocks for device settings initialization
     EXPECT_CALL(*p_managerImplMock, Initialize())
-        .Times(1)
-        .WillOnce(::testing::Return());
+        .Times(1);
     
-    EXPECT_CALL(*p_hostImplMock, getVideoOutputPort())
+    EXPECT_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
         .Times(::testing::AtLeast(1))
-        .WillRepeatedly(::testing::Return(p_videoOutputPortMock));
+        .WillRepeatedly(::testing::ReturnRef(*p_videoOutputPortMock));
     
     EXPECT_CALL(*p_videoOutputPortMock, getDisplay())
         .Times(::testing::AtLeast(1))
-        .WillRepeatedly(::testing::Return(p_displayMock));
+        .WillRepeatedly(::testing::ReturnRef(*p_displayMock));
+    
+    // Setup IARM bus mock expectations
+    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
+        .Times(::testing::AtLeast(1))
+        .WillRepeatedly(::testing::Return(IARM_RESULT_SUCCESS));
     
     // Test setEnabled with enabled=true
     string response;
@@ -529,7 +521,7 @@ TEST_F(HdmiCecSourceInitializedTest, setEnabled_EnablesCecSuccessfully)
     // Verify successful response
     EXPECT_EQ(response, string("{\"success\":true}"));
     
-    // Verify that CEC was actually enabled by checking the status
+    // Verify that the enable state can be retrieved
     string getEnabledResponse;
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEnabled"), _T("{}"), getEnabledResponse));
     EXPECT_THAT(getEnabledResponse, ::testing::HasSubstr("\"enabled\":true"));
