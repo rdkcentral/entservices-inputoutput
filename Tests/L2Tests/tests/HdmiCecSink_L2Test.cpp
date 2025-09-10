@@ -341,7 +341,7 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
     uint32_t status = Core::ERROR_GENERAL;
     createFile("/etc/device.properties", "RDK_PROFILE=TV");
     createFile("/opt/persistent/ds/cecData_2.json", "0");
-    createFile("/tmp/pwrmgr_restarted", "1");
+    createFile("/tmp/pwrmgr_restarted", "2");
 
     struct stat buffer;
     bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
