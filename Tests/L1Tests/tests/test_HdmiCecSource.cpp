@@ -497,24 +497,7 @@ protected:
 
 TEST_F(HdmiCecSourceInitializedTest, setEnabled_EnablesCecSuccessfully)
 {
-    // Setup mocks for device settings initialization
-    EXPECT_CALL(*p_managerImplMock, Initialize())
-        .Times(1);
-    
-    EXPECT_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
-        .Times(::testing::AtLeast(1))
-        .WillRepeatedly(::testing::ReturnRef(*p_videoOutputPortMock));
-    
-    EXPECT_CALL(*p_videoOutputPortMock, getDisplay())
-        .Times(::testing::AtLeast(1))
-        .WillRepeatedly(::testing::ReturnRef(*p_displayMock));
-    
-    // Setup IARM bus mock expectations
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-        .Times(::testing::AtLeast(1))
-        .WillRepeatedly(::testing::Return(IARM_RESULT_SUCCESS));
-    
-    // Test setEnabled with enabled=true
+    // Test setEnabled with enabled=true (CEC is already enabled in fixture setup)
     string response;
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
     
@@ -525,4 +508,16 @@ TEST_F(HdmiCecSourceInitializedTest, setEnabled_EnablesCecSuccessfully)
     string getEnabledResponse;
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEnabled"), _T("{}"), getEnabledResponse));
     EXPECT_THAT(getEnabledResponse, ::testing::HasSubstr("\"enabled\":true"));
+    
+    // Test setEnabled with enabled=false to verify disable functionality
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": false}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+    
+    // Verify CEC is now disabled
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEnabled"), _T("{}"), getEnabledResponse));
+    EXPECT_THAT(getEnabledResponse, ::testing::HasSubstr("\"enabled\":false"));
+    
+    // Re-enable for clean teardown
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
 }
