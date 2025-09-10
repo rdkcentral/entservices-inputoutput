@@ -186,21 +186,21 @@ namespace WPEFramework {
 
             void printVariable()
             {
-                LOGWARN("Device LogicalAddress %s", m_logicalAddress.toString().c_str());
-                LOGWARN("Device Type %s", m_deviceType.toString().c_str());
-                LOGWARN("Device Present %d", m_isDevicePresent);
-                LOGWARN("Active Source %d", m_isActiveSource);
-                LOGWARN("PA Updated %d", m_isPAUpdated);
-                LOGWARN("Version Updated %d", m_isVersionUpdated);
-                LOGWARN("OSDName Updated %d", m_isOSDNameUpdated);
-                LOGWARN("PowerStatus Updated %d", m_isPowerStatusUpdated);
-                LOGWARN("VendorID Updated %d", m_isVendorIDUpdated);
-                LOGWARN("CEC Version : %s", m_cecVersion.toString().c_str());
-                LOGWARN("Vendor ID : %s", m_vendorID.toString().c_str());
-                LOGWARN("PhysicalAddress : %s", m_physicalAddr.toString().c_str());
-                LOGWARN("OSDName : %s", m_osdName.toString().c_str());
-                LOGWARN("Power Status : %s", m_powerStatus.toString().c_str());
-                LOGWARN("Language : %s", m_currentLanguage.toString().c_str());
+                LOGINFO("Device LogicalAddress %s", m_logicalAddress.toString().c_str());
+                LOGINFO("Device Type %s", m_deviceType.toString().c_str());
+                LOGINFO("Device Present %d", m_isDevicePresent);
+                LOGINFO("Active Source %d", m_isActiveSource);
+                LOGINFO("PA Updated %d", m_isPAUpdated);
+                LOGINFO("Version Updated %d", m_isVersionUpdated);
+                LOGINFO("OSDName Updated %d", m_isOSDNameUpdated);
+                LOGINFO("PowerStatus Updated %d", m_isPowerStatusUpdated);
+                LOGINFO("VendorID Updated %d", m_isVendorIDUpdated);
+                LOGINFO("CEC Version : %s", m_cecVersion.toString().c_str());
+                LOGINFO("Vendor ID : %s", m_vendorID.toString().c_str());
+                LOGINFO("PhysicalAddress : %s", m_physicalAddr.toString().c_str());
+                LOGINFO("OSDName : %s", m_osdName.toString().c_str());
+                LOGINFO("Power Status : %s", m_powerStatus.toString().c_str());
+                LOGINFO("Language : %s", m_currentLanguage.toString().c_str());
             }
 
             bool isAllUpdated() {
