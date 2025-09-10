@@ -58,6 +58,7 @@
 #define HDMICECSINK_METHOD_REQUEST_SHORT_AUDIO_DESCRIPTOR  "requestShortAudioDescriptor"
 #define HDMICECSINK_METHOD_SEND_STANDBY_MESSAGE            "sendStandbyMessage"
 #define HDMICECSINK_METHOD_SEND_AUDIO_DEVICE_POWER_ON "sendAudioDevicePowerOnMessage"
+#define HDMICECSINK_METHOD_SEND_AUDIO_DEVICE_MUTE     "sendAudioDeviceMuteMessage"
 #define HDMICECSINK_METHOD_SEND_KEY_PRESS                          "sendKeyPressEvent"
 #define HDMICECSINK_METHOD_SEND_USER_CONTROL_PRESSED          "sendUserControlPressed"
 #define HDMICECSINK_METHOD_SEND_USER_CONTROL_RELEASED         "sendUserControlReleased"
@@ -739,6 +740,7 @@ namespace WPEFramework
            Register(HDMICECSINK_METHOD_REQUEST_SHORT_AUDIO_DESCRIPTOR, &HdmiCecSink::requestShortAudioDescriptorWrapper, this);
            Register(HDMICECSINK_METHOD_SEND_STANDBY_MESSAGE, &HdmiCecSink::sendStandbyMessageWrapper, this);	   
 		   Register(HDMICECSINK_METHOD_SEND_AUDIO_DEVICE_POWER_ON, &HdmiCecSink::sendAudioDevicePowerOnMsgWrapper, this);
+		   Register(HDMICECSINK_METHOD_SEND_AUDIO_DEVICE_MUTE, &HdmiCecSink::sendAVRMuteMsgWrapper, this);
 		   Register(HDMICECSINK_METHOD_SEND_KEY_PRESS,&HdmiCecSink::sendRemoteKeyPressWrapper,this);
 		   Register(HDMICECSINK_METHOD_SEND_USER_CONTROL_PRESSED,&HdmiCecSink::sendUserControlPressedWrapper,this);
 		   Register(HDMICECSINK_METHOD_SEND_USER_CONTROL_RELEASED,&HdmiCecSink::sendUserControlReleasedWrapper,this);
@@ -1386,6 +1388,30 @@ namespace WPEFramework
                     LOGINFO("Notify DS!!! logicalAddress = %d , Audio device power status = %d \n", logicalAddress, powerStatus);
                     sendNotify(eventString[HDMICECSINK_EVENT_AUDIO_DEVICE_POWER_STATUS], params);
 	    }
+        }
+
+		void HdmiCecSink::systemAVRAudioMuteRequest()
+        {
+	     	if ( cecEnableStatus != true  )
+	     	{
+               LOGINFO("systemAVRAudioMuteRequest: Cec is disabled-> EnableCEC first");
+              return;
+    		} 
+
+            if(!HdmiCecSink::_instance)
+             return;
+            if(!(_instance->smConnection))
+                return;
+            LOGINFO(" Send systemAVRAudioMuteRequest ");
+            _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM,MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_MUTE)), 1000);
+			LOGINFO(" Send systemAVRAudioMuteRequest sompleted \n");
+        }
+
+		uint32_t HdmiCecSink::sendAVRMuteMsgWrapper(const JsonObject& parameters, JsonObject& response)
+        {
+	    	LOGINFO("%s invoked. \n",__FUNCTION__);
+            systemAVRAudioMuteRequest();
+	    	returnResponse(true);
         }
 
         void HdmiCecSink::SendStandbyMsgEvent(const int logicalAddress)
