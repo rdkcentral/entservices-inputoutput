@@ -14,6 +14,10 @@ All notable changes to this RDK Service will be documented in this file.
 
 * Changes in CHANGELOG should be updated when commits are added to the main or release branches. There should be one CHANGELOG entry per JIRA Ticket. This is not enforced on sprint branches since there could be multiple changes for the same JIRA ticket during development. 
 
+## [1.1.2] - 2025-09-03
+### Fixed
+- Sync low latency for AVOutput initialization
+
 ## [1.1.1] - 2025-07-08
 ### Fixed
 - ODM API removal changes phase 2
