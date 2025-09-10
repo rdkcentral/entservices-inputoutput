@@ -530,11 +530,11 @@ TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatus_ReturnsCorrectStatus)
     
     // Verify successful response structure
     EXPECT_THAT(response, ::testing::HasSubstr("\"success\":true"));
-    EXPECT_THAT(response, ::testing::HasSubstr("\"isActiveSource\":"));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"status\":"));
     
     // Verify response contains boolean value for isActiveSource
-    EXPECT_TRUE((response.find("\"isActiveSource\":true") != string::npos) || 
-                (response.find("\"isActiveSource\":false") != string::npos));
+    EXPECT_TRUE((response.find("\"status\":true") != string::npos) || 
+                (response.find("\"status\":false") != string::npos));
     
     // Test multiple calls to ensure consistency (since it's a simple getter)
     string response2;
