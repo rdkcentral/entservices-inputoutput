@@ -167,6 +167,7 @@ namespace Plugin {
         Core::hresult GetSupportedGameFeatures(IStringIterator*& features) override;
         Core::hresult GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode) override;
 
+        Core::hresult getInputDevices(const int typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice>& inputDeviceList);
         void AVInputHotplug(int input, int connect, int type);
         void AVInputSignalChange(int port, int signalStatus, int type);
         void AVInputStatusChange(int port, bool isPresented, int type);

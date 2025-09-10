@@ -921,18 +921,20 @@ namespace Plugin {
         }
     }
 
-    Core::hresult AVInputImplementation::GetInputDevices(const int typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices)
+    Core::hresult AVInputImplementation::getInputDevices(const int typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice> &inputDeviceList)
     {
-        Core::hresult result = Core::ERROR_NONE;
         int num = 0;
-        std::list<WPEFramework::Exchange::IAVInput::InputDevice> inputDeviceList;
 
         try {
             if (typeOfInput == HDMI) {
                 num = device::HdmiInput::getInstance().getNumberOfInputs();
             } else if (typeOfInput == COMPOSITE) {
                 num = device::CompositeInput::getInstance().getNumberOfInputs();
+            } else {
+                LOGERR("getInputDevices: Invalid input type");
+                return Core::ERROR_GENERAL;
             }
+
             if (num > 0) {
                 int i = 0;
                 for (i = 0; i < num; i++) {
@@ -949,14 +951,37 @@ namespace Plugin {
                         inputDevice.connected = device::CompositeInput::getInstance().isPortConnected(i);
                     }
                     inputDevice.locator = locator.str();
-                    LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, inputDevice.locator.c_str(), inputDevice.connected);
+                    LOGINFO("getInputDevices id %d, locator=[%s], connected=[%d]", i, inputDevice.locator.c_str(), inputDevice.connected);
                     inputDeviceList.push_back(inputDevice);
                 }
             }
         } catch (const std::exception& e) {
-            LOGWARN("AVInputService::getInputDevices Failed");
-            result = Core::ERROR_GENERAL;
-            devices = nullptr;
+            LOGERR("AVInputService::getInputDevices Failed");
+            return Core::ERROR_GENERAL;
+        }
+
+        return Core::ERROR_NONE;
+    }
+
+    Core::hresult AVInputImplementation::GetInputDevices(const int typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices)
+    {
+        Core::hresult result = Core::ERROR_NONE;
+        std::list<WPEFramework::Exchange::IAVInput::InputDevice> inputDeviceList;
+
+        switch (typeOfInput) {
+        case ALL: {
+            result = getInputDevices(HDMI, inputDeviceList);
+            if (result == Core::ERROR_NONE) {
+                result = getInputDevices(COMPOSITE, inputDeviceList);
+            }
+        }
+        case HDMI:
+        case COMPOSITE:
+            result = getInputDevices(typeOfInput, inputDeviceList);
+            break;
+        default:
+            LOGERR("GetInputDevices: Invalid input type");
+            return Core::ERROR_GENERAL;
         }
 
         devices = Core::Service<RPC::IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(inputDeviceList);
