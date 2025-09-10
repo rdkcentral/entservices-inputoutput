@@ -2336,9 +2336,9 @@ namespace WPEFramework
             for(i=0; i< 16; i++)
             {
                 if (HdmiCecSinkImplementation::_instance->deviceList[i].m_isDevicePresent) {
-                LOGWARN("------ Device ID = %d--------", i);
+                LOGINFO("------ Device ID = %d--------", i);
                 HdmiCecSinkImplementation::_instance->deviceList[i].printVariable();
-                LOGWARN("-----------------------------");
+                LOGINFO("-----------------------------");
                 }
             }
         }
