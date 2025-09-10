@@ -61,16 +61,21 @@
          HdcpProfileImplementation::~HdcpProfileImplementation()
          {
              LOGINFO("Call HdcpProfileImplementation destructor\n");
+             HdcpProfileImplementation::_instance = nullptr;
+             LOGINFO("Call HdcpProfileImplementation destructor-instance-destructed\n");
              if (_powerManagerPlugin) {
                 _powerManagerPlugin.Reset();
              }
+             LOGINFO("Call HdcpProfileImplementation destructor-DeinitializeIARM Call\n");
+             DeinitializeIARM();
+             LOGINFO("Call HdcpProfileImplementation destructor-DeinitializeIARM done\n");
+             mShell = nullptr;
              if(_service != nullptr)
              {
                 _service->Release();
+                _service = nullptr;
              }
-             DeinitializeIARM();
-             HdcpProfileImplementation::_instance = nullptr;
-             mShell = nullptr;
+             LOGINFO("Call HdcpProfileImplementation destructor-service object destructed\n");
          }
  
          void HdcpProfileImplementation::InitializePowerManager(PluginHost::IShell *service)
@@ -93,11 +98,14 @@
  
          void HdcpProfileImplementation::DeinitializeIARM()
          {
+             LOGINFO("Call HdcpProfileImplementation destructor-DeinitializeIARM called\n");
              if (Utils::IARM::isConnected())
              {
+                 LOGINFO("Call HdcpProfileImplementation destructor-DeinitializeIARM called-inside if\n");
                  IARM_Result_t res;
                  IARM_CHECK( Utils::Synchro::RemoveLockedEventHandler<HdcpProfileImplementation>(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, dsHdmiEventHandler) );
                  IARM_CHECK( Utils::Synchro::RemoveLockedEventHandler<HdcpProfileImplementation>(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDCP_STATUS, dsHdmiEventHandler) );
+                 LOGINFO("Call HdcpProfileImplementation destructor-DeinitializeIARM called-last if\n");
              }
          }
  
@@ -250,13 +258,14 @@
  
          void HdcpProfileImplementation::dispatchEvent(Event event, const HDCPStatus &hdcpstatus)
          {
+             LOGINFO("dispatchEvent called");
              Core::IWorkerPool::Instance().Submit(Job::Create(this, event, hdcpstatus));
          }
  
          void HdcpProfileImplementation::Dispatch(Event event,const HDCPStatus& hdcpstatus)
          {
              _adminLock.Lock();
- 
+             LOGINFO("dispatch called");
              std::list<Exchange::IHdcpProfile::INotification *>::const_iterator index(_hdcpProfileNotification.begin());
  
              switch (event)
@@ -265,6 +274,7 @@
                  {
                      while (index != _hdcpProfileNotification.end())
                      {
+                         LOGINFO("Dispatch event-in progress");
                          (*index)->OnDisplayConnectionChanged(hdcpstatus);
                          ++index;
                      }
