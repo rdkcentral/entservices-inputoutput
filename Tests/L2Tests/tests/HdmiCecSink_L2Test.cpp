@@ -44,11 +44,26 @@ using IHdmiCecSinkActivePathIterator = WPEFramework::Exchange::IHdmiCecSink::IHd
 namespace {
 static void removeFile(const char* fileName)
 {
-    if (std::remove(fileName) != 0) {
-        printf("File %s failed to remove\n", fileName);
-        perror("Error deleting file");
+    // Use sudo for protected files
+    if (strcmp(fileName, "/etc/device.properties") == 0 ||
+        strcmp(fileName, "/opt/persistent/ds/cecData_2.json") == 0 ||
+        strcmp(fileName, "/opt/uimgr_settings.bin") == 0) {
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "sudo rm -f %s", fileName);
+        int ret = system(cmd);
+        if (ret != 0) {
+            printf("File %s failed to remove with sudo\n", fileName);
+            perror("Error deleting file");
+        } else {
+            printf("File %s successfully deleted with sudo\n", fileName);
+        }
     } else {
-        printf("File %s successfully deleted\n", fileName);
+        if (std::remove(fileName) != 0) {
+            printf("File %s failed to remove\n", fileName);
+            perror("Error deleting file");
+        } else {
+            printf("File %s successfully deleted\n", fileName);
+        }
     }
 }
 
@@ -343,18 +358,6 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
     createFile("/opt/persistent/ds/cecData_2.json", "0");
     createFile("/tmp/pwrmgr_restarted", "2");
 
-    printf("[TEST DEBUG] State ON fixture: ls /tmp/pwrmgr_restarted output:\n");
-    int lsResult = system("ls -l /tmp/pwrmgr_restarted");
-    if (lsResult != 0) {
-        printf("[TEST DEBUG] /tmp/pwrmgr_restarted does NOT exist\n");
-    }
-
-    printf("[TEST DEBUG] State ON fixture: ls /tmp/uimgr_settings.bin output:\n");
-    int lsResult1 = system("ls -l /tmp/uimgr_settings.bin");
-    if (lsResult1 != 0) {
-        printf("[TEST DEBUG] /tmp/uimgr_settings.bin does NOT exist\n");
-    }
-
     // Add sleep to ensure file is properly written to disk
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -513,6 +516,7 @@ HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
     removeFile("/tmp/pwrmgr_restarted");
     removeFile("/etc/device.properties");
     removeFile("/opt/persistent/ds/cecData_2.json");
+    removeFile("/opt/uimgr_settings.bin");
 }
 
 class HdmiCecSink_L2Test_STANDBY : public L2TestMocks {
@@ -552,18 +556,6 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
 
     // Add sleep to ensure file is properly written to disk
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    printf("[TEST DEBUG] Standby fixture: ls /tmp/pwrmgr_restarted output:\n");
-    int lsResult = system("ls -l /tmp/pwrmgr_restarted");
-    if (lsResult != 0) {
-        printf("[TEST DEBUG] /tmp/pwrmgr_restarted does NOT exist\n");
-    }
-
-    printf("[TEST DEBUG] State ON fixture: ls /tmp/uimgr_settings.bin output:\n");
-    int lsResult1 = system("ls -l /tmp/uimgr_settings.bin");
-    if (lsResult1 != 0) {
-        printf("[TEST DEBUG] /tmp/uimgr_settings.bin does NOT exist\n");
-    }
 
     EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
         .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
@@ -718,6 +710,7 @@ HdmiCecSink_L2Test_STANDBY::~HdmiCecSink_L2Test_STANDBY()
     EXPECT_EQ(Core::ERROR_NONE, status);
 
     removeFile("/etc/device.properties");
+    removeFile("/opt/uimgr_settings.bin");
 }
 
 void HdmiCecSink_L2Test::arcInitiationEvent(const JsonObject& message)
