@@ -1031,7 +1031,7 @@ namespace WPEFramework
                 LOGINFO("Command: sending GiveDevicePowerStatus \r\n");
                 smConnection->sendTo(LogicalAddress::TV, MessageEncoder().encode(GiveDevicePowerStatus()));
                 LOGINFO("Command: sending request active Source isDeviceActiveSource is set to false\r\n");
-                smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(RequestActiveSourceMessage()));
+                smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(RequestActiveSource()));
                 isDeviceActiveSource = false;
                 LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n", \
                                                  (isLGTvConnected)?lgVendorId.toString().c_str():appVendorId.toString().c_str());
