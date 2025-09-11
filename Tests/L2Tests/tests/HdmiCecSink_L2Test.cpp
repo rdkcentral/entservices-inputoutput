@@ -344,9 +344,11 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
     createFile("/tmp/pwrmgr_restarted", "2");
 
     struct stat buffer;
-    bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
-    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n",
-        fileExists ? "YES" : "NO");
+    printf("[TEST DEBUG] Standby fixture: ls /tmp/pwrmgr_restarted output:\n");
+    int lsResult = system("ls -l /tmp/pwrmgr_restarted");
+    if (lsResult != 0) {
+        printf("[TEST DEBUG] /tmp/pwrmgr_restarted does NOT exist\n");
+    }
 
     // Add sleep to ensure file is properly written to disk
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -546,10 +548,11 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
     // Add sleep to ensure file is properly written to disk
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    struct stat buffer;
-    bool fileExists = (stat("/tmp/pwrmgr_restarted", &buffer) == 0);
-    printf("[TEST DEBUG] Standby fixture: /tmp/pwrmgr_restarted exists = %s\n",
-        fileExists ? "YES" : "NO");
+    printf("[TEST DEBUG] Standby fixture: ls /tmp/pwrmgr_restarted output:\n");
+    int lsResult = system("ls -l /tmp/pwrmgr_restarted");
+    if (lsResult != 0) {
+        printf("[TEST DEBUG] /tmp/pwrmgr_restarted does NOT exist\n");
+    }
 
     EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
         .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
