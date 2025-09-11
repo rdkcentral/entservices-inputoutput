@@ -145,27 +145,27 @@ namespace Plugin {
         virtual Core::hresult Register(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
         virtual Core::hresult Unregister(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
 
-        Core::hresult NumberOfInputs(uint32_t& numberOfInputs, string& message, bool& success) override;
-        Core::hresult GetInputDevices(const int typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices) override;
-        Core::hresult WriteEDID(const int portId, const string& message) override;
-        Core::hresult ReadEDID(const int portId, string& EDID) override;
-        Core::hresult GetRawSPD(const int portId, string& HDMISPD) override;
-        Core::hresult GetSPD(const int portId, string& HDMISPD) override;
-        Core::hresult SetEdidVersion(const int portId, const string& edidVersion) override;
-        Core::hresult GetEdidVersion(const int portId, string& edidVersion) override;
-        Core::hresult SetEdid2AllmSupport(const int portId, const bool allmSupport) override;
+        Core::hresult NumberOfInputs(uint32_t& numberOfInputs, bool& success) override;
+        Core::hresult GetInputDevices(const int typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices, bool& success) override;
+        Core::hresult WriteEDID(const int portId, const string& message, bool& success) override;
+        Core::hresult ReadEDID(const int portId, string& EDID, bool& success) override;
+        Core::hresult GetRawSPD(const int portId, string& HDMISPD, bool& success) override;
+        Core::hresult GetSPD(const int portId, string& HDMISPD, bool& success) override;
+        Core::hresult SetEdidVersion(const int portId, const string& edidVersion, bool& success) override;
+        Core::hresult GetEdidVersion(const int portId, string& edidVersion, bool& success) override;
+        Core::hresult SetEdid2AllmSupport(const int portId, const bool allmSupport, bool& success) override;
         Core::hresult GetEdid2AllmSupport(const int portId, bool& allmSupport, bool& success) override;
         Core::hresult SetVRRSupport(const int portId, const bool vrrSupport) override;
         Core::hresult GetVRRSupport(const int portId, bool& vrrSupport) override;
         Core::hresult GetHdmiVersion(const int portId, string& HdmiCapabilityVersion, bool& success) override;
-        Core::hresult SetAudioMixerLevels(const int primaryVolume, const int inputVolume) override;
-        Core::hresult StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost) override;
-        Core::hresult StopInput(const int typeOfInput) override;
-        Core::hresult SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput) override;
-        Core::hresult CurrentVideoMode(string& currentVideoMode, string& message, bool& success) override;
+        Core::hresult SetAudioMixerLevels(const int primaryVolume, const int inputVolume, bool& success) override;
+        Core::hresult StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost, bool& success) override;
+        Core::hresult StopInput(const int typeOfInput, bool& success) override;
+        Core::hresult SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput, bool& success) override;
+        Core::hresult CurrentVideoMode(string& currentVideoMode, bool& success) override;
         Core::hresult ContentProtected(bool& isContentProtected, bool& success) override;
-        Core::hresult GetSupportedGameFeatures(IStringIterator*& features) override;
-        Core::hresult GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode) override;
+        Core::hresult GetSupportedGameFeatures(IStringIterator*& features, bool& success) override;
+        Core::hresult GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode, bool& success) override;
 
         Core::hresult getInputDevices(const int typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice>& inputDeviceList);
         void AVInputHotplug(int input, int connect, int type);
@@ -175,13 +175,6 @@ namespace Plugin {
         void hdmiInputAviContentTypeChange(int port, int content_type);
         void AVInputALLMChange(int port, bool allm_mode);
         void AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode);
-
-    protected:
-
-        // TODO: Why are these here and not following definitions of other JSON calls?
-        uint32_t endpoint_numberOfInputs(const JsonObject& parameters, JsonObject& response);
-        uint32_t endpoint_currentVideoMode(const JsonObject& parameters, JsonObject& response);
-        uint32_t endpoint_contentProtected(const JsonObject& parameters, JsonObject& response);    
 
     private:
 
@@ -210,27 +203,6 @@ namespace Plugin {
         void Dispatch(Event event, const ParamsType params);
 
         static string currentVideoMode(bool& success);
-
-        // Begin methods
-        uint32_t getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t writeEDIDWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t readEDIDWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t getRawSPDWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t getSPDWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t setEdidVersionWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t getEdidVersionWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t setEdid2AllmSupportWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t getEdid2AllmSupportWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t setVRRSupportWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t getVRRSupportWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t getVRRFrameRateWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t setAudioMixerLevelsWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t startInputWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t stopInputWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t setVideoRectangleWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t getSupportedGameFeaturesWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t getGameFeatureStatusWrapper(const JsonObject& parameters, JsonObject& response);
-        uint32_t getHdmiVersionWrapper(const JsonObject& parameters, JsonObject& response);
 
         JsonArray devicesToJson(Exchange::IAVInput::IInputDeviceIterator* devices);
 

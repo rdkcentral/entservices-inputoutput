@@ -532,52 +532,6 @@ namespace Plugin {
         _adminLock.Unlock();
     }
 
-    void setResponseArray(JsonObject& response, const char* key, const vector<string>& items)
-    {
-        JsonArray arr;
-        for (auto& i : items)
-            arr.Add(JsonValue(i));
-
-        response[key] = arr;
-
-        string json;
-        response.ToString(json);
-        LOGINFO("%s: result json %s\n", __FUNCTION__, json.c_str());
-    }
-
-    uint32_t AVInputImplementation::endpoint_numberOfInputs(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        uint32_t count;
-        string message;
-        bool success;
-        Core::hresult ret = NumberOfInputs(count, message, success);
-
-        if (ret == Core::ERROR_NONE) {
-            response[_T("numberOfInputs")] = count;
-        }
-
-        returnResponse(ret == Core::ERROR_NONE);
-    }
-
-    uint32_t AVInputImplementation::endpoint_currentVideoMode(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        string mode;
-        string message;
-        bool success;
-
-        Core::hresult ret = CurrentVideoMode(mode, message, success);
-
-        if (ret == Core::ERROR_NONE) {
-            response[_T("currentVideoMode")] = mode;
-        }
-
-        returnResponse(ret == Core::ERROR_NONE);
-    }
-
     Core::hresult AVInputImplementation::ContentProtected(bool& isContentProtected, bool& success)
     {
         // "This is the way it's done in Service Manager"
@@ -586,22 +540,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    uint32_t AVInputImplementation::endpoint_contentProtected(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        bool isContentProtected;
-        bool success;
-        Core::hresult ret = ContentProtected(isContentProtected, success);
-
-        if (ret == Core::ERROR_NONE) {
-            response[_T("isContentProtected")] = isContentProtected;
-        }
-
-        returnResponse(ret == Core::ERROR_NONE);
-    }
-
-    Core::hresult AVInputImplementation::NumberOfInputs(uint32_t& numberOfInputs, string& message, bool& success)
+    Core::hresult AVInputImplementation::NumberOfInputs(uint32_t& numberOfInputs, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
 
@@ -609,39 +548,37 @@ namespace Plugin {
             printf("AVInputImplementation::NumberOfInputs: Calling HdmiInput::getNumberOfInputs...\n");
             numberOfInputs = device::HdmiInput::getInstance().getNumberOfInputs();
             success = true;
-            message = "Success";
             printf("AVInputImplementation::NumberOfInputs: numberOfInputs=%d\n", numberOfInputs);
         } catch (...) {
             LOGERR("Exception caught");
             ret = Core::ERROR_GENERAL;
             success = false;
-            message = "org.rdk.HdmiInput plugin is not ready";
         }
 
         return ret;
     }
 
-    Core::hresult AVInputImplementation::CurrentVideoMode(string& currentVideoMode, string& message, bool& success)
+    Core::hresult AVInputImplementation::CurrentVideoMode(string& currentVideoMode, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
 
         try {
             currentVideoMode = device::HdmiInput::getInstance().getCurrentVideoMode();
             success = true;
-            message = "Success";
         } catch (...) {
             LOGERR("Exception caught");
             ret = Core::ERROR_GENERAL;
             success = false;
-            message = "org.rdk.HdmiInput plugin is not ready";
         }
 
         return ret;
     }
 
-    Core::hresult AVInputImplementation::StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost)
+    Core::hresult AVInputImplementation::StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
+        success = true;
+
         try {
             if (typeOfInput == HDMI) {
                 device::HdmiInput::getInstance().selectPort(portId, audioMix, planeType, topMost);
@@ -649,74 +586,22 @@ namespace Plugin {
                 device::CompositeInput::getInstance().selectPort(portId);
             } else {
                 LOGWARN("Invalid input type passed to StartInput");
+                success = false;
                 ret = Core::ERROR_GENERAL;
             }
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            success = false;
             ret = Core::ERROR_GENERAL;
         }
+
         return ret;
     }
 
-    uint32_t AVInputImplementation::startInputWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        string sPortId = parameters["portId"].String();
-        string sType = parameters["typeOfInput"].String();
-        bool audioMix = parameters["requestAudioMix"].Boolean();
-        int portId = 0;
-        int iType = 0;
-        int planeType = 0;
-        bool topMostPlane = parameters["topMost"].Boolean();
-        LOGINFO("topMost value in thunder: %d\n", topMostPlane);
-
-        if (parameters.HasLabel("portId") && parameters.HasLabel("typeOfInput")) {
-            try {
-                portId = stoi(sPortId);
-                iType = getTypeOfInput(sType);
-                if (parameters.HasLabel("plane")) {
-                    planeType = stoi(parameters["plane"].String());
-                }
-            } catch (...) {
-                LOGWARN("Invalid Arguments");
-                returnResponse(false);
-            }
-        } else {
-            LOGWARN("Required parameters are not passed");
-            returnResponse(false);
-        }
-
-        Core::hresult ret = StartInput(portId, iType, audioMix, planeType, topMostPlane);
-        returnResponse(ret == Core::ERROR_NONE);
-    }
-
-    uint32_t AVInputImplementation::stopInputWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        string sType = parameters["typeOfInput"].String();
-        int iType = 0;
-
-        if (parameters.HasLabel("typeOfInput")) {
-            try {
-                iType = getTypeOfInput(sType);
-            } catch (...) {
-                LOGWARN("Invalid Arguments");
-                returnResponse(false);
-            }
-        } else {
-            LOGWARN("Required parameters are not passed");
-            returnResponse(false);
-        }
-
-        Core::hresult ret = StopInput(iType);
-        returnResponse(ret == Core::ERROR_NONE);
-    }
-
-    Core::hresult AVInputImplementation::StopInput(const int typeOfInput)
+    Core::hresult AVInputImplementation::StopInput(const int typeOfInput, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
+        success = true;
 
         try {
             planeType = -1;
@@ -731,77 +616,22 @@ namespace Plugin {
                 device::CompositeInput::getInstance().selectPort(-1);
             } else {
                 LOGWARN("Invalid input type passed to StopInput");
+                success = false;
                 ret = Core::ERROR_GENERAL;
             }
         } catch (const device::Exception& err) {
             LOGWARN("AVInputImplementation::StopInput Failed");
+            success = false;
             ret = Core::ERROR_GENERAL;
         }
+
         return ret;
     }
 
-    uint32_t AVInputImplementation::setVideoRectangleWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        bool result = true;
-        if (!parameters.HasLabel("x") && !parameters.HasLabel("y")) {
-            result = false;
-            LOGWARN("please specif coordinates (x,y)");
-        }
-
-        if (!parameters.HasLabel("w") && !parameters.HasLabel("h")) {
-            result = false;
-            LOGWARN("please specify window width and height (w,h)");
-        }
-
-        if (!parameters.HasLabel("typeOfInput")) {
-            result = false;
-            LOGWARN("please specify type of input HDMI/COMPOSITE");
-        }
-
-        if (result) {
-            int x = 0;
-            int y = 0;
-            int w = 0;
-            int h = 0;
-            int t = 0;
-            string sType;
-
-            try {
-                if (parameters.HasLabel("x")) {
-                    x = parameters["x"].Number();
-                }
-                if (parameters.HasLabel("y")) {
-                    y = parameters["y"].Number();
-                }
-                if (parameters.HasLabel("w")) {
-                    w = parameters["w"].Number();
-                }
-                if (parameters.HasLabel("h")) {
-                    h = parameters["h"].Number();
-                }
-                if (parameters.HasLabel("typeOfInput")) {
-                    sType = parameters["typeOfInput"].String();
-                    t = getTypeOfInput(sType);
-                }
-            } catch (...) {
-                LOGWARN("Invalid Arguments");
-                returnResponse(false);
-            }
-
-            if (Core::ERROR_NONE != SetVideoRectangle(x, y, w, h, t)) {
-                LOGWARN("AVInputService::setVideoRectangle Failed");
-                returnResponse(false);
-            }
-            returnResponse(true);
-        }
-        returnResponse(false);
-    }
-
-    Core::hresult AVInputImplementation::SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput)
+    Core::hresult AVInputImplementation::SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
+        success = true;
 
         try {
             if (typeOfInput == HDMI) {
@@ -810,6 +640,7 @@ namespace Plugin {
                 device::CompositeInput::getInstance().scaleVideo(x, y, w, h);
             }
         } catch (const device::Exception& err) {
+            success = false;
             ret = Core::ERROR_GENERAL;
         }
 
@@ -833,92 +664,6 @@ namespace Plugin {
             }
         }
         return deviceArray;
-    }
-
-    uint32_t AVInputImplementation::getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        IInputDeviceIterator* devices = nullptr;
-        Core::hresult result;
-
-        LOGINFOMETHOD();
-
-        if (parameters.HasLabel("typeOfInput")) {
-            string sType = parameters["typeOfInput"].String();
-            int iType = 0;
-
-            try {
-                iType = getTypeOfInput(sType);
-            } catch (...) {
-                LOGWARN("Invalid Arguments");
-                returnResponse(false);
-            }
-
-            result = GetInputDevices(iType, devices);
-        } else {
-            std::list<WPEFramework::Exchange::IAVInput::InputDevice> hdmiDevices;
-            result = getInputDevices(HDMI, hdmiDevices);
-
-            if (Core::ERROR_NONE == result) {
-                std::list<WPEFramework::Exchange::IAVInput::InputDevice> compositeDevices;
-                result = getInputDevices(COMPOSITE, compositeDevices);
-
-                if (Core::ERROR_NONE == result) {
-                    std::list<WPEFramework::Exchange::IAVInput::InputDevice> combinedDevices = hdmiDevices;
-                    combinedDevices.insert(combinedDevices.end(), compositeDevices.begin(), compositeDevices.end());
-                    devices = Core::Service<RPC::IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(combinedDevices);
-                }
-            }
-        }
-
-        if (devices != nullptr && Core::ERROR_NONE == result) {
-            response["devices"] = devicesToJson(devices);
-            devices->Release();
-        }
-
-        returnResponse(Core::ERROR_NONE == result);
-    }
-
-    uint32_t AVInputImplementation::writeEDIDWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        string sPortId = parameters["portId"].String();
-        int portId = 0;
-        std::string message;
-
-        if (parameters.HasLabel("portId") && parameters.HasLabel("message")) {
-            portId = stoi(sPortId);
-            message = parameters["message"].String();
-        } else {
-            LOGWARN("Required parameters are not passed");
-            returnResponse(false);
-        }
-
-        returnResponse(Core::ERROR_NONE == WriteEDID(portId, message));
-    }
-
-    uint32_t AVInputImplementation::readEDIDWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        string sPortId = parameters["portId"].String();
-        int portId = 0;
-        try {
-            portId = stoi(sPortId);
-        } catch (...) {
-            LOGWARN("Invalid Arguments");
-            returnResponse(false);
-        }
-
-        string edid;
-
-        Core::hresult result = ReadEDID(portId, edid);
-        if (Core::ERROR_NONE != result || edid.empty()) {
-            returnResponse(false);
-        } else {
-            response["EDID"] = edid;
-            returnResponse(true);
-        }
     }
 
     Core::hresult AVInputImplementation::getInputDevices(const int typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice> &inputDeviceList)
@@ -963,10 +708,11 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetInputDevices(const int typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices)
+    Core::hresult AVInputImplementation::GetInputDevices(const int typeOfInput, IInputDeviceIterator*& devices, bool& success)
     {
         Core::hresult result = Core::ERROR_NONE;
         std::list<WPEFramework::Exchange::IAVInput::InputDevice> inputDeviceList;
+        success = false;
 
         switch (typeOfInput) {
         case ALL: {
@@ -981,21 +727,26 @@ namespace Plugin {
             break;
         default:
             LOGERR("GetInputDevices: Invalid input type");
+            success = false;
             return Core::ERROR_GENERAL;
         }
 
-        devices = Core::Service<RPC::IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(inputDeviceList);
+        if(Core::ERROR_NONE == result) {
+            devices = Core::Service<RPC::IteratorType<IInputDeviceIterator>>::Create<IInputDeviceIterator>(inputDeviceList);
+            success = true;
+        }
 
         return result;
     }
 
-    Core::hresult AVInputImplementation::WriteEDID(const int portId, const string& message)
+    Core::hresult AVInputImplementation::WriteEDID(const int portId, const string& message, bool& success)
     {
         // TODO: This wasn't implemented in the original code, do we want to implement it?
+        success = true;
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::ReadEDID(const int portId, string& EDID)
+    Core::hresult AVInputImplementation::ReadEDID(const int portId, string& EDID, bool& success)
     {
         vector<uint8_t> edidVec({ 'u', 'n', 'k', 'n', 'o', 'w', 'n' });
 
@@ -1010,14 +761,17 @@ namespace Plugin {
             LOGWARN("AVInputImplementation::readEDID size:%d edidVec.size:%zu", size, edidVec.size());
             if (edidVec.size() > (size_t)numeric_limits<uint16_t>::max()) {
                 LOGERR("Size too large to use ToString base64 wpe api");
+                success = false;
                 return Core::ERROR_GENERAL;
             }
             Core::ToString((uint8_t*)&edidVec[0], size, true, EDID);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            success = false;
             return Core::ERROR_GENERAL;
         }
 
+        success = true;
         return Core::ERROR_NONE;
     }
 
@@ -1033,8 +787,9 @@ namespace Plugin {
         LOGWARN("AVInputHotplug [%d, %d, %d]", input, connect, type);
 
         IInputDeviceIterator* devices;
+        bool success;
 
-        Core::hresult result = GetInputDevices(type, devices);
+        Core::hresult result = GetInputDevices(type, devices, success);
         if (Core::ERROR_NONE != result) {
             LOGERR("AVInputHotplug [%d, %d, %d]: Failed to get devices", input, connect, type);
             return;
@@ -1326,81 +1081,32 @@ namespace Plugin {
         dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
     }
 
-    Core::hresult AVInputImplementation::GetSupportedGameFeatures(IStringIterator*& features)
+    Core::hresult AVInputImplementation::GetSupportedGameFeatures(IStringIterator*& features, bool& success)
     {
         Core::hresult result = Core::ERROR_NONE;
+        success = true;
         features = nullptr;
         std::vector<std::string> supportedFeatures;
         try {
             device::HdmiInput::getInstance().getSupportedGameFeatures(supportedFeatures);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION0();
+            success = false;
             result = Core::ERROR_GENERAL;
         }
 
         if (!supportedFeatures.empty() && result == Core::ERROR_NONE) {
             features = Core::Service<RPC::IteratorType<IStringIterator>>::Create<IStringIterator>(supportedFeatures);
         } else {
+            success = false;
             result = Core::ERROR_GENERAL;
         }
+
         return result;
     }
 
-    uint32_t AVInputImplementation::getSupportedGameFeaturesWrapper(const JsonObject& parameters, JsonObject& response)
+    Core::hresult AVInputImplementation::GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode, bool& success)
     {
-        LOGINFOMETHOD();
-        IStringIterator* features = nullptr;
-        Core::hresult result = GetSupportedGameFeatures(features);
-
-        if (result != Core::ERROR_NONE || features == nullptr) {
-            returnResponse(false);
-        } else {
-            vector<string> supportedFeatures;
-            features->Reset(0);
-            string feature;
-            while (features->Next(feature)) {
-                supportedFeatures.push_back(feature);
-            }
-            features->Release();
-            setResponseArray(response, "supportedGameFeatures", supportedFeatures);
-            returnResponse(true);
-        }
-    }
-
-    uint32_t AVInputImplementation::getGameFeatureStatusWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        if (!(parameters.HasLabel("portId") && parameters.HasLabel("gameFeature"))) {
-            LOGWARN("Required parameters are not passed");
-            returnResponse(false);
-        }
-
-        string sPortId = parameters["portId"].String();
-        string sGameFeature = parameters["gameFeature"].String();
-        int portId = 0;
-        try {
-            portId = stoi(sPortId);
-        } catch (...) {
-            LOGWARN("Invalid Arguments");
-            returnResponse(false);
-        }
-
-        bool mode = false;
-        Core::hresult ret = GetGameFeatureStatus(portId, sGameFeature, mode);
-        if (ret == Core::ERROR_NONE) {
-            response["mode"] = mode;
-            returnResponse(true);
-        } else {
-            LOGWARN("AVInputImplementation::getGameFeatureStatusWrapper Mode is not supported. Supported mode: ALLM, VRR-HDMI, VRR-FREESYNC, VRR-FREESYNC-PREMIUM, VRR-FREESYNC-PREMIUM-PRO");
-            returnResponse(false);
-        }
-    }
-
-    Core::hresult AVInputImplementation::GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode)
-    {
-        // TODO: The current docs state that the id parameter is optional, but that's not the case in existing code. Which is correct?
-
         if (gameFeature == STR_ALLM) {
             mode = getALLMStatus(portId);
         } else if (gameFeature == VRR_TYPE_HDMI) {
@@ -1421,9 +1127,11 @@ namespace Plugin {
             mode = (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM_PRO);
         } else {
             LOGWARN("AVInputImplementation::GetGameFeatureStatus Unsupported feature: %s", gameFeature.c_str());
+            success = false;
             return Core::ERROR_NOT_SUPPORTED;
         }
 
+        success = true;
         return Core::ERROR_NONE;
     }
 
@@ -1453,63 +1161,7 @@ namespace Plugin {
         return ret;
     }
 
-    uint32_t AVInputImplementation::getRawSPDWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        string sPortId = parameters["portId"].String();
-        int portId = 0;
-        if (parameters.HasLabel("portId")) {
-            try {
-                portId = stoi(sPortId);
-            } catch (...) {
-                LOGWARN("Invalid Arguments");
-                returnResponse(false);
-            }
-        } else {
-            LOGWARN("Required parameters are not passed");
-            returnResponse(false);
-        }
-
-        string spdInfo;
-        Core::hresult ret = GetRawSPD(portId, spdInfo);
-        response["HDMISPD"] = spdInfo;
-        if (spdInfo.empty() || Core::ERROR_NONE != ret) {
-            returnResponse(false);
-        } else {
-            returnResponse(true);
-        }
-    }
-
-    uint32_t AVInputImplementation::getSPDWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        string sPortId = parameters["portId"].String();
-        int portId = 0;
-        if (parameters.HasLabel("portId")) {
-            try {
-                portId = stoi(sPortId);
-            } catch (...) {
-                LOGWARN("Invalid Arguments");
-                returnResponse(false);
-            }
-        } else {
-            LOGWARN("Required parameters are not passed");
-            returnResponse(false);
-        }
-
-        string spdInfo;
-        Core::hresult ret = GetSPD(portId, spdInfo);
-        response["HDMISPD"] = spdInfo;
-        if (spdInfo.empty() || Core::ERROR_NONE != ret) {
-            returnResponse(false);
-        } else {
-            returnResponse(true);
-        }
-    }
-
-    Core::hresult AVInputImplementation::GetRawSPD(const int portId, string& HDMISPD)
+    Core::hresult AVInputImplementation::GetRawSPD(const int portId, string& HDMISPD, bool& success)
     {
         LOGINFO("AVInputImplementation::getSPDInfo");
         vector<uint8_t> spdVect({ 'u', 'n', 'k', 'n', 'o', 'w', 'n' });
@@ -1527,6 +1179,7 @@ namespace Plugin {
 
             if (spdVect.size() > (size_t)numeric_limits<uint16_t>::max()) {
                 LOGERR("Size too large to use ToString base64 wpe api");
+                success = false;
                 return Core::ERROR_GENERAL;
             }
 
@@ -1537,12 +1190,15 @@ namespace Plugin {
             Core::ToString((uint8_t*)&spdVect[0], size, false, HDMISPD);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            success = false;
             return Core::ERROR_GENERAL;
         }
+
+        success = true;
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetSPD(const int portId, string& HDMISPD)
+    Core::hresult AVInputImplementation::GetSPD(const int portId, string& HDMISPD, bool& success)
     {
         vector<uint8_t> spdVect({ 'u', 'n', 'k', 'n', 'o', 'w', 'n' });
 
@@ -1561,6 +1217,7 @@ namespace Plugin {
 
             if (spdVect.size() > (size_t)numeric_limits<uint16_t>::max()) {
                 LOGERR("Size too large to use ToString base64 wpe api");
+                success = false;
                 return Core::ERROR_GENERAL;
             }
 
@@ -1580,95 +1237,45 @@ namespace Plugin {
             }
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            success = false;
             return Core::ERROR_GENERAL;
         }
 
+        success = true;
         return Core::ERROR_NONE;
     }
 
-    uint32_t AVInputImplementation::setAudioMixerLevelsWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        returnIfParamNotFound(parameters, "primaryVolume");
-        returnIfParamNotFound(parameters, "inputVolume");
-
-        int primVol = 0, inputVol = 0;
-        try {
-            primVol = parameters["primaryVolume"].Number();
-            inputVol = parameters["inputVolume"].Number();
-        } catch (...) {
-            LOGERR("Incompatible params passed !!!\n");
-            response["success"] = false;
-            returnResponse(false);
-        }
-
-        if ((primVol >= 0) && (inputVol >= 0)) {
-            m_primVolume = primVol;
-            m_inputVolume = inputVol;
-        } else {
-            LOGERR("Incompatible params passed !!!\n");
-            response["success"] = false;
-            returnResponse(false);
-        }
-        if (m_primVolume > MAX_PRIM_VOL_LEVEL) {
-            LOGWARN("Primary Volume greater than limit. Set to MAX_PRIM_VOL_LEVEL(100) !!!\n");
-            m_primVolume = MAX_PRIM_VOL_LEVEL;
-        }
-        if (m_inputVolume > DEFAULT_INPUT_VOL_LEVEL) {
-            LOGWARN("INPUT Volume greater than limit. Set to DEFAULT_INPUT_VOL_LEVEL(100) !!!\n");
-            m_inputVolume = DEFAULT_INPUT_VOL_LEVEL;
-        }
-
-        LOGINFO("GLOBAL primary Volume=%d input Volume=%d \n", m_primVolume, m_inputVolume);
-
-        returnResponse(Core::ERROR_NONE == SetAudioMixerLevels(m_primVolume, m_inputVolume));
-    }
-
-    Core::hresult AVInputImplementation::SetAudioMixerLevels(const int primaryVolume, const int inputVolume)
+    Core::hresult AVInputImplementation::SetAudioMixerLevels(const int primaryVolume, const int inputVolume, bool& success)
     {
         try {
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY, primaryVolume);
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, inputVolume);
         } catch (...) {
             LOGWARN("Not setting SoC volume !!!\n");
+            success = false;
             return Core::ERROR_GENERAL;
         }
 
         isAudioBalanceSet = true;
+        success = true;
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::SetEdid2AllmSupport(const int portId, const bool allmSupport)
+    Core::hresult AVInputImplementation::SetEdid2AllmSupport(const int portId, const bool allmSupport, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
+        success = true;
+
         try {
             device::HdmiInput::getInstance().setEdid2AllmSupport(portId, allmSupport);
             LOGWARN("AVInput -  allmsupport:%d", allmSupport);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            success = false;
             ret = Core::ERROR_GENERAL;
         }
+
         return ret;
-    }
-
-    uint32_t AVInputImplementation::setEdid2AllmSupportWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        returnIfParamNotFound(parameters, "portId");
-        returnIfParamNotFound(parameters, "allmSupport");
-
-        int portId = 0;
-        string sPortId = parameters["portId"].String();
-        bool allmSupport = parameters["allmSupport"].Boolean();
-
-        try {
-            portId = stoi(sPortId);
-        } catch (const std::exception& err) {
-            LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
-            returnResponse(false);
-        }
-
-        returnResponse(Core::ERROR_NONE == SetEdid2AllmSupport(portId, allmSupport));
     }
 
     Core::hresult AVInputImplementation::GetEdid2AllmSupport(const int portId, bool& allmSupport, bool& success)
@@ -1686,31 +1293,6 @@ namespace Plugin {
         return ret;
     }
 
-    uint32_t AVInputImplementation::getEdid2AllmSupportWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-        string sPortId = parameters["portId"].String();
-
-        int portId = 0;
-        bool allmSupport = true;
-        bool success;
-        returnIfParamNotFound(parameters, "portId");
-
-        try {
-            portId = stoi(sPortId);
-        } catch (const std::exception& err) {
-            LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
-            returnResponse(false);
-        }
-
-        Core::hresult result = GetEdid2AllmSupport(portId, allmSupport, success);
-        if (Core::ERROR_NONE == result) {
-            response["allmSupport"] = allmSupport;
-        }
-
-        returnResponse(Core::ERROR_NONE == result);
-    }
-
     Core::hresult AVInputImplementation::GetVRRSupport(const int portId, bool& vrrSupport)
     {
         Core::hresult ret = Core::ERROR_NONE;
@@ -1725,31 +1307,6 @@ namespace Plugin {
         return ret;
     }
 
-    uint32_t AVInputImplementation::getVRRSupportWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-        returnIfParamNotFound(parameters, "portId");
-        string sPortId = parameters["portId"].String();
-
-        int portId = 0;
-        bool vrrSupport = true;
-
-        try {
-            portId = stoi(sPortId);
-        } catch (const std::exception& err) {
-            LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
-            returnResponse(false);
-        }
-
-        Core::hresult result = GetVRRSupport(portId, vrrSupport);
-
-        if (Core::ERROR_NONE == result) {
-            response["vrrSupport"] = vrrSupport;
-        }
-
-        returnResponse(Core::ERROR_NONE == result);
-    }
-
     Core::hresult AVInputImplementation::SetVRRSupport(const int portId, const bool vrrSupport)
     {
         Core::hresult ret = Core::ERROR_NONE;
@@ -1761,75 +1318,6 @@ namespace Plugin {
             ret = Core::ERROR_GENERAL;
         }
         return ret;
-    }
-
-    uint32_t AVInputImplementation::setVRRSupportWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-
-        returnIfParamNotFound(parameters, "portId");
-        returnIfParamNotFound(parameters, "vrrSupport");
-
-        int portId = 0;
-        string sPortId = parameters["portId"].String();
-        bool vrrSupport = parameters["vrrSupport"].Boolean();
-
-        try {
-            portId = stoi(sPortId);
-        } catch (const std::exception& err) {
-            LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
-            returnResponse(false);
-        }
-
-        returnResponse(Core::ERROR_NONE == SetVRRSupport(portId, vrrSupport));
-    }
-
-    uint32_t AVInputImplementation::getVRRFrameRateWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-        returnIfParamNotFound(parameters, "portId");
-        string sPortId = parameters["portId"].String();
-
-        int portId = 0;
-        dsHdmiInVrrStatus_t vrrStatus;
-        vrrStatus.vrrAmdfreesyncFramerate_Hz = 0;
-
-        try {
-            portId = stoi(sPortId);
-        } catch (const std::exception& err) {
-            LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
-            returnResponse(false);
-        }
-
-        bool result = getVRRStatus(portId, &vrrStatus);
-        if (result == true) {
-            response["currentVRRVideoFrameRate"] = vrrStatus.vrrAmdfreesyncFramerate_Hz;
-            returnResponse(true);
-        } else {
-            returnResponse(false);
-        }
-    }
-
-    uint32_t AVInputImplementation::setEdidVersionWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-        string sPortId = parameters["portId"].String();
-        int portId = 0;
-        string sVersion = "";
-        if (parameters.HasLabel("portId") && parameters.HasLabel("edidVersion")) {
-            try {
-                portId = stoi(sPortId);
-                sVersion = parameters["edidVersion"].String();
-            } catch (...) {
-                LOGWARN("Invalid Arguments");
-                returnResponse(false);
-            }
-        } else {
-            LOGWARN("Required parameters are not passed");
-            returnResponse(false);
-        }
-
-        returnResponse(Core::ERROR_NONE == SetEdidVersion(portId, sVersion));
     }
 
     Core::hresult AVInputImplementation::GetHdmiVersion(const int portId, string& HdmiCapabilityVersion, bool& success)
@@ -1871,36 +1359,11 @@ namespace Plugin {
         return ret;
     }
 
-    uint32_t AVInputImplementation::getHdmiVersionWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-        returnIfParamNotFound(parameters, "portId");
-        string sPortId = parameters["portId"].String();
-        int portId = 0;
-
-        try {
-            portId = stoi(sPortId);
-        } catch (const std::exception& err) {
-            LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
-            returnResponse(false);
-        }
-
-        string hdmiVersion;
-        bool success;
-        Core::hresult ret = GetHdmiVersion(portId, hdmiVersion, success);
-
-        if (ret == Core::ERROR_NONE) {
-            response["HdmiCapabilityVersion"] = hdmiVersion;
-            returnResponse(true);
-        } else {
-            returnResponse(false);
-        }
-    }
-
-    Core::hresult AVInputImplementation::SetEdidVersion(const int portId, const string& edidVersion)
+    Core::hresult AVInputImplementation::SetEdidVersion(const int portId, const string& edidVersion, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
         int edidVer = -1;
+        success = true;
 
         if (strcmp(edidVersion.c_str(), "HDMI1.4") == 0) {
             edidVer = HDMI_EDID_VER_14;
@@ -1908,6 +1371,7 @@ namespace Plugin {
             edidVer = HDMI_EDID_VER_20;
         } else {
             LOGERR("Invalid EDID Version: %s", edidVersion.c_str());
+            success = false;
             return Core::ERROR_GENERAL;
         }
 
@@ -1916,44 +1380,17 @@ namespace Plugin {
             LOGWARN("AVInputImplementation::setEdidVersion EDID Version: %s", edidVersion.c_str());
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            success = false;
             ret = Core::ERROR_GENERAL;
         }
 
         return ret;
     }
 
-    uint32_t AVInputImplementation::getEdidVersionWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        string sPortId = parameters["portId"].String();
-        int portId = 0;
-
-        LOGINFOMETHOD();
-        if (parameters.HasLabel("portId")) {
-            try {
-                portId = stoi(sPortId);
-            } catch (...) {
-                LOGWARN("Invalid Arguments");
-                returnResponse(false);
-            }
-        } else {
-            LOGWARN("Required parameters are not passed");
-            returnResponse(false);
-        }
-
-        string version;
-        Core::hresult ret = GetEdidVersion(portId, version);
-        if (Core::ERROR_NONE == ret) {
-            response["edidVersion"] = version;
-            returnResponse(true);
-        } else {
-            LOGERR("Failed to get EDID version for port %d", portId);
-            returnResponse(false);
-        }
-    }
-
-    Core::hresult AVInputImplementation::GetEdidVersion(const int portId, string& edidVersion)
+    Core::hresult AVInputImplementation::GetEdidVersion(const int portId, string& edidVersion, bool& success)
     {
         Core::hresult ret = Core::ERROR_NONE;
+        success = true;
         int version = -1;
 
         try {
@@ -1961,6 +1398,7 @@ namespace Plugin {
             LOGWARN("AVInputImplementation::getEdidVersion EDID Version:%d", version);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            success = false;
             return Core::ERROR_GENERAL;
         }
 
@@ -1972,6 +1410,7 @@ namespace Plugin {
             edidVersion = "HDMI2.0";
             break;
         default:
+            success = false;
             return Core::ERROR_GENERAL;
         }
 
