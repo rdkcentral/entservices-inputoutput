@@ -514,7 +514,6 @@ HdmiCecSink_L2Test::~HdmiCecSink_L2Test()
     EXPECT_EQ(Core::ERROR_NONE, status);
 
     removeFile("/tmp/pwrmgr_restarted");
-    removeFile("/etc/device.properties");
     removeFile("/opt/persistent/ds/cecData_2.json");
     removeFile("/opt/uimgr_settings.bin");
 }
@@ -709,7 +708,6 @@ HdmiCecSink_L2Test_STANDBY::~HdmiCecSink_L2Test_STANDBY()
     status = DeactivateService("org.rdk.PowerManager");
     EXPECT_EQ(Core::ERROR_NONE, status);
 
-    removeFile("/etc/device.properties");
     removeFile("/opt/uimgr_settings.bin");
 }
 
