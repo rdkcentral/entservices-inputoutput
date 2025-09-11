@@ -495,72 +495,832 @@ protected:
     }
 };
 
-TEST_F(HdmiCecSourceInitializedTest, setEnabled_EnablesCecSuccessfully)
+TEST_F(HdmiCecSourceInitializedTest, RegisteredMethods)
 {
-    // Test setEnabled with enabled=true (CEC is already enabled in fixture setup)
-    string response;
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
-    
-    // Verify successful response
-    EXPECT_EQ(response, string("{\"success\":true}"));
-    
-    // Verify that the enable state can be retrieved
-    string getEnabledResponse;
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEnabled"), _T("{}"), getEnabledResponse));
-    EXPECT_THAT(getEnabledResponse, ::testing::HasSubstr("\"enabled\":true"));
-    
-    // Test setEnabled with enabled=false to verify disable functionality
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": false}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
-    
-    // Verify CEC is now disabled
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEnabled"), _T("{}"), getEnabledResponse));
-    EXPECT_THAT(getEnabledResponse, ::testing::HasSubstr("\"enabled\":false"));
-    
-    // Re-enable for clean teardown
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    removeFile("/etc/device.properties");
+    createFile("/etc/device.properties", "RDK_PROFILE=STB");
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getActiveSourceStatus")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getDeviceList")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEnabled")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getOSDName")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getOTPEnabled")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVendorId")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("performOTPAction")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendKeyPressEvent")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendStandbyMessage")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEnabled")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setOSDName")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setOTPEnabled")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVendorId")));
+
+    removeFile("/etc/device.properties");
+
 }
 
-TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatus_ReturnsCorrectStatus)
+TEST_F(HdmiCecSourceInitializedTest, getEnabledTrue)
 {
-    // Test getActiveSourceStatus method
-    string response;
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T("{}"), response));
-    
-    // Verify successful response structure
-    EXPECT_THAT(response, ::testing::HasSubstr("\"success\":true"));
-    EXPECT_THAT(response, ::testing::HasSubstr("\"status\":"));
-    
-    // Verify response contains boolean value for isActiveSource
-    EXPECT_TRUE((response.find("\"status\":true") != string::npos) || 
-                (response.find("\"status\":false") != string::npos));
-    
-    // Test multiple calls to ensure consistency (since it's a simple getter)
-    string response2;
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T("{}"), response2));
-    EXPECT_EQ(response, response2);
+    //Get enabled just checks if CEC is on, which is a global variable.
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEnabled"), _T(""), response));
+    EXPECT_EQ(response, string("{\"enabled\":true,\"success\":true}"));
+
 }
 
-TEST_F(HdmiCecSourceInitializedTest, getOTPEnabled_ReturnsCorrectStatus)
+TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatusFalse)
 {
-    // Test getOTPEnabled method
-    string response;
+    //ActiveSource is a local variable, no mocked functions to check.
+    //Active source is false by default.
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
+    EXPECT_EQ(response, string("{\"status\":false,\"success\":true}"));
+}
+
+
+TEST_F(HdmiCecSourceInitializedTest, getDeviceList)
+{
+    int iCounter = 0;
+    //Checking to see if one of the values has been filled in (as the rest get filled in at the same time, and waiting if its not.
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
+                usleep (100 * 1000); //sleep for 100 milli sec
+                iCounter ++;
+        }
+
+    const char* val = "TEST";
+    OSDName name = OSDName(val);
+    SetOSDName osdName = SetOSDName(name);
+
+    Header header;
+    header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
+
+    VendorID vendor(1,2,3);
+    DeviceVendorID vendorid(vendor);
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+
+    proc.process(osdName, header); //calls the process that sets osdName for LogicalAddress = 1
+    proc.process(vendorid, header); //calls the process that sets vendorID for LogicalAddress = 1
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+
+    EXPECT_EQ(response, string(_T("{\"numberofdevices\":15,\"deviceList\":[{\"logicalAddress\":0,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
+
+
+}
+
+
+TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage)
+{
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
+        EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setOSDName)
+{
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOSDName"), _T("{\"name\": \"CUSTOM8 Tv\"}"), response));
+        EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOSDName"), _T("{}"), response));
+        EXPECT_EQ(response, string("{\"name\":\"CUSTOM8 Tv\",\"success\":true}"));
+
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventUp)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+            .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(),UICommand::UI_COMMAND_VOLUME_UP );
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 65}"), response));
+        EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, GetInformation)
+{
+    EXPECT_EQ("This HdmiCecSource PLugin Facilitates the HDMI CEC Source Control", plugin->Information());
+}
+
+TEST_F(HdmiCecSourceInitializedTest, activeSourceProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
+        usleep (100 * 1000); //sleep for 100 milli sec
+        iCounter ++;
+}
+
+
+    Header header;
+    header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
+
+    PhysicalAddress physicalAddress(0x0F,0x0F,0x0F,0x0F);
+    PhysicalAddress physicalAddress2(1,2,3,4);
+    ActiveSource activeSource(physicalAddress);
+    ActiveSource activeSource2(physicalAddress2);
+
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(activeSource2, header);
+    proc.process(activeSource, header); 
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+
+    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
+
+
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, textViewOnProcess){
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
+        usleep (100 * 1000); //sleep for 100 milli sec
+        iCounter ++;
+}
+    
+
+    Header header;
+    header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
+
+    TextViewOn textViewOn;
+
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(textViewOn, header); 
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+
+    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
+
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
+        usleep (100 * 1000); //sleep for 100 milli sec
+        iCounter ++;
+    }
+
+    ASSERT_TRUE(dsHdmiEventHandler != nullptr);
+    EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
+    .Times(1)
+        .WillOnce(::testing::Return("TEST"));
+
+
+    IARM_Bus_DSMgr_EventData_t eventData;
+    eventData.data.hdmi_hpd.event = 0;
+
+    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+
+    dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, &eventData , 0);
+
+    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+}
+
+
+TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged)
+{
+    EXPECT_CALL(*p_libCCECImplMock, getLogicalAddress(::testing::_))
+    .WillRepeatedly(::testing::Invoke(
+        [&](int devType) {
+           EXPECT_EQ(devType, 1);
+           return 0;
+        }));
+
+        Plugin::HdmiCecSourceImplementation::_instance->onPowerModeChanged(WPEFramework::Exchange::IPowerManager::POWER_STATE_OFF, WPEFramework::Exchange::IPowerManager::POWER_STATE_ON);
+
+
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setVendorId)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"0x019FB\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVendorId"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"vendorid\":\"019fb\",\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, getOTPEnabled)
+{
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T("{}"), response));
-    
-    // Verify successful response structure
-    EXPECT_THAT(response, ::testing::HasSubstr("\"success\":true"));
-    EXPECT_THAT(response, ::testing::HasSubstr("\"enabled\":"));
-    
-    // Verify response contains boolean value for OTP enabled status
-    EXPECT_TRUE((response.find("\"enabled\":true") != string::npos) || 
-                (response.find("\"enabled\":false") != string::npos));
-    
-    // Test multiple calls to ensure consistency (since it's a simple getter)
-    string response2;
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T("{}"), response2));
-    EXPECT_EQ(response, response2);
-    
-    // Verify default state is false (based on typical OTP initialization)
-    EXPECT_THAT(response, ::testing::HasSubstr("\"enabled\":false"));
+    EXPECT_EQ(response, string("{\"enabled\":true,\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setOTPEnabled)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": false}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"enabled\":false,\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, performOTPAction)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatusTrue)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
+    EXPECT_EQ(response, string("{\"status\":true,\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventVolumeDown)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_VOLUME_DOWN);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 66}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventMute)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_MUTE);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 67}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventDown)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_DOWN);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 2}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventLeft)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_LEFT);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 3}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventRight)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_RIGHT);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 4}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventSelect)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_SELECT);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 0}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventHome)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_HOME);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 9}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventBack)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_BACK);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 13}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber0)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_NUM_0);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 32}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber1)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_NUM_1);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 33}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber2)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_NUM_2);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 34}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber3)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_NUM_3);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 35}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber4)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_NUM_4);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 36}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber5)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_NUM_5);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 37}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber6)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_NUM_6);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 38}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber7)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_NUM_7);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 39}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber8)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_NUM_8);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 40}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber9)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame&  {
+                EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_NUM_9);
+                return CECFrame::getInstance();
+            }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 41}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, imageViewOnProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    ImageViewOn imageViewOn;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(imageViewOn, header);
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, requestActiveSourceProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    RequestActiveSource requestActiveSource;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(requestActiveSource, header);
+
+    // Verify that processing the message doesn't alter the device list unexpectedly.
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"logicalAddress\":1"));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, cecVersionProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    CECVersion cecVersion(Version::V_1_4);
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(cecVersion, header);
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, giveOSDNameProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    GiveOSDName giveOSDName;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(giveOSDName, header);
+
+    // Verify that processing the message doesn't alter the device list unexpectedly.
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"logicalAddress\":1"));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, givePhysicalAddressProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    GivePhysicalAddress givePhysicalAddress;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(givePhysicalAddress, header);
+
+    // Verify that processing the message doesn't alter the device list unexpectedly.
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"logicalAddress\":1"));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, giveDeviceVendorIdProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    GiveDeviceVendorID giveDeviceVendorID;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(giveDeviceVendorID, header);
+
+    // Verify that processing the message doesn't alter the device list unexpectedly.
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"logicalAddress\":1"));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, routingChangeProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    PhysicalAddress from(1,2,3,4);
+    PhysicalAddress to(0x0F,0x0F,0x0F,0x0F);
+    RoutingChange routingChange(from, to);
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(routingChange, header);
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
+    EXPECT_EQ(response, string("{\"status\":true,\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, routingInformationProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    RoutingInformation routingInformation; // Remove the parameter
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(routingInformation, header);
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
+    EXPECT_EQ(response, string("{\"status\":true,\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, setStreamPathProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    PhysicalAddress toSink(0x0F,0x0F,0x0F,0x0F);
+    SetStreamPath setStreamPath(toSink);
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(setStreamPath, header);
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
+    EXPECT_EQ(response, string("{\"status\":true,\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, reportPhysicalAddressProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    PhysicalAddress physicalAddress(1,2,3,4);
+    ReportPhysicalAddress reportPhysicalAddress(physicalAddress, 1);
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(reportPhysicalAddress, header);
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, deviceVendorIDProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    VendorID vendor(1,2,3);
+    DeviceVendorID deviceVendorID(vendor);
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(deviceVendorID, header);
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"123\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, giveDevicePowerStatusProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    GiveDevicePowerStatus giveDevicePowerStatus;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(giveDevicePowerStatus, header);
+
+    // Verify that processing the message doesn't alter the device list unexpectedly.
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"logicalAddress\":1"));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, reportPowerStatusProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress::TV;
+
+    PowerStatus powerStatus(1);
+    ReportPowerStatus reportPowerStatus(powerStatus);
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(reportPowerStatus, header);
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":0,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Core::Sink<NotificationHandler> notification;
+    uint32_t signalled = false;
+    p_hdmiCecSourceMock->AddRef();
+    p_hdmiCecSourceMock->Register(&notification);
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    UICommand uiCommand(UICommand::UI_COMMAND_VOLUME_UP);
+    UserControlPressed userControlPressed(uiCommand);
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(userControlPressed, header);
+
+    signalled = notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyPressEvent);
+
+    EXPECT_TRUE(signalled);
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Core::Sink<NotificationHandler> notification;
+    uint32_t signalled = false;
+    p_hdmiCecSourceMock->AddRef();
+    p_hdmiCecSourceMock->Register(&notification);
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    UserControlReleased userControlReleased;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(userControlReleased, header);
+
+    signalled = notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyReleaseEvent);
+
+    EXPECT_TRUE(signalled);
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, abortProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    Abort abort; // Remove the OpCode parameter
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(abort, header);
+
+    // Verify that processing the message doesn't alter the device list unexpectedly.
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"logicalAddress\":1"));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, setOSDNameProcess)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000);
+        iCounter ++;
+    }
+
+    Core::Sink<NotificationHandler> notification;
+    uint32_t signalled = false;
+    p_hdmiCecSourceMock->AddRef();
+    p_hdmiCecSourceMock->Register(&notification);
+
+    Header header;
+    header.from = LogicalAddress(1);
+
+    const char* val = "TEST_DEVICE";
+    OSDName name = OSDName(val);
+    SetOSDName setOSDName(name);
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(setOSDName, header);
+
+    signalled = notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnDeviceInfoUpdated);
+
+    EXPECT_TRUE(signalled);
 }
