@@ -343,11 +343,16 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
     createFile("/opt/persistent/ds/cecData_2.json", "0");
     createFile("/tmp/pwrmgr_restarted", "2");
 
-    struct stat buffer;
-    printf("[TEST DEBUG] Standby fixture: ls /tmp/pwrmgr_restarted output:\n");
+    printf("[TEST DEBUG] State ON fixture: ls /tmp/pwrmgr_restarted output:\n");
     int lsResult = system("ls -l /tmp/pwrmgr_restarted");
     if (lsResult != 0) {
         printf("[TEST DEBUG] /tmp/pwrmgr_restarted does NOT exist\n");
+    }
+
+    printf("[TEST DEBUG] State ON fixture: ls /tmp/uimgr_settings.bin output:\n");
+    int lsResult1 = system("ls -l /tmp/uimgr_settings.bin");
+    if (lsResult1 != 0) {
+        printf("[TEST DEBUG] /tmp/uimgr_settings.bin does NOT exist\n");
     }
 
     // Add sleep to ensure file is properly written to disk
@@ -552,6 +557,12 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
     int lsResult = system("ls -l /tmp/pwrmgr_restarted");
     if (lsResult != 0) {
         printf("[TEST DEBUG] /tmp/pwrmgr_restarted does NOT exist\n");
+    }
+
+    printf("[TEST DEBUG] State ON fixture: ls /tmp/uimgr_settings.bin output:\n");
+    int lsResult1 = system("ls -l /tmp/uimgr_settings.bin");
+    if (lsResult1 != 0) {
+        printf("[TEST DEBUG] /tmp/uimgr_settings.bin does NOT exist\n");
     }
 
     EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
