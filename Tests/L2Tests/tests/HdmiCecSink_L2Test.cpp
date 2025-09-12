@@ -1850,8 +1850,14 @@ TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC)
             if (m_cecSinkPlugin) {
 
                 IARM_Bus_DSMgr_EventData_t eventData;
-                eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_1;
+                eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_2;
                 eventData.data.hdmi_in_connect.isPortConnected = true;
+
+                dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
+
+                IARM_Bus_DSMgr_EventData_t eventData;
+                eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_2;
+                eventData.data.hdmi_in_connect.isPortConnected = false;
 
                 dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
 
