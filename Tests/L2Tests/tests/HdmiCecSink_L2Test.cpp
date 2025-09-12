@@ -2800,7 +2800,7 @@ TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceFramesAndVerifyEvents)
 TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceBroadcastIgnoreCase)
 {
     // Inject <Inactive Source>
-    uint8_t inactiveSource[] = { 0x40, 0x9D, 0x10, 0x00 };
+    uint8_t inactiveSource[] = { 0x4F, 0x9D, 0x10, 0x00 };
     CECFrame inactiveSourceFrame(inactiveSource, sizeof(inactiveSource));
     for (auto* listener : listeners) {
         if (listener)
@@ -3800,6 +3800,18 @@ TEST_F(HdmiCecSink_L2Test_STANDBY, InjectWakeupFromStandbyFrameAndVerifyEvent)
     EXPECT_TRUE(signalled & ON_WAKEUP_FROM_STANDBY);
 
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onWakeupFromStandby"));
+}
+
+TEST_F(HdmiCecSink_L2Test, ActiveSourceFrameBroadcastIgnoreTest)
+{
+    uint8_t buffer[] = { 0x40, 0x82, 0x10, 0x00 }; // Active Source from device 4 to broadcast
+    CECFrame frame(buffer, sizeof(buffer));
+
+    for (auto* listener : listeners) {
+        if (listener) {
+            listener->notify(frame);
+        }
+    }
 }
 
 // Power Mode Change to ON to verify onPowerModeChanged event
