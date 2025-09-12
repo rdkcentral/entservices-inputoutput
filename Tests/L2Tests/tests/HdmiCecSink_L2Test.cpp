@@ -1054,6 +1054,7 @@ uint32_t HdmiCecSink_L2Test::CreateHdmiCecSinkInterfaceObject()
     return return_value;
 }
 
+// Test cases to validate Set and Get OSDName COMRPC
 TEST_F(HdmiCecSink_L2Test, Set_And_Get_OSDName_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1096,6 +1097,7 @@ TEST_F(HdmiCecSink_L2Test, Set_And_Get_OSDName_COMRPC)
     }
 }
 
+// Test cases to validate Set and Get Enabled COMRPC
 TEST_F(HdmiCecSink_L2Test, Set_And_Get_Enabled_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1137,6 +1139,7 @@ TEST_F(HdmiCecSink_L2Test, Set_And_Get_Enabled_COMRPC)
     }
 }
 
+// Test cases to validate Set and Get VendorId COMRPC
 TEST_F(HdmiCecSink_L2Test, Set_And_Get_VendorId_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1180,6 +1183,8 @@ TEST_F(HdmiCecSink_L2Test, Set_And_Get_VendorId_COMRPC)
     }
 }
 
+
+// Test cases to validate GetAudioDeviceConnectedStatus COMRPC
 TEST_F(HdmiCecSink_L2Test, GetAudioDeviceConnectedStatus_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1213,6 +1218,7 @@ TEST_F(HdmiCecSink_L2Test, GetAudioDeviceConnectedStatus_COMRPC)
     }
 }
 
+// Test cases to validate PrintDeviceList COMRPC
 TEST_F(HdmiCecSink_L2Test, PrintDeviceList_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1244,8 +1250,7 @@ TEST_F(HdmiCecSink_L2Test, PrintDeviceList_COMRPC)
             TEST_LOG("m_controller_cecSink is NULL");
         }
     }
-}
-
+// Test cases to validate RequestActiveSource COMRPC
 TEST_F(HdmiCecSink_L2Test, RequestActiveSource_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1278,6 +1283,7 @@ TEST_F(HdmiCecSink_L2Test, RequestActiveSource_COMRPC)
     }
 }
 
+// Test cases to validate RequestShortAudioDescriptor COMRPC
 TEST_F(HdmiCecSink_L2Test, RequestShortAudioDescriptor_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1310,6 +1316,7 @@ TEST_F(HdmiCecSink_L2Test, RequestShortAudioDescriptor_COMRPC)
     }
 }
 
+// Test cases to validate SendAudioDevicePowerOnMessage COMRPC
 TEST_F(HdmiCecSink_L2Test, SendAudioDevicePowerOnMessage_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1342,6 +1349,7 @@ TEST_F(HdmiCecSink_L2Test, SendAudioDevicePowerOnMessage_COMRPC)
     }
 }
 
+// Test cases to validate SendGetAudioStatusMessage COMRPC
 TEST_F(HdmiCecSink_L2Test, SendGetAudioStatusMessage_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1374,6 +1382,7 @@ TEST_F(HdmiCecSink_L2Test, SendGetAudioStatusMessage_COMRPC)
     }
 }
 
+// Test cases to validate SendKeyPressEvent COMRPC
 TEST_F(HdmiCecSink_L2Test, SendKeyPressEvent_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1407,6 +1416,7 @@ TEST_F(HdmiCecSink_L2Test, SendKeyPressEvent_COMRPC)
     }
 }
 
+// Test cases to validate SendUserControlPressed COMRPC
 TEST_F(HdmiCecSink_L2Test, SendUserControlPressed_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1440,6 +1450,7 @@ TEST_F(HdmiCecSink_L2Test, SendUserControlPressed_COMRPC)
     }
 }
 
+// Test cases to validate SendUserControlReleased COMRPC
 TEST_F(HdmiCecSink_L2Test, SendUserControlReleased_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1473,6 +1484,7 @@ TEST_F(HdmiCecSink_L2Test, SendUserControlReleased_COMRPC)
     }
 }
 
+// Test cases to validate SendStandbyMessage COMRPC
 TEST_F(HdmiCecSink_L2Test, SendStandbyMessage_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1505,6 +1517,7 @@ TEST_F(HdmiCecSink_L2Test, SendStandbyMessage_COMRPC)
     }
 }
 
+// Test cases to validate SetActivePath COMRPC
 TEST_F(HdmiCecSink_L2Test, SetActivePath_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1538,6 +1551,7 @@ TEST_F(HdmiCecSink_L2Test, SetActivePath_COMRPC)
     }
 }
 
+// Test cases to validate SetActiveSource COMRPC
 TEST_F(HdmiCecSink_L2Test, SetActiveSource_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1570,6 +1584,7 @@ TEST_F(HdmiCecSink_L2Test, SetActiveSource_COMRPC)
     }
 }
 
+// Test cases to validate SetMenuLanguage COMRPC
 TEST_F(HdmiCecSink_L2Test, SetMenuLanguage_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1610,6 +1625,7 @@ TEST_F(HdmiCecSink_L2Test, SetMenuLanguage_COMRPC)
     }
 }
 
+// Test cases to validate SetRoutingChange COMRPC
 TEST_F(HdmiCecSink_L2Test, SetRoutingChange_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1645,6 +1661,7 @@ TEST_F(HdmiCecSink_L2Test, SetRoutingChange_COMRPC)
     }
 }
 
+// Test cases to validate SetupARCRouting COMRPC
 TEST_F(HdmiCecSink_L2Test, SetupARCRouting_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1680,6 +1697,7 @@ TEST_F(HdmiCecSink_L2Test, SetupARCRouting_COMRPC)
     }
 }
 
+// Test cases to validate SetLatencyInfo COMRPC
 TEST_F(HdmiCecSink_L2Test, SetLatencyInfo_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1716,6 +1734,7 @@ TEST_F(HdmiCecSink_L2Test, SetLatencyInfo_COMRPC)
     }
 }
 
+// Test cases to validate RequestAudioDevicePowerStatus COMRPC
 TEST_F(HdmiCecSink_L2Test, RequestAudioDevicePowerStatus_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1748,6 +1767,7 @@ TEST_F(HdmiCecSink_L2Test, RequestAudioDevicePowerStatus_COMRPC)
     }
 }
 
+// Test cases to validate GetActiveSource COMRPC
 TEST_F(HdmiCecSink_L2Test, GetActiveSource_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1779,6 +1799,7 @@ TEST_F(HdmiCecSink_L2Test, GetActiveSource_COMRPC)
     }
 }
 
+// Test cases to validate GetActiveRoute COMRPC
 TEST_F(HdmiCecSink_L2Test, GetActiveRoute_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1809,6 +1830,7 @@ TEST_F(HdmiCecSink_L2Test, GetActiveRoute_COMRPC)
     }
 }
 
+// Test cases to validate GetDeviceList COMRPC
 TEST_F(HdmiCecSink_L2Test, GetDeviceList_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1837,6 +1859,7 @@ TEST_F(HdmiCecSink_L2Test, GetDeviceList_COMRPC)
     }
 }
 
+// Test cases to validate Hdmihotplug COMRPC
 TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
@@ -1860,7 +1883,7 @@ TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC)
     }
 }
 
-// JSONRPC test fixtures
+// Test cases to validate Set and Get OSDName using JSONRPC
 TEST_F(HdmiCecSink_L2Test, Set_And_Get_OSDName_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -1884,6 +1907,7 @@ TEST_F(HdmiCecSink_L2Test, Set_And_Get_OSDName_JSONRPC)
     EXPECT_STREQ("TEST", result["name"].String().c_str());
 }
 
+// Test cases to validate GetVendorId using JSONRPC
 TEST_F(HdmiCecSink_L2Test, GetAudioDeviceConnectedStatus_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -1898,6 +1922,7 @@ TEST_F(HdmiCecSink_L2Test, GetAudioDeviceConnectedStatus_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate PrintDeviceList using JSONRPC
 TEST_F(HdmiCecSink_L2Test, PrintDeviceList_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -1912,6 +1937,7 @@ TEST_F(HdmiCecSink_L2Test, PrintDeviceList_JSONRPC)
     EXPECT_TRUE(result["printed"].Boolean());
 }
 
+// Test cases to validate PrintDeviceList using JSONRPC
 TEST_F(HdmiCecSink_L2Test, RequestActiveSource_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -1945,6 +1971,7 @@ TEST_F(HdmiCecSink_L2Test, RequestActiveSource_JSONRPC)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onDeviceAdded"));
 }
 
+// Test cases to validate RequestShortAudioDescriptor using JSONRPC
 TEST_F(HdmiCecSink_L2Test, RequestShortAudioDescriptor_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -1957,6 +1984,7 @@ TEST_F(HdmiCecSink_L2Test, RequestShortAudioDescriptor_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SendAudioDevicePowerOnMessage using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SendKeyPressEvent_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2179,6 +2207,7 @@ TEST_F(HdmiCecSink_L2Test, SendKeyPressEvent_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SendUserControlPressed using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SendUserControlPressed_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2401,6 +2430,7 @@ TEST_F(HdmiCecSink_L2Test, SendUserControlPressed_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SendUserControlReleased using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SendUserControlReleased_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2415,6 +2445,7 @@ TEST_F(HdmiCecSink_L2Test, SendUserControlReleased_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SetActivePath using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SetActivePath_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2428,6 +2459,7 @@ TEST_F(HdmiCecSink_L2Test, SetActivePath_JSONRPC)
     EXPECT_TRUE(result.HasLabel("success"));
 }
 
+// Test cases to validate SetActiveSource using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SetActiveSource_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2440,6 +2472,7 @@ TEST_F(HdmiCecSink_L2Test, SetActiveSource_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SetActiveSource using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SetMenuLanguage_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2461,6 +2494,7 @@ TEST_F(HdmiCecSink_L2Test, SetMenuLanguage_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SetRoutingChange using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SetRoutingChange_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2478,6 +2512,7 @@ TEST_F(HdmiCecSink_L2Test, SetRoutingChange_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SetupARCRouting using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SetupARCRouting_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2492,6 +2527,7 @@ TEST_F(HdmiCecSink_L2Test, SetupARCRouting_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SetLatencyInfo using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SetLatencyInfo_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2509,6 +2545,7 @@ TEST_F(HdmiCecSink_L2Test, SetLatencyInfo_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate RequestAudioDevicePowerStatus using JSONRPC
 TEST_F(HdmiCecSink_L2Test, RequestAudioDevicePowerStatus_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2521,6 +2558,7 @@ TEST_F(HdmiCecSink_L2Test, RequestAudioDevicePowerStatus_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate GetActiveSource using JSONRPC
 TEST_F(HdmiCecSink_L2Test, GetActiveSource_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2532,6 +2570,7 @@ TEST_F(HdmiCecSink_L2Test, GetActiveSource_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate GetActiveRoute using JSONRPC
 TEST_F(HdmiCecSink_L2Test, GetActiveRoute_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2543,6 +2582,7 @@ TEST_F(HdmiCecSink_L2Test, GetActiveRoute_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate GetDeviceList using JSONRPC
 TEST_F(HdmiCecSink_L2Test, GetDeviceList_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2554,6 +2594,7 @@ TEST_F(HdmiCecSink_L2Test, GetDeviceList_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SetVendorId and GetVendorId using JSONRPC
 TEST_F(HdmiCecSink_L2Test, Set_And_Get_VendorId_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2577,6 +2618,7 @@ TEST_F(HdmiCecSink_L2Test, Set_And_Get_VendorId_JSONRPC)
     EXPECT_STREQ("aabbcc", result["vendorid"].String().c_str());
 }
 
+// Test cases to validate SetEnabled and GetEnabled using JSONRPC
 TEST_F(HdmiCecSink_L2Test, Set_And_Get_Enabled_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2621,6 +2663,7 @@ TEST_F(HdmiCecSink_L2Test, Set_And_Get_Enabled_JSONRPC)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportCecEnabledEvent"));
 }
 
+// Test cases to validate SendAudioDevicePowerOnMessage using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SendAudioDevicePowerOnMessage_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2639,6 +2682,7 @@ TEST_F(HdmiCecSink_L2Test, SendAudioDevicePowerOnMessage_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SendGetAudioStatusMessage using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SendGetAudioStatusMessage_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2657,6 +2701,7 @@ TEST_F(HdmiCecSink_L2Test, SendGetAudioStatusMessage_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
+// Test cases to validate SendStandbyMessage using JSONRPC
 TEST_F(HdmiCecSink_L2Test, SendStandbyMessage_JSONRPC)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2669,7 +2714,7 @@ TEST_F(HdmiCecSink_L2Test, SendStandbyMessage_JSONRPC)
     EXPECT_TRUE(result["success"].Boolean());
 }
 
-// Inject CEC frames and verify events
+// Inject CEC frames and verify onActiveSourceChange events
 TEST_F(HdmiCecSink_L2Test, InjectActiveSourceFrameAndVerifyEvent)
 {
     // Set up the JSON-RPC client and mock event handler
@@ -2715,6 +2760,7 @@ TEST_F(HdmiCecSink_L2Test, InjectActiveSourceFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onActiveSourceChange"));
 }
 
+// Inject InActiveSource frames and verify onInActiveSource events
 TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceFramesAndVerifyEvents)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2748,7 +2794,7 @@ TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceFramesAndVerifyEvents)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onInActiveSource"));
 }
 
-// InActiveSource
+// InActiveSource Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceBroadcastIgnoreCase)
 {
     // Inject <Inactive Source>
@@ -2760,6 +2806,8 @@ TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceBroadcastIgnoreCase)
     }
 }
 
+// Inject ImageViewOn frame and verify onImageViewOnMsg event
+// Disabled due to implementation issue.
 TEST_F(HdmiCecSink_L2Test, DISABLED_InjectImageViewOnFrameAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2794,6 +2842,7 @@ TEST_F(HdmiCecSink_L2Test, DISABLED_InjectImageViewOnFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onImageViewOnMsg"));
 }
 
+// Inject TextViewOn frame and verify onTextViewOnMsg event
 TEST_F(HdmiCecSink_L2Test, InjectTextViewOnFrameAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2828,6 +2877,7 @@ TEST_F(HdmiCecSink_L2Test, InjectTextViewOnFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onTextViewOnMsg"));
 }
 
+// Inject DeviceAdded frame and verify onDeviceAdded event
 TEST_F(HdmiCecSink_L2Test, InjectDeviceAddedFrameAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2864,6 +2914,7 @@ TEST_F(HdmiCecSink_L2Test, InjectDeviceAddedFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onDeviceAdded"));
 }
 
+// Inject DeviceAdded frame and verify reportAudioDeviceConnectedStatus event
 TEST_F(HdmiCecSink_L2Test, InjectDeviceAddedFrameAndVerifyEvent_ReportAudioDeviceConnectedStatus)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2900,6 +2951,7 @@ TEST_F(HdmiCecSink_L2Test, InjectDeviceAddedFrameAndVerifyEvent_ReportAudioDevic
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportAudioDeviceConnectedStatus"));
 }
 
+// Report Audio Status
 TEST_F(HdmiCecSink_L2Test, InjectReportAudioStatusAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2935,7 +2987,7 @@ TEST_F(HdmiCecSink_L2Test, InjectReportAudioStatusAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportAudioStatusEvent"));
 }
 
-// Report Audio Status
+// Report Audio Status Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectReportAudioStatusAndVerifyEventBroadcastIgnoreTest)
 {
     // Header: 0x50, Opcode: 0x7A (Report Audio Status), Status: 0x50 (Volume 80, not muted)
@@ -2949,6 +3001,7 @@ TEST_F(HdmiCecSink_L2Test, InjectReportAudioStatusAndVerifyEventBroadcastIgnoreT
     }
 }
 
+// Inject Feature Abort frame and verify reportFeatureAbortEvent event
 TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2984,7 +3037,7 @@ TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportFeatureAbortEvent"));
 }
 
-// Feature Abort
+// Feature Abort Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortFrameBroadcastIgnoreTest)
 {
     ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
@@ -3000,6 +3053,7 @@ TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortFrameBroadcastIgnoreTest)
     }
 }
 
+// Inject SetSystemAudioMode frame and verify setSystemAudioModeEvent event
 TEST_F(HdmiCecSink_L2Test, InjectSetSystemAudioModeAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -3035,6 +3089,7 @@ TEST_F(HdmiCecSink_L2Test, InjectSetSystemAudioModeAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("setSystemAudioModeEvent"));
 }
 
+// Inject CECVersion frame and verify onDeviceInfoUpdated event
 TEST_F(HdmiCecSink_L2Test, InjectCECVersionAndVerifyOnDeviceInfoUpdated)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -3070,20 +3125,28 @@ TEST_F(HdmiCecSink_L2Test, InjectCECVersionAndVerifyOnDeviceInfoUpdated)
 // RequestActiveSource (0x85)
 TEST_F(HdmiCecSink_L2Test, InjectRequestActiveSourceFrame)
 {
-    // No event is fired, but plugin should send ActiveSource in response (not observable here)
     uint8_t buffer[] = { 0x4F, 0x85 }; // From device 4 to broadcast
     CECFrame frame(buffer, sizeof(buffer));
     for (auto* listener : listeners) {
         if (listener)
             listener->notify(frame);
     }
-    // Optionally: check plugin state or logs
+}
+
+// RequestActiveSource frame with direct message ingnored
+TEST_F(HdmiCecSink_L2Test, InjectRequestActiveSourceFrameDirectMessageIgnoreTest)
+{
+    uint8_t buffer[] = { 0x40, 0x85 }; // From device 4 to TV
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
 }
 
 // GetCECVersion (0x9F)
 TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrame)
 {
-    // No event is fired, plugin should send CECVersion in response
     uint8_t buffer[] = { 0x40, 0x9F }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
     for (auto* listener : listeners) {
@@ -3092,9 +3155,9 @@ TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrame)
     }
 }
 
+// GetCECVersion Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrameroadcastIgnoreTest)
 {
-    // No event is fired, plugin should send CECVersion in response
     uint8_t buffer[] = { 0x4F, 0x9F }; // From device 4 to broadcast
     CECFrame frame(buffer, sizeof(buffer));
     for (auto* listener : listeners) {
@@ -3103,6 +3166,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrameroadcastIgnoreTest)
     }
 }
 
+// GetCECVersion frame with exception in sendToAsync
 TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrameException)
 {
     EXPECT_CALL(*p_connectionMock, sendToAsync(::testing::_, ::testing::_))
@@ -3110,7 +3174,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGetCECVersionFrameException)
             [&](const LogicalAddress& to, const CECFrame& frame) {
                 throw Exception();
             }));
-    // No event is fired, plugin should send CECVersion in response
+
     uint8_t buffer[] = { 0x40, 0x9F }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
     for (auto* listener : listeners) {
@@ -3130,6 +3194,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveOSDNameFrame)
     }
 }
 
+// GiveOSDName frame with exception in sendToAsync
 TEST_F(HdmiCecSink_L2Test, InjectGiveOSDNameFrameException)
 {
     uint8_t buffer[] = { 0x40, 0x46 }; // From device 4 to TV (0)
@@ -3147,6 +3212,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveOSDNameFrameException)
     }
 }
 
+// GiveOSDName Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectGiveOSDNameFrameBroadcastIgnoreTest)
 {
     uint8_t buffer[] = { 0x4F, 0x46 }; // From device 4 to broadcast
@@ -3168,6 +3234,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrame)
     }
 }
 
+// GivePhysicalAddress Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrameException)
 {
     EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_, ::testing::_))
@@ -3196,9 +3263,10 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrame)
     }
 }
 
+// GiveDeviceVendorID Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrameBroadcastIgnoreTest)
 {
-    uint8_t buffer[] = { 0x4F, 0x8C }; // From device 4 to broadcast
+    uint8_t buffer[] = { 0x40, 0x8C }; // From device 4 to broadcast
     CECFrame frame(buffer, sizeof(buffer));
     for (auto* listener : listeners) {
         if (listener)
@@ -3206,6 +3274,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrameBroadcastIgnoreTest)
     }
 }
 
+// GiveDeviceVendorID frame with exception in sendToAsync
 TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrameBroadcastException)
 {
     uint8_t buffer[] = { 0x40, 0x8C }; // From device 4 to TV (0)
@@ -3245,6 +3314,7 @@ TEST_F(HdmiCecSink_L2Test, InjectSetOSDNameFrame)
     }
 }
 
+// SetOSDName Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectSetOSDNameBroadcastIgnoreTest)
 {
     uint8_t buffer[] = { 0x4F, 0x47, 'T', 'E', 'S', 'T' }; // From device 4 to broadcast, name "TEST"
@@ -3299,6 +3369,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGetMenuLanguageFrame)
     }
 }
 
+// GetMenuLanguage Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectGetMenuLanguageFrameBroadcastIgnoreTest)
 {
     uint8_t buffer[] = { 0x4F, 0x91 }; // From device 4 to broadcast
@@ -3320,6 +3391,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrame)
     }
 }
 
+// GiveDevicePowerStatus Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrameBroadcastIgnoreTest)
 {
     uint8_t buffer[] = { 0x4F, 0x8F }; // From device 4 to broadcast
@@ -3330,6 +3402,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrameBroadcastIgnoreTest)
     }
 }
 
+// GiveDevicePowerStatus frame with exception in sendTo
 TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrameException)
 {
     uint8_t buffer[] = { 0x40, 0x8F }; // From device 4 to TV (0)
@@ -3444,6 +3517,7 @@ TEST_F(HdmiCecSink_L2Test, InjectRequestCurrentLatencyFrame)
     }
 }
 
+// ReportPhysicalAddress (0x84)
 TEST_F(HdmiCecSink_L2Test, ReportPhysicalAddressBroadcastIgnoreCase)
 {
     // Add a device on port 1 (logical address 4)
@@ -3455,6 +3529,7 @@ TEST_F(HdmiCecSink_L2Test, ReportPhysicalAddressBroadcastIgnoreCase)
     }
 }
 
+// Report Short Audio Descriptor (0xA3) and verify shortAudiodescriptorEvent event
 TEST_F(HdmiCecSink_L2Test, InjectReportShortAudioDescriptorAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -3489,6 +3564,7 @@ TEST_F(HdmiCecSink_L2Test, InjectReportShortAudioDescriptorAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("shortAudiodescriptorEvent"));
 }
 
+// Standby (0x36) and verify standbyMessageReceived event
 TEST_F(HdmiCecSink_L2Test, InjectStandbyFrameAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -3522,6 +3598,7 @@ TEST_F(HdmiCecSink_L2Test, InjectStandbyFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("standbyMessageReceived"));
 }
 
+// Report Power Status (0x90) and verify reportAudioDevicePowerStatus event
 TEST_F(HdmiCecSink_L2Test, InjectReportPowerStatusAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -3569,6 +3646,7 @@ TEST_F(HdmiCecSink_L2Test, InjectReportPowerStatusAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportAudioDevicePowerStatus"));
 }
 
+// SetMenuLanguage (0x32)
 TEST_F(HdmiCecSink_L2Test, InjectSetMenuLanguageFrame)
 {
     // Set Menu Language: opcode 0x32, language "eng"
@@ -3581,6 +3659,7 @@ TEST_F(HdmiCecSink_L2Test, InjectSetMenuLanguageFrame)
     // Optionally: check plugin state or logs for language update
 }
 
+// DeviceVendorID (0x87) and verify onDeviceInfoUpdated event
 TEST_F(HdmiCecSink_L2Test, InjectDeviceVendorIDFrameAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -3625,6 +3704,7 @@ TEST_F(HdmiCecSink_L2Test, InjectDeviceVendorIDFrameBroadcastIgnoreTest)
     }
 }
 
+// Abort (0xFF)
 TEST_F(HdmiCecSink_L2Test, InjectAbortFrame)
 {
     // Abort: opcode 0xFF, sent as a direct message (not broadcast)
@@ -3636,6 +3716,7 @@ TEST_F(HdmiCecSink_L2Test, InjectAbortFrame)
     }
 }
 
+// Abort (0xFF) Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectAbortFrameBroadcastIgnoreCase)
 {
     // Abort: opcode 0xFF, sent as a direct message (not broadcast)
@@ -3647,6 +3728,7 @@ TEST_F(HdmiCecSink_L2Test, InjectAbortFrameBroadcastIgnoreCase)
     }
 }
 
+// Polling: header only, no opcode
 TEST_F(HdmiCecSink_L2Test, InjectPollingFrame)
 {
     // Polling: header only, no opcode
@@ -3658,6 +3740,7 @@ TEST_F(HdmiCecSink_L2Test, InjectPollingFrame)
     }
 }
 
+// Active Source (0x82) and verify onWakeupFromStandby event
 TEST_F(HdmiCecSink_L2Test_STANDBY, InjectWakeupFromStandbyFrameAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -3692,6 +3775,7 @@ TEST_F(HdmiCecSink_L2Test_STANDBY, InjectWakeupFromStandbyFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onWakeupFromStandby"));
 }
 
+// Power Mode Change to ON to verify onPowerModeChanged event
 TEST_F(HdmiCecSink_L2Test_STANDBY, TriggerOnPowerModeChangeEvent_ON)
 {
     Core::ProxyType<RPC::InvokeServerType<1, 0, 4>> mEngine_PowerManager;
@@ -3745,6 +3829,7 @@ TEST_F(HdmiCecSink_L2Test_STANDBY, TriggerOnPowerModeChangeEvent_ON)
     }
 }
 
+// Power Mode Change to OFF to verify onPowerModeChanged event
 TEST_F(HdmiCecSink_L2Test, RaisePowerModeChangedEvent_OFF)
 {
     Core::ProxyType<RPC::InvokeServerType<1, 0, 4>> mEngine_PowerManager;
