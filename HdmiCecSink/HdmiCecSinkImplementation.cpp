@@ -17,6 +17,7 @@
 * limitations under the License.
 **/
 
+#define CCEC_NAMESPACE  // Enable CCEC namespace
 #include "HdmiCecSinkImplementation.h"
 
 #include "ccec/CCEC.hpp"

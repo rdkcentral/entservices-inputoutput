@@ -17,9 +17,10 @@
 * limitations under the License.
 **/
 
+#define CCEC_NAMESPACE  // Enable CCEC namespace
 #include "HdmiCecSourceImplementation.h"
 
-
+#include "ccec/CCEC.hpp"
 #include "ccec/Connection.hpp"
 #include "ccec/CECFrame.hpp"
 #include "ccec/MessageEncoder.hpp"
