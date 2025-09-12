@@ -542,41 +542,34 @@ namespace Plugin {
 
     Core::hresult AVInputImplementation::NumberOfInputs(uint32_t& numberOfInputs, bool& success)
     {
-        Core::hresult ret = Core::ERROR_NONE;
-
         try {
-            printf("AVInputImplementation::NumberOfInputs: Calling HdmiInput::getNumberOfInputs...\n");
+            printf("*** _DEBUG: AVInputImplementation::NumberOfInputs: Calling HdmiInput::getNumberOfInputs...\n");
             numberOfInputs = device::HdmiInput::getInstance().getNumberOfInputs();
             success = true;
-            printf("AVInputImplementation::NumberOfInputs: numberOfInputs=%d\n", numberOfInputs);
+            printf("*** _DEBUG: AVInputImplementation::NumberOfInputs: numberOfInputs=%d\n", numberOfInputs);
         } catch (...) {
             LOGERR("Exception caught");
-            ret = Core::ERROR_GENERAL;
             success = false;
         }
 
-        return ret;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult AVInputImplementation::CurrentVideoMode(string& currentVideoMode, bool& success)
     {
-        Core::hresult ret = Core::ERROR_NONE;
-
         try {
             currentVideoMode = device::HdmiInput::getInstance().getCurrentVideoMode();
             success = true;
         } catch (...) {
             LOGERR("Exception caught");
-            ret = Core::ERROR_GENERAL;
             success = false;
         }
 
-        return ret;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult AVInputImplementation::StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost, bool& success)
     {
-        Core::hresult ret = Core::ERROR_NONE;
         success = true;
 
         try {
@@ -587,15 +580,13 @@ namespace Plugin {
             } else {
                 LOGWARN("Invalid input type passed to StartInput");
                 success = false;
-                ret = Core::ERROR_GENERAL;
             }
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             success = false;
-            ret = Core::ERROR_GENERAL;
         }
 
-        return ret;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult AVInputImplementation::StopInput(const int typeOfInput, bool& success)
@@ -630,7 +621,6 @@ namespace Plugin {
 
     Core::hresult AVInputImplementation::SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput, bool& success)
     {
-        Core::hresult ret = Core::ERROR_NONE;
         success = true;
 
         try {
@@ -641,10 +631,9 @@ namespace Plugin {
             }
         } catch (const device::Exception& err) {
             success = false;
-            ret = Core::ERROR_GENERAL;
         }
 
-        return ret;
+        return Core::ERROR_NONE;
     }
 
     JsonArray AVInputImplementation::devicesToJson(Exchange::IAVInput::IInputDeviceIterator* devices)
@@ -710,7 +699,7 @@ namespace Plugin {
 
     Core::hresult AVInputImplementation::GetInputDevices(const int typeOfInput, IInputDeviceIterator*& devices, bool& success)
     {
-        Core::hresult result = Core::ERROR_NONE;
+        Core::hresult result;
         std::list<WPEFramework::Exchange::IAVInput::InputDevice> inputDeviceList;
         success = false;
 
@@ -727,8 +716,7 @@ namespace Plugin {
             break;
         default:
             LOGERR("GetInputDevices: Invalid input type");
-            success = false;
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
         if(Core::ERROR_NONE == result) {
@@ -736,7 +724,7 @@ namespace Plugin {
             success = true;
         }
 
-        return result;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult AVInputImplementation::WriteEDID(const int portId, const string& message, bool& success)
@@ -762,13 +750,13 @@ namespace Plugin {
             if (edidVec.size() > (size_t)numeric_limits<uint16_t>::max()) {
                 LOGERR("Size too large to use ToString base64 wpe api");
                 success = false;
-                return Core::ERROR_GENERAL;
+                return Core::ERROR_NONE;
             }
             Core::ToString((uint8_t*)&edidVec[0], size, true, EDID);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             success = false;
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
         success = true;
@@ -1099,10 +1087,9 @@ namespace Plugin {
             features = Core::Service<RPC::IteratorType<IStringIterator>>::Create<IStringIterator>(supportedFeatures);
         } else {
             success = false;
-            result = Core::ERROR_GENERAL;
         }
 
-        return result;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult AVInputImplementation::GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode, bool& success)
@@ -1180,7 +1167,7 @@ namespace Plugin {
             if (spdVect.size() > (size_t)numeric_limits<uint16_t>::max()) {
                 LOGERR("Size too large to use ToString base64 wpe api");
                 success = false;
-                return Core::ERROR_GENERAL;
+                return Core::ERROR_NONE;
             }
 
             LOGINFO("------------getSPD: ");
@@ -1191,7 +1178,7 @@ namespace Plugin {
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             success = false;
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
         success = true;
@@ -1218,7 +1205,7 @@ namespace Plugin {
             if (spdVect.size() > (size_t)numeric_limits<uint16_t>::max()) {
                 LOGERR("Size too large to use ToString base64 wpe api");
                 success = false;
-                return Core::ERROR_GENERAL;
+                return Core::ERROR_NONE;
             }
 
             LOGINFO("------------getSPD: ");
@@ -1238,7 +1225,7 @@ namespace Plugin {
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             success = false;
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
         success = true;
@@ -1253,7 +1240,7 @@ namespace Plugin {
         } catch (...) {
             LOGWARN("Not setting SoC volume !!!\n");
             success = false;
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
         isAudioBalanceSet = true;
@@ -1263,7 +1250,6 @@ namespace Plugin {
 
     Core::hresult AVInputImplementation::SetEdid2AllmSupport(const int portId, const bool allmSupport, bool& success)
     {
-        Core::hresult ret = Core::ERROR_NONE;
         success = true;
 
         try {
@@ -1272,25 +1258,22 @@ namespace Plugin {
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             success = false;
-            ret = Core::ERROR_GENERAL;
         }
 
-        return ret;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult AVInputImplementation::GetEdid2AllmSupport(const int portId, bool& allmSupport, bool& success)
     {
-        Core::hresult ret = Core::ERROR_NONE;
         try {
             device::HdmiInput::getInstance().getEdid2AllmSupport(portId, &allmSupport);
             success = true;
             LOGINFO("AVInput - getEdid2AllmSupport:%d", allmSupport);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-            ret = Core::ERROR_GENERAL;
             success = false;
         }
-        return ret;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult AVInputImplementation::GetVRRSupport(const int portId, bool& vrrSupport)
@@ -1322,7 +1305,6 @@ namespace Plugin {
 
     Core::hresult AVInputImplementation::GetHdmiVersion(const int portId, string& HdmiCapabilityVersion, bool& success)
     {
-        Core::hresult ret = Core::ERROR_NONE;
         dsHdmiMaxCapabilityVersion_t hdmiCapVersion = HDMI_COMPATIBILITY_VERSION_14;
 
         try {
@@ -1330,7 +1312,7 @@ namespace Plugin {
             LOGWARN("AVInputImplementation::GetHdmiVersion Hdmi Version:%d", hdmiCapVersion);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
         switch ((int)hdmiCapVersion) {
@@ -1348,20 +1330,19 @@ namespace Plugin {
             break;
         default:
             success = false;
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
         if (hdmiCapVersion == HDMI_COMPATIBILITY_VERSION_MAX) {
             success = false;
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
-        return ret;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult AVInputImplementation::SetEdidVersion(const int portId, const string& edidVersion, bool& success)
     {
-        Core::hresult ret = Core::ERROR_NONE;
         int edidVer = -1;
         success = true;
 
@@ -1372,7 +1353,7 @@ namespace Plugin {
         } else {
             LOGERR("Invalid EDID Version: %s", edidVersion.c_str());
             success = false;
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
         try {
@@ -1381,15 +1362,13 @@ namespace Plugin {
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             success = false;
-            ret = Core::ERROR_GENERAL;
         }
 
-        return ret;
+        return Core::ERROR_NONE;
     }
 
     Core::hresult AVInputImplementation::GetEdidVersion(const int portId, string& edidVersion, bool& success)
     {
-        Core::hresult ret = Core::ERROR_NONE;
         success = true;
         int version = -1;
 
@@ -1399,7 +1378,7 @@ namespace Plugin {
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             success = false;
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
         switch (version) {
@@ -1411,10 +1390,10 @@ namespace Plugin {
             break;
         default:
             success = false;
-            return Core::ERROR_GENERAL;
+            return Core::ERROR_NONE;
         }
 
-        return ret;
+        return Core::ERROR_NONE;
     }
 
 } // namespace Plugin
