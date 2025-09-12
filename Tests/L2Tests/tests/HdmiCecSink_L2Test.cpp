@@ -3781,67 +3781,67 @@ TEST_F(HdmiCecSink_L2Test_STANDBY, InjectWakeupFromStandbyFrameAndVerifyEvent)
 }
 
 
-// TEST_F(HdmiCecSink_L2Test_STANDBY, PowerModePreChangeAckTimeout)
-// {
-//     Core::ProxyType<RPC::InvokeServerType<1, 0, 4>> mEngine_PowerManager;
-//     Core::ProxyType<RPC::CommunicatorClient> mClient_PowerManager;
-//     PluginHost::IShell *mController_PowerManager;
+TEST_F(HdmiCecSink_L2Test_STANDBY, PowerModePreChangeAckTimeout)
+{
+    Core::ProxyType<RPC::InvokeServerType<1, 0, 4>> mEngine_PowerManager;
+    Core::ProxyType<RPC::CommunicatorClient> mClient_PowerManager;
+    PluginHost::IShell *mController_PowerManager;
 
-//     TEST_LOG("Creating mEngine_PowerManager");
-//     mEngine_PowerManager = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
-//     mClient_PowerManager = Core::ProxyType<RPC::CommunicatorClient>::Create(Core::NodeId("/tmp/communicator"), Core::ProxyType<Core::IIPCServer>(mEngine_PowerManager));
+    TEST_LOG("Creating mEngine_PowerManager");
+    mEngine_PowerManager = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
+    mClient_PowerManager = Core::ProxyType<RPC::CommunicatorClient>::Create(Core::NodeId("/tmp/communicator"), Core::ProxyType<Core::IIPCServer>(mEngine_PowerManager));
 
-//     TEST_LOG("Creating mEngine_PowerManager Announcements");
-// #if ((THUNDER_VERSION == 2) || ((THUNDER_VERSION == 4) && (THUNDER_VERSION_MINOR == 2)))
-//     mEngine_PowerManager->Announcements(mClient_PowerManager->Announcement());
-// #endif
+    TEST_LOG("Creating mEngine_PowerManager Announcements");
+#if ((THUNDER_VERSION == 2) || ((THUNDER_VERSION == 4) && (THUNDER_VERSION_MINOR == 2)))
+    mEngine_PowerManager->Announcements(mClient_PowerManager->Announcement());
+#endif
 
-//     if (!mClient_PowerManager.IsValid())
-//     {
-//         TEST_LOG("Invalid mClient_PowerManager");
-//     }
-//     else
-//     {
-//         mController_PowerManager = mClient_PowerManager->Open<PluginHost::IShell>(_T("org.rdk.PowerManager"), ~0, 3000);
-//         if (mController_PowerManager)
-//         {
-//             auto PowerManagerPlugin = mController_PowerManager->QueryInterface<Exchange::IPowerManager>();
+    if (!mClient_PowerManager.IsValid())
+    {
+        TEST_LOG("Invalid mClient_PowerManager");
+    }
+    else
+    {
+        mController_PowerManager = mClient_PowerManager->Open<PluginHost::IShell>(_T("org.rdk.PowerManager"), ~0, 3000);
+        if (mController_PowerManager)
+        {
+            auto PowerManagerPlugin = mController_PowerManager->QueryInterface<Exchange::IPowerManager>();
 
-//             if (PowerManagerPlugin)
-//             {
-//                 int keyCode = 0;
+            if (PowerManagerPlugin)
+            {
+                int keyCode = 0;
 
-//                 uint32_t clientId = 0;
-//                 uint32_t status   = PowerManagerPlugin->AddPowerModePreChangeClient("l2-test-client", clientId);
-//                 EXPECT_EQ(status, Core::ERROR_NONE);
+                uint32_t clientId = 0;
+                uint32_t status   = PowerManagerPlugin->AddPowerModePreChangeClient("l2-test-client", clientId);
+                EXPECT_EQ(status, Core::ERROR_NONE);
 
-//                 EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
-//                     .WillOnce(::testing::Invoke(
-//                         [](PWRMgr_PowerState_t powerState) {
-//                             EXPECT_EQ(powerState, PWRMGR_POWERSTATE_ON);
-//                             return PWRMGR_SUCCESS;
-//                         }));
+                EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
+                    .WillOnce(::testing::Invoke(
+                        [](PWRMgr_PowerState_t powerState) {
+                            EXPECT_EQ(powerState, PWRMGR_POWERSTATE_ON);
+                            return PWRMGR_SUCCESS;
+                        }));
 
-//                 status = PowerManagerPlugin->SetPowerState(keyCode, PowerState::POWER_STATE_ON, "l2-test");
-//                 EXPECT_EQ(status, Core::ERROR_NONE);
+                status = PowerManagerPlugin->SetPowerState(keyCode, PowerState::POWER_STATE_ON, "l2-test");
+                EXPECT_EQ(status, Core::ERROR_NONE);
 
-//                 // some delay to destroy AckController after IModeChanged notification
-//                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+                // some delay to destroy AckController after IModeChanged notification
+                std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
-//                 PowerState currentState = PowerState::POWER_STATE_UNKNOWN;
-//                 PowerState prevState    = PowerState::POWER_STATE_UNKNOWN;
+                PowerState currentState = PowerState::POWER_STATE_UNKNOWN;
+                PowerState prevState    = PowerState::POWER_STATE_UNKNOWN;
 
-//                 PowerManagerPlugin->Release();
-//             }
-//             else
-//             {
-//                 TEST_LOG("PowerManagerPlugin is NULL");
-//             }
-//             mController_PowerManager->Release();
-//         }
-//         else
-//         {
-//             TEST_LOG("mController_PowerManager is NULL");
-//         }
-//     }
-// }
+                PowerManagerPlugin->Release();
+            }
+            else
+            {
+                TEST_LOG("PowerManagerPlugin is NULL");
+            }
+            mController_PowerManager->Release();
+        }
+        else
+        {
+            TEST_LOG("mController_PowerManager is NULL");
+        }
+    }
+}
