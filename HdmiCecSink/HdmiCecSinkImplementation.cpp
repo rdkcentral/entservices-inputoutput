@@ -104,6 +104,7 @@ static std::vector<DeviceFeatures> deviceFeatures = {DEVICE_FEATURES_TV};
 #define API_VERSION_NUMBER_MINOR 3
 #define API_VERSION_NUMBER_PATCH 7
 
+using namespace CCEC;
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
 
 namespace WPEFramework

@@ -78,6 +78,7 @@ static PowerStatus tvPowerState = 1;
 static bool isDeviceActiveSource = false;
 static bool isLGTvConnected = false;
 
+using namespace CCEC;
 using namespace WPEFramework;
 
 
