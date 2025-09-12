@@ -1250,6 +1250,8 @@ TEST_F(HdmiCecSink_L2Test, PrintDeviceList_COMRPC)
             TEST_LOG("m_controller_cecSink is NULL");
         }
     }
+}
+
 // Test cases to validate RequestActiveSource COMRPC
 TEST_F(HdmiCecSink_L2Test, RequestActiveSource_COMRPC)
 {
