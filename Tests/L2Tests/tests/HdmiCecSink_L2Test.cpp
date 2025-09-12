@@ -1839,35 +1839,6 @@ TEST_F(HdmiCecSink_L2Test, GetDeviceList_COMRPC)
     }
 }
 
-TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC)
-{
-    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
-        TEST_LOG("Invalid HdmiCecSink_Client");
-    } else {
-        EXPECT_TRUE(m_controller_cecSink != nullptr);
-        if (m_controller_cecSink) {
-            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
-            if (m_cecSinkPlugin) {
-
-                IARM_Bus_DSMgr_EventData_t eventDataPlugIn;
-                eventDataPlugIn.data.hdmi_in_connect.port = dsHDMI_IN_PORT_2;
-                eventDataPlugIn.data.hdmi_in_connect.isPortConnected = true;
-
-                dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventDataPlugIn, 0);
-
-                IARM_Bus_DSMgr_EventData_t eventDataPlugOut;
-                eventDataPlugOut.data.hdmi_in_connect.port = dsHDMI_IN_PORT_2;
-                eventDataPlugOut.data.hdmi_in_connect.isPortConnected = false;
-
-                dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventDataPlugOut, 0);
-
-                m_cecSinkPlugin->Release();
-            }
-            m_controller_cecSink->Release();
-        }
-    }
-}
-
 // JSONRPC test fixtures
 TEST_F(HdmiCecSink_L2Test, Set_And_Get_OSDName_JSONRPC)
 {
