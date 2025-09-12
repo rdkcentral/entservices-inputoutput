@@ -3485,7 +3485,7 @@ TEST_F(HdmiCecSink_L2Test, InjectRequestCurrentLatencyFrame)
     }
 }
 
-TEST_F(HdmiCecSink_L2Test, DISABLED_InjectDeviceRemovedAndVerifyEvent)
+TEST_F(HdmiCecSink_L2Test, InjectDeviceRemovedAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
     StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
@@ -3500,14 +3500,6 @@ TEST_F(HdmiCecSink_L2Test, DISABLED_InjectDeviceRemovedAndVerifyEvent)
 
     EXPECT_CALL(async_handler, onDeviceRemoved(::testing::_))
         .WillOnce(Invoke(this, &HdmiCecSink_L2Test::onDeviceRemoved));
-
-    // Add a device on port 1 (logical address 4)
-    uint8_t addBuffer[] = { 0x40, 0x84, 0x10, 0x00, 0x04 }; // From 4 to TV
-    CECFrame addFrame(addBuffer, sizeof(addBuffer));
-    for (auto* listener : listeners) {
-        if (listener)
-            listener->notify(addFrame);
-    }
 
     // Now simulate hotplug disconnect for port 1
     IARM_Bus_DSMgr_EventData_t eventData;
