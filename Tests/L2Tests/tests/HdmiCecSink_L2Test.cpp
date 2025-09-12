@@ -3662,7 +3662,7 @@ TEST_F(HdmiCecSink_L2Test, InjectReportPowerStatusAndVerifyEvent)
 }
 
 // Report Power Status (0x90) Broadcast frame should be ignored
-TEST_F(HdmiCecSink_L2Test, InjectTextViewOnFrameBroadcastIgnoreCase)
+TEST_F(HdmiCecSink_L2Test, InjectReportPowerStatusBroadcastIgnoreTest)
 {
     // Then, inject ON status (should trigger the event)
     uint8_t buffer_on[] = { 0x5F, 0x90, 0x00 }; // 0x00 = ON
