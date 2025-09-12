@@ -78,7 +78,6 @@ static PowerStatus tvPowerState = 1;
 static bool isDeviceActiveSource = false;
 static bool isLGTvConnected = false;
 
-using namespace CCEC;
 using namespace WPEFramework;
 
 
@@ -1032,7 +1031,7 @@ namespace WPEFramework
                 LOGINFO("Command: sending GiveDevicePowerStatus \r\n");
                 smConnection->sendTo(LogicalAddress::TV, MessageEncoder().encode(GiveDevicePowerStatus()));
                 LOGINFO("Command: sending request active Source isDeviceActiveSource is set to false\r\n");
-                smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(RequestActiveSource()));
+                smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(CCEC::RequestActiveSource()));
                 isDeviceActiveSource = false;
                 LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n", \
                                                  (isLGTvConnected)?lgVendorId.toString().c_str():appVendorId.toString().c_str());

@@ -19,6 +19,7 @@
 
 #include "HdmiCecSinkImplementation.h"
 
+#include "ccec/CCEC.hpp"
 #include "ccec/Connection.hpp"
 #include "ccec/CECFrame.hpp"
 #include "ccec/MessageEncoder.hpp"
@@ -104,7 +105,6 @@ static std::vector<DeviceFeatures> deviceFeatures = {DEVICE_FEATURES_TV};
 #define API_VERSION_NUMBER_MINOR 3
 #define API_VERSION_NUMBER_PATCH 7
 
-using namespace CCEC;
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
 
 namespace WPEFramework
@@ -2039,7 +2039,7 @@ namespace WPEFramework
 
 
             _instance->smConnection->sendTo(LogicalAddress::BROADCAST, 
-                                        MessageEncoder().encode(RequestActiveSource()), 500);
+                                        MessageEncoder().encode(CCEC::RequestActiveSource()), 500);
         }
 
         void HdmiCecSinkImplementation::setActiveSource(bool isResponse)
@@ -2103,7 +2103,7 @@ namespace WPEFramework
 
             lang = _instance->deviceList[_instance->m_logicalAddressAllocated].m_currentLanguage;
 
-            _instance->smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(SetMenuLanguage(lang)), 100);
+            _instance->smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(CCEC::SetMenuLanguage(lang)), 100);
         }
 
         void HdmiCecSinkImplementation::updateInActiveSource(const int logical_address, const InActiveSource &source )
@@ -2202,7 +2202,7 @@ namespace WPEFramework
             }
 
                         LOGINFO(" Send requestShortAudioDescriptor Message ");
-                    _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM,MessageEncoder().encode(RequestShortAudioDescriptor(formatid,audioFormatCode,numberofdescriptor)), 1000);
+                    _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM,MessageEncoder().encode(CCEC::RequestShortAudioDescriptor(formatid,audioFormatCode,numberofdescriptor)), 1000);
 
         }
 
