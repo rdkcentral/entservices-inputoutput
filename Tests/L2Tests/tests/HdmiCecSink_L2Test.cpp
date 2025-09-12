@@ -23,6 +23,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <interfaces/IHdmiCecSink.h>
+//Used to change the power state for onpowermodechanged event
+#include <interfaces/IPowerManager.h>
 
 #define EVNT_TIMEOUT (5000)
 #define HDMICECSINK_CALLSIGN _T("org.rdk.HdmiCecSink.1")
@@ -40,6 +42,7 @@ using HdmiCecSinkDevice = WPEFramework::Exchange::IHdmiCecSink::HdmiCecSinkDevic
 using HdmiCecSinkActivePath = WPEFramework::Exchange::IHdmiCecSink::HdmiCecSinkActivePath;
 using IHdmiCecSinkDeviceListIterator = WPEFramework::Exchange::IHdmiCecSink::IHdmiCecSinkDeviceListIterator;
 using IHdmiCecSinkActivePathIterator = WPEFramework::Exchange::IHdmiCecSink::IHdmiCecSinkActivePathIterator;
+using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
 
 namespace {
 static void removeFile(const char* fileName)
@@ -3182,7 +3185,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrame)
 
 TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrameException)
 {
-    EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_))
+    EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_,::testing::_))
         .WillRepeatedly(::testing::Invoke(
             [&](const LogicalAddress& to, const CECFrame& frame,int timeout) {
                 throw Exception();
@@ -3775,3 +3778,69 @@ TEST_F(HdmiCecSink_L2Test_STANDBY, InjectWakeupFromStandbyFrameAndVerifyEvent)
 
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onWakeupFromStandby"));
 }
+
+
+// TEST_F(HdmiCecSink_L2Test_STANDBY, PowerModePreChangeAckTimeout)
+// {
+//     Core::ProxyType<RPC::InvokeServerType<1, 0, 4>> mEngine_PowerManager;
+//     Core::ProxyType<RPC::CommunicatorClient> mClient_PowerManager;
+//     PluginHost::IShell *mController_PowerManager;
+
+//     TEST_LOG("Creating mEngine_PowerManager");
+//     mEngine_PowerManager = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
+//     mClient_PowerManager = Core::ProxyType<RPC::CommunicatorClient>::Create(Core::NodeId("/tmp/communicator"), Core::ProxyType<Core::IIPCServer>(mEngine_PowerManager));
+
+//     TEST_LOG("Creating mEngine_PowerManager Announcements");
+// #if ((THUNDER_VERSION == 2) || ((THUNDER_VERSION == 4) && (THUNDER_VERSION_MINOR == 2)))
+//     mEngine_PowerManager->Announcements(mClient_PowerManager->Announcement());
+// #endif
+
+//     if (!mClient_PowerManager.IsValid())
+//     {
+//         TEST_LOG("Invalid mClient_PowerManager");
+//     }
+//     else
+//     {
+//         mController_PowerManager = mClient_PowerManager->Open<PluginHost::IShell>(_T("org.rdk.PowerManager"), ~0, 3000);
+//         if (mController_PowerManager)
+//         {
+//             auto PowerManagerPlugin = mController_PowerManager->QueryInterface<Exchange::IPowerManager>();
+
+//             if (PowerManagerPlugin)
+//             {
+//                 int keyCode = 0;
+
+//                 uint32_t clientId = 0;
+//                 uint32_t status   = PowerManagerPlugin->AddPowerModePreChangeClient("l2-test-client", clientId);
+//                 EXPECT_EQ(status, Core::ERROR_NONE);
+
+//                 EXPECT_CALL(PowerManagerHalMock::Mock(), PLAT_API_SetPowerState(::testing::_))
+//                     .WillOnce(::testing::Invoke(
+//                         [](PWRMgr_PowerState_t powerState) {
+//                             EXPECT_EQ(powerState, PWRMGR_POWERSTATE_ON);
+//                             return PWRMGR_SUCCESS;
+//                         }));
+
+//                 status = PowerManagerPlugin->SetPowerState(keyCode, PowerState::POWER_STATE_ON, "l2-test");
+//                 EXPECT_EQ(status, Core::ERROR_NONE);
+
+//                 // some delay to destroy AckController after IModeChanged notification
+//                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+
+//                 PowerState currentState = PowerState::POWER_STATE_UNKNOWN;
+//                 PowerState prevState    = PowerState::POWER_STATE_UNKNOWN;
+
+//                 PowerManagerPlugin->Release();
+//             }
+//             else
+//             {
+//                 TEST_LOG("PowerManagerPlugin is NULL");
+//             }
+//             mController_PowerManager->Release();
+//         }
+//         else
+//         {
+//             TEST_LOG("mController_PowerManager is NULL");
+//         }
+//     }
+// }
