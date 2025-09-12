@@ -23,7 +23,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <interfaces/IHdmiCecSink.h>
-//Used to change the power state for onpowermodechanged event
+// Used to change the power state for onpowermodechanged event
 #include <interfaces/IPowerManager.h>
 
 #define EVNT_TIMEOUT (5000)
@@ -48,9 +48,7 @@ namespace {
 static void removeFile(const char* fileName)
 {
     // Use sudo for protected files
-    if (strcmp(fileName, "/etc/device.properties") == 0 ||
-        strcmp(fileName, "/opt/persistent/ds/cecData_2.json") == 0 ||
-        strcmp(fileName, "/opt/uimgr_settings.bin") == 0) {
+    if (strcmp(fileName, "/etc/device.properties") == 0 || strcmp(fileName, "/opt/persistent/ds/cecData_2.json") == 0 || strcmp(fileName, "/opt/uimgr_settings.bin") == 0) {
         char cmd[256];
         snprintf(cmd, sizeof(cmd), "sudo rm -f %s", fileName);
         int ret = system(cmd);
@@ -1839,6 +1837,29 @@ TEST_F(HdmiCecSink_L2Test, GetDeviceList_COMRPC)
     }
 }
 
+TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC)
+{
+    if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSink_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSink != nullptr);
+        if (m_controller_cecSink) {
+            EXPECT_TRUE(m_cecSinkPlugin != nullptr);
+            if (m_cecSinkPlugin) {
+
+                IARM_Bus_DSMgr_EventData_t eventData;
+                eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_1;
+                eventData.data.hdmi_in_connect.isPortConnected = true;
+
+                dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
+
+                m_cecSinkPlugin->Release();
+            }
+            m_controller_cecSink->Release();
+        }
+    }
+}
+
 // JSONRPC test fixtures
 TEST_F(HdmiCecSink_L2Test, Set_And_Get_OSDName_JSONRPC)
 {
@@ -2727,7 +2748,7 @@ TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceFramesAndVerifyEvents)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onInActiveSource"));
 }
 
-//InActiveSource
+// InActiveSource
 TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceBroadcastIgnoreCase)
 {
     // Inject <Inactive Source>
@@ -2976,7 +2997,7 @@ TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportFeatureAbortEvent"));
 }
 
-//Feature Abort
+// Feature Abort
 TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortFrameBroadcastIgnoreTest)
 {
     ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
@@ -3163,11 +3184,11 @@ TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrame)
 TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrameException)
 {
     EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_, ::testing::_))
-    .WillOnce(::testing::Invoke(
-        [&](const LogicalAddress&, const CECFrame&, int) {
-            throw std::runtime_error("Simulated sendTo failure");
-        }))
-    .WillRepeatedly(::testing::Return());
+        .WillOnce(::testing::Invoke(
+            [&](const LogicalAddress&, const CECFrame&, int) {
+                throw std::runtime_error("Simulated sendTo failure");
+            }))
+        .WillRepeatedly(::testing::Return());
 
     uint8_t buffer[] = { 0x40, 0x83 }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
@@ -3176,7 +3197,6 @@ TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrameException)
             listener->notify(frame);
     }
 }
-
 
 // GiveDeviceVendorID (0x8C)
 TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrame)
@@ -3478,6 +3498,13 @@ TEST_F(HdmiCecSink_L2Test, InjectDeviceRemovedAndVerifyEvent)
     EXPECT_CALL(async_handler, onDeviceRemoved(::testing::_))
         .WillOnce(Invoke(this, &HdmiCecSink_L2Test::onDeviceRemoved));
 
+    uint8_t addBuffer[] = { 0x4F, 0x84, 0x10, 0x00, 0x04 };
+    CECFrame addFrame(addBuffer, sizeof(addBuffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(addFrame);
+    }
+
     // Now simulate hotplug disconnect for port 1
     IARM_Bus_DSMgr_EventData_t eventData;
     eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_1;
@@ -3749,12 +3776,11 @@ TEST_F(HdmiCecSink_L2Test_STANDBY, InjectWakeupFromStandbyFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onWakeupFromStandby"));
 }
 
-
 TEST_F(HdmiCecSink_L2Test_STANDBY, TriggerOnPowerModeChangeEvent_ON)
 {
     Core::ProxyType<RPC::InvokeServerType<1, 0, 4>> mEngine_PowerManager;
     Core::ProxyType<RPC::CommunicatorClient> mClient_PowerManager;
-    PluginHost::IShell *mController_PowerManager;
+    PluginHost::IShell* mController_PowerManager;
 
     TEST_LOG("Creating mEngine_PowerManager");
     mEngine_PowerManager = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
@@ -3765,23 +3791,18 @@ TEST_F(HdmiCecSink_L2Test_STANDBY, TriggerOnPowerModeChangeEvent_ON)
     mEngine_PowerManager->Announcements(mClient_PowerManager->Announcement());
 #endif
 
-    if (!mClient_PowerManager.IsValid())
-    {
+    if (!mClient_PowerManager.IsValid()) {
         TEST_LOG("Invalid mClient_PowerManager");
-    }
-    else
-    {
+    } else {
         mController_PowerManager = mClient_PowerManager->Open<PluginHost::IShell>(_T("org.rdk.PowerManager"), ~0, 3000);
-        if (mController_PowerManager)
-        {
+        if (mController_PowerManager) {
             auto PowerManagerPlugin = mController_PowerManager->QueryInterface<Exchange::IPowerManager>();
 
-            if (PowerManagerPlugin)
-            {
+            if (PowerManagerPlugin) {
                 int keyCode = 0;
 
                 uint32_t clientId = 0;
-                uint32_t status   = PowerManagerPlugin->AddPowerModePreChangeClient("l2-test-client", clientId);
+                uint32_t status = PowerManagerPlugin->AddPowerModePreChangeClient("l2-test-client", clientId);
                 EXPECT_EQ(status, Core::ERROR_NONE);
 
                 EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetPowerState(::testing::_))
@@ -3798,15 +3819,11 @@ TEST_F(HdmiCecSink_L2Test_STANDBY, TriggerOnPowerModeChangeEvent_ON)
                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
                 PowerManagerPlugin->Release();
-            }
-            else
-            {
+            } else {
                 TEST_LOG("PowerManagerPlugin is NULL");
             }
             mController_PowerManager->Release();
-        }
-        else
-        {
+        } else {
             TEST_LOG("mController_PowerManager is NULL");
         }
     }
@@ -3816,7 +3833,7 @@ TEST_F(HdmiCecSink_L2Test, RaisePowerModeChangedEvent_OFF)
 {
     Core::ProxyType<RPC::InvokeServerType<1, 0, 4>> mEngine_PowerManager;
     Core::ProxyType<RPC::CommunicatorClient> mClient_PowerManager;
-    PluginHost::IShell *mController_PowerManager;
+    PluginHost::IShell* mController_PowerManager;
 
     TEST_LOG("Creating mEngine_PowerManager");
     mEngine_PowerManager = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
@@ -3827,23 +3844,18 @@ TEST_F(HdmiCecSink_L2Test, RaisePowerModeChangedEvent_OFF)
     mEngine_PowerManager->Announcements(mClient_PowerManager->Announcement());
 #endif
 
-    if (!mClient_PowerManager.IsValid())
-    {
+    if (!mClient_PowerManager.IsValid()) {
         TEST_LOG("Invalid mClient_PowerManager");
-    }
-    else
-    {
+    } else {
         mController_PowerManager = mClient_PowerManager->Open<PluginHost::IShell>(_T("org.rdk.PowerManager"), ~0, 3000);
-        if (mController_PowerManager)
-        {
+        if (mController_PowerManager) {
             auto PowerManagerPlugin = mController_PowerManager->QueryInterface<Exchange::IPowerManager>();
 
-            if (PowerManagerPlugin)
-            {
+            if (PowerManagerPlugin) {
                 int keyCode = 0;
 
                 uint32_t clientId = 0;
-                uint32_t status   = PowerManagerPlugin->AddPowerModePreChangeClient("l2-test-client", clientId);
+                uint32_t status = PowerManagerPlugin->AddPowerModePreChangeClient("l2-test-client", clientId);
                 EXPECT_EQ(status, Core::ERROR_NONE);
 
                 EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetPowerState(::testing::_))
@@ -3860,15 +3872,11 @@ TEST_F(HdmiCecSink_L2Test, RaisePowerModeChangedEvent_OFF)
                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
                 PowerManagerPlugin->Release();
-            }
-            else
-            {
+            } else {
                 TEST_LOG("PowerManagerPlugin is NULL");
             }
             mController_PowerManager->Release();
-        }
-        else
-        {
+        } else {
             TEST_LOG("mController_PowerManager is NULL");
         }
     }
