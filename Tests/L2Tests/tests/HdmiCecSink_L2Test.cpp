@@ -1849,17 +1849,17 @@ TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC)
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
 
-                IARM_Bus_DSMgr_EventData_t eventData;
-                eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_2;
-                eventData.data.hdmi_in_connect.isPortConnected = true;
+                IARM_Bus_DSMgr_EventData_t eventDataPlugIn;
+                eventDataPlugIn.data.hdmi_in_connect.port = dsHDMI_IN_PORT_2;
+                eventDataPlugIn.data.hdmi_in_connect.isPortConnected = true;
 
-                dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
+                dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventDataPlugIn, 0);
 
-                IARM_Bus_DSMgr_EventData_t eventData;
-                eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_2;
-                eventData.data.hdmi_in_connect.isPortConnected = false;
+                IARM_Bus_DSMgr_EventData_t eventDataPlugOut;
+                eventDataPlugOut.data.hdmi_in_connect.port = dsHDMI_IN_PORT_2;
+                eventDataPlugOut.data.hdmi_in_connect.isPortConnected = false;
 
-                dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
+                dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventDataPlugOut, 0);
 
                 m_cecSinkPlugin->Release();
             }
