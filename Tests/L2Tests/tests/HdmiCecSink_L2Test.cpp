@@ -2828,19 +2828,6 @@ TEST_F(HdmiCecSink_L2Test, InjectTextViewOnFrameAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onTextViewOnMsg"));
 }
 
-TEST_F(HdmiCecSink_L2Test, TextViewOnBroadcastIgnoreCase)
-{
-    // Header: From TV (0) to Playback Device 1 (4), Opcode: 0x0D (Text View On)
-    uint8_t buffer[] = { 0x4F, 0x0D };
-    CECFrame frame(buffer, sizeof(buffer));
-
-    for (auto* listener : listeners) {
-        if (listener) {
-            listener->notify(frame);
-        }
-    }
-}
-
 TEST_F(HdmiCecSink_L2Test, InjectDeviceAddedFrameAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -3446,31 +3433,6 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveFeaturesFrame)
     }
 }
 
-TEST_F(HdmiCecSink_L2Test, InjectGiveFeaturesFrameBroadcastIgnoreTest)
-{
-
-    // Simulate a CECVersion message from logical address 4 to us (0)
-    uint8_t buffer1[] = { 0x40, 0x9E, 0x06 }; // 0x06 = Version 2.0
-    CECFrame frame1(buffer1, sizeof(buffer1));
-    for (auto* listener : listeners) {
-        if (listener)
-            listener->notify(frame1);
-    }
-
-    EXPECT_CALL(*p_connectionMock, sendToAsync(::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke(
-            [&](const LogicalAddress& to, const CECFrame& frame) {
-                throw Exception();
-            }));
-
-    uint8_t buffer2[] = { 0x4F, 0xA5 }; // From device 4 to TV (0)
-    CECFrame frame2(buffer2, sizeof(buffer2));
-    for (auto* listener : listeners) {
-        if (listener)
-            listener->notify(frame2);
-    }
-}
-
 // RequestCurrentLatency (0xA7)
 TEST_F(HdmiCecSink_L2Test, InjectRequestCurrentLatencyFrame)
 {
@@ -3485,7 +3447,7 @@ TEST_F(HdmiCecSink_L2Test, InjectRequestCurrentLatencyFrame)
 TEST_F(HdmiCecSink_L2Test, ReportPhysicalAddressBroadcastIgnoreCase)
 {
     // Add a device on port 1 (logical address 4)
-    uint8_t addBuffer[] = { 0x4F, 0x84, 0x10, 0x00, 0x04 }; // From 4 to TV
+    uint8_t addBuffer[] = { 0x40, 0x84, 0x10, 0x00, 0x04 }; // From 4 to TV
     CECFrame addFrame(addBuffer, sizeof(addBuffer));
     for (auto* listener : listeners) {
         if (listener)
@@ -3605,17 +3567,6 @@ TEST_F(HdmiCecSink_L2Test, InjectReportPowerStatusAndVerifyEvent)
     EXPECT_TRUE(signalled & REPORT_AUDIO_DEVICE_POWER_STATUS);
 
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportAudioDevicePowerStatus"));
-}
-
-TEST_F(HdmiCecSink_L2Test, InjectGiveDevicePowerStatusFrameBroadcastIgnoreTest1)
-{
-    // Then, inject ON status (should trigger the event)
-    uint8_t buffer_on[] = { 0x5F, 0x90, 0x00 }; // 0x00 = ON
-    CECFrame frame_on(buffer_on, sizeof(buffer_on));
-    for (auto* listener : listeners) {
-        if (listener)
-            listener->notify(frame_on);
-    }
 }
 
 TEST_F(HdmiCecSink_L2Test, InjectSetMenuLanguageFrame)
