@@ -3186,7 +3186,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrame)
 TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrameException)
 {
     EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_,::testing::_))
-        .WillRepeatedly(::testing::Invoke(
+        .WillOnce(::testing::Invoke(
             [&](const LogicalAddress& to, const CECFrame& frame,int timeout) {
                 throw Exception();
             }));
