@@ -2747,6 +2747,18 @@ TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceFramesAndVerifyEvents)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onInActiveSource"));
 }
 
+//InActiveSource
+TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceBroadcastIgnoreCase)
+{
+    // Inject <Inactive Source>
+    uint8_t inactiveSource[] = { 0x4F, 0x9D, 0x10, 0x00 };
+    CECFrame inactiveSourceFrame(inactiveSource, sizeof(inactiveSource));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(inactiveSourceFrame);
+    }
+}
+
 TEST_F(HdmiCecSink_L2Test, DISABLED_InjectImageViewOnFrameAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -2813,6 +2825,19 @@ TEST_F(HdmiCecSink_L2Test, InjectTextViewOnFrameAndVerifyEvent)
     EXPECT_TRUE(signalled & ON_TEXT_VIEW_ON);
 
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onTextViewOnMsg"));
+}
+
+TEST_F(HdmiCecSink_L2Test, TextViewOnBroadcastIgnoreCase)
+{
+    // Header: From TV (0) to Playback Device 1 (4), Opcode: 0x0D (Text View On)
+    uint8_t buffer[] = { 0x4F, 0x0D };
+    CECFrame frame(buffer, sizeof(buffer));
+
+    for (auto* listener : listeners) {
+        if (listener) {
+            listener->notify(frame);
+        }
+    }
 }
 
 TEST_F(HdmiCecSink_L2Test, InjectDeviceAddedFrameAndVerifyEvent)
@@ -3159,7 +3184,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrameException)
 {
     EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [&](const LogicalAddress& to, const CECFrame& frame) {
+            [&](const LogicalAddress& to, const CECFrame& frame,int timeout) {
                 throw Exception();
             }));
 
@@ -3492,6 +3517,17 @@ TEST_F(HdmiCecSink_L2Test, DISABLED_InjectDeviceRemovedAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onDeviceRemoved"));
 }
 
+TEST_F(HdmiCecSink_L2Test, ReportPhysicalAddressBroadcastIgnoreCase)
+{
+    // Add a device on port 1 (logical address 4)
+    uint8_t addBuffer[] = { 0x4F, 0x84, 0x10, 0x00, 0x04 }; // From 4 to TV
+    CECFrame addFrame(addBuffer, sizeof(addBuffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(addFrame);
+    }
+}
+
 TEST_F(HdmiCecSink_L2Test, InjectReportShortAudioDescriptorAndVerifyEvent)
 {
     JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
@@ -3677,6 +3713,17 @@ TEST_F(HdmiCecSink_L2Test, InjectAbortFrame)
 {
     // Abort: opcode 0xFF, sent as a direct message (not broadcast)
     uint8_t buffer[] = { 0x40, 0xFF }; // From device 4 to TV (0)
+    CECFrame frame(buffer, sizeof(buffer));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+}
+
+TEST_F(HdmiCecSink_L2Test, InjectAbortFrameBroadcastIgnoreCase)
+{
+    // Abort: opcode 0xFF, sent as a direct message (not broadcast)
+    uint8_t buffer[] = { 0x4F, 0xFF }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
     for (auto* listener : listeners) {
         if (listener)
