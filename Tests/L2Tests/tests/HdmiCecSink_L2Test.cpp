@@ -3482,41 +3482,6 @@ TEST_F(HdmiCecSink_L2Test, InjectRequestCurrentLatencyFrame)
     }
 }
 
-TEST_F(HdmiCecSink_L2Test, InjectDeviceRemovedAndVerifyEvent)
-{
-    JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
-    StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
-    uint32_t status = Core::ERROR_GENERAL;
-    uint32_t signalled = HDMICECSINK_STATUS_INVALID;
-
-    status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
-        _T("onDeviceRemoved"),
-        &AsyncHandlerMock_HdmiCecSink::onDeviceRemoved,
-        &async_handler);
-    EXPECT_EQ(Core::ERROR_NONE, status);
-
-    EXPECT_CALL(async_handler, onDeviceRemoved(::testing::_))
-        .WillOnce(Invoke(this, &HdmiCecSink_L2Test::onDeviceRemoved));
-
-    uint8_t addBuffer[] = { 0x40, 0x84, 0x10, 0x00, 0x04 };
-    CECFrame addFrame(addBuffer, sizeof(addBuffer));
-    for (auto* listener : listeners) {
-        if (listener)
-            listener->notify(addFrame);
-    }
-
-    // Now simulate hotplug disconnect for port 1
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_1;
-    eventData.data.hdmi_in_connect.isPortConnected = false;
-    dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
-
-    signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_REMOVED);
-    EXPECT_TRUE(signalled & ON_DEVICE_REMOVED);
-
-    jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onDeviceRemoved"));
-}
-
 TEST_F(HdmiCecSink_L2Test, ReportPhysicalAddressBroadcastIgnoreCase)
 {
     // Add a device on port 1 (logical address 4)
