@@ -2800,7 +2800,7 @@ TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceFramesAndVerifyEvents)
 TEST_F(HdmiCecSink_L2Test, InjectInactiveSourceBroadcastIgnoreCase)
 {
     // Inject <Inactive Source>
-    uint8_t inactiveSource[] = { 0x4F, 0x9D, 0x10, 0x00 };
+    uint8_t inactiveSource[] = { 0x40, 0x9D, 0x10, 0x00 };
     CECFrame inactiveSourceFrame(inactiveSource, sizeof(inactiveSource));
     for (auto* listener : listeners) {
         if (listener)
@@ -2877,6 +2877,19 @@ TEST_F(HdmiCecSink_L2Test, InjectTextViewOnFrameAndVerifyEvent)
     EXPECT_TRUE(signalled & ON_TEXT_VIEW_ON);
 
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("onTextViewOnMsg"));
+}
+
+// TextViewOn Broadcast frame should be ignored
+TEST_F(HdmiCecSink_L2Test, InjectTextViewOnFrameBroadcastIgnoreCase)
+{
+    uint8_t buffer[] = { 0x4F, 0x0D };
+    CECFrame frame(buffer, sizeof(buffer));
+
+    for (auto* listener : listeners) {
+        if (listener) {
+            listener->notify(frame);
+        }
+    }
 }
 
 // Inject DeviceAdded frame and verify onDeviceAdded event
@@ -3268,7 +3281,7 @@ TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrame)
 // GiveDeviceVendorID Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectGiveDeviceVendorIDFrameBroadcastIgnoreTest)
 {
-    uint8_t buffer[] = { 0x40, 0x8C }; // From device 4 to broadcast
+    uint8_t buffer[] = { 0x4F, 0x8C }; // From device 4 to broadcast
     CECFrame frame(buffer, sizeof(buffer));
     for (auto* listener : listeners) {
         if (listener)
@@ -3648,6 +3661,18 @@ TEST_F(HdmiCecSink_L2Test, InjectReportPowerStatusAndVerifyEvent)
     jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportAudioDevicePowerStatus"));
 }
 
+// Report Power Status (0x90) Broadcast frame should be ignored
+TEST_F(HdmiCecSink_L2Test, InjectTextViewOnFrameBroadcastIgnoreCase)
+{
+    // Then, inject ON status (should trigger the event)
+    uint8_t buffer_on[] = { 0x5F, 0x90, 0x00 }; // 0x00 = ON
+    CECFrame frame_on(buffer_on, sizeof(buffer_on));
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame_on);
+    }
+}
+
 // SetMenuLanguage (0x32)
 TEST_F(HdmiCecSink_L2Test, InjectSetMenuLanguageFrame)
 {
@@ -3698,7 +3723,7 @@ TEST_F(HdmiCecSink_L2Test, InjectDeviceVendorIDFrameAndVerifyEvent)
 TEST_F(HdmiCecSink_L2Test, InjectDeviceVendorIDFrameBroadcastIgnoreTest)
 {
     // Device Vendor ID: opcode 0x87, vendor ID 0x00 0x19 0xFB
-    uint8_t buffer[] = { 0x4F, 0x87, 0x00, 0x19, 0xFB };
+    uint8_t buffer[] = { 0x40, 0x87, 0x00, 0x19, 0xFB };
     CECFrame frame(buffer, sizeof(buffer));
     for (auto* listener : listeners) {
         if (listener)
