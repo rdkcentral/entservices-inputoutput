@@ -3186,10 +3186,11 @@ TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrame)
 TEST_F(HdmiCecSink_L2Test, InjectGivePhysicalAddressFrameException)
 {
     EXPECT_CALL(*p_connectionMock, sendTo(::testing::_, ::testing::_,::testing::_))
-        .WillOnce(::testing::Invoke(
-            [&](const LogicalAddress& to, const CECFrame& frame,int timeout) {
-                throw Exception();
-            }));
+    .Times(::testing::AtLeast(1))
+    .WillRepeatedly(::testing::Invoke(
+        [&](const LogicalAddress& to, const CECFrame& frame, int timeout) {
+            throw Exception();
+        }));
 
     uint8_t buffer[] = { 0x40, 0x83 }; // From device 4 to TV (0)
     CECFrame frame(buffer, sizeof(buffer));
