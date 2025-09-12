@@ -3498,7 +3498,7 @@ TEST_F(HdmiCecSink_L2Test, InjectDeviceRemovedAndVerifyEvent)
     EXPECT_CALL(async_handler, onDeviceRemoved(::testing::_))
         .WillOnce(Invoke(this, &HdmiCecSink_L2Test::onDeviceRemoved));
 
-    uint8_t addBuffer[] = { 0x4F, 0x84, 0x10, 0x00, 0x04 };
+    uint8_t addBuffer[] = { 0x40, 0x84, 0x10, 0x00, 0x04 };
     CECFrame addFrame(addBuffer, sizeof(addBuffer));
     for (auto* listener : listeners) {
         if (listener)
