@@ -17,7 +17,6 @@
 * limitations under the License.
 **/
 
-#define CCEC_NAMESPACE  // Enable CCEC namespace
 #include "HdmiCecSinkImplementation.h"
 
 #include "ccec/CCEC.hpp"
@@ -38,6 +37,12 @@
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
 #include "UtilsSearchRDKProfile.h"
+
+// Type aliases to resolve conflicts between CCEC message classes and implementation methods
+// CCEC classes are in global namespace when CCEC_NAMESPACE is not defined in headers
+using CCECRequestActiveSource = RequestActiveSource;
+using CCECSetMenuLanguage = SetMenuLanguage;
+using CCECRequestShortAudioDescriptor = RequestShortAudioDescriptor;
 
 #define TEST_ADD 0
 #define HDMICECSINK_REQUEST_MAX_RETRY                 3
@@ -2040,7 +2045,7 @@ namespace WPEFramework
 
 
             _instance->smConnection->sendTo(LogicalAddress::BROADCAST, 
-                                        MessageEncoder().encode(CCEC::RequestActiveSource()), 500);
+                                        MessageEncoder().encode(CCECRequestActiveSource()), 500);
         }
 
         void HdmiCecSinkImplementation::setActiveSource(bool isResponse)
@@ -2104,7 +2109,7 @@ namespace WPEFramework
 
             lang = _instance->deviceList[_instance->m_logicalAddressAllocated].m_currentLanguage;
 
-            _instance->smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(CCEC::SetMenuLanguage(lang)), 100);
+            _instance->smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(CCECSetMenuLanguage(lang)), 100);
         }
 
         void HdmiCecSinkImplementation::updateInActiveSource(const int logical_address, const InActiveSource &source )
@@ -2203,7 +2208,7 @@ namespace WPEFramework
             }
 
                         LOGINFO(" Send requestShortAudioDescriptor Message ");
-                    _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM,MessageEncoder().encode(CCEC::RequestShortAudioDescriptor(formatid,audioFormatCode,numberofdescriptor)), 1000);
+                    _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM,MessageEncoder().encode(CCECRequestShortAudioDescriptor(formatid,audioFormatCode,numberofdescriptor)), 1000);
 
         }
 
