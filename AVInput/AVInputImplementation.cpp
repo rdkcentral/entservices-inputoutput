@@ -567,10 +567,9 @@ namespace Plugin {
 
         return Core::ERROR_NONE;
     }
-
-    Core::hresult AVInputImplementation::StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost, bool& success)
+    Core::hresult AVInputImplementation::StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost, SuccessResult& success)
     {
-        success = true;
+        success.success = true;
 
         try {
             if (typeOfInput == HDMI) {
@@ -579,11 +578,11 @@ namespace Plugin {
                 device::CompositeInput::getInstance().selectPort(portId);
             } else {
                 LOGWARN("Invalid input type passed to StartInput");
-                success = false;
+                success.success = false;
             }
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-            success = false;
+            success.success = false;
         }
 
         return Core::ERROR_NONE;
@@ -619,9 +618,9 @@ namespace Plugin {
         return ret;
     }
 
-    Core::hresult AVInputImplementation::SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput, bool& success)
+    Core::hresult AVInputImplementation::SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput, SuccessResult& success)
     {
-        success = true;
+        success.success = true;
 
         try {
             if (typeOfInput == HDMI) {
@@ -630,7 +629,7 @@ namespace Plugin {
                 device::CompositeInput::getInstance().scaleVideo(x, y, w, h);
             }
         } catch (const device::Exception& err) {
-            success = false;
+            success.success = false;
         }
 
         return Core::ERROR_NONE;
@@ -727,10 +726,10 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::WriteEDID(const int portId, const string& message, bool& success)
+    Core::hresult AVInputImplementation::WriteEDID(const int portId, const string& message, SuccessResult& success)
     {
         // TODO: This wasn't implemented in the original code, do we want to implement it?
-        success = true;
+        success.success = true;
         return Core::ERROR_NONE;
     }
 
@@ -1232,32 +1231,32 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::SetAudioMixerLevels(const int primaryVolume, const int inputVolume, bool& success)
+    Core::hresult AVInputImplementation::SetAudioMixerLevels(const int primaryVolume, const int inputVolume, SuccessResult& success)
     {
         try {
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY, primaryVolume);
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, inputVolume);
         } catch (...) {
             LOGWARN("Not setting SoC volume !!!\n");
-            success = false;
+            success.success = false;
             return Core::ERROR_NONE;
         }
 
         isAudioBalanceSet = true;
-        success = true;
+        success.success = true;
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::SetEdid2AllmSupport(const int portId, const bool allmSupport, bool& success)
+    Core::hresult AVInputImplementation::SetEdid2AllmSupport(const int portId, const bool allmSupport, SuccessResult& success)
     {
-        success = true;
+        success.success = true;
 
         try {
             device::HdmiInput::getInstance().setEdid2AllmSupport(portId, allmSupport);
             LOGWARN("AVInput -  allmsupport:%d", allmSupport);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-            success = false;
+            success.success = false;
         }
 
         return Core::ERROR_NONE;
@@ -1341,10 +1340,10 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::SetEdidVersion(const int portId, const string& edidVersion, bool& success)
+    Core::hresult AVInputImplementation::SetEdidVersion(const int portId, const string& edidVersion, SuccessResult& success)
     {
         int edidVer = -1;
-        success = true;
+        success.success = true;
 
         if (strcmp(edidVersion.c_str(), "HDMI1.4") == 0) {
             edidVer = HDMI_EDID_VER_14;
@@ -1352,7 +1351,7 @@ namespace Plugin {
             edidVer = HDMI_EDID_VER_20;
         } else {
             LOGERR("Invalid EDID Version: %s", edidVersion.c_str());
-            success = false;
+            success.success = false;
             return Core::ERROR_NONE;
         }
 
@@ -1361,7 +1360,7 @@ namespace Plugin {
             LOGWARN("AVInputImplementation::setEdidVersion EDID Version: %s", edidVersion.c_str());
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
-            success = false;
+            success.success = false;
         }
 
         return Core::ERROR_NONE;

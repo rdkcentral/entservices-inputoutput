@@ -147,21 +147,21 @@ namespace Plugin {
 
         Core::hresult NumberOfInputs(uint32_t& numberOfInputs, bool& success) override;
         Core::hresult GetInputDevices(const int typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices, bool& success) override;
-        Core::hresult WriteEDID(const int portId, const string& message, bool& success) override;
+        Core::hresult WriteEDID(const int portId, const string& message, SuccessResult& success) override;
         Core::hresult ReadEDID(const int portId, string& EDID, bool& success) override;
         Core::hresult GetRawSPD(const int portId, string& HDMISPD, bool& success) override;
         Core::hresult GetSPD(const int portId, string& HDMISPD, bool& success) override;
-        Core::hresult SetEdidVersion(const int portId, const string& edidVersion, bool& success) override;
+        Core::hresult SetEdidVersion(const int portId, const string& edidVersion, SuccessResult& success) override;
         Core::hresult GetEdidVersion(const int portId, string& edidVersion, bool& success) override;
-        Core::hresult SetEdid2AllmSupport(const int portId, const bool allmSupport, bool& success) override;
+        Core::hresult SetEdid2AllmSupport(const int portId, const bool allmSupport, SuccessResult& success) override;
         Core::hresult GetEdid2AllmSupport(const int portId, bool& allmSupport, bool& success) override;
         Core::hresult SetVRRSupport(const int portId, const bool vrrSupport) override;
         Core::hresult GetVRRSupport(const int portId, bool& vrrSupport) override;
         Core::hresult GetHdmiVersion(const int portId, string& HdmiCapabilityVersion, bool& success) override;
-        Core::hresult SetAudioMixerLevels(const int primaryVolume, const int inputVolume, bool& success) override;
-        Core::hresult StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost, bool& success) override;
+        Core::hresult SetAudioMixerLevels(const int primaryVolume, const int inputVolume, SuccessResult& success) override;
+        Core::hresult StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost, SuccessResult& success) override;
         Core::hresult StopInput(const int typeOfInput, bool& success) override;
-        Core::hresult SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput, bool& success) override;
+        Core::hresult SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput, SuccessResult& success) override;
         Core::hresult CurrentVideoMode(string& currentVideoMode, bool& success) override;
         Core::hresult ContentProtected(bool& isContentProtected, bool& success) override;
         Core::hresult GetSupportedGameFeatures(IStringIterator*& features, bool& success) override;
