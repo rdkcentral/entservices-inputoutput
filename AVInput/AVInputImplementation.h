@@ -45,12 +45,15 @@
 #define DEFAULT_INPUT_VOL_LEVEL 100
 
 using ParamsType = boost::variant<
-    string&,                                            // OnDevicesChanged
-    std::tuple<int, string, string>,                    // OnSignalChanged
-    std::tuple<int, string, string, int>,               // OnInputStatusChanged
-    std::tuple<int, string, int, int, bool, int, int>,  // VideoStreamInfoUpdate
-    std::tuple<int, string, bool>,                      // GameFeatureStatusUpdate
-    std::tuple<int, int>                                // HdmiContentTypeUpdate
+    // <pca>
+    //string&,                                            // OnDevicesChanged
+    WPEFramework::Exchange::IAVInput::IInputDeviceIterator* const,  // OnDevicesChanged
+    // </pca>
+    std::tuple<int, string, string>,                                // OnSignalChanged
+    std::tuple<int, string, string, int>,                           // OnInputStatusChanged
+    std::tuple<int, string, int, int, bool, int, int>,              // VideoStreamInfoUpdate
+    std::tuple<int, string, bool>,                                  // GameFeatureStatusUpdate
+    std::tuple<int, int>                                            // HdmiContentTypeUpdate
 >;
 
 namespace WPEFramework {
@@ -204,7 +207,9 @@ namespace Plugin {
 
         static string currentVideoMode(bool& success);
 
-        JsonArray devicesToJson(Exchange::IAVInput::IInputDeviceIterator* devices);
+        // <pca>
+        //JsonArray devicesToJson(Exchange::IAVInput::IInputDeviceIterator* devices);
+        // </pca>
 
         bool getALLMStatus(int iPort);
         bool getVRRStatus(int iPort, dsHdmiInVrrStatus_t* vrrStatus);

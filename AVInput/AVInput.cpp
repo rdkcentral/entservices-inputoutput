@@ -160,5 +160,22 @@ namespace Plugin {
         }
     }
 
+    // <pca>
+    void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
+    {
+        Core::JSON::ArrayType<InputDeviceJson> deviceArray;
+        if (devices != nullptr)
+        {
+            Exchange::IAVInput::InputDevice resultItem{};
+
+            while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
+
+            Core::JSON::Container eventPayload;
+            eventPayload.Add(_T("deviceArray"), &deviceArray);
+            _parent.Notify(_T("onDevicesChanged"), eventPayload);
+        }
+    }
+    // </pca>
+
 } // namespace Plugin
 } // namespace WPEFramework

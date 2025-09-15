@@ -24,6 +24,9 @@
 #include <interfaces/IAVInput.h>
 #include <interfaces/json/JAVInput.h>
 #include <interfaces/json/JsonData_AVInput.h>
+// <pca>
+#include "AVInputJsonData.h"
+// </pca>
 
 #include "UtilsLogging.h"
 #include "tracing/Logging.h"
@@ -110,11 +113,14 @@ namespace Plugin {
                 _parent.Deactivated(connection);
             }
 
-            void OnDevicesChanged(const string& devices) override
-            {
-                LOGINFO("OnDevicesChanged: devices %s\n", devices.c_str());
-                Exchange::JAVInput::Event::OnDevicesChanged(_parent, devices);
-            }
+            // <pca>
+            // void OnDevicesChanged(const string& devices) override
+            // {
+            //     LOGINFO("OnDevicesChanged: devices %s\n", devices.c_str());
+            //     Exchange::JAVInput::Event::OnDevicesChanged(_parent, devices);
+            // }
+            void OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices) override;
+            // </pca>
 
             void OnSignalChanged(const int id, const string& locator, const string& signalStatus) override
             {
