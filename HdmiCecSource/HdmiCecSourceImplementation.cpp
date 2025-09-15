@@ -19,7 +19,6 @@
 
 #include "HdmiCecSourceImplementation.h"
 
-#include "ccec/CCEC.hpp"
 #include "ccec/Connection.hpp"
 #include "ccec/CECFrame.hpp"
 #include "ccec/MessageEncoder.hpp"
