@@ -631,11 +631,7 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
-    ASSERT_TRUE(dsAVEventHandler != nullptr);
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_connect.isPortConnected = true;
-    dsAVEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
+    plugin->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
@@ -661,11 +657,7 @@ TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
-    ASSERT_TRUE(dsAVEventHandler != nullptr);
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_connect.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_connect.isPortConnected = true;
-    dsAVEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG, &eventData, 0);
+    plugin->OnCompositeInEventHotPlug(dsCOMPOSITE_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
@@ -692,11 +684,7 @@ TEST_F(AVInputInit, onSignalChangedStableHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_STABLE;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnHdmiInSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_STABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -722,12 +710,8 @@ TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnHdmiInSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -753,12 +737,7 @@ TEST_F(AVInputInit, onSignalChangedUnstableHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_UNSTABLE;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnHdmiInSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_UNSTABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
