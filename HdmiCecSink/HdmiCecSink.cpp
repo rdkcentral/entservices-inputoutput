@@ -702,7 +702,6 @@ namespace WPEFramework
            catch(const device::Exception& err)
            {
                 LOGINFO("HdmiCecSink plugin device::Manager::Initialize failed");
-                msg = "HdmiCecSink plugin Initialize failed";
                 LOG_DEVICE_EXCEPTION0();
            }
 
@@ -714,8 +713,7 @@ namespace WPEFramework
               if (profileType == STB || profileType == NOT_FOUND)
               {
                   LOGINFO("Invalid profile type for TV \n");
-                  msg = "Not supported";
-                  return msg;
+                  return (std::string("Not supported"));
               }
 
               HdmiCecSink::_instance = this;
@@ -837,14 +835,13 @@ namespace WPEFramework
                   catch(...)
                   {
                       LOGWARN("Exception while enabling CEC settings .\r\n");
-                      msg = "Exception while enabling CEC settings";
                   }
                }
                getCecVersion();
            }
 
            LOGINFO(" HdmiCecSink plugin Initialize completed \n");
-           return msg;
+           return (std::string());
 
        }
 
