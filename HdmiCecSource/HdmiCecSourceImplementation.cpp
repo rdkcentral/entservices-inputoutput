@@ -424,7 +424,7 @@ namespace WPEFramework
             try
             {
                 //TODO(MROLLINS) this is probably per process so we either need to be running in our own process or be carefull no other plugin is calling it
-                //device::Manager::Initialize();
+                device::Manager::Initialize();
 
 #ifndef IO_HCEC_ENABLE_IARM
                 device::Host::getInstance().Register(baseInterface<device::Host::IDisplayDeviceEvents>(), "WPE[HdmiCecSource]");
