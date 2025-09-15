@@ -2206,7 +2206,7 @@ namespace WPEFramework
             }
 
                         LOGINFO(" Send requestShortAudioDescriptor Message ");
-                    _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM,MessageEncoder().encode(CCEC::RequestShortAudioDescriptor(formatid,audioFormatCode,numberofdescriptor)), 1000);
+                    _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM,MessageEncoder().encode(CCECRequestShortAudioDescriptor(formatid,audioFormatCode,numberofdescriptor)), 1000);
 
         }
 
