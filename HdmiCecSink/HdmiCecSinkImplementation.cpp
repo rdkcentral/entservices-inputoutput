@@ -19,6 +19,7 @@
 
 #include "HdmiCecSinkImplementation.h"
 
+#include "ccec/CCEC.hpp"
 #include "ccec/Connection.hpp"
 #include "ccec/CECFrame.hpp"
 #include "ccec/MessageEncoder.hpp"
@@ -36,6 +37,10 @@
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
 #include "UtilsSearchRDKProfile.h"
+
+using CCECRequestActiveSource = RequestActiveSource;
+using CCECSetMenuLanguage = SetMenuLanguage;
+using CCECRequestShortAudioDescriptor = RequestShortAudioDescriptor;
 
 #define TEST_ADD 0
 #define HDMICECSINK_REQUEST_MAX_RETRY                 3
@@ -178,7 +183,7 @@ namespace WPEFramework
              HdmiCecSinkImplementation::_instance->addDevice(header.from.toInt());
              HdmiCecSinkImplementation::_instance->updateTextViewOn(header.from.toInt());
        }
-       void HdmiCecSinkProcessor::process (const RequestActiveSourceMessage &msg, const Header &header)
+       void HdmiCecSinkProcessor::process (const RequestActiveSource &msg, const Header &header)
        {
              printHeader(header);
              LOGINFO("Command: RequestActiveSource\n");
@@ -230,7 +235,7 @@ namespace WPEFramework
          if(!updateStatus)
          HdmiCecSinkImplementation::_instance->sendDeviceUpdateInfo(header.from.toInt());
        }
-       void HdmiCecSinkProcessor::process (const SetMenuLanguageMessage &msg, const Header &header)
+       void HdmiCecSinkProcessor::process (const SetMenuLanguage &msg, const Header &header)
        {
              printHeader(header);
              LOGINFO("Command: SetMenuLanguage Language : %s \n",msg.language.toString().c_str());
@@ -2039,7 +2044,7 @@ namespace WPEFramework
 
 
             _instance->smConnection->sendTo(LogicalAddress::BROADCAST, 
-                                        MessageEncoder().encode(RequestActiveSourceMessage()), 500);
+                                        MessageEncoder().encode(CCECRequestActiveSource()), 500);
         }
 
         void HdmiCecSinkImplementation::setActiveSource(bool isResponse)
@@ -2103,7 +2108,7 @@ namespace WPEFramework
 
             lang = _instance->deviceList[_instance->m_logicalAddressAllocated].m_currentLanguage;
 
-            _instance->smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(SetMenuLanguageMessage(lang)), 100);
+            _instance->smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(CCECSetMenuLanguage(lang)), 100);
         }
 
         void HdmiCecSinkImplementation::updateInActiveSource(const int logical_address, const InActiveSource &source )
@@ -2202,7 +2207,7 @@ namespace WPEFramework
             }
 
                         LOGINFO(" Send requestShortAudioDescriptor Message ");
-                    _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM,MessageEncoder().encode(RequestShortAudioDescriptorMessage(formatid,audioFormatCode,numberofdescriptor)), 1000);
+                    _instance->smConnection->sendTo(LogicalAddress::AUDIO_SYSTEM,MessageEncoder().encode(CCECRequestShortAudioDescriptor(formatid,audioFormatCode,numberofdescriptor)), 1000);
 
         }
 

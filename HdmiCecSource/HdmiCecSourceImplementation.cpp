@@ -19,7 +19,7 @@
 
 #include "HdmiCecSourceImplementation.h"
 
-
+#include "ccec/CCEC.hpp"
 #include "ccec/Connection.hpp"
 #include "ccec/CECFrame.hpp"
 #include "ccec/MessageEncoder.hpp"
@@ -35,6 +35,8 @@
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
 #include "UtilsSearchRDKProfile.h"
+
+using CCECRequestActiveSource = RequestActiveSource;
 
 #define HDMICECSOURCE_METHOD_SET_ENABLED "SetEnabled"
 #define HDMICECSOURCE_METHOD_GET_ENABLED "GetEnabled"
@@ -1031,7 +1033,7 @@ namespace WPEFramework
                 LOGINFO("Command: sending GiveDevicePowerStatus \r\n");
                 smConnection->sendTo(LogicalAddress::TV, MessageEncoder().encode(GiveDevicePowerStatus()));
                 LOGINFO("Command: sending request active Source isDeviceActiveSource is set to false\r\n");
-                smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(RequestActiveSourceMessage()));
+                smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(CCECRequestActiveSource()));
                 isDeviceActiveSource = false;
                 LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n", \
                                                  (isLGTvConnected)?lgVendorId.toString().c_str():appVendorId.toString().c_str());

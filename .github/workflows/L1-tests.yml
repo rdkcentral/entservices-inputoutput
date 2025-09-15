@@ -253,6 +253,7 @@ jobs:
           ccec/MessageProcessor.hpp
           ccec/CECFrame.hpp
           ccec/MessageEncoder.hpp
+          ccec/CCEC.hpp
           ccec/host/RDK.hpp
           rdk/ds/audioOutputPort.hpp
           rdk/ds/compositeIn.hpp

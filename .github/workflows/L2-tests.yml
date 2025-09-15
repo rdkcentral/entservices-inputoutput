@@ -269,6 +269,7 @@ jobs:
           ccec/MessageDecoder.hpp
           ccec/MessageProcessor.hpp
           ccec/CECFrame.hpp
+          ccec/CCEC.hpp
           ccec/MessageEncoder.hpp
           ccec/host/RDK.hpp
           &&
