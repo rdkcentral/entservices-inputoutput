@@ -25,12 +25,8 @@
  #include "videoOutputPortConfig.hpp"
  #include "dsMgr.h"
  #include "manager.hpp"
- #include "host.hpp"
  
  #include "UtilsJsonRpc.h"
- #include "UtilsIarm.h"
- 
- #include "UtilsSynchroIarm.hpp"
  
  #define HDMI_HOT_PLUG_EVENT_CONNECTED 0
  #define HDMI_HOT_PLUG_EVENT_DISCONNECTED 1
@@ -61,6 +57,8 @@
          HdcpProfileImplementation::~HdcpProfileImplementation()
          {
              LOGINFO("Call HdcpProfileImplementation destructor\n");
+             device::Host::getInstance().UnRegister(baseInterface<device::Host::IVideoOutputPortEvents>());
+             device::Host::getInstance().UnRegister(baseInterface<device::Host::IDisplayDeviceEvents>());
              if (_powerManagerPlugin) {
                 _powerManagerPlugin.Reset();
              }
@@ -68,7 +66,6 @@
              {
                 _service->Release();
              }
-             DeinitializeIARM();
              HdcpProfileImplementation::_instance = nullptr;
              mShell = nullptr;
          }
@@ -80,25 +77,6 @@
                                      .withRetryIntervalMS(200)
                                      .withRetryCount(25)
                                      .createInterface();
-         }
- 
-         void HdcpProfileImplementation::InitializeIARM()
-         {
-             Utils::IARM::init();
- 
-             IARM_Result_t res;
-             IARM_CHECK( Utils::Synchro::RegisterLockedIarmEventHandler<HdcpProfileImplementation>(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, dsHdmiEventHandler) );
-             IARM_CHECK( Utils::Synchro::RegisterLockedIarmEventHandler<HdcpProfileImplementation>(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDCP_STATUS, dsHdmiEventHandler) );
-         }
- 
-         void HdcpProfileImplementation::DeinitializeIARM()
-         {
-             if (Utils::IARM::isConnected())
-             {
-                 IARM_Result_t res;
-                 IARM_CHECK( Utils::Synchro::RemoveLockedEventHandler<HdcpProfileImplementation>(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, dsHdmiEventHandler) );
-                 IARM_CHECK( Utils::Synchro::RemoveLockedEventHandler<HdcpProfileImplementation>(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDCP_STATUS, dsHdmiEventHandler) );
-             }
          }
  
          void HdcpProfileImplementation::onHdmiOutputHotPlug(int connectStatus)
@@ -143,43 +121,33 @@
              onHdcpProfileDisplayConnectionChanged();
          }
  
-         void HdcpProfileImplementation::dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
+         void HdcpProfileImplementation::OnDisplayHDMIHotPlug(dsDisplayEvent_t displayEvent)
+         {
+             LOGINFO("Received OnDisplayHDMIHotPlug  event data:%d \r\n", displayEvent);
+             HdcpProfileImplementation::_instance->onHdmiOutputHotPlug(static_cast<int>(displayEvent));
+         }
+
+         void HdcpProfileImplementation::OnHDCPStatusChange(dsHdcpStatus_t hdcpStatus)
          {
              uint32_t res = Core::ERROR_GENERAL;
              PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
              PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
- 
-             if(!HdcpProfileImplementation::_instance)
-                 return;
- 
-             if (IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG == eventId)
-             {
-                 IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                 int hdmi_hotplug_event = eventData->data.hdmi_hpd.event;
-                 LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG  event data:%d \r\n", hdmi_hotplug_event);
- 
-                 HdcpProfileImplementation::_instance->onHdmiOutputHotPlug(hdmi_hotplug_event);
-             }
-             else if (IARM_BUS_DSMGR_EVENT_HDCP_STATUS == eventId)
-             {
-                 ASSERT (_powerManagerPlugin);
-                 if (_powerManagerPlugin){
-                     res = _powerManagerPlugin->GetPowerState(pwrStateCur, pwrStatePrev);
-                     if (Core::ERROR_NONE != res)
-                     {
-                         LOGWARN("Failed to Invoke RPC method: GetPowerState");
-                     }
-                     else
-                     {
-                         IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                         int hdcpStatus = eventData->data.hdmi_hdcp.hdcpStatus;
-                         LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDCP_STATUS  event data:%d  param.curState: %d \r\n", hdcpStatus,pwrStateCur);
-                         HdcpProfileImplementation::_instance->onHdmiOutputHDCPStatusEvent(hdcpStatus);
-                     }
+
+             ASSERT (_powerManagerPlugin);
+             if (_powerManagerPlugin){
+                 res = _powerManagerPlugin->GetPowerState(pwrStateCur, pwrStatePrev);
+                 if (Core::ERROR_NONE != res)
+                 {
+                     LOGWARN("Failed to Invoke RPC method: GetPowerState");
+                 }
+                 else
+                 {
+                     LOGINFO("Received OnHDCPStatusChange  event data:%d  param.curState: %d \r\n", hdcpStatus,pwrStateCur);
+                     HdcpProfileImplementation::_instance->onHdmiOutputHDCPStatusEvent(static_cast<int>(hdcpStatus));
                  }
              }
          }
- 
+
          /**
           * Register a notification callback
           */
@@ -243,7 +211,8 @@
              _service = service;
              _service->AddRef();
              ASSERT(service != nullptr);
-             InitializeIARM();
+             device::Host::getInstance().Register(baseInterface<device::Host::IVideoOutputPortEvents>(),"WPE[HdcpProfile]");
+             device::Host::getInstance().Register(baseInterface<device::Host::IDisplayDeviceEvents>(),"WPE[HdcpProfile]");
              InitializePowerManager(service);
              return result;
          }
