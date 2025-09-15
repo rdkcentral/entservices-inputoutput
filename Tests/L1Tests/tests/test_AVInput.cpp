@@ -100,6 +100,7 @@ class AVInputInit : public AVInputDsTest {
 protected:
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
     NiceMock<FactoriesImplementation> factoriesImplementation;
+    ManagerImplMock   *p_managerImplMock = nullptr ;
     PLUGINHOST_DISPATCHER* dispatcher;
     NiceMock<ServiceMock> service;
     Core::JSONRPC::Message message;
@@ -109,6 +110,13 @@ protected:
     {
         p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
+
+        p_managerImplMock  = new NiceMock <ManagerImplMock>;
+        device::Manager::setImpl(p_managerImplMock);
+
+        EXPECT_CALL(*p_managerImplMock, Initialize())
+            .Times(::testing::AnyNumber())
+            .WillRepeatedly(::testing::Return());
 
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
@@ -159,6 +167,7 @@ protected:
                     }
                     return IARM_RESULT_SUCCESS;
                 }));
+        
         EXPECT_EQ(string(""), plugin->Initialize(&service));
 
         PluginHost::IFactories::Assign(&factoriesImplementation);
