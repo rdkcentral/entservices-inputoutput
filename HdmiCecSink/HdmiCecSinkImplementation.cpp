@@ -38,6 +38,10 @@
 #include "UtilssyncPersistFile.h"
 #include "UtilsSearchRDKProfile.h"
 
+using CCECRequestActiveSource = ::RequestActiveSource;
+using CCECSetMenuLanguage = ::SetMenuLanguage;
+using CCECRequestShortAudioDescriptor = ::RequestShortAudioDescriptor;
+
 #define TEST_ADD 0
 #define HDMICECSINK_REQUEST_MAX_RETRY                 3
 #define HDMICECSINK_REQUEST_MAX_WAIT_TIME_MS         2000
@@ -2039,7 +2043,7 @@ namespace WPEFramework
 
 
             _instance->smConnection->sendTo(LogicalAddress::BROADCAST, 
-                                        MessageEncoder().encode(CCEC::RequestActiveSource()), 500);
+                                        MessageEncoder().encode(CCECRequestActiveSource()), 500);
         }
 
         void HdmiCecSinkImplementation::setActiveSource(bool isResponse)
@@ -2103,7 +2107,7 @@ namespace WPEFramework
 
             lang = _instance->deviceList[_instance->m_logicalAddressAllocated].m_currentLanguage;
 
-            _instance->smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(CCEC::SetMenuLanguage(lang)), 100);
+            _instance->smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(CCECSetMenuLanguage(lang)), 100);
         }
 
         void HdmiCecSinkImplementation::updateInActiveSource(const int logical_address, const InActiveSource &source )
