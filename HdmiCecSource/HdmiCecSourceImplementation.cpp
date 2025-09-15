@@ -36,10 +36,6 @@
 #include "UtilssyncPersistFile.h"
 #include "UtilsSearchRDKProfile.h"
 
-// Type alias to resolve conflict between CCEC message class and implementation method
-// CCEC classes are in global namespace when CCEC_NAMESPACE is not defined in headers
-using CCECRequestActiveSource = RequestActiveSource;
-
 #define HDMICECSOURCE_METHOD_SET_ENABLED "SetEnabled"
 #define HDMICECSOURCE_METHOD_GET_ENABLED "GetEnabled"
 #define HDMICECSOURCE_METHOD_OTP_SET_ENABLED "SetOTPEnabled"
@@ -1035,7 +1031,7 @@ namespace WPEFramework
                 LOGINFO("Command: sending GiveDevicePowerStatus \r\n");
                 smConnection->sendTo(LogicalAddress::TV, MessageEncoder().encode(GiveDevicePowerStatus()));
                 LOGINFO("Command: sending request active Source isDeviceActiveSource is set to false\r\n");
-                smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(CCECRequestActiveSource()));
+                smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(CCEC::RequestActiveSource()));
                 isDeviceActiveSource = false;
                 LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n", \
                                                  (isLGTvConnected)?lgVendorId.toString().c_str():appVendorId.toString().c_str());
