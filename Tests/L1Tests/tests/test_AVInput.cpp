@@ -24,6 +24,7 @@
 #include "CompositeInputMock.h"
 #include "FactoriesImplementation.h"
 #include "HdmiInputMock.h"
+#include "ManagerMock.h"
 #include "HostMock.h"
 #include "IarmBusMock.h"
 #include "ServiceMock.h"
@@ -188,6 +189,12 @@ protected:
         if (p_iarmBusImplMock != nullptr) {
             delete p_iarmBusImplMock;
             p_iarmBusImplMock = nullptr;
+        }
+        device::Manager::setImpl(nullptr);
+        if (p_managerImplMock != nullptr)
+        {
+            delete p_managerImplMock;
+            p_managerImplMock = nullptr;
         }
     }
 };
