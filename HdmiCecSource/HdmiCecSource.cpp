@@ -70,43 +70,29 @@ namespace WPEFramework
            ASSERT(nullptr == _hdmiCecSource);
            ASSERT(0 == _connectionId);
 
-           try
-           {
-                device::Manager::Initialize();
-                LOGINFO("HdmiCecSource plugin device::Manager::Initialize success");
-           }
-           catch(const device::Exception& err)
-           {
-                LOGINFO("HdmiCecSource plugin device::Manager::Initialize failed");
-                msg = "HdmiCecSource plugin Initialize failed";
-                LOG_DEVICE_EXCEPTION0();
-           }
 
-           if (0 == msg.length())
-           {
-               _service = service;
-               _service->AddRef();
-               _service->Register(&_notification);
-               _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
+           _service = service;
+           _service->AddRef();
+           _service->Register(&_notification);
+           _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
 
-                if(nullptr != _hdmiCecSource)
-                {
-                    _hdmiCecSource->Configure(service);
-                    _hdmiCecSource->Register(&_notification);
-                    Exchange::JHdmiCecSource::Register(*this, _hdmiCecSource);
-                    LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
-                }
-                else
-                {
-                    msg = "HdmiCecSource plugin is not available";
-                    LOGINFO("HdmiCecSource plugin is not available. Failed to activate HdmiCecSource Plugin");
-                }
+           if(nullptr != _hdmiCecSource)
+            {
+                _hdmiCecSource->Configure(service);
+                _hdmiCecSource->Register(&_notification);
+                Exchange::JHdmiCecSource::Register(*this, _hdmiCecSource);
+                LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
+            }
+            else
+            {
+                msg = "HdmiCecSource plugin is not available";
+                LOGINFO("HdmiCecSource plugin is not available. Failed to activate HdmiCecSource Plugin");
+            }
 
-                if (0 != msg.length())
-                {
-                    Deinitialize(service);
-                }
-           }
+            if (0 != msg.length())
+            {
+                Deinitialize(service);
+            }
 
            // On success return empty, to indicate there is no error text.
            return msg;
@@ -167,18 +153,6 @@ namespace WPEFramework
            _service->Unregister(&_notification);
            _service->Release();
            _service = nullptr;
-
-           try
-           {
-               device::Manager::DeInitialize();
-               LOGINFO("HdmiCecSource plugin device::Manager::DeInitialize success");
-           }
-           catch(const device::Exception& err)
-           {
-               LOGINFO("HdmiCecSource plugin device::Manager::DeInitialize failed");
-               LOG_DEVICE_EXCEPTION0();
-           }
-
            LOGINFO("HdmiCecSource plugin is deactivated. Successfully deactivated HdmiCecSource Plugin");
         }
 
