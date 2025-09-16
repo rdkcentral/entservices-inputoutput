@@ -657,7 +657,11 @@ TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnCompositeInEventHotPlug(dsCOMPOSITE_IN_PORT_0, true);
+    ASSERT_TRUE(dsAVEventHandler != nullptr);
+    IARM_Bus_DSMgr_EventData_t eventData;
+    eventData.data.composite_in_connect.port = dsCOMPOSITE_IN_PORT_0;
+    eventData.data.composite_in_connect.isPortConnected = true;
+    dsAVEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG, &eventData, 0);
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
@@ -684,7 +688,12 @@ TEST_F(AVInputInit, onSignalChangedStableHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_STABLE);
+    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
+    IARM_Bus_DSMgr_EventData_t eventData;
+    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
+    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_STABLE;
+    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -711,7 +720,12 @@ TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL);
+    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
+
+    IARM_Bus_DSMgr_EventData_t eventData;
+    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
+    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL;
+    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -737,7 +751,12 @@ TEST_F(AVInputInit, onSignalChangedUnstableHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    plugin->OnHdmiInSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_UNSTABLE);
+    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
+
+    IARM_Bus_DSMgr_EventData_t eventData;
+    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
+    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_UNSTABLE;
+    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -764,10 +783,7 @@ TEST_F(AVInputInit, onSignalChangedNotSupportedHDMI)
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
     ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnHdmiInSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -792,12 +808,7 @@ TEST_F(AVInputInit, onSignalChangedDefaultHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_MAX;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnHdmiInSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_MAX);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -822,12 +833,7 @@ TEST_F(AVInputInit, onSignalChangedStableCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_sig_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_sig_status.status = dsCOMP_IN_SIGNAL_STATUS_STABLE;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_STABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -854,10 +860,7 @@ TEST_F(AVInputInit, onSignalChangedNoSignalCOMPOSITE)
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
     ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_sig_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_sig_status.status = dsCOMP_IN_SIGNAL_STATUS_NOSIGNAL;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOSIGNAL);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -884,10 +887,7 @@ TEST_F(AVInputInit, onSignalChangedUnstableCOMPOSITE)
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
     ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_sig_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_sig_status.status = dsCOMP_IN_SIGNAL_STATUS_UNSTABLE;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_UNSTABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -912,12 +912,7 @@ TEST_F(AVInputInit, onSignalChangedNotSupportedCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_sig_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_sig_status.status = dsCOMP_IN_SIGNAL_STATUS_NOTSUPPORTED;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOTSUPPORTED);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -942,12 +937,7 @@ TEST_F(AVInputInit, onSignalChangedDefaultCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_sig_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_sig_status.status = dsCOMP_IN_SIGNAL_STATUS_MAX;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_MAX);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -972,15 +962,11 @@ TEST_F(AVInputInit, onInputStatusChangeOn_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("startInput"), _T("{\"portId\": \"0\" , \"typeOfInput\":\"HDMI\", \"requestAudioMix\": true, \"plane\" : 1, \"topMost\" : true}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_status.isPresented = true;
-    dsAVStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS, &eventData, 0);
+    plugin->OnHdmiInStatus(dsHDMI_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
@@ -1005,13 +991,11 @@ TEST_F(AVInputInit, onInputStatusChangeOff_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
+   
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("stopInput"), _T("{\"typeOfInput\":\"HDMI\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_status.isPresented = false;
+    plugin->OnHdmiInStatus(dsHDMI_IN_PORT_0, false);
 
     dsAVStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS, &eventData, 0);
 
@@ -1038,14 +1022,10 @@ TEST_F(AVInputInit, onInputStatusChangeOn_COMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("startInput"), _T("{\"portId\": \"0\" , \"typeOfInput\":\"COMPOSITE\", \"requestAudioMix\": true, \"plane\" : 1, \"topMost\" : true}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_status.isPresented = true;
-    dsAVStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS, &eventData, 0);
+    plugin->OnCompositeInStatus(dsCOMPOSITE_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
@@ -1070,14 +1050,10 @@ TEST_F(AVInputInit, onInputStatusChangeOff_COMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("stopInput"), _T("{\"typeOfInput\":\"COMPOSITE\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_status.isPresented = false;
-    dsAVStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS, &eventData, 0);
+    plugin->OnCompositeInStatus(dsCOMPOSITE_IN_PORT_0, false);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
