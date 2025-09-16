@@ -18,12 +18,14 @@
 **/
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "AVInput.h"
 // <pca>
 #include "AVInputImplementation.h"
 #include "COMLinkMock.h"
 #include "WorkerPoolImplementation.h"
+#include "WrapsMock.h"
 // </pca>
 
 #include "CompositeInputMock.h"
