@@ -5020,7 +5020,6 @@ namespace Plugin {
         }
         else
         {
-#ifdef HAS_HAL_GETCMSCAPS
             // Extract color and component from input parameters
             std::string color = parameters.HasLabel("color") ? parameters["color"].String() : "";
             std::string component = parameters.HasLabel("component") ? parameters["component"].String() : "";
@@ -5064,12 +5063,7 @@ namespace Plugin {
                 LOGERR("Failed to get CMS param from local storage");
                 returnResponse(false);
             }
-#else
-            LOGINFO("Exit: GetCMSCaps is not implemented in the HAL.");
-            returnResponse(false);
-#endif
         }
-        returnResponse(false);
     }
 
     uint32_t AVOutputTV::setCMS(const JsonObject& parameters, JsonObject& response)
@@ -5161,7 +5155,6 @@ namespace Plugin {
         }
         else
         {
-#ifdef HAS_HAL_GETCMSCAPS
             bool status = setCMSParam(parameters);
             if (status) {
                 LOGINFO("setCMS success");
@@ -5170,12 +5163,7 @@ namespace Plugin {
                 LOGERR("setCMS failed");
                 returnResponse(false);
             }
-#else
-            LOGINFO("Exit: GetCMSCaps is not implemented in the HAL.");
-            returnResponse(false);
-#endif
         }
-        returnResponse(false);
     }
 
     uint32_t AVOutputTV::resetCMS(const JsonObject& parameters, JsonObject& response)
@@ -5285,7 +5273,6 @@ namespace Plugin {
         }
         else
         {
-#ifdef HAS_HAL_GETCMSCAPS
             if (isSetRequiredForParam(parameters, "CMS")) {
                 LOGINFO("Proceed with SetCMSState \n");
                 tvError_t ret = SetCMSState(false);
@@ -5301,18 +5288,13 @@ namespace Plugin {
                 returnResponse(false);
             }
             returnResponse(true);
-#else
-            LOGINFO("Exit: GetCMSCaps is not implemented in the HAL.");
-            returnResponse(false);
-#endif
         }
-        returnResponse(false);
     }
 
     uint32_t AVOutputTV::getCMSCapsV2(const JsonObject& parameters, JsonObject& response)
     {
         LOGINFO("Entry: getCMSCapsV2");
-#ifdef HAS_HAL_GETCMSCAPS
+
         int max_hue = 0, max_saturation = 0, max_luma = 0;
         tvDataComponentColor_t* colorArray = nullptr;
         tvComponentType_t* componentArray = nullptr;
@@ -5360,11 +5342,6 @@ namespace Plugin {
 
         LOGINFO("Exit: getCMSCapsV2");
         returnResponse(true);
-#else
-        response["platformSupport"] = false;
-        LOGINFO("Exit: GetCMSCaps is not implemented in the HAL.");
-        returnResponse(false);
-#endif
     }
 
     uint32_t AVOutputTV::getCMSCaps(const JsonObject& parameters, JsonObject& response)
