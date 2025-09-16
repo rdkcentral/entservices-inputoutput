@@ -1060,7 +1060,7 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInAllmStatus(dsHDMI_IN_PORT_0,true)
+    plugin->OnHdmiInAllmStatus(dsHDMI_IN_PORT_0,true);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
@@ -1086,7 +1086,7 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_HDMI_VRR)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0,dsVRR_HDMI_VRR)
+    plugin->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0,dsVRR_HDMI_VRR);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
