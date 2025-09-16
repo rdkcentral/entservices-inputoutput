@@ -160,7 +160,6 @@ namespace Plugin {
         }
     }
 
-    // <pca>
     void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
     {
         Core::JSON::ArrayType<InputDeviceJson> deviceArray;
@@ -175,7 +174,6 @@ namespace Plugin {
             _parent.Notify(_T("onDevicesChanged"), eventPayload);
         }
     }
-    // </pca>
 
 } // namespace Plugin
 } // namespace WPEFramework

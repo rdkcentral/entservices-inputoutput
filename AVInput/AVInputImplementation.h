@@ -45,10 +45,7 @@
 #define DEFAULT_INPUT_VOL_LEVEL 100
 
 using ParamsType = boost::variant<
-    // <pca>
-    //string&,                                            // OnDevicesChanged
     WPEFramework::Exchange::IAVInput::IInputDeviceIterator* const,  // OnDevicesChanged
-    // </pca>
     std::tuple<int, string, string>,                                // OnSignalChanged
     std::tuple<int, string, string, int>,                           // OnInputStatusChanged
     std::tuple<int, string, int, int, bool, int, int>,              // VideoStreamInfoUpdate
@@ -206,10 +203,6 @@ namespace Plugin {
         void Dispatch(Event event, const ParamsType params);
 
         static string currentVideoMode(bool& success);
-
-        // <pca>
-        //JsonArray devicesToJson(Exchange::IAVInput::IInputDeviceIterator* devices);
-        // </pca>
 
         bool getALLMStatus(int iPort);
         bool getVRRStatus(int iPort, dsHdmiInVrrStatus_t* vrrStatus);

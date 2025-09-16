@@ -428,22 +428,8 @@ namespace Plugin {
 
         switch (event) {
         case ON_AVINPUT_DEVICES_CHANGED: {
-            // <pca>
-            // if (const string* devices = boost::get<string>(&params)) {
 
-            //     std::list<IAVInput::IDevicesChangedNotification*>::const_iterator index(_devicesChangedNotifications.begin());
-
-            //     printf("*** _DEBUG: printf: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices->c_str());
-            //     LOGINFO("*** _DEBUG: ON_AVINPUT_DEVICES_CHANGED: devices=%s\n", devices->c_str());
-
-            //     while (index != _devicesChangedNotifications.end()) {
-            //         (*index)->OnDevicesChanged(*devices);
-            //         ++index;
-            //     }
-            // }
             if (auto* const devices = boost::get<Exchange::IAVInput::IInputDeviceIterator* const>(&params)) {
-
-                printf("*** _DEBUG: printf: ON_AVINPUT_DEVICES_CHANGED");
                 LOGINFO("ON_AVINPUT_DEVICES_CHANGED");
 
                 std::list<IAVInput::IDevicesChangedNotification*>::const_iterator index(_devicesChangedNotifications.begin());
@@ -453,7 +439,6 @@ namespace Plugin {
                     ++index;
                 }
             }
-            // </pca>
             break;
         }
         case ON_AVINPUT_SIGNAL_CHANGED: {
@@ -557,10 +542,8 @@ namespace Plugin {
     Core::hresult AVInputImplementation::NumberOfInputs(uint32_t& numberOfInputs, bool& success)
     {
         try {
-            printf("*** _DEBUG: AVInputImplementation::NumberOfInputs: Calling HdmiInput::getNumberOfInputs...\n");
             numberOfInputs = device::HdmiInput::getInstance().getNumberOfInputs();
             success = true;
-            printf("*** _DEBUG: AVInputImplementation::NumberOfInputs: numberOfInputs=%d\n", numberOfInputs);
         } catch (...) {
             LOGERR("Exception caught");
             success = false;
@@ -648,27 +631,6 @@ namespace Plugin {
 
         return Core::ERROR_NONE;
     }
-
-    // <pca>
-    // JsonArray AVInputImplementation::devicesToJson(Exchange::IAVInput::IInputDeviceIterator* devices)
-    // {
-    //     JsonArray deviceArray;
-    //     if (devices != nullptr) {
-    //         WPEFramework::Exchange::IAVInput::InputDevice device;
-
-    //         devices->Reset(0);
-
-    //         while (devices->Next(device)) {
-    //             JsonObject obj;
-    //             obj["id"] = device.id;
-    //             obj["locator"] = device.locator;
-    //             obj["connected"] = device.connected;
-    //             deviceArray.Add(obj);
-    //         }
-    //     }
-    //     return deviceArray;
-    // }
-    // </pca>
 
     Core::hresult AVInputImplementation::getInputDevices(const int typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice> &inputDeviceList)
     {
@@ -798,15 +760,8 @@ namespace Plugin {
             return;
         }
 
-        // <pca>
-        // JsonArray jsonArray = devicesToJson(devices);
-        // string jsonString;
-        // jsonArray.ToString(jsonString);
-        // ParamsType params = jsonString;
-        // dispatchEvent(ON_AVINPUT_STATUS_CHANGED, params);
         ParamsType params = devices;
         dispatchEvent(ON_AVINPUT_DEVICES_CHANGED, params);
-        // </pca>
     }
 
     /**
