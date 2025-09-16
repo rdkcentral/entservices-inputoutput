@@ -23,6 +23,7 @@
 // <pca>
 #include "AVInputImplementation.h"
 #include "COMLinkMock.h"
+#include "WorkerPoolImplementation.h"
 // </pca>
 
 #include "CompositeInputMock.h"
@@ -42,8 +43,21 @@ protected:
     Core::ProxyType<Plugin::AVInput> plugin;
     // <pca>
     Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
+    Core::ProxyType<WorkerPoolImplementation> workerPool;
     NiceMock<COMLinkMock> comLinkMock;
+    NiceMock<ServiceMock> service;
+    WrapsImplMock *p_wrapsImplMock   = nullptr;
+    ServiceMock  *p_serviceMock  = nullptr;
+    AVInputMock *p_avInputMock = nullptr;
+
+    Exchange::IAVInput::IDevicesChangedNotification *OnDevicesChangedNotification = nullptr;
+    Exchange::IAVInput::ISignalChangedNotification *OnSignalChangedNotification = nullptr;
+    Exchange::IAVInput::IInputStatusChangedNotification *OnInputStatusChangedNotification = nullptr;
+    Exchange::IAVInput::IVideoStreamInfoUpdateNotification *OnVideoStreamInfoUpdateNotification = nullptr;
+    Exchange::IAVInput::IGameFeatureStatusUpdateNotification *OnGameFeatureStatusUpdateNotification = nullptr;
+    Exchange::IAVInput::IHdmiContentTypeUpdateNotification *OnHdmiContentTypeUpdateNotification = nullptr;
     // </pca>
+
     Core::JSONRPC::Handler& handler;
     DECL_CORE_JSONRPC_CONX connection;
     string response;
@@ -51,18 +65,105 @@ protected:
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
-        , INIT_CONX(1, 0)
+        // <pca>
+        //, INIT_CONX(1, 0)
+        , INIT_CONX(1, 0) , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
+            2, Core::Thread::DefaultStackSize(), 16))
+        // </pca>
     {
         // <pca>
+        p_serviceMock = new NiceMock <ServiceMock>;
+
+        p_avInputMock = new NiceMock <AVInputMock>;
+
+        p_wrapsImplMock  = new NiceMock <WrapsImplMock>;
+        Wraps::setImpl(p_wrapsImplMock);
+
+        ON_CALL(*p_avInputMock, Register(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](Exchange::IDevicesChangedNotification::OnDevicesChangedNotification *notification){
+                OnDevicesChangedNotification = notification;
+                return Core::ERROR_NONE;;
+            }));
+
+        ON_CALL(*p_avInputMock, Register(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](Exchange::ISignalChangedNotification *notification){
+                OnSignalChangedNotification = notification;
+                return Core::ERROR_NONE;;
+            }));
+
+        ON_CALL(*p_avInputMock, Register(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](Exchange::IInputStatusChangedNotification *notification){
+                OnInputStatusChangedNotification = notification;
+                return Core::ERROR_NONE;;
+            }));
+
+        ON_CALL(*p_avInputMock, Register(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](Exchange::IVideoStreamInfoUpdateNotification *notification){
+                OnVideoStreamInfoUpdateNotification = notification;
+                return Core::ERROR_NONE;;
+            }));
+
+        ON_CALL(*p_avInputMock, Register(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](Exchange::IGameFeatureStatusUpdateNotification *notification){
+                OnGameFeatureStatusUpdateNotification = notification;
+                return Core::ERROR_NONE;;
+            }));
+
+        ON_CALL(*p_avInputMock, Register(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](Exchange::IHdmiContentTypeUpdateNotification *notification){
+                OnHdmiContentTypeUpdateNotification = notification;
+                return Core::ERROR_NONE;;
+            }));
+
         ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
         .WillByDefault(::testing::Invoke(
         [&](const RPC::Object& object, const uint32_t waitTime, uint32_t& connectionId) {
             AVInputImpl = Core::ProxyType<Plugin::AVInputImplementation>::Create();
             return &AVInputImpl;
             }));
+
+        Core::IWorkerPool::Assign(&(*workerPool));
+        workerPool->Run();
+
+        plugin->Initialize(&service);
         // </pca>
     }
-    virtual ~AVInputTest() = default;
+
+    // <pca>
+    //virtual ~AVInputTest() = default;
+    virtual ~AVInputTest()
+    {
+        plugin->Deinitialize(&service);
+
+        Core::IWorkerPool::Assign(nullptr);
+        workerPool.Release();
+
+        if (p_serviceMock != nullptr)
+        {
+            delete p_serviceMock;
+            p_serviceMock = nullptr;
+        }
+
+        if (p_avInputMock != nullptr)
+        {
+            delete p_avInputMock;
+            p_avInputMock = nullptr;
+        }
+
+        Wraps::setImpl(nullptr);
+        if (p_wrapsImplMock != nullptr)
+        {
+            delete p_wrapsImplMock;
+            p_wrapsImplMock = nullptr;
+        }
+    }
+    // </pca>
 };
 
 class AVInputDsTest : public AVInputTest {
