@@ -26,6 +26,7 @@
 #include "COMLinkMock.h"
 #include "WorkerPoolImplementation.h"
 #include "WrapsMock.h"
+#include "AVInputMock.h"
 // </pca>
 
 #include "CompositeInputMock.h"
