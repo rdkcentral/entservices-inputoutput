@@ -82,44 +82,44 @@ protected:
         p_wrapsImplMock  = new NiceMock <WrapsImplMock>;
         Wraps::setImpl(p_wrapsImplMock);
 
-        ON_CALL(*p_avInputMock, Register(::testing::_))
+        ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IDevicesChangedNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
-            [&](Exchange::IDevicesChangedNotification::OnDevicesChangedNotification *notification){
+            [&](Exchange::IAVInput::IDevicesChangedNotification *notification){
                 OnDevicesChangedNotification = notification;
                 return Core::ERROR_NONE;;
             }));
 
-        ON_CALL(*p_avInputMock, Register(::testing::_))
+        ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::ISignalChangedNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
-            [&](Exchange::ISignalChangedNotification *notification){
+            [&](Exchange::IAVInput::ISignalChangedNotification *notification){
                 OnSignalChangedNotification = notification;
                 return Core::ERROR_NONE;;
             }));
 
-        ON_CALL(*p_avInputMock, Register(::testing::_))
+        ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IInputStatusChangedNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
-            [&](Exchange::IInputStatusChangedNotification *notification){
+            [&](Exchange::IAVInput::IInputStatusChangedNotification *notification){
                 OnInputStatusChangedNotification = notification;
                 return Core::ERROR_NONE;;
             }));
 
-        ON_CALL(*p_avInputMock, Register(::testing::_))
+        ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IVideoStreamInfoUpdateNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
-            [&](Exchange::IVideoStreamInfoUpdateNotification *notification){
+            [&](Exchange::IAVInput::IVideoStreamInfoUpdateNotification *notification){
                 OnVideoStreamInfoUpdateNotification = notification;
                 return Core::ERROR_NONE;;
             }));
 
-        ON_CALL(*p_avInputMock, Register(::testing::_))
+        ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IGameFeatureStatusUpdateNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
-            [&](Exchange::IGameFeatureStatusUpdateNotification *notification){
+            [&](Exchange::IAVInput::IGameFeatureStatusUpdateNotification *notification){
                 OnGameFeatureStatusUpdateNotification = notification;
                 return Core::ERROR_NONE;;
             }));
 
-        ON_CALL(*p_avInputMock, Register(::testing::_))
+        ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IHdmiContentTypeUpdateNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
-            [&](Exchange::IHdmiContentTypeUpdateNotification *notification){
+            [&](Exchange::IAVInput::IHdmiContentTypeUpdateNotification *notification){
                 OnHdmiContentTypeUpdateNotification = notification;
                 return Core::ERROR_NONE;;
             }));
