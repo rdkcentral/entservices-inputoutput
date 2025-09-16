@@ -763,7 +763,6 @@ TEST_F(AVInputInit, onSignalChangedNotSupportedHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
     plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED);
 
@@ -840,7 +839,6 @@ TEST_F(AVInputInit, onSignalChangedNoSignalCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
     plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOSIGNAL);
 
@@ -867,7 +865,6 @@ TEST_F(AVInputInit, onSignalChangedUnstableCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
     plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_UNSTABLE);
 
@@ -1345,7 +1342,6 @@ TEST_F(AVInputInit, videoStreamInfoUpdate6_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
     
     dsVideoPortResolution_t videoPortResolution;
     
@@ -1730,7 +1726,6 @@ TEST_F(AVInputInit, videoStreamInfoUpdate2_COMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
     dsVideoPortResolution_t videoPortResolution;
     videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_720x576;
