@@ -20,6 +20,10 @@
 #include <gtest/gtest.h>
 
 #include "AVInput.h"
+// <pca>
+#include "AVInputImplementation.h"
+#include "COMLinkMock.h"
+// </pca>
 
 #include "CompositeInputMock.h"
 #include "FactoriesImplementation.h"
@@ -36,6 +40,10 @@ using ::testing::NiceMock;
 class AVInputTest : public ::testing::Test {
 protected:
     Core::ProxyType<Plugin::AVInput> plugin;
+    // <pca>
+    Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
+    NiceMock<COMLinkMock> comLinkMock;
+    // </pca>
     Core::JSONRPC::Handler& handler;
     DECL_CORE_JSONRPC_CONX connection;
     string response;
@@ -45,6 +53,14 @@ protected:
         , handler(*(plugin))
         , INIT_CONX(1, 0)
     {
+        // <pca>
+        ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+        [&](const RPC::Object& object, const uint32_t waitTime, uint32_t& connectionId) {
+            AVInputImpl = Core::ProxyType<Plugin::AVInputImplementation>::Create();
+            return &AVInputImpl;
+            }));
+        // </pca>
     }
     virtual ~AVInputTest() = default;
 };
