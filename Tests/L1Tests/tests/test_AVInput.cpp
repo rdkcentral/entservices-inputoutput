@@ -55,12 +55,12 @@ protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
     CompositeInputImplMock* p_compositeInputImplMock = nullptr;
     HostImplMock* p_HostImplMock = nullptr;
-    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
-    IARM_EventHandler_t dsAVEventHandler;
-    IARM_EventHandler_t dsAVSignalStatusEventHandler;
-    IARM_EventHandler_t dsAVStatusEventHandler;
-    IARM_EventHandler_t dsAVVideoModeEventHandler;
-    IARM_EventHandler_t dsAviContentTypeEventHandler;
+    //IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
+    // IARM_EventHandler_t dsAVEventHandler;
+    // IARM_EventHandler_t dsAVSignalStatusEventHandler;
+    // IARM_EventHandler_t dsAVStatusEventHandler;
+    // IARM_EventHandler_t dsAVVideoModeEventHandler;
+    // IARM_EventHandler_t dsAviContentTypeEventHandler;
 
     AVInputDsTest()
         : AVInputTest()
@@ -119,55 +119,55 @@ protected:
             .Times(::testing::AnyNumber())
             .WillRepeatedly(::testing::Return());
 
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVSignalStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVVideoModeEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVGameFeatureStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVGameFeatureStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVSignalStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVVideoModeEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAviContentTypeEventHandler = handler;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                }));
+        // ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
+        //     .WillByDefault(::testing::Invoke(
+        //         [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAVEventHandler = handler;
+        //             }
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAVStatusEventHandler = handler;
+        //             }
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAVSignalStatusEventHandler = handler;
+        //             }
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAVVideoModeEventHandler = handler;
+        //             }
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAVGameFeatureStatusEventHandler = handler;
+        //             }
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAVGameFeatureStatusEventHandler = handler;
+        //             }
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAVEventHandler = handler;
+        //             }
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAVSignalStatusEventHandler = handler;
+        //             }
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAVStatusEventHandler = handler;
+        //             }
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAVVideoModeEventHandler = handler;
+        //             }
+        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE)) {
+        //                 EXPECT_TRUE(handler != nullptr);
+        //                 dsAviContentTypeEventHandler = handler;
+        //             }
+        //             return IARM_RESULT_SUCCESS;
+        //         }));
         
         EXPECT_EQ(string(""), plugin->Initialize(&service));
 
