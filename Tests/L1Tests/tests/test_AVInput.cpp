@@ -1195,7 +1195,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_59dot94;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0,videoPortResolution)
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0,videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
