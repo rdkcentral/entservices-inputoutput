@@ -75,7 +75,7 @@ protected:
         // </pca>
     {
         // <pca>
-        TEST_LOG("*** _DEBUG: AVInputTest Constructor");
+        TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 1");
         p_serviceMock = new NiceMock <ServiceMock>;
 
         p_avInputMock = new NiceMock <AVInputMock>;
@@ -132,10 +132,15 @@ protected:
             return &AVInputImpl;
             }));
 
+        TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 2");
+
         Core::IWorkerPool::Assign(&(*workerPool));
+        TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 3");
         workerPool->Run();
+        TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 4");
 
         plugin->Initialize(&service);
+        TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 5");
         // </pca>
     }
 
@@ -2008,7 +2013,7 @@ TEST_F(AVInputInit, aviContentTypeUpdate_HDMI)
 
 TEST_F(AVInputTest, contentProtected)
 {
-    TEST_LOG("TEST_F(AVInputTest, contentProtected): entry");
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): entry");
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
 }
