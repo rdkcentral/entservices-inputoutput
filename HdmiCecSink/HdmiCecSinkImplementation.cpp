@@ -628,6 +628,7 @@ namespace WPEFramework
             m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
 
             // Device / CEC defaults
+            m_deviceType = 0;
             m_numofHdmiInput = 0;
             m_numberOfDevices = 0;
             m_logicalAddressAllocated = LogicalAddress::UNREGISTERED;
