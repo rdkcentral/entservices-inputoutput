@@ -601,45 +601,61 @@ namespace WPEFramework
 //=========================================== HdmiCecSinkImplementation =========================================
 
        HdmiCecSinkImplementation::HdmiCecSinkImplementation()
-       : smConnection(nullptr)
+        : deviceList()
+        , hdmiInputs()
+        , m_currentActiveSource(-1)
+        , m_numberOfDevices(0)
+        , m_audioDevicePowerStatusRequested(false)
+        , logicalAddressDeviceType("None")
+        , cecSettingEnabled(true)
+        , cecOTPSettingEnabled(true)
+        , cecEnableStatus(false)
+        , hdmiCecAudioDeviceConnected(false)
+        , m_isHdmiInConnected(false)
+        , m_numofHdmiInput(0)
+        , m_deviceType(0)
+        , m_logicalAddressAllocated(LogicalAddress::UNREGISTERED)
+        , m_pollThread()
+        , m_pollThreadState(POLL_THREAD_STATE_NONE)
+        , m_pollNextState(POLL_THREAD_STATE_NONE)
+        , m_pollThreadExit(false)
+        , m_sleepTime(0)
+        , m_sendKeyEventThreadExit(false)
+        , m_sendKeyEventThreadRun(false)
+        , m_isAudioStatusInfoUpdated(false)
+        , m_audioStatusReceived(false)
+        , m_audioStatusTimerStarted(false)
+        , m_sendKeyEventThread()
+        , m_video_latency(DEFAULT_VIDEO_LATENCY)
+        , m_latency_flags(DEFAULT_LATENCY_FLAGS)
+        , m_audio_output_delay(DEFAULT_AUDIO_OUTPUT_DELAY)
+        , m_arcRoutingThread()
+        , m_currentArcRoutingState(ARC_STATE_ARC_TERMINATED)
+        , m_semSignaltoArcRoutingThread(0)
+        , m_arcstarting(false)
+        , smConnection(nullptr)
+        , m_connectedDevices()
         , msgProcessor(nullptr)
         , msgFrameListener(nullptr)
+        , _powerManagerPlugin()
         , _pwrMgrNotification(*this)
         , _registeredEventHandlers(false)
-       {
-           LOGWARN("Initlaizing HdmiCecSinkImplementation");
-           // Thread/control flags
-            m_pollThreadState = POLL_THREAD_STATE_NONE;
-            m_pollNextState = POLL_THREAD_STATE_NONE;
-            m_pollThreadExit = false;
-            m_sleepTime = HDMICECSINK_PING_INTERVAL_MS;
+        {
+            LOGWARN("Initializing HdmiCecSinkImplementation");
 
-            // Send-key thread flags/queue
-            m_sendKeyEventThreadExit = false;
-            m_sendKeyEventThreadRun = false;
+            // Deterministic initialization for all device slots
+            for (int i = 0; i < 16; ++i) {
+                deviceList[i].clear();
+                deviceList[i].m_isDevicePresent = false;
+                deviceList[i].m_isRequestRetry = 0;
+                deviceList[i].m_isRequested = CECDeviceParams::REQUEST_NONE;
+            }
 
-            // Audio / latency defaults
-            m_video_latency = DEFAULT_VIDEO_LATENCY;
-            m_latency_flags = DEFAULT_LATENCY_FLAGS;
-            m_audio_output_delay = DEFAULT_AUDIO_OUTPUT_DELAY;
-
-            // ARC defaults
-            m_arcstarting = false;
-            m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
-
-            // Device / CEC defaults
-            m_deviceType = 0;
-            m_numofHdmiInput = 0;
-            m_numberOfDevices = 0;
-            m_logicalAddressAllocated = LogicalAddress::UNREGISTERED;
-            m_currentActiveSource = -1;
-            m_isHdmiInConnected = false;
-            hdmiCecAudioDeviceConnected = false;
-            m_isAudioStatusInfoUpdated = false;
-            m_audioStatusReceived = false;
-            m_audioStatusTimerStarted = false;
-            m_audioDevicePowerStatusRequested = false;
-       }
+            // Ensure queues/flags are clean
+            while (!m_SendKeyQueue.empty()) {
+                m_SendKeyQueue.pop();
+            }
+        }
 
        HdmiCecSinkImplementation::~HdmiCecSinkImplementation()
        {
@@ -3091,6 +3107,11 @@ namespace WPEFramework
             _instance->getPhysicalAddress();
 
             smConnection = new Connection(LogicalAddress::UNREGISTERED,false,"ServiceManager::Connection::");
+            if(!smConnection)
+            {
+                LOGERR("smConnection is NULL");
+                return;
+            }
             smConnection->open();
             allocateLogicalAddress(DeviceType::TV);
             LOGINFO("logical address allocalted: %x  \n",m_logicalAddressAllocated);
@@ -3101,16 +3122,15 @@ namespace WPEFramework
                 LibCCEC::getInstance().addLogicalAddress(logicalAddress);
                 smConnection->setSource(logicalAddress);
             }
-            if(smConnection)
-            {
-                msgProcessor = new HdmiCecSinkProcessor(*smConnection);
-                msgFrameListener = new HdmiCecSinkFrameListener(*msgProcessor);
-                LOGWARN("Start Thread %p", smConnection );
-                m_pollThreadState = POLL_THREAD_STATE_POLL;
-                m_pollNextState = POLL_THREAD_STATE_NONE;
-                m_pollThreadExit = false;
-                m_pollThread = std::thread(threadRun);
-            }
+
+            msgProcessor = new HdmiCecSinkProcessor(*smConnection);
+            msgFrameListener = new HdmiCecSinkFrameListener(*msgProcessor);
+            LOGWARN("Start Thread %p", smConnection );
+            m_pollThreadState = POLL_THREAD_STATE_POLL;
+            m_pollNextState = POLL_THREAD_STATE_NONE;
+            m_pollThreadExit = false;
+            m_pollThread = std::thread(threadRun);
+
             cecEnableStatus = true;
 
             params["cecEnable"] = string("true");
@@ -3125,7 +3145,7 @@ namespace WPEFramework
 
         void HdmiCecSinkImplementation::CECDisable(void)
         {
-            std::unique_lock<std::mutex> lock(m_enableMutex);
+            std::lock_guard<std::mutex> lock(m_enableMutex);
             JsonObject params;
             LOGINFO("Entered CECDisable ");
             if(!cecEnableStatus)
@@ -3136,19 +3156,10 @@ namespace WPEFramework
 
             if(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)
             {
-                // release enable lock before initiating/ waiting for ARC stop
-                lock.unlock();
                 stopArc();
-
-                // wait for the ARC state to become TERMINATED without holding m_enableMutex
-                const unsigned int maxRetries = 8; // e.g. total wait ~4s (8 * 500ms)
-                unsigned int retries = 0;
-                while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED && retries++ < maxRetries) {
+                while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED) {
                     usleep(500000);
                 }
-
-                // re-acquire the enable lock for the rest of CECDisable cleanup
-                lock.lock();
             }
 
             LOGINFO(" CECDisable ARC stopped ");
