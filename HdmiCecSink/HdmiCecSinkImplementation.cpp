@@ -609,6 +609,7 @@ namespace WPEFramework
        {
            LOGWARN("Initlaizing HdmiCecSinkImplementation");
            m_arcstarting = false;
+           m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
        }
 
        HdmiCecSinkImplementation::~HdmiCecSinkImplementation()
