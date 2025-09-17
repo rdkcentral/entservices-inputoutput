@@ -601,10 +601,10 @@ namespace WPEFramework
 //=========================================== HdmiCecSinkImplementation =========================================
 
        HdmiCecSinkImplementation::HdmiCecSinkImplementation()
-       : _pwrMgrNotification(*this)
-        , smConnection(nullptr)
+       : smConnection(nullptr)
         , msgProcessor(nullptr)
         , msgFrameListener(nullptr)
+        , _pwrMgrNotification(*this)
         , _registeredEventHandlers(false)
        {
            LOGWARN("Initlaizing HdmiCecSinkImplementation");
