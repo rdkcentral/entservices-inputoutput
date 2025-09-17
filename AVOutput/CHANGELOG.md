@@ -17,6 +17,10 @@ All notable changes to this RDK Service will be documented in this file.
 ### Added
 - Advance PQ Params
 
+## [1.1.4] - 2025-09-08
+### Fixed
+- Sync low latency for AVOutput initialization
+
 ## [1.1.3] - 2025-08-08
 ### Fixed
 - Fixed getDolbyVisionMode() for non DV content
