@@ -25,7 +25,6 @@
 #include "host.hpp"
 #include "UtilsgetRFCConfig.h"
 
-#include "dsMgr.h"
 #include "dsRpc.h"
 #include "dsDisplay.h"
 #include "videoOutputPort.hpp"
@@ -36,6 +35,8 @@
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
 #include "UtilsSearchRDKProfile.h"
+#include "exception.hpp"
+#include "hdmiIn.hpp"
 
 #define HDMICECSINK_METHOD_SET_ENABLED 			"setEnabled"
 #define HDMICECSINK_METHOD_GET_ENABLED 			"getEnabled"
@@ -765,14 +766,7 @@ namespace WPEFramework
               logicalAddress = 0xFF;
               // load persistence setting
               loadSettings();
-
-              int err;
-              dsHdmiInGetNumberOfInputsParam_t hdmiInput;
-#ifdef IO_HCEC_ENABLE_IARM
-              InitializeIARM();
-#else
-              device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE[HdmiCecSink]");
-#endif /* IO_HCEC_ENABLE_IARM */
+              device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::CecSink");
               m_sendKeyEventThreadExit = false;
               m_sendKeyEventThread = std::thread(threadSendKeyEvent);
 
@@ -798,23 +792,8 @@ namespace WPEFramework
                    }
                }
 
-#ifdef IO_HCEC_ENABLE_IARM
-               err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
-                               IARM_BUS_DSMGR_API_dsHdmiInGetNumberOfInputs,
-                               (void *)&hdmiInput,
-                               sizeof(hdmiInput));
-
-              if (err == IARM_RESULT_SUCCESS && hdmiInput.result == dsERR_NONE)
-              {
-                   LOGINFO("Number of Inputs [%d] \n", hdmiInput.numHdmiInputs );
-                   m_numofHdmiInput = hdmiInput.numHdmiInputs;
-              }else{
-                   LOGINFO("Not able to get Numebr of inputs so defaulting to 3 \n");
-                   m_numofHdmiInput = 3;
-               }
-#else
                m_numofHdmiInput = device::HdmiInput::getInstance().getNumberOfInputs();
-#endif /* IO_HCEC_ENABLE_IARM */
+
                LOGINFO("initalize inputs \n");
 
               for (int i = 0; i < m_numofHdmiInput; i++){
@@ -903,11 +882,7 @@ namespace WPEFramework
 	    }
 
             HdmiCecSink::_instance = nullptr;
-#ifdef IO_HCEC_ENABLE_IARM
-           DeinitializeIARM();
-#else
-           device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
-#endif /* IO_HCEC_ENABLE_IARM */
+            device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
 
         try
         {
@@ -921,24 +896,6 @@ namespace WPEFramework
         }
 
 	    LOGWARN(" HdmiCecSink Deinitialize() Done");
-       }
-
-       const void HdmiCecSink::InitializeIARM()
-       {
-            if (Utils::IARM::init())
-            {
-                IARM_Result_t res;
-                IARM_CHECK( IARM_Bus_RegisterEventHandler(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, dsHdmiEventHandler) );
-           }
-       }
-
-       void HdmiCecSink::DeinitializeIARM()
-       {
-            if (Utils::IARM::isConnected())
-            {
-                IARM_Result_t res;
-                IARM_CHECK( IARM_Bus_RemoveEventHandler(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, dsHdmiEventHandler) );
-            }
        }
 
         void HdmiCecSink::InitializePowerManager(PluginHost::IShell *service)
@@ -960,31 +917,14 @@ namespace WPEFramework
            }
        }
 
-#ifdef IO_HCEC_ENABLE_IARM
-       void HdmiCecSink::dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-       {
-            if(!HdmiCecSink::_instance)
-                return;
-
-            if (IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG == eventId)
-            {
-                IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                bool isHdmiConnected = eventData->data.hdmi_in_connect.isPortConnected;
-                dsHdmiInPort_t portId = eventData->data.hdmi_in_connect.port;
-                LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG event port: %d data:%d \r\n",portId,  isHdmiConnected);
-                HdmiCecSink::_instance->onHdmiHotPlug(portId,isHdmiConnected);
-            }
-       }
-#else
         void HdmiCecSink::OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected)
         {
             if(!HdmiCecSink::_instance)
                 return;
 
-            LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG event port: %d isConnected: %d \r\n", port, isConnected);
+            LOGINFO("Received HdmiCecSink::OnHdmiInEventHotPlug event port: %d isConnected: %d \r\n", port, isConnected);
             HdmiCecSink::_instance->onHdmiHotPlug((int) port, isConnected);
         }
-#endif /* IO_HCEC_ENABLE_IARM */
 
        void HdmiCecSink::onPowerModeChanged(const PowerState currentState, const PowerState newState)
        {
@@ -2109,46 +2049,20 @@ namespace WPEFramework
 
 		void HdmiCecSink::CheckHdmiInState()
 		{
-			int err;
 			bool isAnyPortConnected = false;
-
-#ifdef IO_HCEC_ENABLE_IARM
-
-			dsHdmiInGetStatusParam_t params;
-            err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
-                            IARM_BUS_DSMGR_API_dsHdmiInGetStatus,
-                            (void *)&params,
-                            sizeof(params));
-
-            if(err == IARM_RESULT_SUCCESS && params.result == dsERR_NONE )
-            {
-           		for( int i = 0; i < m_numofHdmiInput; i++ )
-           		{
-           		    LOGINFO("Is HDMI In Port [%d] connected [%d] \n",i, params.status.isPortConnected[i]);
-					if ( params.status.isPortConnected[i] )
-					{
-						isAnyPortConnected = true;
-					}
-
-					LOGINFO("update Port Status [%d] \n", i);
-					hdmiInputs[i].update(params.status.isPortConnected[i]);
-           		}
-			}
-#else
 
             for( int i = 0; i < m_numofHdmiInput; i++ )
             {
-                //LOGINFO("update Port Status [%d] \n", i);
+                LOGINFO("update Port Status [%d] \n", i);
                 hdmiInputs[i].update(device::HdmiInput::getInstance().isPortConnected(i));
 
-                //LOGINFO("Is HDMI In Port [%d] connected [%d] \n",i, params.status.isPortConnected[i]);
+                LOGINFO("Is HDMI In Port [%d] connected [%d] \n",i, hdmiInputs[i].m_isConnected);
                 if ( hdmiInputs[i].m_isConnected )
                 {
                     isAnyPortConnected = true;
                 }
             }
 
-#endif /* IO_HCEC_ENABLE_IARM */
 			if ( isAnyPortConnected ) {
 				m_isHdmiInConnected = true;
 			} else {
@@ -3609,58 +3523,26 @@ namespace WPEFramework
 
        }
 
-#ifdef IO_HCEC_ENABLE_IARM
-      void HdmiCecSink::getHdmiArcPortID()
-      {
-         int err;
-         dsGetHDMIARCPortIdParam_t param;
-         unsigned int retryCount = 1;
-         do {
-            usleep(50000); // Sleep for 50ms before retrying
-            param.portId = -1; // Initialize to an invalid port ID
-            err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
-                                (char *)IARM_BUS_DSMGR_API_dsGetHDMIARCPortId,
-                                (void *)&param,
-                                sizeof(param));
-            if (IARM_RESULT_SUCCESS == err)
-            {
-                LOGINFO("HDMI ARC port ID HdmiArcPortID[%d] on retry count[%d]", param.portId, retryCount);
-                HdmiArcPortID = param.portId;
-                break;
-            }
-            else
-            {
-                LOGWARN("IARM_Bus_Call failed with error[%d], retry count[%d]", err, retryCount);
-            }
-        } while(retryCount++ <= 6);
-      }
-#else
-    void HdmiCecSink::getHdmiArcPortID()
-    {
-       int portId;
-       unsigned int retryCount = 1;
-       do {
-          usleep(50000); // Sleep for 50ms before retrying
-          portId = -1;
-#if 0 //just to verify compilation
-          device::HdmiInput::getInstance().getHDMIARCPortId(&portId);
-#else
-          portId = 0;
-#endif
-          if (-1 != portId)
-          {
-              LOGINFO("HDMI ARC port ID HdmiArcPortID[%d] on retry count[%d]", portId, retryCount);
-              HdmiArcPortID = portId;
-              break;
-          }
-          else
-          {
-              LOGWARN("getHDMIARCPortId failed for retry count[%d]", retryCount);
-          }
-      } while(retryCount++ <= 6);
-    }
-#endif /* IO_HCEC_ENABLE_IARM */
-
+       void HdmiCecSink::getHdmiArcPortID()
+       {
+			int portId;
+			unsigned int retryCount = 1;
+			do {
+				usleep(50000); // Sleep for 50ms before retrying
+				portId = -1;
+				device::HdmiInput::getInstance().getHDMIARCPortId(&portId);
+				if (-1 != portId)
+				{
+					LOGINFO("HDMI ARC port ID HdmiArcPortID[%d] on retry count[%d]", portId, retryCount);
+					HdmiArcPortID = portId;
+					break;
+				}
+				else
+				{
+					LOGWARN("getHDMIARCPortId failed for retry count[%d]", retryCount);
+				}
+			} while(retryCount++ <= 6);
+        }
 
       void HdmiCecSink::getCecVersion()
       {
