@@ -314,12 +314,9 @@ protected:
     }
 };
 
-// <pca> debug
-//TEST_F(AVInputTest, RegisteredMethods)
-TEST_F(AVInputInit, RegisteredMethods)
-// </pca>
+TEST_F(AVInputTest, RegisteredMethods)
 {
-    TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, RegisteredMethods): entry");
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, RegisteredMethods): entry");
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("numberOfInputs")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("currentVideoMode")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("contentProtected")));
