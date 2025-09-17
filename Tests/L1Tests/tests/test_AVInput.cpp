@@ -75,6 +75,7 @@ protected:
         // </pca>
     {
         // <pca>
+        TEST_LOG("*** _DEBUG: AVInputTest Constructor");
         p_serviceMock = new NiceMock <ServiceMock>;
 
         p_avInputMock = new NiceMock <AVInputMock>;
@@ -142,6 +143,7 @@ protected:
     //virtual ~AVInputTest() = default;
     virtual ~AVInputTest()
     {
+        TEST_LOG("*** _DEBUG: AVInputTest Destructor");
         plugin->Deinitialize(&service);
 
         Core::IWorkerPool::Assign(nullptr);
@@ -184,6 +186,7 @@ protected:
     AVInputDsTest()
         : AVInputTest()
     {
+        TEST_LOG("*** _DEBUG: AVInputDsTest Constructor");
         p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
         device::HdmiInput::setImpl(p_hdmiInputImplMock);
 
@@ -195,6 +198,7 @@ protected:
     }
     virtual ~AVInputDsTest() override
     {
+        TEST_LOG("*** _DEBUG: AVInputDsTest Destructor");
         device::HdmiInput::setImpl(nullptr);
         if (p_hdmiInputImplMock != nullptr)
         {
@@ -227,6 +231,7 @@ protected:
     AVInputInit()
         : AVInputDsTest()
     {
+        TEST_LOG("*** _DEBUG: AVInputInit Constructor");
         p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
 
@@ -289,6 +294,7 @@ protected:
 
     virtual ~AVInputInit() override
     {
+        TEST_LOG("*** _DEBUG: AVInputDsTest Destructor");
         dispatcher->Deactivate();
         dispatcher->Release();
         PluginHost::IFactories::Assign(nullptr);
@@ -305,6 +311,7 @@ protected:
 
 TEST_F(AVInputTest, RegisteredMethods)
 {
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, RegisteredMethods): entry");
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("numberOfInputs")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("currentVideoMode")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("contentProtected")));
