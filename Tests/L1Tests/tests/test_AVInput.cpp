@@ -2008,6 +2008,7 @@ TEST_F(AVInputInit, aviContentTypeUpdate_HDMI)
 
 TEST_F(AVInputTest, contentProtected)
 {
+    TEST_LOG("TEST_F(AVInputTest, contentProtected): entry");
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
 }
