@@ -3003,18 +3003,10 @@ namespace WPEFramework
                 }
 
                 std::unique_lock<std::mutex> lk(_instance->m_pollExitMutex);
-                bool signaled = _instance->m_ThreadExitCV.wait_for(
-                    lk,
-                    std::chrono::milliseconds(_instance->m_sleepTime),
-                    [&]{ return _instance->m_pollThreadExit; }
-                );
-
-                if (!signaled) {
-                    // timeout -> continue polling loop
+                if ( _instance->m_ThreadExitCV.wait_for(lk, std::chrono::milliseconds(_instance->m_sleepTime)) == std::cv_status::timeout )
                     continue;
-                } else {
-                    LOGINFO("Thread is going to Exit m_pollThreadExit %d\n", _instance->m_pollThreadExit);
-                }
+                else
+                    LOGINFO("Thread is going to Exit m_pollThreadExit %d\n", _instance->m_pollThreadExit );
 
             }
         }
