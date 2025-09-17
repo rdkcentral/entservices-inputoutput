@@ -25,7 +25,6 @@
 #include "host.hpp"
 #include "UtilsgetRFCConfig.h"
 
-#include "dsRpc.h"
 #include "dsDisplay.h"
 #include "videoOutputPort.hpp"
 #include "manager.hpp"
@@ -792,7 +791,17 @@ namespace WPEFramework
                    }
                }
 
-               m_numofHdmiInput = device::HdmiInput::getInstance().getNumberOfInputs();
+			   try
+			   {
+					m_numofHdmiInput = device::HdmiInput::getInstance().getNumberOfInputs();
+					LOGINFO("HdmiCecSink plugin m_numofHdmiInput %d", m_numofHdmiInput);
+			   }
+			   catch(const device::Exception& err)
+			   {
+					LOGINFO("HdmiCecSink plugin device::HdmiInput::getInstance().getNumberOfInputs failed");
+					m_numofHdmiInput = 3;
+					LOG_DEVICE_EXCEPTION0();
+			   }
 
                LOGINFO("initalize inputs \n");
 
@@ -826,76 +835,76 @@ namespace WPEFramework
 
        void HdmiCecSink::Deinitialize(PluginHost::IShell* /* service */)
        {
-           if(_powerManagerPlugin)
-           {
-               _powerManagerPlugin->Unregister(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
-               _powerManagerPlugin.Reset();
-           }
-           _registeredEventHandlers = false;
+			if(_powerManagerPlugin)
+			{
+				_powerManagerPlugin->Unregister(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
+				_powerManagerPlugin.Reset();
+			}
+			_registeredEventHandlers = false;
 
-		profileType = searchRdkProfile();
+			profileType = searchRdkProfile();
 
-		if (profileType == STB || profileType == NOT_FOUND)
-		{
-			LOGINFO("Invalid profile type for TV \n");
-			return ;
-		}
+			if (profileType == STB || profileType == NOT_FOUND)
+			{
+				LOGINFO("Invalid profile type for TV \n");
+				return ;
+			}
 
-	    CECDisable();
-	    m_currentArcRoutingState = ARC_STATE_ARC_EXIT;
+			CECDisable();
+			m_currentArcRoutingState = ARC_STATE_ARC_EXIT;
 
-            m_semSignaltoArcRoutingThread.release();
+				m_semSignaltoArcRoutingThread.release();
 
-            try
-	    {
-		if (m_arcRoutingThread.joinable())
-			m_arcRoutingThread.join();
-	    }
-	    catch(const std::system_error& e)
-	    {
-		LOGERR("system_error exception in thread join %s", e.what());
-	    }
-	    catch(const std::exception& e)
-	    {
-		LOGERR("exception in thread join %s", e.what());
-	    }
+			try
+			{
+				if (m_arcRoutingThread.joinable())
+					m_arcRoutingThread.join();
+			}
+			catch(const std::system_error& e)
+			{
+				LOGERR("system_error exception in thread join %s", e.what());
+			}
+			catch(const std::exception& e)
+			{
+				LOGERR("exception in thread join %s", e.what());
+			}
 
-	    {
-	        m_sendKeyEventThreadExit = true;
-                std::unique_lock<std::mutex> lk(m_sendKeyEventMutex);
-                m_sendKeyEventThreadRun = true;
-                m_sendKeyCV.notify_one();
-            }
+			{
+				m_sendKeyEventThreadExit = true;
+					std::unique_lock<std::mutex> lk(m_sendKeyEventMutex);
+					m_sendKeyEventThreadRun = true;
+					m_sendKeyCV.notify_one();
+			}
 
-	    try
-	    {
-            if (m_sendKeyEventThread.joinable())
-                m_sendKeyEventThread.join();
-	    }
-	    catch(const std::system_error& e)
-	    {
-		    LOGERR("system_error exception in thread join %s", e.what());
-	    }
-	    catch(const std::exception& e)
-	    {
-		    LOGERR("exception in thread join %s", e.what());
-	    }
+			try
+			{
+				if (m_sendKeyEventThread.joinable())
+					m_sendKeyEventThread.join();
+			}
+			catch(const std::system_error& e)
+			{
+				LOGERR("system_error exception in thread join %s", e.what());
+			}
+			catch(const std::exception& e)
+			{
+				LOGERR("exception in thread join %s", e.what());
+			}
 
-            HdmiCecSink::_instance = nullptr;
-            device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+			HdmiCecSink::_instance = nullptr;
+			device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
 
-        try
-        {
-            device::Manager::DeInitialize();
-            LOGINFO("HdmiCecSink plugin device::Manager::DeInitialize success");
-        }
-        catch(const device::Exception& err)
-        {
-            LOGINFO("HdmiCecSink plugin device::Manager::DeInitialize failed");
-            LOG_DEVICE_EXCEPTION0();
-        }
+			try
+			{
+				device::Manager::DeInitialize();
+				LOGINFO("HdmiCecSink plugin device::Manager::DeInitialize success");
+			}
+			catch(const device::Exception& err)
+			{
+				LOGINFO("HdmiCecSink plugin device::Manager::DeInitialize failed");
+				LOG_DEVICE_EXCEPTION0();
+			}
 
-	    LOGWARN(" HdmiCecSink Deinitialize() Done");
+			LOGWARN(" HdmiCecSink Deinitialize() Done");
        }
 
         void HdmiCecSink::InitializePowerManager(PluginHost::IShell *service)
