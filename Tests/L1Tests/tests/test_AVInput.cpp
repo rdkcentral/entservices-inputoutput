@@ -360,12 +360,17 @@ protected:
 
 TEST_F(AVInputInit, getInputDevices)
 {
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): entry");
     EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
         .WillOnce(::testing::Return(1));
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): Mark 1");
     EXPECT_CALL(*p_compositeInputImplMock, getNumberOfInputs())
         .WillOnce(::testing::Return(1));
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): Mark 2");
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getInputDevices"), _T("{}"), response));
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): response=" + response);
     EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\"},{\"id\":0,\"connected\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): exit");
 }
 
 TEST_F(AVInputInit, getInputDevices_HDMI)
