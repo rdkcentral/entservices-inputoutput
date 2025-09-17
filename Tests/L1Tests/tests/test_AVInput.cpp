@@ -291,19 +291,26 @@ TEST_F(AVInputDsTest, currentVideoMode)
 
 TEST_F(AVInputDsTest, getEdid2AllmSupport)
 {
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputDsTest, getEdid2AllmSupport)");
     EXPECT_CALL(*p_hdmiInputImplMock, getEdid2AllmSupport(::testing::_, ::testing::_))
         .WillOnce([](int iport, bool *allmSupport) {
             *allmSupport = true;
         });
 
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"0\",\"allmSupport\":true}"), response));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"0\"}"), response));
     EXPECT_EQ(response, string("{\"allmSupport\":true,\"success\":true}"));
 }
 
 TEST_F(AVInputDsTest, getEdid2AllmSupport_ErrorCase)
 {
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"test\",\"allmSupport\":true}"), response));
-    EXPECT_EQ(response, string(""));
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputDsTest, getEdid2AllmSupport_ErrorCase)");
+    EXPECT_CALL(*p_hdmiInputImplMock, getEdid2AllmSupport(::testing::_, ::testing::_))
+        .WillOnce([](int iport, bool *allmSupport) {
+            throw std::runtime_error("Mocked exception");
+        });
+
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"test\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":false}"));
 }
 
 TEST_F(AVInputDsTest, setEdid2AllmSupport)
