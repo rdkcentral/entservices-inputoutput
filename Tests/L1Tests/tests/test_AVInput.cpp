@@ -371,7 +371,7 @@ TEST_F(AVInputInit, getInputDevices)
     TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): response=%s", response.c_str());
     // <pca>
     //EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\"},{\"id\":0,\"connected\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
-    EXPECT_EQ(response, string("\"devices\":[{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"connected\":false}],\"success\":true}"));
+    EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"connected\":false}],\"success\":true}"));
     // </pca>
     TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): exit");
 }
