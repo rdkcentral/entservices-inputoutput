@@ -608,6 +608,7 @@ namespace WPEFramework
         , _registeredEventHandlers(false)
        {
            LOGWARN("Initlaizing HdmiCecSinkImplementation");
+           m_arcstarting = false;
        }
 
        HdmiCecSinkImplementation::~HdmiCecSinkImplementation()
