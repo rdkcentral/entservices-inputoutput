@@ -608,8 +608,36 @@ namespace WPEFramework
         , _registeredEventHandlers(false)
        {
            LOGWARN("Initlaizing HdmiCecSinkImplementation");
-           m_arcstarting = false;
-           m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+           // Thread/control flags
+            m_pollThreadState = POLL_THREAD_STATE_NONE;
+            m_pollNextState = POLL_THREAD_STATE_NONE;
+            m_pollThreadExit = false;
+            m_sleepTime = HDMICECSINK_PING_INTERVAL_MS;
+
+            // Send-key thread flags/queue
+            m_sendKeyEventThreadExit = false;
+            m_sendKeyEventThreadRun = false;
+
+            // Audio / latency defaults
+            m_video_latency = DEFAULT_VIDEO_LATENCY;
+            m_latency_flags = DEFAULT_LATENCY_FLAGS;
+            m_audio_output_delay = DEFAULT_AUDIO_OUTPUT_DELAY;
+
+            // ARC defaults
+            m_arcstarting = false;
+            m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+
+            // Device / CEC defaults
+            m_numofHdmiInput = 0;
+            m_numberOfDevices = 0;
+            m_logicalAddressAllocated = LogicalAddress::UNREGISTERED;
+            m_currentActiveSource = -1;
+            m_isHdmiInConnected = false;
+            hdmiCecAudioDeviceConnected = false;
+            m_isAudioStatusInfoUpdated = false;
+            m_audioStatusReceived = false;
+            m_audioStatusTimerStarted = false;
+            m_audioDevicePowerStatusRequested = false;
        }
 
        HdmiCecSinkImplementation::~HdmiCecSinkImplementation()
