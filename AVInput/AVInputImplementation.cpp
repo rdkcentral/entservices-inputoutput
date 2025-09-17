@@ -1123,35 +1123,6 @@ namespace Plugin {
     }
 
     // <pca>
-    uint32_t AVInput::getVRRFrameRateWrapper(const JsonObject& parameters, JsonObject& response)
-    {
-        LOGINFOMETHOD();
-        returnIfParamNotFound(parameters, "portId");
-        string sPortId = parameters["portId"].String();
-
-        int portId = 0;
-        dsHdmiInVrrStatus_t vrrStatus;
-        vrrStatus.vrrAmdfreesyncFramerate_Hz = 0;
-
-        try {
-                portId = stoi(sPortId);
-        }catch (const std::exception& err) {
-                LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
-                returnResponse(false);
-        }
-
-        bool result = getVRRStatus(portId, &vrrStatus);
-        if(result == true)
-        {
-                response["currentVRRVideoFrameRate"] = vrrStatus.vrrAmdfreesyncFramerate_Hz;
-                returnResponse(true);
-        }
-        else
-        {
-            returnResponse(false);
-        }
-    }
-
     Core::hresult AVInputImplementation::GetVRRFrameRate(const int portId, double& currentVRRVideoFrameRate, bool& success)
     {
         dsHdmiInVrrStatus_t vrrStatus;
