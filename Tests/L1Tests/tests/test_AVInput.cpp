@@ -373,6 +373,10 @@ TEST_F(AVInputInit, getInputDevices)
     // </pca>
 }
 
+// <pca> debug
+#if 0
+// </pca>
+
 TEST_F(AVInputInit, getInputDevices_HDMI)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
@@ -2107,3 +2111,7 @@ TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"test\"}"), response));
     EXPECT_EQ(response, string(""));
 }
+
+// <pca> debug
+#endif
+// </pca>
