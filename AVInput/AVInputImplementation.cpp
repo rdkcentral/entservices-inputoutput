@@ -1122,6 +1122,51 @@ namespace Plugin {
         return ret;
     }
 
+    // <pca>
+    uint32_t AVInput::getVRRFrameRateWrapper(const JsonObject& parameters, JsonObject& response)
+    {
+        LOGINFOMETHOD();
+        returnIfParamNotFound(parameters, "portId");
+        string sPortId = parameters["portId"].String();
+
+        int portId = 0;
+        dsHdmiInVrrStatus_t vrrStatus;
+        vrrStatus.vrrAmdfreesyncFramerate_Hz = 0;
+
+        try {
+                portId = stoi(sPortId);
+        }catch (const std::exception& err) {
+                LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+                returnResponse(false);
+        }
+
+        bool result = getVRRStatus(portId, &vrrStatus);
+        if(result == true)
+        {
+                response["currentVRRVideoFrameRate"] = vrrStatus.vrrAmdfreesyncFramerate_Hz;
+                returnResponse(true);
+        }
+        else
+        {
+            returnResponse(false);
+        }
+    }
+
+    Core::hresult AVInputImplementation::GetVRRFrameRate(const int portId, double& currentVRRVideoFrameRate, bool& success)
+    {
+        dsHdmiInVrrStatus_t vrrStatus;
+        vrrStatus.vrrAmdfreesyncFramerate_Hz = 0;
+
+        success = getVRRStatus(portId, &vrrStatus);
+        if(success == true)
+        {
+            currentVRRVideoFrameRate = vrrStatus.vrrAmdfreesyncFramerate_Hz;
+        }
+
+        return Core::ERROR_NONE;
+    }
+    // </pca>
+
     Core::hresult AVInputImplementation::GetRawSPD(const int portId, string& HDMISPD, bool& success)
     {
         LOGINFO("AVInputImplementation::getSPDInfo");
@@ -1206,7 +1251,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::SetAudioMixerLevels(const int primaryVolume, const int inputVolume, SuccessResult& successResult)
+    Core::hresult AVInputImplementation::SetMixerLevels(const int primaryVolume, const int inputVolume, SuccessResult& successResult)
     {
         try {
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY, primaryVolume);
