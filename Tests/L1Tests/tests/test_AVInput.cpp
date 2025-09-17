@@ -220,6 +220,10 @@ TEST_F(AVInputTest, contentProtected)
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
 }
 
+// <pca> debug
+#if 0
+// </pca>
+
 class AVInputDsTest : public AVInputTest {
 protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
@@ -372,10 +376,6 @@ TEST_F(AVInputInit, getInputDevices)
     //EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"connected\":false}],\"success\":true}"));
     // </pca>
 }
-
-// <pca> debug
-#if 0
-// </pca>
 
 TEST_F(AVInputInit, getInputDevices_HDMI)
 {
