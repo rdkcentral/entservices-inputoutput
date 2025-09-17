@@ -368,7 +368,7 @@ TEST_F(AVInputInit, getInputDevices)
         .WillOnce(::testing::Return(1));
     TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): Mark 2");
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getInputDevices"), _T("{}"), response));
-    TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): response=" + response);
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): response=%s", response);
     EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\"},{\"id\":0,\"connected\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
     TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): exit");
 }
