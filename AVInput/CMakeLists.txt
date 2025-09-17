@@ -41,6 +41,9 @@ set_target_properties(${MODULE_NAME} PROPERTIES
 
 target_compile_definitions(${MODULE_NAME} PRIVATE MODULE_NAME=Plugin_${PLUGIN_NAME})
 
+find_package(DS)
+find_package(IARMBus)
+
 target_include_directories(${MODULE_NAME} PRIVATE ../helpers)
 target_include_directories(${MODULE_NAME} PRIVATE ${DS_INCLUDE_DIRS})
 target_include_directories(${MODULE_NAME} PRIVATE ${IARMBUS_INCLUDE_DIRS})
@@ -78,14 +81,13 @@ if (RDK_SERVICE_L2_TEST)
    endif (TESTMOCKLIB_LIBRARIES)
 endif (RDK_SERVICES_L2_TEST)
 
-find_package(DS)
-find_package(IARMBus)
-
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${DS_INCLUDE_DIRS})
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${IARMBUS_INCLUDE_DIRS})
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ../helpers)
 
 target_link_libraries(${PLUGIN_IMPLEMENTATION} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${DS_LIBRARIES} )
+
+target_link_libraries(${MODULE_NAME} PUBLIC ${IARMBUS_LIBRARIES} ${DS_LIBRARIES} )
 
 install(TARGETS ${PLUGIN_IMPLEMENTATION}
         DESTINATION lib/${STORAGE_DIRECTORY}/plugins)

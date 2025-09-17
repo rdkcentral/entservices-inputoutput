@@ -150,7 +150,7 @@ namespace Plugin {
         virtual Core::hresult Unregister(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
 
         Core::hresult NumberOfInputs(uint32_t& numberOfInputs, bool& success) override;
-        Core::hresult GetInputDevices(const int typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices, bool& success) override;
+        Core::hresult GetInputDevices(const int typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices, bool& success);
         Core::hresult WriteEDID(const int portId, const string& message, SuccessResult& successResult) override;
         Core::hresult ReadEDID(const int portId, string& EDID, bool& success) override;
         Core::hresult GetRawSPD(const int portId, string& HDMISPD, bool& success) override;

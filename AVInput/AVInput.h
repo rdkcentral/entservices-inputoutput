@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Module.h"
+
 #include <core/JSON.h>
 #include <interfaces/IAVInput.h>
 #include <interfaces/json/JAVInput.h>
@@ -156,6 +157,11 @@ namespace Plugin {
         Core::Sink<Notification> _avInputNotification;
 
         void Deactivated(RPC::IRemoteConnection* connection);
+
+        // <pca>
+        JsonArray getInputDevices(int iType);
+        uint32_t getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response);
+        // </pca>
 
     }; // AVInput
 } // namespace Plugin

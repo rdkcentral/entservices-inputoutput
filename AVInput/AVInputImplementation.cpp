@@ -38,18 +38,6 @@ static int planeType = 0;
 
 using namespace std;
 
-int getTypeOfInput(string sType)
-{
-    int iType = -1;
-    if (strcmp(sType.c_str(), "HDMI") == 0)
-        iType = HDMI;
-    else if (strcmp(sType.c_str(), "COMPOSITE") == 0)
-        iType = COMPOSITE;
-    else
-        throw "Invalide type of INPUT, please specify HDMI/COMPOSITE";
-    return iType;
-}
-
 namespace WPEFramework {
 namespace Plugin {
     SERVICE_REGISTRATION(AVInputImplementation, 1, 0);

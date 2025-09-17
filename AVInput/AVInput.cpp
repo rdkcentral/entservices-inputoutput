@@ -18,10 +18,24 @@
  **/
 
 #include "AVInput.h"
+#include "dsMgr.h"
+#include "hdmiIn.hpp"
+#include "compositeIn.hpp"
+
+#include "UtilsJsonRpc.h"
 
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 7
 #define API_VERSION_NUMBER_PATCH 1
+
+// <pca>
+// Explicitly implementing getInputDevices method instead of autogenerating via IAVInput.h
+// because it requires optional parameters which are not supported in Thunder 4.x. This can 
+// be refactored after migrating to 5.x.
+#define AVINPUT_METHOD_GET_INPUT_DEVICES "getInputDevices"
+#define HDMI 0
+#define COMPOSITE 1
+// </pca>
 
 namespace WPEFramework {
 namespace {
@@ -47,11 +61,13 @@ namespace Plugin {
         , _avInput(nullptr)
         , _avInputNotification(this)
     {
+        Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_INPUT_DEVICES), &AVInput::getInputDevicesWrapper, this);
         SYSLOG(Logging::Startup, (_T("AVInput Constructor")));
     }
 
     AVInput::~AVInput()
     {
+        Unregister(_T(AVINPUT_METHOD_GET_INPUT_DEVICES));
         SYSLOG(Logging::Shutdown, (string(_T("AVInput Destructor"))));
     }
 
@@ -146,6 +162,87 @@ namespace Plugin {
         _service = nullptr;
         SYSLOG(Logging::Shutdown, (string(_T("AVInput de-initialised"))));
     }
+
+    // <pca>
+    JsonArray AVInput::getInputDevices(int iType)
+    {
+        JsonArray list;
+        try
+        {
+            int num = 0;
+            if (iType == HDMI) {
+                num = device::HdmiInput::getInstance().getNumberOfInputs();
+            }
+            else if (iType == COMPOSITE) {
+                num = device::CompositeInput::getInstance().getNumberOfInputs();
+            }
+            if (num > 0) {
+                int i = 0;
+                for (i = 0; i < num; i++) {
+                    //Input ID is aleays 0-indexed, continuous number starting 0
+                    JsonObject hash;
+                    hash["id"] = i;
+                    std::stringstream locator;
+                    if (iType == HDMI) {
+                        locator << "hdmiin://localhost/deviceid/" << i;
+                        hash["connected"] = device::HdmiInput::getInstance().isPortConnected(i);
+                    }
+                    else if (iType == COMPOSITE) {
+                        locator << "cvbsin://localhost/deviceid/" << i;
+                        hash["connected"] = device::CompositeInput::getInstance().isPortConnected(i);
+                    }
+                    hash["locator"] = locator.str();
+                    LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, hash["locator"].String().c_str(), hash["connected"].Boolean());
+                    list.Add(hash);
+                }
+            }
+        }
+        catch (const std::exception &e) {
+            LOGWARN("AVInputService::getInputDevices Failed");
+        }
+        return list;
+    }
+
+    // <pca>
+    int getTypeOfInput(string sType)
+    {
+        int iType = -1;
+        if (strcmp(sType.c_str(), "HDMI") == 0)
+            iType = HDMI;
+        else if (strcmp(sType.c_str(), "COMPOSITE") == 0)
+            iType = COMPOSITE;
+        else
+            throw "Invalide type of INPUT, please specify HDMI/COMPOSITE";
+        return iType;
+    }
+    // </pca>
+
+    uint32_t AVInput::getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response)
+    {
+        LOGINFOMETHOD();
+
+        if (parameters.HasLabel("typeOfInput")) {
+            string sType = parameters["typeOfInput"].String();
+            int iType = 0;
+            try {
+                iType = getTypeOfInput (sType);
+            }catch (...) {
+                LOGWARN("Invalid Arguments");
+                returnResponse(false);
+            }
+            response["devices"] = getInputDevices(iType);
+        }
+        else {
+            JsonArray listHdmi = getInputDevices(HDMI);
+            JsonArray listComposite = getInputDevices(COMPOSITE);
+            for (int i = 0; i < listComposite.Length(); i++) {
+                listHdmi.Add(listComposite.Get(i));
+            }
+            response["devices"] = listHdmi;
+        }
+        returnResponse(true);
+    }
+    // </pca>
 
     string AVInput::Information() const
     {
