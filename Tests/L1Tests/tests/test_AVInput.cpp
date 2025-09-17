@@ -45,6 +45,7 @@ class AVInputTest : public ::testing::Test {
 protected:
     Core::ProxyType<Plugin::AVInput> plugin;
     // <pca>
+    IarmBusImplMock* p_iarmBusImplMock = nullptr;
     Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
     Core::ProxyType<WorkerPoolImplementation> workerPool;
     NiceMock<COMLinkMock> comLinkMock;
@@ -82,6 +83,9 @@ protected:
 
         p_wrapsImplMock  = new NiceMock <WrapsImplMock>;
         Wraps::setImpl(p_wrapsImplMock);
+
+        p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
+        IarmBus::setImpl(p_iarmBusImplMock);
 
         ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IDevicesChangedNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
@@ -171,6 +175,11 @@ protected:
         {
             delete p_wrapsImplMock;
             p_wrapsImplMock = nullptr;
+        }
+
+        if (p_iarmBusImplMock != nullptr) {
+            delete p_iarmBusImplMock;
+            p_iarmBusImplMock = nullptr;
         }
     }
     // </pca>
