@@ -670,7 +670,7 @@ private:
         PowerManagerInterfaceRef _powerManagerPlugin;
         Core::Sink<PowerManagerNotification> _pwrMgrNotification;
         bool _registeredEventHandlers;
-        const void InitializeIARM();
+        void InitializeIARM();
         void DeinitializeIARM();
         void allocateLogicalAddress(int deviceType);
         void allocateLAforTV();

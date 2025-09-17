@@ -603,6 +603,9 @@ namespace WPEFramework
        HdmiCecSinkImplementation::HdmiCecSinkImplementation()
        : _pwrMgrNotification(*this)
         , _registeredEventHandlers(false)
+        , msgProcessor(nullptr)
+        , msgFrameListener(nullptr)
+        , smConnection(nullptr)
        {
            LOGWARN("Initlaizing HdmiCecSinkImplementation");
        }
@@ -744,7 +747,7 @@ namespace WPEFramework
            for (int i = 0; i < m_numofHdmiInput; i++){
                 HdmiPortMap hdmiPort((uint8_t)i);
                 LOGINFO(" Add to vector [%d] \n", i);
-                hdmiInputs.push_back(hdmiPort);
+                hdmiInputs.push_back(std::move(hdmiPort));
             }
 
             LOGINFO("Check the HDMI State \n");
@@ -809,7 +812,7 @@ namespace WPEFramework
         }
 
 
-       const void HdmiCecSinkImplementation::InitializeIARM()
+       void HdmiCecSinkImplementation::InitializeIARM()
        {
             if (Utils::IARM::init())
             {
@@ -948,17 +951,17 @@ namespace WPEFramework
        }
        void HdmiCecSinkImplementation::updateArcState()
        {
+           std::lock_guard<std::mutex> lock(_instance->m_arcRoutingStateMutex);
            if ( m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED )
            {
             if (!(hdmiInputs[HdmiArcPortID].m_isConnected))
-        {
-                   std::lock_guard<std::mutex> lock(_instance->m_arcRoutingStateMutex);
-           m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
-        }
-                else
-                {
-                   LOGINFO("updateArcState :not updating ARC state current arc state %d ",m_currentArcRoutingState);
-                }
+            {
+                m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+            }
+            else
+            {
+                LOGINFO("updateArcState :not updating ARC state current arc state %d ",m_currentArcRoutingState);
+            }
            } 
       }
       void HdmiCecSinkImplementation::arcStartStopTimerFunction()
@@ -1027,7 +1030,7 @@ namespace WPEFramework
         {
             audiodescriptor.Add(descriptor);
         }
-       HdmiCecSinkImplementation::_instance->Send_ShortAudioDescriptor_Event(audiodescriptor);
+       HdmiCecSinkImplementation::_instance->Send_ShortAudioDescriptor_Event(std::move(audiodescriptor));
         }
 
        void HdmiCecSinkImplementation::updateCurrentLatency(int videoLatency, bool lowLatencyMode,int audioOutputCompensated, int audioOutputDelay = 0)
@@ -1545,7 +1548,7 @@ namespace WPEFramework
                             device.osdName = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_osdName.toString().c_str();
                             device.vendorID = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_vendorID.toString().c_str();
 
-                            paths.push_back(device);
+                            paths.emplace_back(std::move(device));
 
                             snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s", _instance->deviceList[route[i]].m_logicalAddress.toString().c_str());
                             stringLength += _instance->deviceList[route[i]].m_logicalAddress.toString().length();
@@ -2953,10 +2956,18 @@ namespace WPEFramework
                 }
 
                 std::unique_lock<std::mutex> lk(_instance->m_pollExitMutex);
-                if ( _instance->m_ThreadExitCV.wait_for(lk, std::chrono::milliseconds(_instance->m_sleepTime)) == std::cv_status::timeout )
+                bool signaled = _instance->m_ThreadExitCV.wait_for(
+                    lk,
+                    std::chrono::milliseconds(_instance->m_sleepTime),
+                    [&]{ return _instance->m_pollThreadExit; }
+                );
+
+                if (!signaled) {
+                    // timeout -> continue polling loop
                     continue;
-                else
-                    LOGINFO("Thread is going to Exit m_pollThreadExit %d\n", _instance->m_pollThreadExit );
+                } else {
+                    LOGINFO("Thread is going to Exit m_pollThreadExit %d\n", _instance->m_pollThreadExit);
+                }
 
             }
         }
@@ -3059,14 +3070,14 @@ namespace WPEFramework
                 LibCCEC::getInstance().addLogicalAddress(logicalAddress);
                 smConnection->setSource(logicalAddress);
             }
-            msgProcessor = new HdmiCecSinkProcessor(*smConnection);
-            msgFrameListener = new HdmiCecSinkFrameListener(*msgProcessor);
             if(smConnection)
             {
-                   LOGWARN("Start Thread %p", smConnection );
+                msgProcessor = new HdmiCecSinkProcessor(*smConnection);
+                msgFrameListener = new HdmiCecSinkFrameListener(*msgProcessor);
+                LOGWARN("Start Thread %p", smConnection );
                 m_pollThreadState = POLL_THREAD_STATE_POLL;
-                            m_pollNextState = POLL_THREAD_STATE_NONE;
-                            m_pollThreadExit = false;
+                m_pollNextState = POLL_THREAD_STATE_NONE;
+                m_pollThreadExit = false;
                 m_pollThread = std::thread(threadRun);
             }
             cecEnableStatus = true;
@@ -3083,7 +3094,7 @@ namespace WPEFramework
 
         void HdmiCecSinkImplementation::CECDisable(void)
         {
-            std::lock_guard<std::mutex> lock(m_enableMutex);
+            std::unique_lock<std::mutex> lock(m_enableMutex);
             JsonObject params;
             LOGINFO("Entered CECDisable ");
             if(!cecEnableStatus)
@@ -3094,11 +3105,19 @@ namespace WPEFramework
 
             if(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)
             {
+                // release enable lock before initiating/ waiting for ARC stop
+                lock.unlock();
                 stopArc();
-                while(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)    
-                {
-                     usleep(500000);
+
+                // wait for the ARC state to become TERMINATED without holding m_enableMutex
+                const unsigned int maxRetries = 8; // e.g. total wait ~4s (8 * 500ms)
+                unsigned int retries = 0;
+                while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED && retries++ < maxRetries) {
+                    usleep(500000);
                 }
+
+                // re-acquire the enable lock for the rest of CECDisable cleanup
+                lock.lock();
             }
 
             LOGINFO(" CECDisable ARC stopped ");
