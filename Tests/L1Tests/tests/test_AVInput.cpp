@@ -291,6 +291,11 @@ TEST_F(AVInputDsTest, currentVideoMode)
 
 TEST_F(AVInputDsTest, getEdid2AllmSupport)
 {
+    EXPECT_CALL(*p_hdmiInputImplMock, getEdid2AllmSupport(::testing::_, ::testing::_))
+        .WillOnce([](int iport, bool *allmSupport) {
+            *allmSupport = true;
+        });
+
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"0\",\"allmSupport\":true}"), response));
     EXPECT_EQ(response, string("{\"allmSupport\":true,\"success\":true}"));
 }
