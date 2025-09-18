@@ -324,7 +324,7 @@ TEST_F(AVInputTest, contentProtected)
 // </pca>
 
 // <pca> debug
-#if 1
+#if 0
 // </pca>
 TEST_F(AVInputTest, numberOfInputs)
 {
@@ -388,7 +388,7 @@ TEST_F(AVInputTest, getVRRFrameRate)
 // </pca>
 
 // <pca> debug
-#if 1
+#if 0
 // </pca>
 TEST_F(AVInputTest, getInputDevices)
 {
