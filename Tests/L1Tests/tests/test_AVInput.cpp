@@ -344,7 +344,9 @@ TEST_F(AVInputDsTest, getVRRFrameRate)
 
 class AVInputInit : public AVInputDsTest {
 protected:
-    IarmBusImplMock* p_iarmBusImplMock = nullptr;
+    // <pca> debug
+    //IarmBusImplMock* p_iarmBusImplMock = nullptr;
+    // </pca>
     NiceMock<FactoriesImplementation> factoriesImplementation;
     PLUGINHOST_DISPATCHER* dispatcher;
     NiceMock<ServiceMock> service;
@@ -354,8 +356,10 @@ protected:
         : AVInputDsTest()
     {
         TEST_LOG("*** _DEBUG: AVInputInit Constructor");
-        p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
-        IarmBus::setImpl(p_iarmBusImplMock);
+        // <pca> debug
+        // p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
+        // IarmBus::setImpl(p_iarmBusImplMock);
+        // </pca>
 
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
@@ -423,11 +427,13 @@ protected:
 
         plugin->Deinitialize(&service);
 
-        IarmBus::setImpl(nullptr);
-        if (p_iarmBusImplMock != nullptr) {
-            delete p_iarmBusImplMock;
-            p_iarmBusImplMock = nullptr;
-        }
+        // <pca> debug
+        // IarmBus::setImpl(nullptr);
+        // if (p_iarmBusImplMock != nullptr) {
+        //     delete p_iarmBusImplMock;
+        //     p_iarmBusImplMock = nullptr;
+        // }
+        // </pca>
         TEST_LOG("*** _DEBUG: AVInputInit Destructor: exit");
     }
 };
