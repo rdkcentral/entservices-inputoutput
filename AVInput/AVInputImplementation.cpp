@@ -1250,9 +1250,6 @@ namespace Plugin {
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(portId));
             success = false;
-            // <pca> debug
-            return Core::ERROR_GENERAL;
-            // </pca>
         }
         return Core::ERROR_NONE;
     }
