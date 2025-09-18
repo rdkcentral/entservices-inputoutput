@@ -3539,7 +3539,7 @@ namespace WPEFramework
 			do {
 				usleep(50000); // Sleep for 50ms before retrying
 				portId = -1;
-				device::HdmiInput::getInstance().getHDMIARCPortId(&portId);
+				device::HdmiInput::getInstance().getHDMIARCPortId(portId);
 				if (-1 != portId)
 				{
 					LOGINFO("HDMI ARC port ID HdmiArcPortID[%d] on retry count[%d]", portId, retryCount);
