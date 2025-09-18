@@ -601,8 +601,7 @@ namespace WPEFramework
 //=========================================== HdmiCecSinkImplementation =========================================
 
        HdmiCecSinkImplementation::HdmiCecSinkImplementation()
-        : PluginHost::JSONRPC()
-        , _pwrMgrNotification(*this)
+        :  _pwrMgrNotification(*this)
         , _registeredEventHandlers(false)
         {
             LOGWARN("Initializing HdmiCecSinkImplementation");
