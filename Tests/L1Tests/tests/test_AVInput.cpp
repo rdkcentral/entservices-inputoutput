@@ -279,7 +279,7 @@ public:
 };
 
 // <pca> debug
-#if 0
+#if 1
 // </pca>
 TEST_F(AVInputTest, RegisteredMethods)
 {
@@ -685,6 +685,10 @@ TEST_F(AVInputTest, getGameFeatureStatus_VRR_FREESYNC_PREMIUM_PRO)
 // <pca>
 #endif
 // </pca>
+
+// <pca> debug
+#if 0
+// </pca>
 TEST_F(AVInputTest, onDevicesChangedHDMI)
 {
     printf("*** _DEBUG: onDevicesChangedHDMI: entry");
@@ -721,6 +725,9 @@ TEST_F(AVInputTest, onDevicesChangedHDMI)
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
     printf("*** _DEBUG: onDevicesChangedHDMI: exit");
 }
+// <pca>
+#endif
+// </pca>
 
 // <pca> debug
 #if 0
