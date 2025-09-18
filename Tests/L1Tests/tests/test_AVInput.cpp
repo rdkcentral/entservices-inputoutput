@@ -103,8 +103,10 @@ public:
         //PluginHost::IFactories::Assign(&factoriesImplementation);
         // </pca>
 
-        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
-        dispatcher->Activate(&service);
+        // <pca> debug
+        // dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        // dispatcher->Activate(&service);
+        // </pca>
 
         // <pca> debug
         #if 0
@@ -287,8 +289,10 @@ public:
             p_HostImplMock = nullptr;
         }
 
-        dispatcher->Deactivate();
-        dispatcher->Release();
+        // <pca> debug
+        // dispatcher->Deactivate();
+        // dispatcher->Release();
+        // </pca>
 
         PluginHost::IFactories::Assign(nullptr);
 
