@@ -42,8 +42,9 @@ using ::testing::NiceMock;
 class AVInputTest : public ::testing::Test {
 protected:
     Core::ProxyType<Plugin::AVInput> plugin;
-    // <pca> debug
+    // <pca>
     //IarmBusImplMock* p_iarmBusImplMock = nullptr;
+    PLUGINHOST_DISPATCHER* dispatcher;
     // </pca>
     Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
     Core::ProxyType<WorkerPoolImplementation> workerPool;
@@ -79,7 +80,9 @@ protected:
         Wraps::setImpl(p_wrapsImplMock);
 
         // <pca>
-        plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID);
+        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
+        plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        dispatcher->Activate(&service);
         // </pca>
 
         // <pca>
@@ -169,13 +172,8 @@ protected:
             p_wrapsImplMock = nullptr;
         }
 
-        // <pca> debug
-        // IarmBus::setImpl(nullptr);
-        // if (p_iarmBusImplMock != nullptr) {
-        //     delete p_iarmBusImplMock;
-        //     p_iarmBusImplMock = nullptr;
-        // }
-        // </pca>
+        dispatcher->Deactivate();
+        dispatcher->Release();
     }
 };
 
@@ -336,11 +334,9 @@ TEST_F(AVInputDsTest, getVRRFrameRate)
 
 class AVInputInit : public AVInputDsTest {
 protected:
-    // <pca> debug
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
-    // </pca>
     NiceMock<FactoriesImplementation> factoriesImplementation;
-    PLUGINHOST_DISPATCHER* dispatcher;
+
     Core::JSONRPC::Message message;
 
     AVInputInit()
@@ -348,10 +344,8 @@ protected:
     {
         TEST_LOG("*** _DEBUG: AVInputInit Constructor");
 
-        // <pca> debug
         p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
-        // </pca>
 
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
@@ -404,27 +398,18 @@ protected:
                 }));
 
         PluginHost::IFactories::Assign(&factoriesImplementation);
-        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
-        // <pca>
-        //plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
-        // </pca>
-        dispatcher->Activate(&service);
     }
 
     virtual ~AVInputInit() override
     {
         TEST_LOG("*** _DEBUG: AVInputInit Destructor");
-        dispatcher->Deactivate();
-        dispatcher->Release();
         PluginHost::IFactories::Assign(nullptr);
 
-        // <pca> debug
         IarmBus::setImpl(nullptr);
         if (p_iarmBusImplMock != nullptr) {
             delete p_iarmBusImplMock;
             p_iarmBusImplMock = nullptr;
         }
-        // </pca>
         TEST_LOG("*** _DEBUG: AVInputInit Destructor: exit");
     }
 };
