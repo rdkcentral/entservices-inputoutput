@@ -36,6 +36,7 @@
 #include "UtilsSearchRDKProfile.h"
 #include "exception.hpp"
 #include "hdmiIn.hpp"
+#include "dsError.h"
 
 #define HDMICECSINK_METHOD_SET_ENABLED 			"setEnabled"
 #define HDMICECSINK_METHOD_GET_ENABLED 			"getEnabled"
@@ -3539,8 +3540,8 @@ namespace WPEFramework
 			do {
 				usleep(50000); // Sleep for 50ms before retrying
 				portId = -1;
-				device::HdmiInput::getInstance().getHDMIARCPortId(portId);
-				if (-1 != portId)
+				dsError_t error = device::HdmiInput::getInstance().getHDMIARCPortId(portId);
+				if (dsERR_NONE == error)
 				{
 					LOGINFO("HDMI ARC port ID HdmiArcPortID[%d] on retry count[%d]", portId, retryCount);
 					HdmiArcPortID = portId;
