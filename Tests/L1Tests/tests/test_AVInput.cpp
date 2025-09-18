@@ -459,10 +459,6 @@ TEST_F(AVInputInit, getInputDevices)
     // </pca>
 }
 
-// <pca> debug
-#if 0
-// </pca>
-
 TEST_F(AVInputInit, getInputDevices_HDMI)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
@@ -529,6 +525,10 @@ TEST_F(AVInputInit, readEDID_InvalidParameters)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("readEDID"), _T("{\"portId\": \"test\"}"), response));
     EXPECT_EQ(response, string(""));
 }
+
+// <pca> debug
+#if 0
+// </pca>
 
 TEST_F(AVInputInit, getRawSPD)
 {
