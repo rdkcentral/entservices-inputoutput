@@ -101,6 +101,9 @@ public:
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
         dispatcher->Activate(&service);
 
+        // <pca> debug
+        #if 0
+        // </pca>
         ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IDevicesChangedNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
             [&](Exchange::IAVInput::IDevicesChangedNotification *notification){
@@ -142,6 +145,9 @@ public:
                 OnHdmiContentTypeUpdateNotification = notification;
                 return Core::ERROR_NONE;;
             }));
+        // <pca> debug
+        #endif
+        // </pca>
 
         #ifdef USE_THUNDER_R4
         ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
