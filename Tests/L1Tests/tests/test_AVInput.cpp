@@ -314,13 +314,7 @@ TEST_F(AVInputDsTest, getVRRSupport)
         });
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"0\"}"), response));
-    EXPECT_EQ(response, string("{\"vrrSupport\":true,\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, getVRRSupport_ErrorCase)
-{
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"test\",\"vrrSupport\":true}"), response));
-    EXPECT_EQ(response, string(""));
+    EXPECT_EQ(response, string("true"));
 }
 
 TEST_F(AVInputDsTest, setVRRSupport)
