@@ -692,6 +692,7 @@ namespace Plugin {
 
     Core::hresult AVInputImplementation::WriteEDID(const int portId, const string& message, SuccessResult& successResult)
     {
+        printf("*** _DEBUG: AVInputImplementation::WriteEDID: entry");
         // TODO: This wasn't implemented in the original code, do we want to implement it?
         successResult.success = true;
         return Core::ERROR_NONE;
@@ -1070,6 +1071,7 @@ namespace Plugin {
 
     Core::hresult AVInputImplementation::GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode, bool& success)
     {
+        printf("*** _DEBUG: AVInputImplementation::GetGameFeatureStatus: entry");
         if (gameFeature == STR_ALLM) {
             mode = getALLMStatus(portId);
         } else if (gameFeature == VRR_TYPE_HDMI) {
