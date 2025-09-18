@@ -129,15 +129,9 @@ protected:
             return &AVInputImpl;
             }));
 
-        TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 2");
-
         Core::IWorkerPool::Assign(&(*workerPool));
-        TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 3");
         workerPool->Run();
-        TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 4");
-
         plugin->Initialize(&service);
-        TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 5");
     }
 
     virtual ~AVInputTest()
