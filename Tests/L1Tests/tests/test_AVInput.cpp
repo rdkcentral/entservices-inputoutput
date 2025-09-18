@@ -150,9 +150,6 @@ public:
                 OnHdmiContentTypeUpdateNotification = notification;
                 return Core::ERROR_NONE;;
             }));
-        // <pca> debug
-        #endif
-        // </pca>
 
         #ifdef USE_THUNDER_R4
         ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
@@ -165,6 +162,10 @@ public:
         ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Return(AVInputImpl));
         #endif
+
+        // <pca> debug
+        #endif
+        // </pca>
 
         // <pca>
         #if 0
