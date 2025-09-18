@@ -18,23 +18,23 @@
 **/
 
 #include <gtest/gtest.h>
+#include "COMLinkMock.h"
 #include <gmock/gmock.h>
 
 #include "AVInput.h"
-#include "AVInputImplementation.h"
-#include "COMLinkMock.h"
-#include "WorkerPoolImplementation.h"
-#include "WrapsMock.h"
-#include "AVInputMock.h"
 
-#include "CompositeInputMock.h"
-// <pca> debug
-//#include "FactoriesImplementation.h"
-// </pca>
-#include "HdmiInputMock.h"
+#include "FactoriesImplementation.h"
 #include "HostMock.h"
 #include "IarmBusMock.h"
 #include "ServiceMock.h"
+#include "CompositeInputMock.h"
+#include "HdmiInputMock.h"
+#include "AVInputImplementation.h"
+#include "AVInputMock.h"
+#include "WorkerPoolImplementation.h"
+#include "WrapsMock.h"
+
+
 #include "ThunderPortability.h"
 
 using namespace WPEFramework;
