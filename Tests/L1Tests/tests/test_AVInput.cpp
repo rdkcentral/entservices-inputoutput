@@ -28,7 +28,9 @@
 #include "AVInputMock.h"
 
 #include "CompositeInputMock.h"
-#include "FactoriesImplementation.h"
+// <pca> debug
+//#include "FactoriesImplementation.h"
+// </pca>
 #include "HdmiInputMock.h"
 #include "HostMock.h"
 #include "IarmBusMock.h"
@@ -40,7 +42,7 @@ using namespace WPEFramework;
 using ::testing::NiceMock;
 
 class AVInputTest : public ::testing::Test {
-    
+
 public:
 
     PLUGINHOST_DISPATCHER* dispatcher;
@@ -55,7 +57,9 @@ public:
 
     NiceMock<COMLinkMock> comLinkMock;
     NiceMock<ServiceMock> service;
-    NiceMock<FactoriesImplementation> factoriesImplementation;
+    // <pca>
+    //NiceMock<FactoriesImplementation> factoriesImplementation;
+    // </pca>
 
     WrapsImplMock* p_wrapsImplMock                      = nullptr;
     ServiceMock* p_serviceMock                          = nullptr;
@@ -95,7 +99,9 @@ public:
 
         Wraps::setImpl(p_wrapsImplMock);
 
-        PluginHost::IFactories::Assign(&factoriesImplementation);
+        // <pca> debug
+        //PluginHost::IFactories::Assign(&factoriesImplementation);
+        // </pca>
 
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
         dispatcher->Activate(&service);
