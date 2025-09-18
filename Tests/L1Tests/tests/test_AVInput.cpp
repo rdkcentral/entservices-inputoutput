@@ -53,7 +53,9 @@ public:
 
     Core::ProxyType<Plugin::AVInput> plugin;
     Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
-    Core::ProxyType<WorkerPoolImplementation> workerPool;
+    // <pca> debug
+    //Core::ProxyType<WorkerPoolImplementation> workerPool;
+    // </pca>
 
     NiceMock<COMLinkMock> comLinkMock;
     NiceMock<ServiceMock> service;
@@ -85,12 +87,19 @@ public:
     IARM_EventHandler_t dsAVVideoModeEventHandler;
     IARM_EventHandler_t dsAviContentTypeEventHandler;
 
+    // <pca> debug
+    // AVInputTest()
+    //     : plugin(Core::ProxyType<Plugin::AVInput>::Create())
+    //     , handler(*(plugin))
+    //     , INIT_CONX(1, 0) , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
+    //         2, Core::Thread::DefaultStackSize(), 16))
+    // {
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
-        , INIT_CONX(1, 0) , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
-            2, Core::Thread::DefaultStackSize(), 16))
+        , INIT_CONX(1, 0)
     {
+    // </pca>
         printf("*** _DEBUG: AVInputTest ctor: entry");
 
         p_serviceMock = new NiceMock <ServiceMock>;
@@ -228,8 +237,10 @@ public:
         #endif
         // </pca>
 
-        Core::IWorkerPool::Assign(&(*workerPool));
-        workerPool->Run();
+        // <pca> debug
+        // Core::IWorkerPool::Assign(&(*workerPool));
+        // workerPool->Run();
+        // </pca>
 
         plugin->Initialize(&service);
 
@@ -248,8 +259,10 @@ public:
         TEST_LOG("*** _DEBUG: AVInputTest xtor");
         plugin->Deinitialize(&service);
 
-        Core::IWorkerPool::Assign(nullptr);
-        workerPool.Release();
+        // <pca> debug
+        // Core::IWorkerPool::Assign(nullptr);
+        // workerPool.Release();
+        // </pca>
 
         if (p_serviceMock != nullptr)
         {
