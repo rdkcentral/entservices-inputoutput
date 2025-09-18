@@ -329,10 +329,6 @@ TEST_F(AVInputDsTest, getVRRFrameRate)
     EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":0,\"success\":true}"));
 }
 
-// <pca> debug
-#if 0
-// </pca>
-
 class AVInputInit : public AVInputDsTest {
 protected:
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
@@ -474,6 +470,10 @@ TEST_F(AVInputInit, writeEDID_InvalidParameters)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("writeEDID"), _T("{}"), response));
     EXPECT_EQ(response, string(""));
 }
+
+// <pca> debug
+#if 0
+// </pca>
 
 TEST_F(AVInputInit, readEDID)
 {
