@@ -89,15 +89,14 @@ public:
         printf("*** _DEBUG: AVInputTest ctor: entry");
 
         p_serviceMock = new NiceMock <ServiceMock>;
-
         p_avInputMock = new NiceMock <AVInputMock>;
-
         p_wrapsImplMock  = new NiceMock <WrapsImplMock>;
 
         Wraps::setImpl(p_wrapsImplMock);
 
-        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
-        plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        PluginHost::IFactories::Assign(&factoriesImplementation);
+
+        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
         dispatcher->Activate(&service);
 
         ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IDevicesChangedNotification*>(::testing::_)))
@@ -142,26 +141,17 @@ public:
                 return Core::ERROR_NONE;;
             }));
 
+        #ifdef USE_THUNDER_R4
         ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke(
-        [&](const RPC::Object& object, const uint32_t waitTime, uint32_t& connectionId) {
-            TEST_LOG("*** _DEBUG: Instantiate called");
-            AVInputImpl = Core::ProxyType<Plugin::AVInputImplementation>::Create();
-            return &AVInputImpl;
-            }));
-
-        Core::IWorkerPool::Assign(&(*workerPool));
-        workerPool->Run();
-        plugin->Initialize(&service);
-
-        p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
-        device::HdmiInput::setImpl(p_hdmiInputImplMock);
-
-        p_compositeInputImplMock = new NiceMock<CompositeInputImplMock>;
-        device::CompositeInput::setImpl(p_compositeInputImplMock);
-
-        p_HostImplMock = new NiceMock<HostImplMock>;
-        device::Host::setImpl(p_HostImplMock);
+                .WillByDefault(::testing::Invoke(
+                    [&](const RPC::Object& object, const uint32_t waitTime, uint32_t& connectionId) {
+                        AVInputImpl = Core::ProxyType<Plugin::AVInputImplementation>::Create();
+                        return &AVInputImpl;
+                    }));
+        #else
+        ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_, ::testing::_, ::testing::_))
+            .WillByDefault(::testing::Return(AVInputImpl));
+        #endif
 
         p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
@@ -216,7 +206,19 @@ public:
                     return IARM_RESULT_SUCCESS;
                 }));
 
-        PluginHost::IFactories::Assign(&factoriesImplementation);
+        Core::IWorkerPool::Assign(&(*workerPool));
+        workerPool->Run();
+
+        plugin->Initialize(&service);
+
+        p_HostImplMock = new NiceMock<HostImplMock>;
+        device::Host::setImpl(p_HostImplMock);
+        
+        p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
+        device::HdmiInput::setImpl(p_hdmiInputImplMock);
+
+        p_compositeInputImplMock = new NiceMock<CompositeInputImplMock>;
+        device::CompositeInput::setImpl(p_compositeInputImplMock);
     }
 
     virtual ~AVInputTest()
@@ -246,9 +248,6 @@ public:
             p_wrapsImplMock = nullptr;
         }
 
-        dispatcher->Deactivate();
-        dispatcher->Release();
-
         device::HdmiInput::setImpl(nullptr);
         if (p_hdmiInputImplMock != nullptr)
         {
@@ -267,6 +266,9 @@ public:
             delete p_HostImplMock;
             p_HostImplMock = nullptr;
         }
+
+        dispatcher->Deactivate();
+        dispatcher->Release();
 
         PluginHost::IFactories::Assign(nullptr);
 
