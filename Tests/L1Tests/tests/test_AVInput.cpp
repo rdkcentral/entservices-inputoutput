@@ -79,7 +79,7 @@ protected:
         Wraps::setImpl(p_wrapsImplMock);
 
         // <pca>
-        plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID);
         // </pca>
 
         // <pca>
