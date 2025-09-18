@@ -671,9 +671,9 @@ namespace Plugin {
         success = false;
 
         if(strcmp(typeOfInput.c_str(), INPUT_TYPE_ALL) == 0) {
-            result = getInputDevices(HDMI, inputDeviceList);
+            result = getInputDevices(INPUT_TYPE_HDMI, inputDeviceList);
             if (result == Core::ERROR_NONE) {
-                result = getInputDevices(COMPOSITE, inputDeviceList);
+                result = getInputDevices(INPUT_TYPE_COMPOSITE, inputDeviceList);
             }
         } else if((strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) || (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0)) {
             result = getInputDevices(typeOfInput, inputDeviceList);
