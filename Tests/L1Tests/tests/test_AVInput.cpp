@@ -308,7 +308,12 @@ TEST_F(AVInputDsTest, setEdid2AllmSupport)
 
 TEST_F(AVInputDsTest, getVRRSupport)
 {
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
+    EXPECT_CALL(*p_hdmiInputImplMock, getVRRSupport(::testing::_, ::testing::_))
+        .WillOnce([](int iport, bool *vrrSupport) {
+            *vrrSupport = true;
+        });
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"0\"}"), response));
     EXPECT_EQ(response, string("{\"vrrSupport\":true,\"success\":true}"));
 }
 
