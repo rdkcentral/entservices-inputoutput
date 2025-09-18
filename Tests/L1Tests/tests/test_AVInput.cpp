@@ -302,11 +302,11 @@ TEST_F(AVInputDsTest, getEdid2AllmSupport)
 
 TEST_F(AVInputDsTest, getEdid2AllmSupport_ErrorCase)
 {
-    EXPECT_CALL(*p_hdmiInputImplMock, getEdid2AllmSupport(::testing::_, ::testing::_))
-        .WillOnce(testing::Throw(new device::Exception(-1, "Error")));
+    // EXPECT_CALL(*p_hdmiInputImplMock, getEdid2AllmSupport(::testing::_, ::testing::_))
+    //     .WillOnce(testing::Throw(new device::Exception(-1, "Error")));
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"test\"}"), response));
-    //EXPECT_EQ(response, string("{\"success\":false}"));
+    EXPECT_EQ(response, string("{\"success\":false}"));
 }
 
 TEST_F(AVInputDsTest, setEdid2AllmSupport)
