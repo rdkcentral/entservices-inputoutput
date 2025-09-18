@@ -61,6 +61,7 @@ namespace Plugin {
 
     void AVInputImplementation::InitializeIARM()
     {
+        printf("*** _DEBUG: AVInputImplementation::InitializeIARM: entry")
         if (Utils::IARM::init()) {
             IARM_Result_t res;
             IARM_CHECK(IARM_Bus_RegisterEventHandler(
