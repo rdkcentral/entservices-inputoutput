@@ -557,7 +557,7 @@ namespace Plugin {
         successResult.success = true;
 
         try {
-            if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0)
+            if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) {
                 device::HdmiInput::getInstance().selectPort(portId, requestAudioMix, plane, topMost);
             } else if (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0) {
                 device::CompositeInput::getInstance().selectPort(portId);
