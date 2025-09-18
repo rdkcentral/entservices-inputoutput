@@ -78,20 +78,22 @@ protected:
     IARM_EventHandler_t dsAVVideoModeEventHandler;
     IARM_EventHandler_t dsAviContentTypeEventHandler;
 
+public:
+
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
         , INIT_CONX(1, 0) , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
             2, Core::Thread::DefaultStackSize(), 16))
     {
-        TEST_LOG("*** _DEBUG: AVInputTest ctor");
+        printf("*** _DEBUG: AVInputTest ctor: entry");
 
         p_serviceMock = new NiceMock <ServiceMock>;
 
         p_avInputMock = new NiceMock <AVInputMock>;
 
         p_wrapsImplMock  = new NiceMock <WrapsImplMock>;
-        
+
         Wraps::setImpl(p_wrapsImplMock);
 
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
