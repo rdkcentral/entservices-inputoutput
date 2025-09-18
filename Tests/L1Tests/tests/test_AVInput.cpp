@@ -40,7 +40,8 @@ using namespace WPEFramework;
 using ::testing::NiceMock;
 
 class AVInputTest : public ::testing::Test {
-protected:
+    
+public:
 
     PLUGINHOST_DISPATCHER* dispatcher;
     Core::JSONRPC::Handler& handler;
@@ -79,8 +80,6 @@ protected:
     IARM_EventHandler_t dsAVStatusEventHandler;
     IARM_EventHandler_t dsAVVideoModeEventHandler;
     IARM_EventHandler_t dsAviContentTypeEventHandler;
-
-public:
 
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
