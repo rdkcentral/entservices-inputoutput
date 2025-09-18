@@ -742,9 +742,8 @@ TEST_F(AVInputInit, getGameFeatureStatus_VRR_FREESYNC_PREMIUM_PRO)
     EXPECT_EQ(response, string("{\"mode\":true,\"success\":true}"));
 }
 
-
 // <pca> debug
-#if 0
+#if 1
 // </pca>
 
 TEST_F(AVInputInit, onDevicesChangedHDMI)
