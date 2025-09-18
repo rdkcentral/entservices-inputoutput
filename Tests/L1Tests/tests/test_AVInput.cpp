@@ -41,18 +41,28 @@ using ::testing::NiceMock;
 
 class AVInputTest : public ::testing::Test {
 protected:
-    Core::ProxyType<Plugin::AVInput> plugin;
-    // <pca>
-    //IarmBusImplMock* p_iarmBusImplMock = nullptr;
+
     PLUGINHOST_DISPATCHER* dispatcher;
-    // </pca>
+    Core::JSONRPC::Handler& handler;
+    DECL_CORE_JSONRPC_CONX connection;
+    Core::JSONRPC::Message message;
+    string response;
+
+    Core::ProxyType<Plugin::AVInput> plugin;
     Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
     Core::ProxyType<WorkerPoolImplementation> workerPool;
+
     NiceMock<COMLinkMock> comLinkMock;
     NiceMock<ServiceMock> service;
-    WrapsImplMock *p_wrapsImplMock   = nullptr;
-    ServiceMock  *p_serviceMock  = nullptr;
-    AVInputMock *p_avInputMock = nullptr;
+    NiceMock<FactoriesImplementation> factoriesImplementation;
+
+    WrapsImplMock* p_wrapsImplMock                      = nullptr;
+    ServiceMock* p_serviceMock                          = nullptr;
+    AVInputMock* p_avInputMock                          = nullptr;
+    HdmiInputImplMock* p_hdmiInputImplMock              = nullptr;
+    CompositeInputImplMock* p_compositeInputImplMock    = nullptr;
+    HostImplMock* p_HostImplMock                        = nullptr;
+    IarmBusImplMock* p_iarmBusImplMock                  = nullptr;
 
     Exchange::IAVInput::IDevicesChangedNotification *OnDevicesChangedNotification = nullptr;
     Exchange::IAVInput::ISignalChangedNotification *OnSignalChangedNotification = nullptr;
@@ -61,9 +71,12 @@ protected:
     Exchange::IAVInput::IGameFeatureStatusUpdateNotification *OnGameFeatureStatusUpdateNotification = nullptr;
     Exchange::IAVInput::IHdmiContentTypeUpdateNotification *OnHdmiContentTypeUpdateNotification = nullptr;
 
-    Core::JSONRPC::Handler& handler;
-    DECL_CORE_JSONRPC_CONX connection;
-    string response;
+    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
+    IARM_EventHandler_t dsAVEventHandler;
+    IARM_EventHandler_t dsAVSignalStatusEventHandler;
+    IARM_EventHandler_t dsAVStatusEventHandler;
+    IARM_EventHandler_t dsAVVideoModeEventHandler;
+    IARM_EventHandler_t dsAviContentTypeEventHandler;
 
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
@@ -72,23 +85,18 @@ protected:
             2, Core::Thread::DefaultStackSize(), 16))
     {
         TEST_LOG("*** _DEBUG: AVInputTest ctor");
+
         p_serviceMock = new NiceMock <ServiceMock>;
 
         p_avInputMock = new NiceMock <AVInputMock>;
 
         p_wrapsImplMock  = new NiceMock <WrapsImplMock>;
+        
         Wraps::setImpl(p_wrapsImplMock);
 
-        // <pca>
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
         plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
         dispatcher->Activate(&service);
-        // </pca>
-
-        // <pca>
-        // p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
-        // IarmBus::setImpl(p_iarmBusImplMock);
-        // </pca>
 
         ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IDevicesChangedNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
@@ -143,98 +151,7 @@ protected:
         Core::IWorkerPool::Assign(&(*workerPool));
         workerPool->Run();
         plugin->Initialize(&service);
-    }
 
-    virtual ~AVInputTest()
-    {
-        TEST_LOG("*** _DEBUG: AVInputTest xtor");
-        plugin->Deinitialize(&service);
-
-        Core::IWorkerPool::Assign(nullptr);
-        workerPool.Release();
-
-        if (p_serviceMock != nullptr)
-        {
-            delete p_serviceMock;
-            p_serviceMock = nullptr;
-        }
-
-        if (p_avInputMock != nullptr)
-        {
-            delete p_avInputMock;
-            p_avInputMock = nullptr;
-        }
-
-        Wraps::setImpl(nullptr);
-        if (p_wrapsImplMock != nullptr)
-        {
-            delete p_wrapsImplMock;
-            p_wrapsImplMock = nullptr;
-        }
-
-        dispatcher->Deactivate();
-        dispatcher->Release();
-    }
-};
-
-// <pca> debug
-#if 0
-// </pca>
-TEST_F(AVInputTest, RegisteredMethods)
-{
-    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, RegisteredMethods): entry");
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("numberOfInputs")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("currentVideoMode")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("contentProtected")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEdid2AllmSupport")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEdid2AllmSupport")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVRRSupport")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVRRSupport")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVRRFrameRate")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getInputDevices")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("writeEDID")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("readEDID")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getRawSPD")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getSPD")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEdidVersion")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEdidVersion")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getHdmiVersion")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setMixerLevels")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("startInput")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("stopInput")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVideoRectangle")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getSupportedGameFeatures")));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getGameFeatureStatus")));
-}
-
-TEST_F(AVInputTest, contentProtected)
-{
-    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): entry");
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
-    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 1");
-    EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
-    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 2");
-}
-// <pca>
-#endif
-// </pca>
-
-class AVInputDsTest : public AVInputTest {
-protected:
-    HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
-    CompositeInputImplMock* p_compositeInputImplMock = nullptr;
-    HostImplMock* p_HostImplMock = nullptr;
-    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
-    IARM_EventHandler_t dsAVEventHandler;
-    IARM_EventHandler_t dsAVSignalStatusEventHandler;
-    IARM_EventHandler_t dsAVStatusEventHandler;
-    IARM_EventHandler_t dsAVVideoModeEventHandler;
-    IARM_EventHandler_t dsAviContentTypeEventHandler;
-
-    AVInputDsTest()
-        : AVInputTest()
-    {
-        TEST_LOG("*** _DEBUG: AVInputDsTest Constructor");
         p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
         device::HdmiInput::setImpl(p_hdmiInputImplMock);
 
@@ -243,106 +160,6 @@ protected:
 
         p_HostImplMock = new NiceMock<HostImplMock>;
         device::Host::setImpl(p_HostImplMock);
-    }
-    virtual ~AVInputDsTest() override
-    {
-        TEST_LOG("*** _DEBUG: AVInputDsTest Destructor");
-        device::HdmiInput::setImpl(nullptr);
-        if (p_hdmiInputImplMock != nullptr)
-        {
-            delete p_hdmiInputImplMock;
-            p_hdmiInputImplMock = nullptr;
-        }
-
-        device::CompositeInput::setImpl(nullptr);
-        if (p_compositeInputImplMock != nullptr) {
-            delete p_compositeInputImplMock;
-            p_compositeInputImplMock = nullptr;
-        }
-
-        device::Host::setImpl(nullptr);
-        if (p_HostImplMock != nullptr) {
-            delete p_HostImplMock;
-            p_HostImplMock = nullptr;
-        }
-    }
-};
-
-// <pca> debug
-#if 0
-// </pca>
-TEST_F(AVInputDsTest, numberOfInputs)
-{
-    ON_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
-        .WillByDefault(::testing::Return(1));
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("numberOfInputs"), _T("{}"), response));
-    EXPECT_EQ(response, string("{\"numberOfInputs\":1,\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, currentVideoMode)
-{
-    ON_CALL(*p_hdmiInputImplMock, getCurrentVideoMode())
-        .WillByDefault(::testing::Return(string("unknown")));
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("currentVideoMode"), _T("{}"), response));
-    EXPECT_EQ(response, string("{\"currentVideoMode\":\"unknown\",\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, getEdid2AllmSupport)
-{
-    EXPECT_CALL(*p_hdmiInputImplMock, getEdid2AllmSupport(::testing::_, ::testing::_))
-        .WillOnce([](int iport, bool *allmSupport) {
-            *allmSupport = true;
-        });
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"0\"}"), response));
-    EXPECT_EQ(response, string("{\"allmSupport\":true,\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, setEdid2AllmSupport)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEdid2AllmSupport"), _T("{\"portId\": \"0\",\"allmSupport\":true}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, getVRRSupport)
-{
-    EXPECT_CALL(*p_hdmiInputImplMock, getVRRSupport(::testing::_, ::testing::_))
-        .WillOnce([](int iport, bool *vrrSupport) {
-            *vrrSupport = true;
-        });
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"0\"}"), response));
-    EXPECT_EQ(response, string("true"));
-}
-
-TEST_F(AVInputDsTest, setVRRSupport)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
-    EXPECT_EQ(response, string(""));
-}
-
-TEST_F(AVInputDsTest, getVRRFrameRate)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"0\"}"), response));
-    EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":0,\"success\":true}"));
-}
-// <pca>
-#endif
-// </pca>
-
-class AVInputInit : public AVInputDsTest {
-protected:
-    IarmBusImplMock* p_iarmBusImplMock = nullptr;
-    NiceMock<FactoriesImplementation> factoriesImplementation;
-
-    Core::JSONRPC::Message message;
-
-    AVInputInit()
-        : AVInputDsTest()
-    {
-        TEST_LOG("*** _DEBUG: AVInputInit Constructor");
 
         p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
@@ -400,9 +217,55 @@ protected:
         PluginHost::IFactories::Assign(&factoriesImplementation);
     }
 
-    virtual ~AVInputInit() override
+    virtual ~AVInputTest()
     {
-        TEST_LOG("*** _DEBUG: AVInputInit Destructor");
+        TEST_LOG("*** _DEBUG: AVInputTest xtor");
+        plugin->Deinitialize(&service);
+
+        Core::IWorkerPool::Assign(nullptr);
+        workerPool.Release();
+
+        if (p_serviceMock != nullptr)
+        {
+            delete p_serviceMock;
+            p_serviceMock = nullptr;
+        }
+
+        if (p_avInputMock != nullptr)
+        {
+            delete p_avInputMock;
+            p_avInputMock = nullptr;
+        }
+
+        Wraps::setImpl(nullptr);
+        if (p_wrapsImplMock != nullptr)
+        {
+            delete p_wrapsImplMock;
+            p_wrapsImplMock = nullptr;
+        }
+
+        dispatcher->Deactivate();
+        dispatcher->Release();
+
+        device::HdmiInput::setImpl(nullptr);
+        if (p_hdmiInputImplMock != nullptr)
+        {
+            delete p_hdmiInputImplMock;
+            p_hdmiInputImplMock = nullptr;
+        }
+
+        device::CompositeInput::setImpl(nullptr);
+        if (p_compositeInputImplMock != nullptr) {
+            delete p_compositeInputImplMock;
+            p_compositeInputImplMock = nullptr;
+        }
+
+        device::Host::setImpl(nullptr);
+        if (p_HostImplMock != nullptr) {
+            delete p_HostImplMock;
+            p_HostImplMock = nullptr;
+        }
+
         PluginHost::IFactories::Assign(nullptr);
 
         IarmBus::setImpl(nullptr);
@@ -410,26 +273,131 @@ protected:
             delete p_iarmBusImplMock;
             p_iarmBusImplMock = nullptr;
         }
-        TEST_LOG("*** _DEBUG: AVInputInit Destructor: exit");
     }
 };
 
 // <pca> debug
 #if 0
 // </pca>
-TEST_F(AVInputInit, getInputDevices)
+TEST_F(AVInputTest, RegisteredMethods)
 {
-    TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): entry");
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, RegisteredMethods): entry");
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("numberOfInputs")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("currentVideoMode")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("contentProtected")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEdid2AllmSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEdid2AllmSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVRRSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVRRSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVRRFrameRate")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getInputDevices")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("writeEDID")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("readEDID")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getRawSPD")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getSPD")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEdidVersion")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEdidVersion")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getHdmiVersion")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setMixerLevels")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("startInput")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("stopInput")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVideoRectangle")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getSupportedGameFeatures")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getGameFeatureStatus")));
+}
+
+TEST_F(AVInputTest, contentProtected)
+{
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): entry");
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 1");
+    EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 2");
+}
+// <pca>
+#endif
+// </pca>
+
+// <pca> debug
+#if 0
+// </pca>
+TEST_F(AVInputTest, numberOfInputs)
+{
+    ON_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
+        .WillByDefault(::testing::Return(1));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("numberOfInputs"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"numberOfInputs\":1,\"success\":true}"));
+}
+
+TEST_F(AVInputTest, currentVideoMode)
+{
+    ON_CALL(*p_hdmiInputImplMock, getCurrentVideoMode())
+        .WillByDefault(::testing::Return(string("unknown")));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("currentVideoMode"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"currentVideoMode\":\"unknown\",\"success\":true}"));
+}
+
+TEST_F(AVInputTest, getEdid2AllmSupport)
+{
+    EXPECT_CALL(*p_hdmiInputImplMock, getEdid2AllmSupport(::testing::_, ::testing::_))
+        .WillOnce([](int iport, bool *allmSupport) {
+            *allmSupport = true;
+        });
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"0\"}"), response));
+    EXPECT_EQ(response, string("{\"allmSupport\":true,\"success\":true}"));
+}
+
+TEST_F(AVInputTest, setEdid2AllmSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEdid2AllmSupport"), _T("{\"portId\": \"0\",\"allmSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(AVInputTest, getVRRSupport)
+{
+    EXPECT_CALL(*p_hdmiInputImplMock, getVRRSupport(::testing::_, ::testing::_))
+        .WillOnce([](int iport, bool *vrrSupport) {
+            *vrrSupport = true;
+        });
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"0\"}"), response));
+    EXPECT_EQ(response, string("true"));
+}
+
+TEST_F(AVInputTest, setVRRSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+TEST_F(AVInputTest, getVRRFrameRate)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"0\"}"), response));
+    EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":0,\"success\":true}"));
+}
+// <pca>
+#endif
+// </pca>
+
+// <pca> debug
+#if 0
+// </pca>
+TEST_F(AVInputTest, getInputDevices)
+{
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, getInputDevices): entry");
     EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
         .WillOnce(::testing::Return(1));
     EXPECT_CALL(*p_compositeInputImplMock, getNumberOfInputs())
         .WillOnce(::testing::Return(1));
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getInputDevices"), _T("{}"), response));
-    TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): response=%s", response.c_str());
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, getInputDevices): response=%s", response.c_str());
     EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\"},{\"id\":0,\"connected\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getInputDevices_HDMI)
+TEST_F(AVInputTest, getInputDevices_HDMI)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
         .WillOnce(::testing::Return(1));
@@ -439,7 +407,7 @@ TEST_F(AVInputInit, getInputDevices_HDMI)
     EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":true,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getInputDevices_COMPOSITE)
+TEST_F(AVInputTest, getInputDevices_COMPOSITE)
 {
     EXPECT_CALL(*p_compositeInputImplMock, getNumberOfInputs())
         .WillOnce(::testing::Return(1));
@@ -449,19 +417,19 @@ TEST_F(AVInputInit, getInputDevices_COMPOSITE)
     EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":true,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getInputDevices_InvalidParameters)
+TEST_F(AVInputTest, getInputDevices_InvalidParameters)
 {
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getInputDevices"), _T("{\"typeOfInput\": \"Test\"}"), response));
     EXPECT_EQ(response, string(""));
 }
 
-TEST_F(AVInputInit, writeEDID)
+TEST_F(AVInputTest, writeEDID)
 {
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("writeEDID"), _T("{\"portId\": \"1\",\"message\":\"Test\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(AVInputInit, readEDID)
+TEST_F(AVInputTest, readEDID)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getEDIDBytesInfo(::testing::_, ::testing::_))
         .WillOnce([](int port, std::vector<uint8_t>& edid) {
@@ -473,7 +441,7 @@ TEST_F(AVInputInit, readEDID)
     EXPECT_EQ(response, string("{\"EDID\":\"AP\\/\\/\\/\\/\\/\\/\\/w==\",\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getRawSPD)
+TEST_F(AVInputTest, getRawSPD)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getHDMISPDInfo(::testing::_, ::testing::_))
         .WillOnce([](int port, std::vector<uint8_t>& data) {
@@ -484,7 +452,7 @@ TEST_F(AVInputInit, getRawSPD)
     EXPECT_EQ(response, string("{\"HDMISPD\":\"U1BEAA\",\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getSPD)
+TEST_F(AVInputTest, getSPD)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getHDMISPDInfo(::testing::_, ::testing::_))
         .WillOnce([](int port, std::vector<uint8_t>& data) {
@@ -495,7 +463,7 @@ TEST_F(AVInputInit, getSPD)
     EXPECT_EQ(response, string("{\"HDMISPD\":\"Packet Type:53,Version:80,Length:68,vendor name:wn,product des:,source info:00\",\"success\":true}"));
 }
 
-TEST_F(AVInputInit, setEdidVersion)
+TEST_F(AVInputTest, setEdidVersion)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, setEdidVersion(::testing::_, ::testing::_))
         .WillOnce([](int port, int edidVersion) {
@@ -507,7 +475,7 @@ TEST_F(AVInputInit, setEdidVersion)
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getEdidVersion1)
+TEST_F(AVInputTest, getEdidVersion1)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getEdidVersion(::testing::_, ::testing::_))
         .WillOnce([](int port, int* edidVersion) {
@@ -519,7 +487,7 @@ TEST_F(AVInputInit, getEdidVersion1)
     EXPECT_EQ(response, string("{\"edidVersion\":\"HDMI1.4\",\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getEdidVersion2)
+TEST_F(AVInputTest, getEdidVersion2)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getEdidVersion(::testing::_, ::testing::_))
         .WillOnce([](int port, int* edidVersion) {
@@ -531,7 +499,7 @@ TEST_F(AVInputInit, getEdidVersion2)
     EXPECT_EQ(response, string("{\"edidVersion\":\"HDMI2.0\",\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getHdmiVersion)
+TEST_F(AVInputTest, getHdmiVersion)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getHdmiVersion(::testing::_, ::testing::_))
         .WillOnce([](int port, dsHdmiMaxCapabilityVersion_t* capVersion) {
@@ -544,7 +512,7 @@ TEST_F(AVInputInit, getHdmiVersion)
     EXPECT_EQ(response, string("{\"HdmiCapabilityVersion\":\"2.1\",\"success\":true}"));
 }
 
-TEST_F(AVInputInit, setMixerLevels)
+TEST_F(AVInputTest, setMixerLevels)
 {
     EXPECT_CALL(*p_HostImplMock, setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY, ::testing::_))
         .WillOnce([](dsAudioInput_t input, int volume) {
@@ -562,7 +530,7 @@ TEST_F(AVInputInit, setMixerLevels)
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(AVInputInit, startInput_HDMI)
+TEST_F(AVInputTest, startInput_HDMI)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, selectPort(::testing::_, ::testing::_, ::testing::_, ::testing::_))
         .WillOnce([](int8_t Port, bool audioMix, int videoPlane, bool topMost) {
@@ -576,7 +544,7 @@ TEST_F(AVInputInit, startInput_HDMI)
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(AVInputInit, startInput_COMPOSITE)
+TEST_F(AVInputTest, startInput_COMPOSITE)
 {
     EXPECT_CALL(*p_compositeInputImplMock, selectPort(::testing::_))
         .WillOnce([](int8_t Port) {
@@ -587,7 +555,7 @@ TEST_F(AVInputInit, startInput_COMPOSITE)
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(AVInputInit, stopInput_HDMI)
+TEST_F(AVInputTest, stopInput_HDMI)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, selectPort(::testing::_, ::testing::_, ::testing::_, ::testing::_))
         .WillOnce([](int8_t Port, bool audioMix, int videoPlane, bool topMost) {
@@ -598,7 +566,7 @@ TEST_F(AVInputInit, stopInput_HDMI)
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(AVInputInit, stopInput_COMPOSITE)
+TEST_F(AVInputTest, stopInput_COMPOSITE)
 {
     EXPECT_CALL(*p_compositeInputImplMock, selectPort(::testing::_))
         .WillOnce([](int8_t Port) {
@@ -609,7 +577,7 @@ TEST_F(AVInputInit, stopInput_COMPOSITE)
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(AVInputInit, setVideoRectangle_HDMI)
+TEST_F(AVInputTest, setVideoRectangle_HDMI)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, scaleVideo(::testing::_, ::testing::_, ::testing::_, ::testing::_))
         .WillOnce([](int32_t x, int32_t y, int32_t width, int32_t height) {
@@ -623,7 +591,7 @@ TEST_F(AVInputInit, setVideoRectangle_HDMI)
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(AVInputInit, setVideoRectangle_COMPOSITE)
+TEST_F(AVInputTest, setVideoRectangle_COMPOSITE)
 {
     EXPECT_CALL(*p_compositeInputImplMock, scaleVideo(::testing::_, ::testing::_, ::testing::_, ::testing::_))
         .WillOnce([](int32_t x, int32_t y, int32_t width, int32_t height) {
@@ -637,7 +605,7 @@ TEST_F(AVInputInit, setVideoRectangle_COMPOSITE)
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getSupportedGameFeatures)
+TEST_F(AVInputTest, getSupportedGameFeatures)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getSupportedGameFeatures(::testing::_))
         .WillOnce([](std::vector<std::string>& featureList) {
@@ -648,7 +616,7 @@ TEST_F(AVInputInit, getSupportedGameFeatures)
     EXPECT_EQ(response, string("{\"supportedGameFeatures\":[\"ALLM\",\"VRR\",\"QMS\"],\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getGameFeatureStatus_ALLM)
+TEST_F(AVInputTest, getGameFeatureStatus_ALLM)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getHdmiALLMStatus(::testing::_, ::testing::_))
         .WillOnce([](int iHdmiPort, bool* allmStatus) {
@@ -660,7 +628,7 @@ TEST_F(AVInputInit, getGameFeatureStatus_ALLM)
     EXPECT_EQ(response, string("{\"mode\":true,\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getGameFeatureStatus_VRR_HDMI)
+TEST_F(AVInputTest, getGameFeatureStatus_VRR_HDMI)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getVRRStatus(::testing::_, ::testing::_))
         .WillOnce([](int iHdmiPort, dsHdmiInVrrStatus_t* vrrStatus) {
@@ -673,7 +641,7 @@ TEST_F(AVInputInit, getGameFeatureStatus_VRR_HDMI)
     EXPECT_EQ(response, string("{\"mode\":true,\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getGameFeatureStatus_VRR_FREESYNC)
+TEST_F(AVInputTest, getGameFeatureStatus_VRR_FREESYNC)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getVRRStatus(::testing::_, ::testing::_))
         .WillOnce([](int iHdmiPort, dsHdmiInVrrStatus_t* vrrStatus) {
@@ -686,7 +654,7 @@ TEST_F(AVInputInit, getGameFeatureStatus_VRR_FREESYNC)
     EXPECT_EQ(response, string("{\"mode\":true,\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getGameFeatureStatus_VRR_FREESYNC_PREMIUM)
+TEST_F(AVInputTest, getGameFeatureStatus_VRR_FREESYNC_PREMIUM)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getVRRStatus(::testing::_, ::testing::_))
         .WillOnce([](int iHdmiPort, dsHdmiInVrrStatus_t* vrrStatus) {
@@ -699,7 +667,7 @@ TEST_F(AVInputInit, getGameFeatureStatus_VRR_FREESYNC_PREMIUM)
     EXPECT_EQ(response, string("{\"mode\":true,\"success\":true}"));
 }
 
-TEST_F(AVInputInit, getGameFeatureStatus_VRR_FREESYNC_PREMIUM_PRO)
+TEST_F(AVInputTest, getGameFeatureStatus_VRR_FREESYNC_PREMIUM_PRO)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getVRRStatus(::testing::_, ::testing::_))
         .WillOnce([](int iHdmiPort, dsHdmiInVrrStatus_t* vrrStatus) {
@@ -715,7 +683,7 @@ TEST_F(AVInputInit, getGameFeatureStatus_VRR_FREESYNC_PREMIUM_PRO)
 // <pca>
 #endif
 // </pca>
-TEST_F(AVInputInit, onDevicesChangedHDMI)
+TEST_F(AVInputTest, onDevicesChangedHDMI)
 {
     printf("*** _DEBUG: onDevicesChangedHDMI: entry");
     Core::Event onDevicesChanged(false, true);
@@ -755,7 +723,7 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
 // <pca> debug
 #if 0
 // </pca>
-TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
+TEST_F(AVInputTest, onDevicesChangedCOMPOSITE)
 {
     Core::Event onDevicesChanged(false, true);
 
@@ -785,7 +753,7 @@ TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedStableHDMI)
+TEST_F(AVInputTest, onSignalChangedStableHDMI)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -816,7 +784,7 @@ TEST_F(AVInputInit, onSignalChangedStableHDMI)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
+TEST_F(AVInputTest, onSignalChangedNoSignalHDMI)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -847,7 +815,7 @@ TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedUnstableHDMI)
+TEST_F(AVInputTest, onSignalChangedUnstableHDMI)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -878,7 +846,7 @@ TEST_F(AVInputInit, onSignalChangedUnstableHDMI)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedNotSupportedHDMI)
+TEST_F(AVInputTest, onSignalChangedNotSupportedHDMI)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -908,7 +876,7 @@ TEST_F(AVInputInit, onSignalChangedNotSupportedHDMI)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedDefaultHDMI)
+TEST_F(AVInputTest, onSignalChangedDefaultHDMI)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -938,7 +906,7 @@ TEST_F(AVInputInit, onSignalChangedDefaultHDMI)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedStableCOMPOSITE)
+TEST_F(AVInputTest, onSignalChangedStableCOMPOSITE)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -968,7 +936,7 @@ TEST_F(AVInputInit, onSignalChangedStableCOMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedNoSignalCOMPOSITE)
+TEST_F(AVInputTest, onSignalChangedNoSignalCOMPOSITE)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -998,7 +966,7 @@ TEST_F(AVInputInit, onSignalChangedNoSignalCOMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedUnstableCOMPOSITE)
+TEST_F(AVInputTest, onSignalChangedUnstableCOMPOSITE)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -1028,7 +996,7 @@ TEST_F(AVInputInit, onSignalChangedUnstableCOMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedNotSupportedCOMPOSITE)
+TEST_F(AVInputTest, onSignalChangedNotSupportedCOMPOSITE)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -1058,7 +1026,7 @@ TEST_F(AVInputInit, onSignalChangedNotSupportedCOMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedDefaultCOMPOSITE)
+TEST_F(AVInputTest, onSignalChangedDefaultCOMPOSITE)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -1088,7 +1056,7 @@ TEST_F(AVInputInit, onSignalChangedDefaultCOMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOn_HDMI)
+TEST_F(AVInputTest, onInputStatusChangeOn_HDMI)
 {
     Core::Event onInputStatusChanged(false, true);
 
@@ -1121,7 +1089,7 @@ TEST_F(AVInputInit, onInputStatusChangeOn_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOff_HDMI)
+TEST_F(AVInputTest, onInputStatusChangeOff_HDMI)
 {
     Core::Event onInputStatusChanged(false, true);
 
@@ -1154,7 +1122,7 @@ TEST_F(AVInputInit, onInputStatusChangeOff_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOn_COMPOSITE)
+TEST_F(AVInputTest, onInputStatusChangeOn_COMPOSITE)
 {
     Core::Event onInputStatusChanged(false, true);
 
@@ -1186,7 +1154,7 @@ TEST_F(AVInputInit, onInputStatusChangeOn_COMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOff_COMPOSITE)
+TEST_F(AVInputTest, onInputStatusChangeOff_COMPOSITE)
 {
     Core::Event onInputStatusChanged(false, true);
 
@@ -1218,7 +1186,7 @@ TEST_F(AVInputInit, onInputStatusChangeOff_COMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate)
+TEST_F(AVInputTest, hdmiGameFeatureStatusUpdate)
 {
     Core::Event gameFeatureStatusUpdate(false, true);
 
@@ -1248,7 +1216,7 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate)
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_HDMI_VRR)
+TEST_F(AVInputTest, hdmiGameFeatureStatusUpdate_HDMI_VRR)
 {
     Core::Event gameFeatureStatusUpdate(false, true);
 
@@ -1278,7 +1246,7 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_HDMI_VRR)
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
+TEST_F(AVInputTest, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
 {
     Core::Event gameFeatureStatusUpdate(false, true);
 
@@ -1308,7 +1276,7 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
+TEST_F(AVInputTest, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
 {
     Core::Event gameFeatureStatusUpdate(false, true);
 
@@ -1338,7 +1306,7 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
+TEST_F(AVInputTest, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 {
     Core::Event gameFeatureStatusUpdate(false, true);
 
@@ -1368,7 +1336,7 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate1_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate1_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1400,7 +1368,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate2_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate2_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1432,7 +1400,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate2_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate3_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate3_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1464,7 +1432,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate3_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate4_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate4_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1496,7 +1464,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate4_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate5_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate5_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1528,7 +1496,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate5_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate6_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate6_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1560,7 +1528,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate6_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate7_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate7_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1592,7 +1560,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate7_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate8_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate8_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1624,7 +1592,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate8_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate9_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate9_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1656,7 +1624,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate9_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate10_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate10_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1688,7 +1656,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate10_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate11_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate11_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1720,7 +1688,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate11_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate12_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate12_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1752,7 +1720,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate12_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate13_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate13_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1784,7 +1752,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate13_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate14_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate14_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1816,7 +1784,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate14_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate15_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdate15_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1848,7 +1816,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate15_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdateDefault_HDMI)
+TEST_F(AVInputTest, videoStreamInfoUpdateDefault_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1881,7 +1849,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdateDefault_HDMI)
 }
 
 
-TEST_F(AVInputInit, videoStreamInfoUpdate1_COMPOSITE)
+TEST_F(AVInputTest, videoStreamInfoUpdate1_COMPOSITE)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1913,7 +1881,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_COMPOSITE)
 }
 
 
-TEST_F(AVInputInit, videoStreamInfoUpdate2_COMPOSITE)
+TEST_F(AVInputTest, videoStreamInfoUpdate2_COMPOSITE)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1944,7 +1912,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate2_COMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdateDefault_COMPOSITE)
+TEST_F(AVInputTest, videoStreamInfoUpdateDefault_COMPOSITE)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1975,7 +1943,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdateDefault_COMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, aviContentTypeUpdate_HDMI)
+TEST_F(AVInputTest, aviContentTypeUpdate_HDMI)
 {
     Core::Event aviContentTypeUpdate(false, true);
 
