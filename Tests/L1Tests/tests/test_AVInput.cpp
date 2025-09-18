@@ -53,11 +53,15 @@ public:
 
     Core::ProxyType<Plugin::AVInput> plugin;
     Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
-    Core::ProxyType<WorkerPoolImplementation> workerPool;
+    // <pca> debug
+    //Core::ProxyType<WorkerPoolImplementation> workerPool;
+    // </pca>
 
     NiceMock<COMLinkMock> comLinkMock;
     NiceMock<ServiceMock> service;
-    NiceMock<FactoriesImplementation> factoriesImplementation;
+    // <pca>
+    //NiceMock<FactoriesImplementation> factoriesImplementation;
+    // </pca>
 
     WrapsImplMock* p_wrapsImplMock                      = nullptr;
     ServiceMock* p_serviceMock                          = nullptr;
@@ -65,7 +69,9 @@ public:
     HdmiInputImplMock* p_hdmiInputImplMock              = nullptr;
     CompositeInputImplMock* p_compositeInputImplMock    = nullptr;
     HostImplMock* p_HostImplMock                        = nullptr;
-    IarmBusImplMock* p_iarmBusImplMock                  = nullptr;
+    // <pca> debug
+    //IarmBusImplMock* p_iarmBusImplMock                  = nullptr;
+    // </pca>
 
     Exchange::IAVInput::IDevicesChangedNotification *OnDevicesChangedNotification = nullptr;
     Exchange::IAVInput::ISignalChangedNotification *OnSignalChangedNotification = nullptr;
@@ -81,12 +87,19 @@ public:
     IARM_EventHandler_t dsAVVideoModeEventHandler;
     IARM_EventHandler_t dsAviContentTypeEventHandler;
 
+    // <pca> debug
+    // AVInputTest()
+    //     : plugin(Core::ProxyType<Plugin::AVInput>::Create())
+    //     , handler(*(plugin))
+    //     , INIT_CONX(1, 0) , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
+    //         2, Core::Thread::DefaultStackSize(), 16))
+    // {
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
-        , INIT_CONX(1, 0) , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
-            2, Core::Thread::DefaultStackSize(), 16))
+        , INIT_CONX(1, 0)
     {
+    // </pca>
         printf("*** _DEBUG: AVInputTest ctor: entry");
 
         p_serviceMock = new NiceMock <ServiceMock>;
@@ -95,11 +108,18 @@ public:
 
         Wraps::setImpl(p_wrapsImplMock);
 
-        PluginHost::IFactories::Assign(&factoriesImplementation);
+        // <pca> debug
+        //PluginHost::IFactories::Assign(&factoriesImplementation);
+        // </pca>
 
-        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
-        dispatcher->Activate(&service);
+        // <pca> debug
+        // dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        // dispatcher->Activate(&service);
+        // </pca>
 
+        // <pca> debug
+        #if 0
+        // </pca>
         ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IDevicesChangedNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
             [&](Exchange::IAVInput::IDevicesChangedNotification *notification){
@@ -154,6 +174,13 @@ public:
             .WillByDefault(::testing::Return(AVInputImpl));
         #endif
 
+        // <pca> debug
+        #endif
+        // </pca>
+
+        // <pca>
+        #if 0
+        // </pca>
         p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
 
@@ -206,9 +233,14 @@ public:
                     }
                     return IARM_RESULT_SUCCESS;
                 }));
+        // <pca>
+        #endif
+        // </pca>
 
-        Core::IWorkerPool::Assign(&(*workerPool));
-        workerPool->Run();
+        // <pca> debug
+        // Core::IWorkerPool::Assign(&(*workerPool));
+        // workerPool->Run();
+        // </pca>
 
         plugin->Initialize(&service);
 
@@ -227,8 +259,10 @@ public:
         TEST_LOG("*** _DEBUG: AVInputTest xtor");
         plugin->Deinitialize(&service);
 
-        Core::IWorkerPool::Assign(nullptr);
-        workerPool.Release();
+        // <pca> debug
+        // Core::IWorkerPool::Assign(nullptr);
+        // workerPool.Release();
+        // </pca>
 
         if (p_serviceMock != nullptr)
         {
@@ -268,16 +302,20 @@ public:
             p_HostImplMock = nullptr;
         }
 
-        dispatcher->Deactivate();
-        dispatcher->Release();
+        // <pca> debug
+        // dispatcher->Deactivate();
+        // dispatcher->Release();
+        // </pca>
 
         PluginHost::IFactories::Assign(nullptr);
 
-        IarmBus::setImpl(nullptr);
-        if (p_iarmBusImplMock != nullptr) {
-            delete p_iarmBusImplMock;
-            p_iarmBusImplMock = nullptr;
-        }
+        // <pca> debug
+        // IarmBus::setImpl(nullptr);
+        // if (p_iarmBusImplMock != nullptr) {
+        //     delete p_iarmBusImplMock;
+        //     p_iarmBusImplMock = nullptr;
+        // }
+        // </pca>
     }
 };
 
@@ -311,14 +349,14 @@ TEST_F(AVInputTest, RegisteredMethods)
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getGameFeatureStatus")));
 }
 
-// TEST_F(AVInputTest, contentProtected)
-// {
-//     TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): entry");
-//     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
-//     TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 1");
-//     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
-//     TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 2");
-// }
+TEST_F(AVInputTest, contentProtected)
+{
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): entry");
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 1");
+    EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
+    TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 2");
+}
 // <pca>
 #endif
 // </pca>
