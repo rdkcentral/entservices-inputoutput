@@ -413,11 +413,11 @@ protected:
         PluginHost::IFactories::Assign(nullptr);
 
         // <pca> debug
-        IarmBus::setImpl(nullptr);
-        if (p_iarmBusImplMock != nullptr) {
-            delete p_iarmBusImplMock;
-            p_iarmBusImplMock = nullptr;
-        }
+        // IarmBus::setImpl(nullptr);
+        // if (p_iarmBusImplMock != nullptr) {
+        //     delete p_iarmBusImplMock;
+        //     p_iarmBusImplMock = nullptr;
+        // }
         // </pca>
         TEST_LOG("*** _DEBUG: AVInputInit Destructor: exit");
     }
