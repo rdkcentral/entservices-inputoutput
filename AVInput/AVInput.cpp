@@ -89,6 +89,10 @@ namespace Plugin {
         _avInput = service->Root<Exchange::IAVInput>(_connectionId, 5000, _T("AVInputImplementation"));
 
         if (nullptr != _avInput) {
+            // <pca>
+            _avInput->InitializeIARM();
+            // </pca>
+
             // Register for notifications
             _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
             _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
@@ -117,6 +121,10 @@ namespace Plugin {
         _service->Unregister(&_avInputNotification);
 
         if (nullptr != _avInput) {
+            // <pca>
+            _avInput->DeinitializeIARM();
+            // </pca>
+
             _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
             _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
             _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());

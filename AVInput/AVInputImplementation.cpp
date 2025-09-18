@@ -49,12 +49,16 @@ namespace Plugin {
     {
         LOGINFO("Create AVInputImplementation Instance");
         AVInputImplementation::_instance = this;
-        InitializeIARM();
+        // <pca>
+        //InitializeIARM();
+        // </pca>
     }
 
     AVInputImplementation::~AVInputImplementation()
     {
-        DeinitializeIARM();
+        // <pca>
+        //DeinitializeIARM();
+        // </pca>
 
         AVInputImplementation::_instance = nullptr;
         _service = nullptr;
