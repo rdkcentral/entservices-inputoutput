@@ -78,7 +78,11 @@ protected:
         p_wrapsImplMock  = new NiceMock <WrapsImplMock>;
         Wraps::setImpl(p_wrapsImplMock);
 
-        // <pca> debug
+        // <pca>
+        plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        // </pca>
+
+        // <pca>
         // p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
         // IarmBus::setImpl(p_iarmBusImplMock);
         // </pca>
@@ -401,7 +405,9 @@ protected:
 
         PluginHost::IFactories::Assign(&factoriesImplementation);
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
-            plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        // <pca>
+        //plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        // </pca>
         dispatcher->Activate(&service);
     }
 
@@ -413,11 +419,11 @@ protected:
         PluginHost::IFactories::Assign(nullptr);
 
         // <pca> debug
-        // IarmBus::setImpl(nullptr);
-        // if (p_iarmBusImplMock != nullptr) {
-        //     delete p_iarmBusImplMock;
-        //     p_iarmBusImplMock = nullptr;
-        // }
+        IarmBus::setImpl(nullptr);
+        if (p_iarmBusImplMock != nullptr) {
+            delete p_iarmBusImplMock;
+            p_iarmBusImplMock = nullptr;
+        }
         // </pca>
         TEST_LOG("*** _DEBUG: AVInputInit Destructor: exit");
     }
