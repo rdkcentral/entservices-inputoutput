@@ -186,6 +186,8 @@ protected:
     // </pca>
 };
 
+// <pca> debug
+#if 0
 TEST_F(AVInputTest, RegisteredMethods)
 {
     TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, RegisteredMethods): entry");
@@ -221,6 +223,9 @@ TEST_F(AVInputTest, contentProtected)
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
     TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 2");
 }
+// <pca>
+#endif
+// </pca>
 
 class AVInputDsTest : public AVInputTest {
 protected:
@@ -270,6 +275,10 @@ protected:
         }
     }
 };
+
+// <pca> debug
+#if 0
+// </pca>
 
 TEST_F(AVInputDsTest, numberOfInputs)
 {
@@ -328,6 +337,10 @@ TEST_F(AVInputDsTest, getVRRFrameRate)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"0\"}"), response));
     EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":0,\"success\":true}"));
 }
+
+// <pca>
+#endif
+// </pca>
 
 class AVInputInit : public AVInputDsTest {
 protected:
@@ -415,6 +428,7 @@ protected:
             delete p_iarmBusImplMock;
             p_iarmBusImplMock = nullptr;
         }
+        TEST_LOG("*** _DEBUG: AVInputInit Destructor: exit");
     }
 };
 
@@ -432,6 +446,10 @@ TEST_F(AVInputInit, getInputDevices)
     //EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"connected\":false}],\"success\":true}"));
     // </pca>
 }
+
+// <pca> debug
+#if 0
+// </pca>
 
 TEST_F(AVInputInit, getInputDevices_HDMI)
 {
@@ -470,10 +488,6 @@ TEST_F(AVInputInit, writeEDID_InvalidParameters)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("writeEDID"), _T("{}"), response));
     EXPECT_EQ(response, string(""));
 }
-
-// <pca> debug
-#if 0
-// </pca>
 
 TEST_F(AVInputInit, readEDID)
 {
