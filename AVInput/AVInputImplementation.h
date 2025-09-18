@@ -117,11 +117,6 @@ namespace Plugin {
                 _avInputImplementation->Dispatch(_event, _params);
             }
 
-            // <pca>
-            void InitializeIARM();
-            void DeinitializeIARM();
-            // </pca>
-
         protected:
 
             Job(AVInputImplementation* avInputImplementation, Event event, ParamsType& params)
@@ -206,10 +201,8 @@ namespace Plugin {
         int m_primVolume;
         int m_inputVolume; // Player Volume
 
-        // <pca>
-        // void InitializeIARM();
-        // void DeinitializeIARM();
-        // </pca>
+        void InitializeIARM();
+        void DeinitializeIARM();
 
         void dispatchEvent(Event, const ParamsType params);
         void Dispatch(Event event, const ParamsType params);

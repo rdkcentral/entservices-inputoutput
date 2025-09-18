@@ -28,14 +28,12 @@
 #define API_VERSION_NUMBER_MINOR 7
 #define API_VERSION_NUMBER_PATCH 1
 
-// <pca>
 // Explicitly implementing getInputDevices method instead of autogenerating via IAVInput.h
 // because it requires optional parameters which are not supported in Thunder 4.x. This can 
 // be refactored after migrating to 5.x.
 #define AVINPUT_METHOD_GET_INPUT_DEVICES "getInputDevices"
 #define HDMI 0
 #define COMPOSITE 1
-// </pca>
 
 namespace WPEFramework {
 namespace {
@@ -89,9 +87,6 @@ namespace Plugin {
         _avInput = service->Root<Exchange::IAVInput>(_connectionId, 5000, _T("AVInputImplementation"));
 
         if (nullptr != _avInput) {
-            // <pca>
-            _avInput->InitializeIARM();
-            // </pca>
 
             // Register for notifications
             _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
@@ -121,9 +116,6 @@ namespace Plugin {
         _service->Unregister(&_avInputNotification);
 
         if (nullptr != _avInput) {
-            // <pca>
-            _avInput->DeinitializeIARM();
-            // </pca>
 
             _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
             _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
@@ -171,7 +163,6 @@ namespace Plugin {
         SYSLOG(Logging::Shutdown, (string(_T("AVInput de-initialised"))));
     }
 
-    // <pca>
     JsonArray AVInput::getInputDevices(int iType)
     {
         JsonArray list;
@@ -211,7 +202,6 @@ namespace Plugin {
         return list;
     }
 
-    // <pca>
     int getTypeOfInput(string sType)
     {
         int iType = -1;
@@ -223,7 +213,6 @@ namespace Plugin {
             throw "Invalide type of INPUT, please specify HDMI/COMPOSITE";
         return iType;
     }
-    // </pca>
 
     uint32_t AVInput::getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response)
     {
@@ -250,7 +239,6 @@ namespace Plugin {
         }
         returnResponse(true);
     }
-    // </pca>
 
     string AVInput::Information() const
     {

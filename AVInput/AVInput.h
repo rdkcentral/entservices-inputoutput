@@ -158,10 +158,8 @@ namespace Plugin {
 
         void Deactivated(RPC::IRemoteConnection* connection);
 
-        // <pca>
         JsonArray getInputDevices(int iType);
         uint32_t getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response);
-        // </pca>
 
     }; // AVInput
 } // namespace Plugin

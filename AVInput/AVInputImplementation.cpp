@@ -49,17 +49,12 @@ namespace Plugin {
     {
         LOGINFO("Create AVInputImplementation Instance");
         AVInputImplementation::_instance = this;
-        // <pca>
-        //InitializeIARM();
-        // </pca>
+        InitializeIARM();
     }
 
     AVInputImplementation::~AVInputImplementation()
     {
-        // <pca>
-        //DeinitializeIARM();
-        // </pca>
-
+        DeinitializeIARM();
         AVInputImplementation::_instance = nullptr;
         _service = nullptr;
     }
@@ -1128,7 +1123,6 @@ namespace Plugin {
         return ret;
     }
 
-    // <pca>
     Core::hresult AVInputImplementation::GetVRRFrameRate(const int portId, double& currentVRRVideoFrameRate, bool& success)
     {
         dsHdmiInVrrStatus_t vrrStatus;
@@ -1142,7 +1136,6 @@ namespace Plugin {
 
         return Core::ERROR_NONE;
     }
-    // </pca>
 
     Core::hresult AVInputImplementation::GetRawSPD(const int portId, string& HDMISPD, bool& success)
     {

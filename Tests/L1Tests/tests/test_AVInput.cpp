@@ -21,13 +21,11 @@
 #include <gmock/gmock.h>
 
 #include "AVInput.h"
-// <pca>
 #include "AVInputImplementation.h"
 #include "COMLinkMock.h"
 #include "WorkerPoolImplementation.h"
 #include "WrapsMock.h"
 #include "AVInputMock.h"
-// </pca>
 
 #include "CompositeInputMock.h"
 #include "FactoriesImplementation.h"
@@ -44,7 +42,6 @@ using ::testing::NiceMock;
 class AVInputTest : public ::testing::Test {
 protected:
     Core::ProxyType<Plugin::AVInput> plugin;
-    // <pca>
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
     Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
     Core::ProxyType<WorkerPoolImplementation> workerPool;
@@ -60,7 +57,6 @@ protected:
     Exchange::IAVInput::IVideoStreamInfoUpdateNotification *OnVideoStreamInfoUpdateNotification = nullptr;
     Exchange::IAVInput::IGameFeatureStatusUpdateNotification *OnGameFeatureStatusUpdateNotification = nullptr;
     Exchange::IAVInput::IHdmiContentTypeUpdateNotification *OnHdmiContentTypeUpdateNotification = nullptr;
-    // </pca>
 
     Core::JSONRPC::Handler& handler;
     DECL_CORE_JSONRPC_CONX connection;
@@ -69,13 +65,9 @@ protected:
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
-        // <pca>
-        //, INIT_CONX(1, 0)
         , INIT_CONX(1, 0) , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
             2, Core::Thread::DefaultStackSize(), 16))
-        // </pca>
     {
-        // <pca>
         TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 1");
         p_serviceMock = new NiceMock <ServiceMock>;
 
@@ -146,11 +138,8 @@ protected:
 
         plugin->Initialize(&service);
         TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 5");
-        // </pca>
     }
 
-    // <pca>
-    //virtual ~AVInputTest() = default;
     virtual ~AVInputTest()
     {
         TEST_LOG("*** _DEBUG: AVInputTest Destructor");
@@ -184,7 +173,6 @@ protected:
             p_iarmBusImplMock = nullptr;
         }
     }
-    // </pca>
 };
 
 TEST_F(AVInputTest, RegisteredMethods)
@@ -332,24 +320,14 @@ TEST_F(AVInputDsTest, getVRRFrameRate)
 
 class AVInputInit : public AVInputDsTest {
 protected:
-    // <pca> debug
-    //IarmBusImplMock* p_iarmBusImplMock = nullptr;
-    // </pca>
     NiceMock<FactoriesImplementation> factoriesImplementation;
     PLUGINHOST_DISPATCHER* dispatcher;
-    // <pca> debug
-    //NiceMock<ServiceMock> service;
-    // </pca>
     Core::JSONRPC::Message message;
 
     AVInputInit()
         : AVInputDsTest()
     {
         TEST_LOG("*** _DEBUG: AVInputInit Constructor");
-        // <pca> debug
-        // p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
-        // IarmBus::setImpl(p_iarmBusImplMock);
-        // </pca>
 
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
@@ -400,9 +378,6 @@ protected:
                     }
                     return IARM_RESULT_SUCCESS;
                 }));
-        // <pca> debug
-        //EXPECT_EQ(string(""), plugin->Initialize(&service));
-        // </pca>
 
         PluginHost::IFactories::Assign(&factoriesImplementation);
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
@@ -417,17 +392,6 @@ protected:
         dispatcher->Release();
         PluginHost::IFactories::Assign(nullptr);
 
-        // <pca> debug
-        //plugin->Deinitialize(&service);
-        // </pca>
-
-        // <pca> debug
-        // IarmBus::setImpl(nullptr);
-        // if (p_iarmBusImplMock != nullptr) {
-        //     delete p_iarmBusImplMock;
-        //     p_iarmBusImplMock = nullptr;
-        // }
-        // </pca>
         TEST_LOG("*** _DEBUG: AVInputInit Destructor: exit");
     }
 };
@@ -441,10 +405,7 @@ TEST_F(AVInputInit, getInputDevices)
         .WillOnce(::testing::Return(1));
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getInputDevices"), _T("{}"), response));
     TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): response=%s", response.c_str());
-    // <pca>
     EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\"},{\"id\":0,\"connected\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
-    //EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"connected\":false}],\"success\":true}"));
-    // </pca>
 }
 
 TEST_F(AVInputInit, getInputDevices_HDMI)
@@ -729,10 +690,6 @@ TEST_F(AVInputInit, getGameFeatureStatus_VRR_FREESYNC_PREMIUM_PRO)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getGameFeatureStatus"), _T("{\"portId\" : 1, \"gameFeature\" : \"VRR-FREESYNC-PREMIUM-PRO\"}"), response));
     EXPECT_EQ(response, string("{\"mode\":true,\"success\":true}"));
 }
-
-// <pca> debug
-#if 1
-// </pca>
 
 TEST_F(AVInputInit, onDevicesChangedHDMI)
 {
@@ -2013,7 +1970,3 @@ TEST_F(AVInputInit, aviContentTypeUpdate_HDMI)
 
     EVENT_UNSUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);
 }
-
-// <pca> debug
-#endif
-// </pca>
