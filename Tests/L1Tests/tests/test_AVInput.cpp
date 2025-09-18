@@ -69,6 +69,7 @@ protected:
             2, Core::Thread::DefaultStackSize(), 16))
     {
         TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 1");
+        printf("*** _DEBUG: AVInputTest ctor printf test");
         p_serviceMock = new NiceMock <ServiceMock>;
 
         p_avInputMock = new NiceMock <AVInputMock>;
