@@ -23,7 +23,6 @@
  
  #include "videoOutputPort.hpp"
  #include "videoOutputPortConfig.hpp"
- #include "dsMgr.h"
  #include "manager.hpp"
  
  #include "UtilsJsonRpc.h"
@@ -79,7 +78,7 @@
                                      .createInterface();
          }
  
-         void HdcpProfileImplementation::onHdmiOutputHotPlug(int connectStatus)
+         void HdcpProfileImplementation::onHdmiOutputHotPlug(dsDisplayEvent_t connectStatus)
          {
              if (HDMI_HOT_PLUG_EVENT_CONNECTED == connectStatus)
              {
@@ -115,7 +114,7 @@
                      status.hdcpReason);
         }
  
-         void HdcpProfileImplementation::onHdmiOutputHDCPStatusEvent(int hdcpStatus)
+         void HdcpProfileImplementation::onHdmiOutputHDCPStatusEvent(dsHdcpStatus_t hdcpStatus)
          {
              LOGINFO("hdcpStatus[%d]",hdcpStatus);
              onHdcpProfileDisplayConnectionChanged();
@@ -124,7 +123,7 @@
          void HdcpProfileImplementation::OnDisplayHDMIHotPlug(dsDisplayEvent_t displayEvent)
          {
              LOGINFO("Received OnDisplayHDMIHotPlug  event data:%d \r\n", displayEvent);
-             HdcpProfileImplementation::_instance->onHdmiOutputHotPlug(static_cast<int>(displayEvent));
+             HdcpProfileImplementation::_instance->onHdmiOutputHotPlug(displayEvent);
          }
 
          void HdcpProfileImplementation::OnHDCPStatusChange(dsHdcpStatus_t hdcpStatus)
@@ -143,7 +142,7 @@
                  else
                  {
                      LOGINFO("Received OnHDCPStatusChange  event data:%d  param.curState: %d \r\n", hdcpStatus,pwrStateCur);
-                     HdcpProfileImplementation::_instance->onHdmiOutputHDCPStatusEvent(static_cast<int>(hdcpStatus));
+                     HdcpProfileImplementation::_instance->onHdmiOutputHDCPStatusEvent(hdcpStatus);
                  }
              }
          }
@@ -211,8 +210,8 @@
              _service = service;
              _service->AddRef();
              ASSERT(service != nullptr);
-             device::Host::getInstance().Register(baseInterface<device::Host::IVideoOutputPortEvents>(),"WPE[HdcpProfile]");
-             device::Host::getInstance().Register(baseInterface<device::Host::IDisplayDeviceEvents>(),"WPE[HdcpProfile]");
+             device::Host::getInstance().Register(baseInterface<device::Host::IVideoOutputPortEvents>(),"WPE::HdcpProfile");
+             device::Host::getInstance().Register(baseInterface<device::Host::IDisplayDeviceEvents>(),"WPE::HdcpProfile");
              InitializePowerManager(service);
              return result;
          }

@@ -127,8 +127,8 @@
              Core::hresult GetSettopHDCPSupport(string& supportedHDCPVersion,bool& isHDCPSupported,bool& success) override;
              bool GetHDCPStatusInternal(HDCPStatus& hdcpstatus);
              void InitializePowerManager(PluginHost::IShell *service);
-             void onHdmiOutputHotPlug(int connectStatus);
-             void onHdmiOutputHDCPStatusEvent(int);
+             void onHdmiOutputHotPlug(dsDisplayEvent_t connectStatus);
+             void onHdmiOutputHDCPStatusEvent(dsHdcpStatus_t);
              void logHdcpStatus (const char *trigger, HDCPStatus& status);   
              void onHdcpProfileDisplayConnectionChanged();  
              static PowerManagerInterfaceRef _powerManagerPlugin;      
