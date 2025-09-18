@@ -132,6 +132,7 @@ protected:
         ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
         .WillByDefault(::testing::Invoke(
         [&](const RPC::Object& object, const uint32_t waitTime, uint32_t& connectionId) {
+            TEST_LOG("*** _DEBUG: Instantiate called");
             AVInputImpl = Core::ProxyType<Plugin::AVInputImplementation>::Create();
             return &AVInputImpl;
             }));
@@ -186,8 +187,6 @@ protected:
     // </pca>
 };
 
-// <pca> debug
-#if 0
 TEST_F(AVInputTest, RegisteredMethods)
 {
     TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, RegisteredMethods): entry");
@@ -223,9 +222,6 @@ TEST_F(AVInputTest, contentProtected)
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
     TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 2");
 }
-// <pca>
-#endif
-// </pca>
 
 class AVInputDsTest : public AVInputTest {
 protected:
@@ -275,10 +271,6 @@ protected:
         }
     }
 };
-
-// <pca> debug
-#if 0
-// </pca>
 
 TEST_F(AVInputDsTest, numberOfInputs)
 {
@@ -337,10 +329,6 @@ TEST_F(AVInputDsTest, getVRRFrameRate)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"0\"}"), response));
     EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":0,\"success\":true}"));
 }
-
-// <pca>
-#endif
-// </pca>
 
 class AVInputInit : public AVInputDsTest {
 protected:
