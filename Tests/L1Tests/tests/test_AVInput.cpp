@@ -53,15 +53,11 @@ public:
 
     Core::ProxyType<Plugin::AVInput> plugin;
     Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
-    // <pca> debug
-    //Core::ProxyType<WorkerPoolImplementation> workerPool;
-    // </pca>
+    Core::ProxyType<WorkerPoolImplementation> workerPool;
 
     NiceMock<COMLinkMock> comLinkMock;
     NiceMock<ServiceMock> service;
-    // <pca>
-    //NiceMock<FactoriesImplementation> factoriesImplementation;
-    // </pca>
+    NiceMock<FactoriesImplementation> factoriesImplementation;
 
     WrapsImplMock* p_wrapsImplMock                      = nullptr;
     ServiceMock* p_serviceMock                          = nullptr;
@@ -69,9 +65,7 @@ public:
     HdmiInputImplMock* p_hdmiInputImplMock              = nullptr;
     CompositeInputImplMock* p_compositeInputImplMock    = nullptr;
     HostImplMock* p_HostImplMock                        = nullptr;
-    // <pca> debug
-    //IarmBusImplMock* p_iarmBusImplMock                  = nullptr;
-    // </pca>
+    IarmBusImplMock* p_iarmBusImplMock                  = nullptr;
 
     Exchange::IAVInput::IDevicesChangedNotification *OnDevicesChangedNotification = nullptr;
     Exchange::IAVInput::ISignalChangedNotification *OnSignalChangedNotification = nullptr;
@@ -87,19 +81,12 @@ public:
     IARM_EventHandler_t dsAVVideoModeEventHandler;
     IARM_EventHandler_t dsAviContentTypeEventHandler;
 
-    // <pca> debug
-    // AVInputTest()
-    //     : plugin(Core::ProxyType<Plugin::AVInput>::Create())
-    //     , handler(*(plugin))
-    //     , INIT_CONX(1, 0) , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
-    //         2, Core::Thread::DefaultStackSize(), 16))
-    // {
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
-        , INIT_CONX(1, 0)
+        , INIT_CONX(1, 0) , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
+            2, Core::Thread::DefaultStackSize(), 16))
     {
-    // </pca>
         printf("*** _DEBUG: AVInputTest ctor: entry");
 
         p_serviceMock = new NiceMock <ServiceMock>;
@@ -108,18 +95,11 @@ public:
 
         Wraps::setImpl(p_wrapsImplMock);
 
-        // <pca> debug
-        //PluginHost::IFactories::Assign(&factoriesImplementation);
-        // </pca>
+        PluginHost::IFactories::Assign(&factoriesImplementation);
 
-        // <pca> debug
-        // dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
-        // dispatcher->Activate(&service);
-        // </pca>
+        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        dispatcher->Activate(&service);
 
-        // <pca> debug
-        #if 0
-        // </pca>
         ON_CALL(*p_avInputMock, Register(::testing::Matcher<Exchange::IAVInput::IDevicesChangedNotification*>(::testing::_)))
         .WillByDefault(::testing::Invoke(
             [&](Exchange::IAVInput::IDevicesChangedNotification *notification){
@@ -174,13 +154,6 @@ public:
             .WillByDefault(::testing::Return(AVInputImpl));
         #endif
 
-        // <pca> debug
-        #endif
-        // </pca>
-
-        // <pca>
-        #if 0
-        // </pca>
         p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
 
@@ -233,14 +206,9 @@ public:
                     }
                     return IARM_RESULT_SUCCESS;
                 }));
-        // <pca>
-        #endif
-        // </pca>
 
-        // <pca> debug
-        // Core::IWorkerPool::Assign(&(*workerPool));
-        // workerPool->Run();
-        // </pca>
+        Core::IWorkerPool::Assign(&(*workerPool));
+        workerPool->Run();
 
         plugin->Initialize(&service);
 
@@ -259,10 +227,8 @@ public:
         TEST_LOG("*** _DEBUG: AVInputTest xtor");
         plugin->Deinitialize(&service);
 
-        // <pca> debug
-        // Core::IWorkerPool::Assign(nullptr);
-        // workerPool.Release();
-        // </pca>
+        Core::IWorkerPool::Assign(nullptr);
+        workerPool.Release();
 
         if (p_serviceMock != nullptr)
         {
@@ -302,20 +268,16 @@ public:
             p_HostImplMock = nullptr;
         }
 
-        // <pca> debug
-        // dispatcher->Deactivate();
-        // dispatcher->Release();
-        // </pca>
+        dispatcher->Deactivate();
+        dispatcher->Release();
 
         PluginHost::IFactories::Assign(nullptr);
 
-        // <pca> debug
-        // IarmBus::setImpl(nullptr);
-        // if (p_iarmBusImplMock != nullptr) {
-        //     delete p_iarmBusImplMock;
-        //     p_iarmBusImplMock = nullptr;
-        // }
-        // </pca>
+        IarmBus::setImpl(nullptr);
+        if (p_iarmBusImplMock != nullptr) {
+            delete p_iarmBusImplMock;
+            p_iarmBusImplMock = nullptr;
+        }
     }
 };
 
@@ -325,28 +287,28 @@ public:
 TEST_F(AVInputTest, RegisteredMethods)
 {
     printf("*** _DEBUG: TEST_F(AVInputTest, RegisteredMethods): entry");
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("numberOfInputs")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("currentVideoMode")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("contentProtected")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEdid2AllmSupport")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEdid2AllmSupport")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVRRSupport")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVRRSupport")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVRRFrameRate")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getInputDevices")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("writeEDID")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("readEDID")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getRawSPD")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getSPD")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEdidVersion")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEdidVersion")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getHdmiVersion")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setMixerLevels")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("startInput")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("stopInput")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVideoRectangle")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getSupportedGameFeatures")));
-    // EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getGameFeatureStatus")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("numberOfInputs")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("currentVideoMode")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("contentProtected")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEdid2AllmSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEdid2AllmSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVRRSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVRRSupport")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVRRFrameRate")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getInputDevices")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("writeEDID")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("readEDID")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getRawSPD")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getSPD")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEdidVersion")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEdidVersion")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getHdmiVersion")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setMixerLevels")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("startInput")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("stopInput")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVideoRectangle")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getSupportedGameFeatures")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getGameFeatureStatus")));
 }
 
 TEST_F(AVInputTest, contentProtected)
@@ -362,7 +324,7 @@ TEST_F(AVInputTest, contentProtected)
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 // </pca>
 TEST_F(AVInputTest, numberOfInputs)
 {
@@ -426,7 +388,7 @@ TEST_F(AVInputTest, getVRRFrameRate)
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 // </pca>
 TEST_F(AVInputTest, getInputDevices)
 {
