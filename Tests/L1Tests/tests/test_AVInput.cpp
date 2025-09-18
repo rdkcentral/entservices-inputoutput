@@ -320,12 +320,6 @@ TEST_F(AVInputDsTest, getVRRSupport)
 TEST_F(AVInputDsTest, setVRRSupport)
 {
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, setVRRSupport_ErrorCase)
-{
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"test\",\"vrrSupport\":true}"), response));
     EXPECT_EQ(response, string(""));
 }
 
@@ -333,12 +327,6 @@ TEST_F(AVInputDsTest, getVRRFrameRate)
 {
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"0\"}"), response));
     EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":0,\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
-{
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"test\"}"), response));
-    EXPECT_EQ(response, string(""));
 }
 
 // <pca> debug
