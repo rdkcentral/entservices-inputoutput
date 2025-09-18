@@ -552,14 +552,14 @@ namespace Plugin {
 
         return Core::ERROR_NONE;
     }
-    Core::hresult AVInputImplementation::StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost, SuccessResult& successResult)
+    Core::hresult AVInputImplementation::StartInput(const int portId, const string& typeOfInput, const bool requestAudioMix, const int plane, const bool topMost, SuccessResult& successResult)
     {
         successResult.success = true;
 
         try {
-            if (typeOfInput == HDMI) {
-                device::HdmiInput::getInstance().selectPort(portId, audioMix, planeType, topMost);
-            } else if (typeOfInput == COMPOSITE) {
+            if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0)
+                device::HdmiInput::getInstance().selectPort(portId, requestAudioMix, plane, topMost);
+            } else if (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0) {
                 device::CompositeInput::getInstance().selectPort(portId);
             } else {
                 LOGWARN("Invalid input type passed to StartInput");
@@ -573,7 +573,7 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::StopInput(const int typeOfInput, SuccessResult& successResult)
+    Core::hresult AVInputImplementation::StopInput(const string& typeOfInput, SuccessResult& successResult)
     {
         Core::hresult ret = Core::ERROR_NONE;
         successResult.success = true;
@@ -585,9 +585,9 @@ namespace Plugin {
                 device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, DEFAULT_INPUT_VOL_LEVEL);
                 isAudioBalanceSet = false;
             }
-            if (typeOfInput == HDMI) {
+            if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) {
                 device::HdmiInput::getInstance().selectPort(-1);
-            } else if (typeOfInput == COMPOSITE) {
+            } else if (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0) {
                 device::CompositeInput::getInstance().selectPort(-1);
             } else {
                 LOGWARN("Invalid input type passed to StopInput");
@@ -603,12 +603,12 @@ namespace Plugin {
         return ret;
     }
 
-    Core::hresult AVInputImplementation::SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput, SuccessResult& successResult)
+    Core::hresult AVInputImplementation::SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const string& typeOfInput, SuccessResult& successResult)
     {
         successResult.success = true;
 
         try {
-            if (typeOfInput == HDMI) {
+            if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) {
                 device::HdmiInput::getInstance().scaleVideo(x, y, w, h);
             } else {
                 device::CompositeInput::getInstance().scaleVideo(x, y, w, h);
@@ -620,15 +620,17 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::getInputDevices(const int typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice> &inputDeviceList)
+    Core::hresult AVInputImplementation::getInputDevices(const string& typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice> &inputDeviceList)
     {
         int num = 0;
+        bool isHdmi = true;
 
         try {
-            if (typeOfInput == HDMI) {
+            if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) {
                 num = device::HdmiInput::getInstance().getNumberOfInputs();
-            } else if (typeOfInput == COMPOSITE) {
+            } else if (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0) {
                 num = device::CompositeInput::getInstance().getNumberOfInputs();
+                isHdmi = false;
             } else {
                 LOGERR("getInputDevices: Invalid input type");
                 return Core::ERROR_GENERAL;
@@ -642,10 +644,10 @@ namespace Plugin {
 
                     inputDevice.id = i;
                     std::stringstream locator;
-                    if (typeOfInput == HDMI) {
+                    if (isHdmi) {
                         locator << "hdmiin://localhost/deviceid/" << i;
                         inputDevice.connected = device::HdmiInput::getInstance().isPortConnected(i);
-                    } else if (typeOfInput == COMPOSITE) {
+                    } else {
                         locator << "cvbsin://localhost/deviceid/" << i;
                         inputDevice.connected = device::CompositeInput::getInstance().isPortConnected(i);
                     }
@@ -662,24 +664,20 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetInputDevices(const int typeOfInput, IInputDeviceIterator*& devices, bool& success)
+    Core::hresult AVInputImplementation::GetInputDevices(const string& typeOfInput, IInputDeviceIterator*& devices, bool& success)
     {
         Core::hresult result;
         std::list<WPEFramework::Exchange::IAVInput::InputDevice> inputDeviceList;
         success = false;
 
-        switch (typeOfInput) {
-        case ALL: {
+        if(strcmp(typeOfInput.c_str(), INPUT_TYPE_ALL) == 0) {
             result = getInputDevices(HDMI, inputDeviceList);
             if (result == Core::ERROR_NONE) {
                 result = getInputDevices(COMPOSITE, inputDeviceList);
             }
-        }
-        case HDMI:
-        case COMPOSITE:
+        } else if((strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) || (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0)) {
             result = getInputDevices(typeOfInput, inputDeviceList);
-            break;
-        default:
+        } else {
             LOGERR("GetInputDevices: Invalid input type");
             return Core::ERROR_NONE;
         }
@@ -742,7 +740,23 @@ namespace Plugin {
         IInputDeviceIterator* devices;
         bool success;
 
-        Core::hresult result = GetInputDevices(type, devices, success);
+        string typeOfInput;
+        switch(type) {
+            case HDMI:
+                typeOfInput = INPUT_TYPE_HDMI;
+                break;
+            case COMPOSITE:
+                typeOfInput = INPUT_TYPE_COMPOSITE;
+                break;
+            case ALL:
+                typeOfInput = INPUT_TYPE_ALL;
+                break;
+            default:
+                LOGERR("AVInputHotplug: Invalid input type");
+                return;
+        }
+
+        Core::hresult result = GetInputDevices(typeOfInput, devices, success);
         if (Core::ERROR_NONE != result) {
             LOGERR("AVInputHotplug [%d, %d, %d]: Failed to get devices", input, connect, type);
             return;

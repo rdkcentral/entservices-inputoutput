@@ -163,16 +163,16 @@ namespace Plugin {
         Core::hresult GetVRRSupport(const int portId, bool& vrrSupport) override;
         Core::hresult GetHdmiVersion(const int portId, string& HdmiCapabilityVersion, bool& success) override;
         Core::hresult SetMixerLevels(const int primaryVolume, const int inputVolume, SuccessResult& successResult) override;
-        Core::hresult StartInput(const int portId, const int typeOfInput, const bool audioMix, const int planeType, const bool topMost, SuccessResult& successResult) override;
-        Core::hresult StopInput(const int typeOfInput, SuccessResult& successResult) override;
-        Core::hresult SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const uint16_t typeOfInput, SuccessResult& successResult) override;
+        Core::hresult StartInput(const int portId, const string& typeOfInput, const bool requestAudioMix, const int plane, const bool topMost, SuccessResult& successResult) override;
+        Core::hresult StopInput(const string& typeOfInput, SuccessResult& successResult) override;
+        Core::hresult SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const string& typeOfInput, SuccessResult& successResult) override;
         Core::hresult CurrentVideoMode(string& currentVideoMode, bool& success) override;
         Core::hresult ContentProtected(bool& isContentProtected, bool& success) override;
         Core::hresult GetSupportedGameFeatures(IStringIterator*& features, bool& success) override;
         Core::hresult GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode, bool& success) override;
         Core::hresult GetVRRFrameRate(const int portId, double& currentVRRVideoFrameRate, bool& success) override;
 
-        Core::hresult getInputDevices(const int typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice>& inputDeviceList);
+        Core::hresult getInputDevices(const string& typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice>& inputDeviceList);
         void AVInputHotplug(int input, int connect, int type);
         void AVInputSignalChange(int port, int signalStatus, int type);
         void AVInputStatusChange(int port, bool isPresented, int type);
