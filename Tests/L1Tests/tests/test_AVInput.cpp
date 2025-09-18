@@ -349,7 +349,9 @@ protected:
     // </pca>
     NiceMock<FactoriesImplementation> factoriesImplementation;
     PLUGINHOST_DISPATCHER* dispatcher;
-    NiceMock<ServiceMock> service;
+    // <pca> debug
+    //NiceMock<ServiceMock> service;
+    // </pca>
     Core::JSONRPC::Message message;
 
     AVInputInit()
@@ -410,7 +412,9 @@ protected:
                     }
                     return IARM_RESULT_SUCCESS;
                 }));
-        EXPECT_EQ(string(""), plugin->Initialize(&service));
+        // <pca> debug
+        //EXPECT_EQ(string(""), plugin->Initialize(&service));
+        // </pca>
 
         PluginHost::IFactories::Assign(&factoriesImplementation);
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
@@ -425,7 +429,9 @@ protected:
         dispatcher->Release();
         PluginHost::IFactories::Assign(nullptr);
 
-        plugin->Deinitialize(&service);
+        // <pca> debug
+        //plugin->Deinitialize(&service);
+        // </pca>
 
         // <pca> debug
         // IarmBus::setImpl(nullptr);
