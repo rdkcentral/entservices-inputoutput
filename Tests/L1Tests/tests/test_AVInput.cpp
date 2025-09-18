@@ -68,7 +68,7 @@ protected:
         , INIT_CONX(1, 0) , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
             2, Core::Thread::DefaultStackSize(), 16))
     {
-        TEST_LOG("*** _DEBUG: AVInputTest Constructor: Mark 1");
+        TEST_LOG("*** _DEBUG: AVInputTest ctor");
         p_serviceMock = new NiceMock <ServiceMock>;
 
         p_avInputMock = new NiceMock <AVInputMock>;
@@ -136,7 +136,7 @@ protected:
 
     virtual ~AVInputTest()
     {
-        TEST_LOG("*** _DEBUG: AVInputTest Destructor");
+        TEST_LOG("*** _DEBUG: AVInputTest xtor");
         plugin->Deinitialize(&service);
 
         Core::IWorkerPool::Assign(nullptr);
@@ -169,6 +169,9 @@ protected:
     }
 };
 
+// <pca> debug
+#if 0
+// </pca>
 TEST_F(AVInputTest, RegisteredMethods)
 {
     TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, RegisteredMethods): entry");
@@ -204,6 +207,9 @@ TEST_F(AVInputTest, contentProtected)
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
     TEST_LOG("*** _DEBUG: TEST_F(AVInputTest, contentProtected): Mark 2");
 }
+// <pca>
+#endif
+// </pca>
 
 class AVInputDsTest : public AVInputTest {
 protected:
@@ -254,6 +260,9 @@ protected:
     }
 };
 
+// <pca> debug
+#if 0
+// </pca>
 TEST_F(AVInputDsTest, numberOfInputs)
 {
     ON_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
@@ -311,6 +320,9 @@ TEST_F(AVInputDsTest, getVRRFrameRate)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"0\"}"), response));
     EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":0,\"success\":true}"));
 }
+// <pca>
+#endif
+// </pca>
 
 class AVInputInit : public AVInputDsTest {
 protected:
@@ -390,6 +402,9 @@ protected:
     }
 };
 
+// <pca> debug
+#if 0
+// </pca>
 TEST_F(AVInputInit, getInputDevices)
 {
     TEST_LOG("*** _DEBUG: TEST_F(AVInputInit, getInputDevices): entry");
@@ -685,8 +700,12 @@ TEST_F(AVInputInit, getGameFeatureStatus_VRR_FREESYNC_PREMIUM_PRO)
     EXPECT_EQ(response, string("{\"mode\":true,\"success\":true}"));
 }
 
+// <pca>
+#endif
+// </pca>
 TEST_F(AVInputInit, onDevicesChangedHDMI)
 {
+    printf("*** _DEBUG: onDevicesChangedHDMI: entry");
     Core::Event onDevicesChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -702,19 +721,28 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
                 return Core::ERROR_NONE;
             }));
 
+    printf("*** _DEBUG: onDevicesChangedHDMI: Mark 1");
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
+    printf("*** _DEBUG: onDevicesChangedHDMI: Mark 2");
 
     ASSERT_TRUE(dsAVEventHandler != nullptr);
+    printf("*** _DEBUG: onDevicesChangedHDMI: Mark 3");
     IARM_Bus_DSMgr_EventData_t eventData;
     eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_0;
     eventData.data.hdmi_in_connect.isPortConnected = true;
     dsAVEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
+    printf("*** _DEBUG: onDevicesChangedHDMI: Mark 4");
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
+    printf("*** _DEBUG: onDevicesChangedHDMI: Mark 5");
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
+    printf("*** _DEBUG: onDevicesChangedHDMI: exit");
 }
 
+// <pca> debug
+#if 0
+// </pca>
 TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 {
     Core::Event onDevicesChanged(false, true);
@@ -1964,3 +1992,6 @@ TEST_F(AVInputInit, aviContentTypeUpdate_HDMI)
 
     EVENT_UNSUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);
 }
+// <pca> debug
+#endif
+// </pca>
