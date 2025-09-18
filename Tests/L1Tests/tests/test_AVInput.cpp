@@ -62,7 +62,9 @@ protected:
     HdmiInputImplMock* p_hdmiInputImplMock              = nullptr;
     CompositeInputImplMock* p_compositeInputImplMock    = nullptr;
     HostImplMock* p_HostImplMock                        = nullptr;
-    IarmBusImplMock* p_iarmBusImplMock                  = nullptr;
+    // <pca> debug
+    //IarmBusImplMock* p_iarmBusImplMock                  = nullptr;
+    // </pca>
 
     Exchange::IAVInput::IDevicesChangedNotification *OnDevicesChangedNotification = nullptr;
     Exchange::IAVInput::ISignalChangedNotification *OnSignalChangedNotification = nullptr;
@@ -153,6 +155,9 @@ public:
             .WillByDefault(::testing::Return(AVInputImpl));
         #endif
 
+        // <pca>
+        #if 0
+        // </pca>
         p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
 
@@ -205,6 +210,9 @@ public:
                     }
                     return IARM_RESULT_SUCCESS;
                 }));
+        // <pca>
+        #endif
+        // </pca>
 
         Core::IWorkerPool::Assign(&(*workerPool));
         workerPool->Run();
@@ -272,11 +280,13 @@ public:
 
         PluginHost::IFactories::Assign(nullptr);
 
-        IarmBus::setImpl(nullptr);
-        if (p_iarmBusImplMock != nullptr) {
-            delete p_iarmBusImplMock;
-            p_iarmBusImplMock = nullptr;
-        }
+        // <pca> debug
+        // IarmBus::setImpl(nullptr);
+        // if (p_iarmBusImplMock != nullptr) {
+        //     delete p_iarmBusImplMock;
+        //     p_iarmBusImplMock = nullptr;
+        // }
+        // </pca>
     }
 };
 
