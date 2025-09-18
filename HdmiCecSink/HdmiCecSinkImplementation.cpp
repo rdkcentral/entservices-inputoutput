@@ -642,19 +642,6 @@ namespace WPEFramework
         , _registeredEventHandlers(false)
         {
             LOGWARN("Initializing HdmiCecSinkImplementation");
-
-            // Deterministic initialization for all device slots
-            for (int i = 0; i < 16; ++i) {
-                deviceList[i].clear();
-                deviceList[i].m_isDevicePresent = false;
-                deviceList[i].m_isRequestRetry = 0;
-                deviceList[i].m_isRequested = CECDeviceParams::REQUEST_NONE;
-            }
-
-            // Ensure queues/flags are clean
-            while (!m_SendKeyQueue.empty()) {
-                m_SendKeyQueue.pop();
-            }
         }
 
        HdmiCecSinkImplementation::~HdmiCecSinkImplementation()
