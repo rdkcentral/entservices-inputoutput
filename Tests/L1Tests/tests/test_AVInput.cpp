@@ -123,3 +123,129 @@ TEST_F(AVInputTest, contentProtected)
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
 }
 
+class AVInputDsTest : public AVInputTest {
+protected:
+    HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
+    CompositeInputImplMock* p_compositeInputImplMock = nullptr;
+    HostImplMock* p_HostImplMock = nullptr;
+    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
+    IARM_EventHandler_t dsAVEventHandler;
+    IARM_EventHandler_t dsAVSignalStatusEventHandler;
+    IARM_EventHandler_t dsAVStatusEventHandler;
+    IARM_EventHandler_t dsAVVideoModeEventHandler;
+    IARM_EventHandler_t dsAviContentTypeEventHandler;
+
+    AVInputDsTest()
+        : AVInputTest()
+    {
+        p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
+        device::HdmiInput::setImpl(p_hdmiInputImplMock);
+
+        p_compositeInputImplMock = new NiceMock<CompositeInputImplMock>;
+        device::CompositeInput::setImpl(p_compositeInputImplMock);
+
+        p_HostImplMock = new NiceMock<HostImplMock>;
+        device::Host::setImpl(p_HostImplMock);
+    }
+    virtual ~AVInputDsTest() override
+    {
+        device::HdmiInput::setImpl(nullptr);
+        if (p_hdmiInputImplMock != nullptr)
+        {
+            delete p_hdmiInputImplMock;
+            p_hdmiInputImplMock = nullptr;
+        }
+
+        device::CompositeInput::setImpl(nullptr);
+        if (p_compositeInputImplMock != nullptr) {
+            delete p_compositeInputImplMock;
+            p_compositeInputImplMock = nullptr;
+        }
+
+        device::Host::setImpl(nullptr);
+        if (p_HostImplMock != nullptr) {
+            delete p_HostImplMock;
+            p_HostImplMock = nullptr;
+        }
+    }
+};
+
+TEST_F(AVInputDsTest, numberOfInputs)
+{
+    ON_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
+        .WillByDefault(::testing::Return(1));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("numberOfInputs"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"numberOfInputs\":1,\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, currentVideoMode)
+{
+    ON_CALL(*p_hdmiInputImplMock, getCurrentVideoMode())
+        .WillByDefault(::testing::Return(string("unknown")));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("currentVideoMode"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"currentVideoMode\":\"unknown\",\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, getEdid2AllmSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"0\",\"allmSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"allmSupport\":true,\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, getEdid2AllmSupport_ErrorCase)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"test\",\"allmSupport\":true}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+TEST_F(AVInputDsTest, setEdid2AllmSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEdid2AllmSupport"), _T("{\"portId\": \"0\",\"allmSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, setEdid2AllmSupport_ErrorCase)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setEdid2AllmSupport"), _T("{\"portId\": \"test\",\"allmSupport\":true}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+TEST_F(AVInputDsTest, getVRRSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"vrrSupport\":true,\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, getVRRSupport_ErrorCase)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"test\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+TEST_F(AVInputDsTest, setVRRSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, setVRRSupport_ErrorCase)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"test\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+TEST_F(AVInputDsTest, getVRRFrameRate)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"0\"}"), response));
+    EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":0,\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"test\"}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+
