@@ -562,7 +562,7 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("StartInput: Invalid paramater: portId: %s ", portId);
+            LOGERR("StartInput: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
@@ -570,15 +570,15 @@ namespace Plugin {
 
         try {
             if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) {
-                device::HdmiInput::getInstance().selectPort(portId, requestAudioMix, plane, topMost);
+                device::HdmiInput::getInstance().selectPort(id, requestAudioMix, plane, topMost);
             } else if (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0) {
-                device::CompositeInput::getInstance().selectPort(portId);
+                device::CompositeInput::getInstance().selectPort(id);
             } else {
                 LOGWARN("Invalid input type passed to StartInput");
                 successResult.success = false;
             }
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             successResult.success = false;
         }
 
@@ -709,7 +709,7 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("WriteEDID: Invalid paramater: portId: %s ", portId);
+            LOGERR("WriteEDID: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
@@ -725,7 +725,7 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("ReadEDID: Invalid paramater: portId: %s ", portId);
+            LOGERR("ReadEDID: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
@@ -733,7 +733,7 @@ namespace Plugin {
 
         try {
             vector<uint8_t> edidVec2;
-            device::HdmiInput::getInstance().getEDIDBytesInfo(portId, edidVec2);
+            device::HdmiInput::getInstance().getEDIDBytesInfo(id, edidVec2);
             edidVec = edidVec2; // edidVec must be "unknown" unless we successfully get to this line
 
             // convert to base64
@@ -747,7 +747,7 @@ namespace Plugin {
             }
             Core::ToString((uint8_t*)&edidVec[0], size, true, EDID);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             success = false;
             return Core::ERROR_NONE;
         }
@@ -1105,27 +1105,27 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("GetGameFeatureStatus: Invalid paramater: portId: %s ", portId);
+            LOGERR("GetGameFeatureStatus: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
         if (gameFeature == STR_ALLM) {
-            mode = getALLMStatus(portId);
+            mode = getALLMStatus(id);
         } else if (gameFeature == VRR_TYPE_HDMI) {
             dsHdmiInVrrStatus_t vrrStatus;
-            getVRRStatus(portId, &vrrStatus);
+            getVRRStatus(id, &vrrStatus);
             mode = (vrrStatus.vrrType == dsVRR_HDMI_VRR);
         } else if (gameFeature == VRR_TYPE_FREESYNC) {
             dsHdmiInVrrStatus_t vrrStatus;
-            getVRRStatus(portId, &vrrStatus);
+            getVRRStatus(id, &vrrStatus);
             mode = (vrrStatus.vrrType == dsVRR_AMD_FREESYNC);
         } else if (gameFeature == VRR_TYPE_FREESYNC_PREMIUM) {
             dsHdmiInVrrStatus_t vrrStatus;
-            getVRRStatus(portId, &vrrStatus);
+            getVRRStatus(id, &vrrStatus);
             mode = (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM);
         } else if (gameFeature == VRR_TYPE_FREESYNC_PREMIUM_PRO) {
             dsHdmiInVrrStatus_t vrrStatus;
-            getVRRStatus(portId, &vrrStatus);
+            getVRRStatus(id, &vrrStatus);
             mode = (vrrStatus.vrrType == dsVRR_AMD_FREESYNC_PREMIUM_PRO);
         } else {
             LOGWARN("AVInputImplementation::GetGameFeatureStatus Unsupported feature: %s", gameFeature.c_str());
@@ -1170,14 +1170,14 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("GetVRRFrameRate: Invalid paramater: portId: %s ", portId);
+            LOGERR("GetVRRFrameRate: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
         dsHdmiInVrrStatus_t vrrStatus;
         vrrStatus.vrrAmdfreesyncFramerate_Hz = 0;
 
-        success = getVRRStatus(portId, &vrrStatus);
+        success = getVRRStatus(id, &vrrStatus);
         if(success == true)
         {
             currentVRRVideoFrameRate = vrrStatus.vrrAmdfreesyncFramerate_Hz;
@@ -1195,7 +1195,7 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("GetRawSPD: Invalid paramater: portId: %s ", portId);
+            LOGERR("GetRawSPD: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
@@ -1204,7 +1204,7 @@ namespace Plugin {
         try {
             LOGWARN("AVInputImplementation::getSPDInfo");
             vector<uint8_t> spdVect2;
-            device::HdmiInput::getInstance().getHDMISPDInfo(portId, spdVect2);
+            device::HdmiInput::getInstance().getHDMISPDInfo(id, spdVect2);
             spdVect = spdVect2; // spdVect must be "unknown" unless we successfully get to this line
 
             // convert to base64
@@ -1224,7 +1224,7 @@ namespace Plugin {
             }
             Core::ToString((uint8_t*)&spdVect[0], size, false, HDMISPD);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             success = false;
             return Core::ERROR_NONE;
         }
@@ -1240,7 +1240,7 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("GetSPD: Invalid paramater: portId: %s ", portId);
+            LOGERR("GetSPD: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
@@ -1250,7 +1250,7 @@ namespace Plugin {
 
         try {
             vector<uint8_t> spdVect2;
-            device::HdmiInput::getInstance().getHDMISPDInfo(portId, spdVect2);
+            device::HdmiInput::getInstance().getHDMISPDInfo(id, spdVect2);
             spdVect = spdVect2; // edidVec must be "unknown" unless we successfully get to this line
 
             // convert to base64
@@ -1279,7 +1279,7 @@ namespace Plugin {
                 HDMISPD = str;
             }
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             success = false;
             return Core::ERROR_NONE;
         }
@@ -1311,17 +1311,17 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("SetEdid2AllmSupport: Invalid paramater: portId: %s ", portId);
+            LOGERR("SetEdid2AllmSupport: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
         successResult.success = true;
 
         try {
-            device::HdmiInput::getInstance().setEdid2AllmSupport(portId, allmSupport);
+            device::HdmiInput::getInstance().setEdid2AllmSupport(id, allmSupport);
             LOGWARN("AVInput -  allmsupport:%d", allmSupport);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             successResult.success = false;
         }
 
@@ -1335,7 +1335,7 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("GetEdid2AllmSupport: Invalid paramater: portId: %s ", portId);
+            LOGERR("GetEdid2AllmSupport: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
@@ -1359,17 +1359,17 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("GetVRRSupport: Invalid paramater: portId: %s ", portId);
+            LOGERR("GetVRRSupport: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
         Core::hresult ret = Core::ERROR_NONE;
 
         try {
-            device::HdmiInput::getInstance().getVRRSupport(portId, &vrrSupport);
+            device::HdmiInput::getInstance().getVRRSupport(id, &vrrSupport);
             LOGINFO("AVInput - getVRRSupport:%d", vrrSupport);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             ret = Core::ERROR_GENERAL;
         }
         return ret;
@@ -1382,16 +1382,16 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("SetVRRSupport: Invalid paramater: portId: %s ", portId);
+            LOGERR("SetVRRSupport: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
         Core::hresult ret = Core::ERROR_NONE;
         try {
-            device::HdmiInput::getInstance().setVRRSupport(portId, vrrSupport);
+            device::HdmiInput::getInstance().setVRRSupport(id, vrrSupport);
             LOGWARN("AVInput -  vrrSupport:%d", vrrSupport);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             ret = Core::ERROR_GENERAL;
         }
         return ret;
@@ -1404,17 +1404,17 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("GetHdmiVersion: Invalid paramater: portId: %s ", portId);
+            LOGERR("GetHdmiVersion: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
         dsHdmiMaxCapabilityVersion_t hdmiCapVersion = HDMI_COMPATIBILITY_VERSION_14;
 
         try {
-            device::HdmiInput::getInstance().getHdmiVersion(portId, &hdmiCapVersion);
+            device::HdmiInput::getInstance().getHdmiVersion(id, &hdmiCapVersion);
             LOGWARN("AVInputImplementation::GetHdmiVersion Hdmi Version:%d", hdmiCapVersion);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             return Core::ERROR_NONE;
         }
 
@@ -1451,7 +1451,7 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("SetEdidVersion: Invalid paramater: portId: %s ", portId);
+            LOGERR("SetEdidVersion: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
@@ -1469,10 +1469,10 @@ namespace Plugin {
         }
 
         try {
-            device::HdmiInput::getInstance().setEdidVersion(portId, edidVer);
+            device::HdmiInput::getInstance().setEdidVersion(id, edidVer);
             LOGWARN("AVInputImplementation::setEdidVersion EDID Version: %s", edidVersion.c_str());
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             successResult.success = false;
         }
 
@@ -1486,7 +1486,7 @@ namespace Plugin {
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
-            LOGERR("GetEdidVersion: Invalid paramater: portId: %s ", portId);
+            LOGERR("GetEdidVersion: Invalid paramater: portId: %s ", portId.c_str());
             return Core::ERROR_GENERAL;
         }
 
@@ -1494,10 +1494,10 @@ namespace Plugin {
         int version = -1;
 
         try {
-            device::HdmiInput::getInstance().getEdidVersion(portId, &version);
+            device::HdmiInput::getInstance().getEdidVersion(id, &version);
             LOGWARN("AVInputImplementation::getEdidVersion EDID Version:%d", version);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             success = false;
             return Core::ERROR_NONE;
         }
