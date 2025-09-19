@@ -554,6 +554,7 @@ namespace Plugin {
 
         return Core::ERROR_NONE;
     }
+    
     Core::hresult AVInputImplementation::StartInput(const int portId, const string& typeOfInput, const bool requestAudioMix, const int plane, const bool topMost, SuccessResult& successResult)
     {
         successResult.success = true;
@@ -1257,14 +1258,25 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetEdid2AllmSupport(const int portId, bool& allmSupport, bool& success)
+    Core::hresult AVInputImplementation::GetEdid2AllmSupport(const string& portId, bool& allmSupport, bool& success)
     {
+        int id;
+
         try {
-            device::HdmiInput::getInstance().getEdid2AllmSupport(portId, &allmSupport);
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("GetEdid2AllmSupport: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
+        allmSupport = true;
+
+        try {
+            device::HdmiInput::getInstance().getEdid2AllmSupport(id, &allmSupport);
             success = true;
             LOGINFO("AVInput - getEdid2AllmSupport:%d", allmSupport);
         } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(portId));
+            LOG_DEVICE_EXCEPTION1(std::to_string(id));
             success = false;
         }
         return Core::ERROR_NONE;
