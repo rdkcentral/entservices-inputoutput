@@ -149,7 +149,7 @@ public:
 
     void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
     void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;   
-    void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented);
+    void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented) override;
     void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
     void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
     void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
@@ -160,7 +160,7 @@ public:
     void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
     void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
     void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
-    void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) ;
+    void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
     
 public:
     static AVInput* _instance;

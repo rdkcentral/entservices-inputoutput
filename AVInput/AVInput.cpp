@@ -80,9 +80,9 @@ using namespace std;
 int getTypeOfInput(string sType)
 {
     int iType = -1;
-    if (strcmp (sType.c_str(), "HDMI") == 0)
+    if (0 == strcmp (sType.c_str(), "HDMI"))
         iType = HDMI;
-    else if (strcmp (sType.c_str(), "COMPOSITE") ==0)
+    else if (0 == strcmp (sType.c_str(), "COMPOSITE"))
         iType = COMPOSITE;
     else
         throw "Invalide type of INPUT, please specify HDMI/COMPOSITE";
@@ -131,15 +131,15 @@ const string AVInput::Initialize(PluginHost::IShell * /* service */)
         LOGINFO("device::Manager::Initialize success");
         if (!_registeredDsEventHandlers) {
             _registeredDsEventHandlers = true;
-            device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::HdmiInEvents");
-            device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::CompositeInEvents");
+            device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
+            device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
         }
     }
     catch(const device::Exception& err)
     {
         LOGINFO("device::Manager::Initialize failed");
         LOG_DEVICE_EXCEPTION0();
-        return std::string("AVInput: Initialization failed");
+        return std::string("AVInput: Initialization failed due to device::manager::Initialize()");
     }
 
     return (string());
@@ -152,15 +152,15 @@ void AVInput::Deinitialize(PluginHost::IShell * /* service */)
     device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
     _registeredDsEventHandlers = false;
     try
-        {
-            device::Manager::DeInitialize();
-            LOGINFO("device::Manager::DeInitialize success");
-        }
+    {
+        device::Manager::DeInitialize();
+        LOGINFO("device::Manager::DeInitialize success");
+    }
     catch(const device::Exception& err)
-        {
-            LOGINFO("device::Manager::DeInitialize failed");
-            LOG_DEVICE_EXCEPTION0();
-        }
+    {
+        LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
+        LOG_DEVICE_EXCEPTION0();
+    }
 
     AVInput::_instance = nullptr;
 }
@@ -342,7 +342,7 @@ uint32_t AVInput::startInput(const JsonObject& parameters, JsonObject& response)
 
     try
     {
-        if (iType == HDMI) {
+        if (HDMI == iType) {
             device::HdmiInput::getInstance().selectPort(portId,audioMix,planeType,topMostPlane);
     }
     else if(iType == COMPOSITE) {
@@ -383,10 +383,10 @@ uint32_t AVInput::stopInput(const JsonObject& parameters, JsonObject& response)
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM,DEFAULT_INPUT_VOL_LEVEL);
 	    isAudioBalanceSet = false;
 	}
-	if (iType == HDMI) {
+	if (HDMI == iType) {
             device::HdmiInput::getInstance().selectPort(-1);
         }
-        else if (iType == COMPOSITE) {
+        else if (COMPOSITE == iType) {
             device::CompositeInput::getInstance().selectPort(-1);
         }
     }
@@ -464,7 +464,7 @@ bool AVInput::setVideoRectangle(int x, int y, int width, int height, int type)
 
     try
     {
-        if (type == HDMI) {
+        if (HDMI == type) {
             device::HdmiInput::getInstance().scaleVideo(x, y, width, height);
         }
         else {
@@ -554,7 +554,7 @@ JsonArray AVInput::getInputDevices(int iType)
     try
     {
         int num = 0;
-        if (iType == HDMI) {
+        if (HDMI == iType) {
             num = device::HdmiInput::getInstance().getNumberOfInputs();
         }
         else if (iType == COMPOSITE) {
@@ -567,11 +567,11 @@ JsonArray AVInput::getInputDevices(int iType)
                 JsonObject hash;
                 hash["id"] = i;
                 std::stringstream locator;
-                if (iType == HDMI) {
+                if (HDMI == iType) {
                     locator << "hdmiin://localhost/deviceid/" << i;
                     hash["connected"] = device::HdmiInput::getInstance().isPortConnected(i);
                 }
-                else if (iType == COMPOSITE) {
+                else if (COMPOSITE == iType) {
                     locator << "cvbsin://localhost/deviceid/" << i;
                     hash["connected"] = device::CompositeInput::getInstance().isPortConnected(i);
                 }
@@ -1661,7 +1661,7 @@ void AVInput::OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType)
         return;
 
     // Handle transitions
-    if (vrrType == dsVRR_NONE) {
+    if (dsVRR_NONE == vrrType) {
         if (AVInput::_instance->m_currentVrrType != dsVRR_NONE) {
             AVInput::_instance->AVInputVRRChange(port,AVInput::_instance->m_currentVrrType,false);
         }
