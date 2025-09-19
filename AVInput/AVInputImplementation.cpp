@@ -47,7 +47,6 @@ namespace Plugin {
         : _adminLock()
         , _service(nullptr)
     {
-        printf("*** _DEBUG: AVInputImplementation::AVInputImplementation(): entry");
         LOGINFO("Create AVInputImplementation Instance");
         AVInputImplementation::_instance = this;
         InitializeIARM();
@@ -55,7 +54,6 @@ namespace Plugin {
 
     AVInputImplementation::~AVInputImplementation()
     {
-        printf("*** _DEBUG: AVInputImplementation::~AVInputImplementation(): entry");
         DeinitializeIARM();
         AVInputImplementation::_instance = nullptr;
         _service = nullptr;
@@ -63,7 +61,6 @@ namespace Plugin {
 
     void AVInputImplementation::InitializeIARM()
     {
-        printf("*** _DEBUG: AVInputImplementation::InitializeIARM: entry");
         if (Utils::IARM::init()) {
             IARM_Result_t res;
             IARM_CHECK(IARM_Bus_RegisterEventHandler(

@@ -250,18 +250,13 @@ TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
 
 class AVInputInit : public AVInputDsTest {
 protected:
-    IarmBusImplMock* p_iarmBusImplMock = nullptr;
     NiceMock<FactoriesImplementation> factoriesImplementation;
     PLUGINHOST_DISPATCHER* dispatcher;
-    NiceMock<ServiceMock> service;
     Core::JSONRPC::Message message;
 
     AVInputInit()
         : AVInputDsTest()
     {
-        p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
-        IarmBus::setImpl(p_iarmBusImplMock);
-
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
                 [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
@@ -311,7 +306,6 @@ protected:
                     }
                     return IARM_RESULT_SUCCESS;
                 }));
-        EXPECT_EQ(string(""), plugin->Initialize(&service));
 
         PluginHost::IFactories::Assign(&factoriesImplementation);
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
@@ -324,14 +318,6 @@ protected:
         dispatcher->Deactivate();
         dispatcher->Release();
         PluginHost::IFactories::Assign(nullptr);
-
-        plugin->Deinitialize(&service);
-
-        IarmBus::setImpl(nullptr);
-        if (p_iarmBusImplMock != nullptr) {
-            delete p_iarmBusImplMock;
-            p_iarmBusImplMock = nullptr;
-        }
     }
 };
 
