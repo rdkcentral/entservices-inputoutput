@@ -52,6 +52,8 @@ protected:
 
     AVInputMock* p_avInputMock = nullptr;
 
+    IarmBusImplMock* p_iarmBusImplMock = nullptr;
+
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
@@ -71,12 +73,21 @@ protected:
                 .WillByDefault(::testing::Return(AVInputImpl));
         #endif
 
+        p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
+        IarmBus::setImpl(p_iarmBusImplMock);
+
         plugin->Initialize(&service);
 
     }
     virtual ~AVInputTest()
     {
         plugin->Deinitialize(&service);
+
+        IarmBus::setImpl(nullptr);
+        if (p_iarmBusImplMock != nullptr) {
+            delete p_iarmBusImplMock;
+            p_iarmBusImplMock = nullptr;
+        }
     }
 };
 
