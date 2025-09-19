@@ -32,6 +32,7 @@
 #include "ThunderPortability.h"
 
 #include "AVInputImplementation.h"
+#include "AVInputMock.h"
 
 using namespace WPEFramework;
 
