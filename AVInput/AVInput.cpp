@@ -167,10 +167,10 @@ namespace Plugin {
         try
         {
             int num = 0;
-            if (iType == INPUT_TYPE_STRING_HDMI) {
+            if (iType == INPUT_TYPE_INT_HDMI) {
                 num = device::HdmiInput::getInstance().getNumberOfInputs();
             }
-            else if (iType == INPUT_TYPE_STRING_COMPOSITE) {
+            else if (iType == INPUT_TYPE_INT_COMPOSITE) {
                 num = device::CompositeInput::getInstance().getNumberOfInputs();
             }
             if (num > 0) {
@@ -180,11 +180,11 @@ namespace Plugin {
                     JsonObject hash;
                     hash["id"] = i;
                     std::stringstream locator;
-                    if (iType == INPUT_TYPE_STRING_HDMI) {
+                    if (iType == INPUT_TYPE_INT_HDMI) {
                         locator << "hdmiin://localhost/deviceid/" << i;
                         hash["connected"] = device::HdmiInput::getInstance().isPortConnected(i);
                     }
-                    else if (iType == INPUT_TYPE_STRING_COMPOSITE) {
+                    else if (iType == INPUT_TYPE_INT_COMPOSITE) {
                         locator << "cvbsin://localhost/deviceid/" << i;
                         hash["connected"] = device::CompositeInput::getInstance().isPortConnected(i);
                     }
@@ -216,8 +216,8 @@ namespace Plugin {
             response["devices"] = getInputDevices(iType);
         }
         else {
-            JsonArray listHdmi = getInputDevices(INPUT_TYPE_STRING_HDMI);
-            JsonArray listComposite = getInputDevices(INPUT_TYPE_STRING_COMPOSITE);
+            JsonArray listHdmi = getInputDevices(INPUT_TYPE_INT_HDMI);
+            JsonArray listComposite = getInputDevices(INPUT_TYPE_INT_COMPOSITE);
             for (int i = 0; i < listComposite.Length(); i++) {
                 listHdmi.Add(listComposite.Get(i));
             }

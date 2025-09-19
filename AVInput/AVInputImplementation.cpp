@@ -668,7 +668,6 @@ namespace Plugin {
                 }
                 default: {
                     LOGERR("getInputDevices: Invalid input type");
-                    successResult.success = false;
                     return Core::ERROR_GENERAL;
                 }
             }
