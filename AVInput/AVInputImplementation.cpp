@@ -738,10 +738,8 @@ namespace Plugin {
 
     Core::hresult AVInputImplementation::WriteEDID(const string& portId, const string& message, SuccessResult& successResult)
     {
-        int id;
-
         try {
-		    id = stoi(portId);
+		    stoi(portId);
         } catch (const std::exception& err) {
             LOGERR("WriteEDID: Invalid paramater: portId: %s ", portId.c_str());
             successResult.success = false;
