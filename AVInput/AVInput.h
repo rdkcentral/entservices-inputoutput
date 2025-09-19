@@ -44,9 +44,9 @@ namespace Plugin {
         virtual ~AVInput();
 
         BEGIN_INTERFACE_MAP(AVInput)
-        INTERFACE_ENTRY(PluginHost::IPlugin)
-        INTERFACE_ENTRY(PluginHost::IDispatcher)
-        INTERFACE_AGGREGATE(Exchange::IAVInput, _avInput)
+            INTERFACE_ENTRY(PluginHost::IPlugin)
+            INTERFACE_ENTRY(PluginHost::IDispatcher)
+            INTERFACE_AGGREGATE(Exchange::IAVInput, _avInput)
         END_INTERFACE_MAP
 
         //  IPlugin methods
@@ -94,13 +94,13 @@ namespace Plugin {
             }
 
             BEGIN_INTERFACE_MAP(Notification)
-            INTERFACE_ENTRY(Exchange::IAVInput::IDevicesChangedNotification)
-            INTERFACE_ENTRY(Exchange::IAVInput::ISignalChangedNotification)
-            INTERFACE_ENTRY(Exchange::IAVInput::IInputStatusChangedNotification)
-            INTERFACE_ENTRY(Exchange::IAVInput::IVideoStreamInfoUpdateNotification)
-            INTERFACE_ENTRY(Exchange::IAVInput::IGameFeatureStatusUpdateNotification)
-            INTERFACE_ENTRY(Exchange::IAVInput::IHdmiContentTypeUpdateNotification)
-            INTERFACE_ENTRY(RPC::IRemoteConnection::INotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IDevicesChangedNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::ISignalChangedNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IInputStatusChangedNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IVideoStreamInfoUpdateNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IGameFeatureStatusUpdateNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IHdmiContentTypeUpdateNotification)
+                INTERFACE_ENTRY(RPC::IRemoteConnection::INotification)
             END_INTERFACE_MAP
 
             void Activated(RPC::IRemoteConnection*) override

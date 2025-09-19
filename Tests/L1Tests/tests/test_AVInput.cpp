@@ -18,6 +18,8 @@
 **/
 
 #include <gtest/gtest.h>
+#include "COMLinkMock.h"
+#include <gmock/gmock.h>
 
 #include "AVInput.h"
 
@@ -29,6 +31,8 @@
 #include "ServiceMock.h"
 #include "ThunderPortability.h"
 
+#include "AVInputImplementation.h"
+
 using namespace WPEFramework;
 
 using ::testing::NiceMock;
@@ -36,17 +40,42 @@ using ::testing::NiceMock;
 class AVInputTest : public ::testing::Test {
 protected:
     Core::ProxyType<Plugin::AVInput> plugin;
+    Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
+
+    NiceMock<COMLinkMock> comLinkMock;
+
     Core::JSONRPC::Handler& handler;
     DECL_CORE_JSONRPC_CONX connection;
     string response;
+
+    AVInputMock* p_avInputMock = nullptr;
 
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
         , INIT_CONX(1, 0)
     {
+        p_avInputMock  = new NiceMock<AVInputMock>;
+
+        #ifdef USE_THUNDER_R4
+        ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
+                .WillByDefault(::testing::Invoke(
+                    [&](const RPC::Object& object, const uint32_t waitTime, uint32_t& connectionId) {
+                        AVInputImpl = Core::ProxyType<Plugin::AVInputImplementation>::Create();
+                        return &AVInputImpl;
+                    }));
+        #else
+            ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_, ::testing::_, ::testing::_))
+                .WillByDefault(::testing::Return(AVInputImpl));
+        #endif
+
+        plugin->Initialize(&service);
+
     }
-    virtual ~AVInputTest() = default;
+    virtual ~AVInputTest()
+    {
+        plugin->Deinitialize(&service);
+    }
 };
 
 TEST_F(AVInputTest, RegisteredMethods)
