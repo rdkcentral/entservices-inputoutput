@@ -137,9 +137,8 @@ const string AVInput::Initialize(PluginHost::IShell * /* service */)
     }
     catch(const device::Exception& err)
     {
-        LOGINFO("device::Manager::Initialize failed");
+        LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
         LOG_DEVICE_EXCEPTION0();
-        return std::string("AVInput: Initialization failed due to device::manager::Initialize()");
     }
 
     return (string());
