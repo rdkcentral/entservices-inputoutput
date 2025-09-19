@@ -1381,9 +1381,11 @@ namespace Plugin {
         return ret;
     }
 
-    Core::hresult AVInputImplementation::SetVRRSupport(const string& portId, const bool vrrSupport)
+    Core::hresult AVInputImplementation::SetVRRSupport(const string& portId, const bool vrrSupport, SuccessResult& successResult)
     {
         int id;
+
+        successResult.success = false;
 
         try {
 		    id = stoi(portId);
@@ -1395,6 +1397,7 @@ namespace Plugin {
         Core::hresult ret = Core::ERROR_NONE;
         try {
             device::HdmiInput::getInstance().setVRRSupport(id, vrrSupport);
+            successResult.success = true;
             LOGWARN("AVInput -  vrrSupport:%d", vrrSupport);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(id));

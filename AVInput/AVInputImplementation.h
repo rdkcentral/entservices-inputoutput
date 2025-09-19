@@ -159,7 +159,7 @@ namespace Plugin {
         Core::hresult GetEdidVersion(const string& portId, string& edidVersion, bool& success) override;
         Core::hresult SetEdid2AllmSupport(const string& portId, const bool allmSupport, SuccessResult& successResult) override;
         Core::hresult GetEdid2AllmSupport(const string& portId, bool& allmSupport, bool& success) override;
-        Core::hresult SetVRRSupport(const string& portId, const bool vrrSupport) override;
+        Core::hresult SetVRRSupport(const string& portId, const bool vrrSupport, SuccessResult& successResult) override;
         Core::hresult GetVRRSupport(const string& portId, bool& vrrSupport, bool& success) override;
         Core::hresult GetHdmiVersion(const string& portId, string& HdmiCapabilityVersion, bool& success) override;
         Core::hresult SetMixerLevels(const int primaryVolume, const int inputVolume, SuccessResult& successResult) override;
