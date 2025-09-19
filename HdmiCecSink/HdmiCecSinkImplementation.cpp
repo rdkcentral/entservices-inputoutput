@@ -637,7 +637,6 @@ namespace WPEFramework
         , m_connectedDevices()
         , msgProcessor(nullptr)
         , msgFrameListener(nullptr)
-        , _powerManagerPlugin()
         , _pwrMgrNotification(*this)
         , _registeredEventHandlers(false)
         {
