@@ -555,8 +555,17 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
     
-    Core::hresult AVInputImplementation::StartInput(const int portId, const string& typeOfInput, const bool requestAudioMix, const int plane, const bool topMost, SuccessResult& successResult)
+    Core::hresult AVInputImplementation::StartInput(const string& portId, const string& typeOfInput, const bool requestAudioMix, const int plane, const bool topMost, SuccessResult& successResult)
     {
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("StartInput: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         successResult.success = true;
 
         try {
@@ -693,16 +702,33 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::WriteEDID(const int portId, const string& message, SuccessResult& successResult)
+    Core::hresult AVInputImplementation::WriteEDID(const string& portId, const string& message, SuccessResult& successResult)
     {
-        printf("*** _DEBUG: AVInputImplementation::WriteEDID: entry");
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("WriteEDID: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         // TODO: This wasn't implemented in the original code, do we want to implement it?
         successResult.success = true;
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::ReadEDID(const int portId, string& EDID, bool& success)
+    Core::hresult AVInputImplementation::ReadEDID(const string& portId, string& EDID, bool& success)
     {
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("ReadEDID: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         vector<uint8_t> edidVec({ 'u', 'n', 'k', 'n', 'o', 'w', 'n' });
 
         try {
@@ -1072,9 +1098,17 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetGameFeatureStatus(const int portId, const string& gameFeature, bool& mode, bool& success)
+    Core::hresult AVInputImplementation::GetGameFeatureStatus(const string& portId, const string& gameFeature, bool& mode, bool& success)
     {
-        printf("*** _DEBUG: AVInputImplementation::GetGameFeatureStatus: entry");
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("GetGameFeatureStatus: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         if (gameFeature == STR_ALLM) {
             mode = getALLMStatus(portId);
         } else if (gameFeature == VRR_TYPE_HDMI) {
@@ -1129,8 +1163,17 @@ namespace Plugin {
         return ret;
     }
 
-    Core::hresult AVInputImplementation::GetVRRFrameRate(const int portId, double& currentVRRVideoFrameRate, bool& success)
+    Core::hresult AVInputImplementation::GetVRRFrameRate(const string& portId, double& currentVRRVideoFrameRate, bool& success)
     {
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("GetVRRFrameRate: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         dsHdmiInVrrStatus_t vrrStatus;
         vrrStatus.vrrAmdfreesyncFramerate_Hz = 0;
 
@@ -1143,9 +1186,19 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetRawSPD(const int portId, string& HDMISPD, bool& success)
+    Core::hresult AVInputImplementation::GetRawSPD(const string& portId, string& HDMISPD, bool& success)
     {
-        LOGINFO("AVInputImplementation::getSPDInfo");
+        LOGINFO("AVInputImplementation::GetRawSPD");
+
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("GetRawSPD: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         vector<uint8_t> spdVect({ 'u', 'n', 'k', 'n', 'o', 'w', 'n' });
         HDMISPD.clear();
         try {
@@ -1180,14 +1233,22 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetSPD(const int portId, string& HDMISPD, bool& success)
+    Core::hresult AVInputImplementation::GetSPD(const string& portId, string& HDMISPD, bool& success)
     {
-        vector<uint8_t> spdVect({ 'u', 'n', 'k', 'n', 'o', 'w', 'n' });
-
-        LOGINFO("AVInputImplementation::getSPDInfo");
+        int id;
 
         try {
-            LOGWARN("AVInputImplementation::getSPDInfo");
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("GetSPD: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
+        vector<uint8_t> spdVect({ 'u', 'n', 'k', 'n', 'o', 'w', 'n' });
+
+        LOGINFO("AVInputImplementation::GetSPD");
+
+        try {
             vector<uint8_t> spdVect2;
             device::HdmiInput::getInstance().getHDMISPDInfo(portId, spdVect2);
             spdVect = spdVect2; // edidVec must be "unknown" unless we successfully get to this line
@@ -1195,7 +1256,7 @@ namespace Plugin {
             // convert to base64
             uint16_t size = min(spdVect.size(), (size_t)numeric_limits<uint16_t>::max());
 
-            LOGWARN("AVInputImplementation::getSPD size:%d spdVec.size:%zu", size, spdVect.size());
+            LOGWARN("AVInputImplementation::GetSPD size:%d spdVec.size:%zu", size, spdVect.size());
 
             if (spdVect.size() > (size_t)numeric_limits<uint16_t>::max()) {
                 LOGERR("Size too large to use ToString base64 wpe api");
@@ -1243,8 +1304,17 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::SetEdid2AllmSupport(const int portId, const bool allmSupport, SuccessResult& successResult)
+    Core::hresult AVInputImplementation::SetEdid2AllmSupport(const string& portId, const bool allmSupport, SuccessResult& successResult)
     {
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("SetEdid2AllmSupport: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         successResult.success = true;
 
         try {
@@ -1282,8 +1352,17 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetVRRSupport(const int portId, bool& vrrSupport)
+    Core::hresult AVInputImplementation::GetVRRSupport(const string& portId, bool& vrrSupport)
     {
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("GetVRRSupport: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         Core::hresult ret = Core::ERROR_NONE;
 
         try {
@@ -1296,8 +1375,17 @@ namespace Plugin {
         return ret;
     }
 
-    Core::hresult AVInputImplementation::SetVRRSupport(const int portId, const bool vrrSupport)
+    Core::hresult AVInputImplementation::SetVRRSupport(const string& portId, const bool vrrSupport)
     {
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("SetVRRSupport: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         Core::hresult ret = Core::ERROR_NONE;
         try {
             device::HdmiInput::getInstance().setVRRSupport(portId, vrrSupport);
@@ -1309,8 +1397,17 @@ namespace Plugin {
         return ret;
     }
 
-    Core::hresult AVInputImplementation::GetHdmiVersion(const int portId, string& HdmiCapabilityVersion, bool& success)
+    Core::hresult AVInputImplementation::GetHdmiVersion(const string& portId, string& HdmiCapabilityVersion, bool& success)
     {
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("GetHdmiVersion: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         dsHdmiMaxCapabilityVersion_t hdmiCapVersion = HDMI_COMPATIBILITY_VERSION_14;
 
         try {
@@ -1347,8 +1444,17 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::SetEdidVersion(const int portId, const string& edidVersion, SuccessResult& successResult)
+    Core::hresult AVInputImplementation::SetEdidVersion(const string& portId, const string& edidVersion, SuccessResult& successResult)
     {
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("SetEdidVersion: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         int edidVer = -1;
         successResult.success = true;
 
@@ -1373,8 +1479,17 @@ namespace Plugin {
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetEdidVersion(const int portId, string& edidVersion, bool& success)
+    Core::hresult AVInputImplementation::GetEdidVersion(const string& portId, string& edidVersion, bool& success)
     {
+        int id;
+
+        try {
+		    id = stoi(portId);
+        } catch (const std::exception& err) {
+            LOGERR("GetEdidVersion: Invalid paramater: portId: %s ", portId);
+            return Core::ERROR_GENERAL;
+        }
+
         success = true;
         int version = -1;
 
