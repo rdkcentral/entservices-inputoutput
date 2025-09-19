@@ -43,6 +43,7 @@ protected:
     Core::ProxyType<Plugin::AVInput> plugin;
     Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
 
+    NiceMock<ServiceMock> service;
     NiceMock<COMLinkMock> comLinkMock;
 
     Core::JSONRPC::Handler& handler;
