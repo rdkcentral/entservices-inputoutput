@@ -1349,10 +1349,11 @@ namespace Plugin {
             LOG_DEVICE_EXCEPTION1(std::to_string(id));
             success = false;
         }
+
         return Core::ERROR_NONE;
     }
 
-    Core::hresult AVInputImplementation::GetVRRSupport(const string& portId, bool& vrrSupport)
+    Core::hresult AVInputImplementation::GetVRRSupport(const string& portId, bool& vrrSupport, bool& success)
     {
         int id;
 
@@ -1360,9 +1361,12 @@ namespace Plugin {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
             LOGERR("GetVRRSupport: Invalid paramater: portId: %s ", portId.c_str());
+            success = false;
             return Core::ERROR_GENERAL;
         }
 
+        vrrSupport = true;
+        success = true;
         Core::hresult ret = Core::ERROR_NONE;
 
         try {
@@ -1370,8 +1374,10 @@ namespace Plugin {
             LOGINFO("AVInput - getVRRSupport:%d", vrrSupport);
         } catch (const device::Exception& err) {
             LOG_DEVICE_EXCEPTION1(std::to_string(id));
+            success = false;
             ret = Core::ERROR_GENERAL;
         }
+
         return ret;
     }
 
@@ -1394,6 +1400,7 @@ namespace Plugin {
             LOG_DEVICE_EXCEPTION1(std::to_string(id));
             ret = Core::ERROR_GENERAL;
         }
+
         return ret;
     }
 
