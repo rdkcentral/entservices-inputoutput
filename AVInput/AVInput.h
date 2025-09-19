@@ -26,6 +26,7 @@
 #include <interfaces/json/JAVInput.h>
 #include <interfaces/json/JsonData_AVInput.h>
 #include "AVInputJsonData.h"
+#include "AVInputUtils.h"
 
 #include "UtilsLogging.h"
 #include "tracing/Logging.h"

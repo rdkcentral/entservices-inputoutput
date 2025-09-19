@@ -32,8 +32,6 @@
 // because it requires optional parameters which are not supported in Thunder 4.x. This can 
 // be refactored after migrating to 5.x.
 #define AVINPUT_METHOD_GET_INPUT_DEVICES "getInputDevices"
-#define HDMI 0
-#define COMPOSITE 1
 
 namespace WPEFramework {
 namespace {
@@ -169,10 +167,10 @@ namespace Plugin {
         try
         {
             int num = 0;
-            if (iType == HDMI) {
+            if (iType == INPUT_TYPE_STRING_HDMI) {
                 num = device::HdmiInput::getInstance().getNumberOfInputs();
             }
-            else if (iType == COMPOSITE) {
+            else if (iType == INPUT_TYPE_STRING_COMPOSITE) {
                 num = device::CompositeInput::getInstance().getNumberOfInputs();
             }
             if (num > 0) {
@@ -182,11 +180,11 @@ namespace Plugin {
                     JsonObject hash;
                     hash["id"] = i;
                     std::stringstream locator;
-                    if (iType == HDMI) {
+                    if (iType == INPUT_TYPE_STRING_HDMI) {
                         locator << "hdmiin://localhost/deviceid/" << i;
                         hash["connected"] = device::HdmiInput::getInstance().isPortConnected(i);
                     }
-                    else if (iType == COMPOSITE) {
+                    else if (iType == INPUT_TYPE_STRING_COMPOSITE) {
                         locator << "cvbsin://localhost/deviceid/" << i;
                         hash["connected"] = device::CompositeInput::getInstance().isPortConnected(i);
                     }
@@ -202,18 +200,6 @@ namespace Plugin {
         return list;
     }
 
-    int getTypeOfInput(string sType)
-    {
-        int iType = -1;
-        if (strcmp(sType.c_str(), "HDMI") == 0)
-            iType = HDMI;
-        else if (strcmp(sType.c_str(), "COMPOSITE") == 0)
-            iType = COMPOSITE;
-        else
-            throw "Invalide type of INPUT, please specify HDMI/COMPOSITE";
-        return iType;
-    }
-
     uint32_t AVInput::getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response)
     {
         LOGINFOMETHOD();
@@ -222,7 +208,7 @@ namespace Plugin {
             string sType = parameters["typeOfInput"].String();
             int iType = 0;
             try {
-                iType = getTypeOfInput (sType);
+                iType = AVInputUtils::getTypeOfInput(sType);
             }catch (...) {
                 LOGWARN("Invalid Arguments");
                 returnResponse(false);
@@ -230,8 +216,8 @@ namespace Plugin {
             response["devices"] = getInputDevices(iType);
         }
         else {
-            JsonArray listHdmi = getInputDevices(HDMI);
-            JsonArray listComposite = getInputDevices(COMPOSITE);
+            JsonArray listHdmi = getInputDevices(INPUT_TYPE_STRING_HDMI);
+            JsonArray listComposite = getInputDevices(INPUT_TYPE_STRING_COMPOSITE);
             for (int i = 0; i < listComposite.Length(); i++) {
                 listHdmi.Add(listComposite.Get(i));
             }

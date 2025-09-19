@@ -175,12 +175,12 @@ namespace Plugin {
             int hdmiin_hotplug_port = eventData->data.hdmi_in_connect.port;
             int hdmiin_hotplug_conn = eventData->data.hdmi_in_connect.isPortConnected;
             LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG  event data:%d", hdmiin_hotplug_port);
-            AVInputImplementation::_instance->AVInputHotplug(hdmiin_hotplug_port, hdmiin_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, HDMI);
+            AVInputImplementation::_instance->AVInputHotplug(hdmiin_hotplug_port, hdmiin_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, INPUT_TYPE_INT_HDMI);
         } else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG == eventId) {
             int compositein_hotplug_port = eventData->data.composite_in_connect.port;
             int compositein_hotplug_conn = eventData->data.composite_in_connect.isPortConnected;
             LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG  event data:%d", compositein_hotplug_port);
-            AVInputImplementation::_instance->AVInputHotplug(compositein_hotplug_port, compositein_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, COMPOSITE);
+            AVInputImplementation::_instance->AVInputHotplug(compositein_hotplug_port, compositein_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, INPUT_TYPE_INT_COMPOSITE);
         }
     }
 
@@ -193,12 +193,12 @@ namespace Plugin {
             int hdmi_in_port = eventData->data.hdmi_in_sig_status.port;
             int hdmi_in_signal_status = eventData->data.hdmi_in_sig_status.status;
             LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS  event  port: %d, signal status: %d", hdmi_in_port, hdmi_in_signal_status);
-            AVInputImplementation::_instance->AVInputSignalChange(hdmi_in_port, hdmi_in_signal_status, HDMI);
+            AVInputImplementation::_instance->AVInputSignalChange(hdmi_in_port, hdmi_in_signal_status, INPUT_TYPE_INT_HDMI);
         } else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS == eventId) {
             int composite_in_port = eventData->data.composite_in_sig_status.port;
             int composite_in_signal_status = eventData->data.composite_in_sig_status.status;
             LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS  event  port: %d, signal status: %d", composite_in_port, composite_in_signal_status);
-            AVInputImplementation::_instance->AVInputSignalChange(composite_in_port, composite_in_signal_status, COMPOSITE);
+            AVInputImplementation::_instance->AVInputSignalChange(composite_in_port, composite_in_signal_status, INPUT_TYPE_INT_COMPOSITE);
         }
     }
 
@@ -211,12 +211,12 @@ namespace Plugin {
             int hdmi_in_port = eventData->data.hdmi_in_status.port;
             bool hdmi_in_status = eventData->data.hdmi_in_status.isPresented;
             LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS  event  port: %d, started: %d", hdmi_in_port, hdmi_in_status);
-            AVInputImplementation::_instance->AVInputStatusChange(hdmi_in_port, hdmi_in_status, HDMI);
+            AVInputImplementation::_instance->AVInputStatusChange(hdmi_in_port, hdmi_in_status, INPUT_TYPE_INT_HDMI);
         } else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS == eventId) {
             int composite_in_port = eventData->data.composite_in_status.port;
             bool composite_in_status = eventData->data.composite_in_status.isPresented;
             LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS  event  port: %d, started: %d", composite_in_port, composite_in_status);
-            AVInputImplementation::_instance->AVInputStatusChange(composite_in_port, composite_in_status, COMPOSITE);
+            AVInputImplementation::_instance->AVInputStatusChange(composite_in_port, composite_in_status, INPUT_TYPE_INT_COMPOSITE);
         }
     }
 
@@ -233,7 +233,7 @@ namespace Plugin {
             resolution.interlaced = eventData->data.hdmi_in_video_mode.resolution.interlaced;
             resolution.frameRate = eventData->data.hdmi_in_video_mode.resolution.frameRate;
             LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE  event  port: %d, pixelResolution: %d, interlaced : %d, frameRate: %d \n", hdmi_in_port, resolution.pixelResolution, resolution.interlaced, resolution.frameRate);
-            AVInputImplementation::_instance->AVInputVideoModeUpdate(hdmi_in_port, resolution, HDMI);
+            AVInputImplementation::_instance->AVInputVideoModeUpdate(hdmi_in_port, resolution, INPUT_TYPE_INT_HDMI);
         } else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE == eventId) {
             IARM_Bus_DSMgr_EventData_t* eventData = (IARM_Bus_DSMgr_EventData_t*)data;
             int composite_in_port = eventData->data.composite_in_video_mode.port;
@@ -242,7 +242,7 @@ namespace Plugin {
             resolution.interlaced = eventData->data.composite_in_video_mode.resolution.interlaced;
             resolution.frameRate = eventData->data.composite_in_video_mode.resolution.frameRate;
             LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE  event  port: %d, pixelResolution: %d, interlaced : %d, frameRate: %d \n", composite_in_port, resolution.pixelResolution, resolution.interlaced, resolution.frameRate);
-            AVInputImplementation::_instance->AVInputVideoModeUpdate(composite_in_port, resolution, COMPOSITE);
+            AVInputImplementation::_instance->AVInputVideoModeUpdate(composite_in_port, resolution, INPUT_TYPE_INT_COMPOSITE);
         }
     }
 
@@ -567,17 +567,21 @@ namespace Plugin {
         }
 
         try {
-            if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) {
-                device::HdmiInput::getInstance().selectPort(id, requestAudioMix, plane, topMost);
-            } else if (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0) {
-                device::CompositeInput::getInstance().selectPort(id);
-            } else {
-                LOGWARN("Invalid input type passed to StartInput");
-                successResult.success = false;
-                return Core::ERROR_GENERAL;
+            switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
+                case INPUT_TYPE_INT_HDMI: {
+                    device::HdmiInput::getInstance().selectPort(id, requestAudioMix, plane, topMost);
+                    break;
+                }
+                case INPUT_TYPE_INT_COMPOSITE: {
+                    device::CompositeInput::getInstance().selectPort(id);
+                }
+                default: {
+                    LOGWARN("Invalid input type passed to StartInput");
+                    successResult.success = false;
+                    return Core::ERROR_GENERAL;
+                }
             }
-        } catch (const device::Exception& err) {
-            LOG_DEVICE_EXCEPTION1(std::to_string(id));
+        } catch(...) {
             successResult.success = false;
             return Core::ERROR_GENERAL;
         }
@@ -598,14 +602,20 @@ namespace Plugin {
                 device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, DEFAULT_INPUT_VOL_LEVEL);
                 isAudioBalanceSet = false;
             }
-            if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) {
-                device::HdmiInput::getInstance().selectPort(-1);
-            } else if (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0) {
-                device::CompositeInput::getInstance().selectPort(-1);
-            } else {
-                LOGWARN("Invalid input type passed to StopInput");
-                successResult.success = false;
-                ret = Core::ERROR_GENERAL;
+
+            switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
+                case INPUT_TYPE_INT_HDMI: {
+                    device::HdmiInput::getInstance().selectPort(-1);
+                    break;
+                }
+                case INPUT_TYPE_INT_COMPOSITE: {
+                    device::CompositeInput::getInstance().selectPort(-1);
+                }
+                default: {
+                    LOGWARN("Invalid input type passed to StopInput");
+                    successResult.success = false;
+                    return Core::ERROR_GENERAL;
+                }
             }
         } catch (const device::Exception& err) {
             LOGWARN("AVInputImplementation::StopInput Failed");
@@ -619,12 +629,20 @@ namespace Plugin {
     Core::hresult AVInputImplementation::SetVideoRectangle(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, const string& typeOfInput, SuccessResult& successResult)
     {
         try {
-            if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) {
-                device::HdmiInput::getInstance().scaleVideo(x, y, w, h);
-            } else {
-                device::CompositeInput::getInstance().scaleVideo(x, y, w, h);
+            switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
+                case INPUT_TYPE_INT_HDMI: {
+                    device::HdmiInput::getInstance().scaleVideo(x, y, w, h);
+                    break;
+                }
+                case INPUT_TYPE_INT_COMPOSITE: {
+                    device::CompositeInput::getInstance().scaleVideo(x, y, w, h);    
+                }
+                default: {
+                    successResult.success = false;
+                    return Core::ERROR_GENERAL;
+                }
             }
-        } catch (const device::Exception& err) {
+        } catch(...) {
             successResult.success = false;
             return Core::ERROR_GENERAL;
         }
@@ -639,14 +657,20 @@ namespace Plugin {
         bool isHdmi = true;
 
         try {
-            if (strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) {
-                num = device::HdmiInput::getInstance().getNumberOfInputs();
-            } else if (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0) {
-                num = device::CompositeInput::getInstance().getNumberOfInputs();
-                isHdmi = false;
-            } else {
-                LOGERR("getInputDevices: Invalid input type");
-                return Core::ERROR_GENERAL;
+            switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
+                case INPUT_TYPE_INT_HDMI: {
+                    num = device::HdmiInput::getInstance().getNumberOfInputs();
+                    break;
+                }
+                case INPUT_TYPE_INT_COMPOSITE: {
+                    num = device::CompositeInput::getInstance().getNumberOfInputs();
+                    isHdmi = false;
+                }
+                default: {
+                    LOGERR("getInputDevices: Invalid input type");
+                    successResult.success = false;
+                    return Core::ERROR_GENERAL;
+                }
             }
 
             if (num > 0) {
@@ -683,15 +707,25 @@ namespace Plugin {
         std::list<WPEFramework::Exchange::IAVInput::InputDevice> inputDeviceList;
         success = false;
 
-        if(strcmp(typeOfInput.c_str(), INPUT_TYPE_ALL) == 0) {
-            result = getInputDevices(INPUT_TYPE_HDMI, inputDeviceList);
-            if (result == Core::ERROR_NONE) {
-                result = getInputDevices(INPUT_TYPE_COMPOSITE, inputDeviceList);
+        try {
+            switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
+                case INPUT_TYPE_INT_ALL: {
+                    result = getInputDevices(INPUT_TYPE_HDMI, inputDeviceList);
+                    if(result == Core::ERROR_NONE) {
+                        result = getInputDevices(INPUT_TYPE_COMPOSITE, inputDeviceList);
+                    }
+                    break;
+                }
+                case INPUT_TYPE_INT_HDMI:
+                case INPUT_TYPE_INT_COMPOSITE: {
+                    result = getInputDevices(typeOfInput, inputDeviceList);
+                }
+                default: {
+                    LOGERR("GetInputDevices: Invalid input type");
+                    return Core::ERROR_GENERAL;
+                }
             }
-        } else if((strcmp(typeOfInput.c_str(), INPUT_TYPE_HDMI) == 0) || (strcmp(typeOfInput.c_str(), INPUT_TYPE_COMPOSITE) == 0)) {
-            result = getInputDevices(typeOfInput, inputDeviceList);
-        } else {
-            LOGERR("GetInputDevices: Invalid input type");
+        } catch(...) {
             return Core::ERROR_GENERAL;
         }
 
@@ -742,6 +776,11 @@ namespace Plugin {
             // convert to base64
             uint16_t size = min(edidVec.size(), (size_t)numeric_limits<uint16_t>::max());
 
+            if(0 == size) {
+                success = false;
+                return Core::ERROR_GENERAL;
+            }
+
             LOGWARN("AVInputImplementation::readEDID size:%d edidVec.size:%zu", size, edidVec.size());
             if (edidVec.size() > (size_t)numeric_limits<uint16_t>::max()) {
                 LOGERR("Size too large to use ToString base64 wpe api");
@@ -774,19 +813,12 @@ namespace Plugin {
         bool success;
 
         string typeOfInput;
-        switch(type) {
-            case HDMI:
-                typeOfInput = INPUT_TYPE_HDMI;
-                break;
-            case COMPOSITE:
-                typeOfInput = INPUT_TYPE_COMPOSITE;
-                break;
-            case ALL:
-                typeOfInput = INPUT_TYPE_ALL;
-                break;
-            default:
-                LOGERR("AVInputHotplug: Invalid input type");
-                return;
+
+        try {
+            typeOfInput = AVInputUtils::getTypeOfInput(type);
+        } catch(...) {
+            LOGERR("AVInputHotplug: Invalid input type");
+            return;
         }
 
         Core::hresult result = GetInputDevices(typeOfInput, devices, success);
@@ -814,7 +846,7 @@ namespace Plugin {
         string signalStatusStr;
 
         std::stringstream locator;
-        if (type == HDMI) {
+        if (type == INPUT_TYPE_INT_HDMI) {
             locator << "hdmiin://localhost/deviceid/" << port;
         } else {
             locator << "cvbsin://localhost/deviceid/" << port;
@@ -862,9 +894,9 @@ namespace Plugin {
 
         std::stringstream locator;
 
-        if (type == HDMI) {
+        if (type == INPUT_TYPE_INT_HDMI) {
             locator << "hdmiin://localhost/deviceid/" << port;
-        } else if (type == COMPOSITE) {
+        } else if (type == INPUT_TYPE_INT_COMPOSITE) {
             locator << "cvbsin://localhost/deviceid/" << port;
         }
 
@@ -893,7 +925,7 @@ namespace Plugin {
 
         LOGWARN("AVInputVideoModeUpdate [%d]", port);
 
-        if (type == HDMI) {
+        if (type == INPUT_TYPE_INT_HDMI) {
             locator << "hdmiin://localhost/deviceid/" << port;
 
             switch (resolution.pixelResolution) {
@@ -936,7 +968,7 @@ namespace Plugin {
 
             progressive = (!resolution.interlaced);
 
-        } else if (type == COMPOSITE) {
+        } else if (type == INPUT_TYPE_INT_COMPOSITE) {
             locator << "cvbsin://localhost/deviceid/" << port;
 
             switch (resolution.pixelResolution) {

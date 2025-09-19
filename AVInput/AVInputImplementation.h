@@ -40,13 +40,11 @@
 #include <com/com.h>
 #include <core/core.h>
 
+#include "AVInputUtils.h"
+
 #define DEFAULT_PRIM_VOL_LEVEL 25
 #define MAX_PRIM_VOL_LEVEL 100
 #define DEFAULT_INPUT_VOL_LEVEL 100
-
-#define ALL         -1
-#define HDMI        0
-#define COMPOSITE   1
 
 using ParamsType = boost::variant<
     WPEFramework::Exchange::IAVInput::IInputDeviceIterator* const,  // OnDevicesChanged
