@@ -17,31 +17,24 @@
  * limitations under the License.
  */
 
- #include "AVInputUtils.h"
+#include "AVInputUtils.h"
 
 int getTypeOfInput(const std::string& sType) {
-    if (strcmp(sType.c_str(), INPUT_TYPE_STRING_HDMI) == 0)
+    if (sType == INPUT_TYPE_STRING_HDMI)
         return INPUT_TYPE_INT_HDMI;
-    else if (strcmp(sType.c_str(), INPUT_TYPE_STRING_COMPOSITE) == 0)
+    else if (sType == INPUT_TYPE_STRING_COMPOSITE)
         return INPUT_TYPE_INT_COMPOSITE;
-    else if (strcmp(sType.c_str(), INPUT_TYPE_STRING_ALL) == 0)
+    else if (sType == INPUT_TYPE_STRING_ALL)
         return INPUT_TYPE_INT_ALL;
     else throw "Invalid type of INPUT, please specify HDMI/COMPOSITE/ALL";
 }
 
-std::string& getTypeOfInput(const int type) {
+const std::string& getTypeOfInput(const int type) {
     switch(type) {
-        case INPUT_TYPE_INT_HDMI:
-            return INPUT_TYPE_STRING_HDMI;
-            break;
-        case INPUT_TYPE_INT_COMPOSITE:
-            return INPUT_TYPE_STRING_COMPOSITE;
-            break;
-        case INPUT_TYPE_INT_ALL:
-            return INPUT_TYPE_STRING_ALL;
-            break;
-        default:
-            throw "Invalid input type";
+        case INPUT_TYPE_INT_HDMI: return INPUT_TYPE_STRING_HDMI;
+        case INPUT_TYPE_INT_COMPOSITE: return INPUT_TYPE_STRING_COMPOSITE;
+        case INPUT_TYPE_INT_ALL: return INPUT_TYPE_STRING_ALL;
+        default: throw "Invalid input type";
     }
 }
 
