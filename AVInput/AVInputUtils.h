@@ -19,13 +19,21 @@
 
 #pragma once
 
-#define INPUT_TYPE_STRING_ALL       "ALL"
-#define INPUT_TYPE_STRING_HDMI      "HDMI"
-#define INPUT_TYPE_STRING_COMPOSITE "COMPOSITE"
+// <pca> debug
+// #define INPUT_TYPE_STRING_ALL       "ALL"
+// #define INPUT_TYPE_STRING_HDMI      "HDMI"
+// #define INPUT_TYPE_STRING_COMPOSITE "COMPOSITE"
+static const string& INPUT_TYPE_STRING_ALL       "ALL"
+static const string& INPUT_TYPE_STRING_HDMI      "HDMI"
+static const string& INPUT_TYPE_STRING_COMPOSITE "COMPOSITE"
 
-#define INPUT_TYPE_INT_ALL          -1
-#define INPUT_TYPE_INT_HDMI         0
-#define INPUT_TYPE_INT_COMPOSITE    1
+// #define INPUT_TYPE_INT_ALL          -1
+// #define INPUT_TYPE_INT_HDMI         0
+// #define INPUT_TYPE_INT_COMPOSITE    1
+static const int INPUT_TYPE_INT_ALL          -1
+static const int INPUT_TYPE_INT_HDMI         0
+static const int INPUT_TYPE_INT_COMPOSITE    1
+// </pca>
 
 class AVInputUtils {
 public:
