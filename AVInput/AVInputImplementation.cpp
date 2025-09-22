@@ -1147,6 +1147,7 @@ namespace Plugin {
             features = Core::Service<RPC::IteratorType<IStringIterator>>::Create<IStringIterator>(supportedFeatures);
         } else {
             success = false;
+            result = Core::ERROR_GENERAL;
         }
 
         return result;
