@@ -1394,7 +1394,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler)
 
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
-    //plugin->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED);
     Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED);
 
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);

@@ -34,6 +34,8 @@
 #include "RfcApiMock.h"
 #include "ThunderPortability.h"
 #include "PowerManagerMock.h"
+#include "ManagerMock.h"
+
 
 using namespace WPEFramework;
 using ::testing::NiceMock;
@@ -67,6 +69,7 @@ namespace
 class HdmiCecSinkWOInitializeTest : public ::testing::Test {
 protected:
     IarmBusImplMock         *p_iarmBusImplMock = nullptr ;
+    ManagerImplMock         *p_managerImplMock = nullptr ;
     ConnectionImplMock      *p_connectionImplMock = nullptr ;
     MessageEncoderMock      *p_messageEncoderMock = nullptr ;
     LibCCECImplMock         *p_libCCECImplMock = nullptr ;
@@ -87,6 +90,9 @@ protected:
     {
         p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
+
+        p_managerImplMock  = new NiceMock <ManagerImplMock>;
+        device::Manager::setImpl(p_managerImplMock);
 
         p_libCCECImplMock  = new testing::NiceMock <LibCCECImplMock>;
         LibCCEC::setImpl(p_libCCECImplMock);
@@ -121,15 +127,9 @@ protected:
         ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
 
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsHdmiEventHandler = handler;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                }));
+        EXPECT_CALL(*p_managerImplMock, Initialize())
+            .Times(::testing::AnyNumber())
+            .WillRepeatedly(::testing::Return());
 
         ON_CALL(*p_connectionImplMock, open())
             .WillByDefault(::testing::Return());
@@ -143,6 +143,12 @@ protected:
         {
             delete p_iarmBusImplMock;
             p_iarmBusImplMock = nullptr;
+        }
+        device::Manager::setImpl(nullptr);
+        if (p_managerImplMock != nullptr)
+        {
+            delete p_managerImplMock;
+            p_managerImplMock = nullptr;
         }
         LibCCEC::setImpl(nullptr);
         if (p_libCCECImplMock != nullptr)
@@ -459,15 +465,8 @@ TEST_F(HdmiCecSinkDsTest, sendKeyPressEvent)
 TEST_F(HdmiCecSinkInitializedEventDsTest, onHdmiOutputHDCPStatusEvent)
 {
 
-    ASSERT_TRUE(dsHdmiEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_connect.port =dsHDMI_IN_PORT_1;
-    eventData.data.hdmi_in_connect.isPortConnected = true;
-
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("client.events.onDevicesChanged"), message);
-
-    dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData , 0);
+    plugin->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_1, true);
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("client.events.onDevicesChanged"), message);
 
 }

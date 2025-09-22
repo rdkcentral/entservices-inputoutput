@@ -799,7 +799,7 @@ namespace WPEFramework
 			   }
 			   catch(const device::Exception& err)
 			   {
-					LOGINFO("HdmiCecSink plugin device::HdmiInput::getInstance().getNumberOfInputs failed");
+					LOGINFO("HdmiCecSink plugin device::HdmiInput::getInstance().getNumberOfInputs failed so defaulting to 3");
 					m_numofHdmiInput = 3;
 					LOG_DEVICE_EXCEPTION0();
 			   }
