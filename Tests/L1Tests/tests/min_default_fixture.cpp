@@ -693,3 +693,423 @@ TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged)
 
 
 }
+
+
+TEST_F(HdmiCecSourceInitializedTest, ExistsAllMethodsAgain)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getActiveSourceStatus")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getDeviceList")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getEnabled")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getOSDName")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getOTPEnabled")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getVendorId")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("performOTPAction")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendKeyPressEvent")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendStandbyMessage")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setEnabled")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setOSDName")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setOTPEnabled")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setVendorId")));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SetEnabledMalformed)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": \"true\"}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SetEnabledMissingParam)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, GetEnabledInvoke)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEnabled"), _T("{}"), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"success\":true"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SetOTPEnabledTrue)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, "{\"success\":true}");
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T("{}"), response));
+    EXPECT_EQ(response, "{\"enabled\":true,\"success\":true}");
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SetOTPEnabledFalse)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": false}"), response));
+    EXPECT_EQ(response, "{\"success\":true}");
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T("{}"), response));
+    EXPECT_EQ(response, "{\"enabled\":false,\"success\":true}");
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SetOTPEnabledMalformed)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": 123}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, GetOTPEnabledInvoke)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T(""), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"success\":true"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SetOSDNameEdgeCases)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOSDName"), _T("{\"name\": \"\"}"), response));
+    EXPECT_EQ(response, "{\"success\":true}");
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOSDName"), _T("{}"), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"success\":true"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOSDName"), _T("{\"name\": \"A\"}"), response));
+    EXPECT_EQ(response, "{\"success\":true}");
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOSDName"), _T("{\"name\": \"12345678901234567890\"}"), response));
+    EXPECT_EQ(response, "{\"success\":true}");
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SetOSDNameMalformed)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOSDName"), _T("{\"wrong\": \"ABC\"}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, VendorIdSetGetValid)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"0x0019FB\"}"), response));
+    EXPECT_EQ(response, "{\"success\":true}");
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVendorId"), _T("{}"), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"success\":true"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, VendorIdMalformed)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"XYZ123\"}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, PerformOTPActionInvoke)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, GetActiveSourceStatusFalseInvoke)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T("{}"), response));
+    EXPECT_EQ(response, "{\"status\":false,\"success\":true}");
+}
+
+TEST_F(HdmiCecSourceInitializedTest, GetActiveSourceStatusTrueAfterOTP)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, "{\"success\":true}");
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{}"), response));
+
+    Header header;
+    header.from = LogicalAddress(2);
+    PhysicalAddress phys(0x0F,0x0F,0x0F,0x0F);
+    ActiveSource activeSource(phys);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(activeSource, header);
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T("{}"), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"success\":true"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SendStandbyMessageInvoke)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
+    EXPECT_EQ(response, "{\"success\":true}");
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEventVolumeDown)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke([](const UserControlPressed& m)->CECFrame& {
+            EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_VOLUME_DOWN);
+            return CECFrame::getInstance();
+        }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 66}"), response));
+    EXPECT_EQ(response, "{\"success\":true}");
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEventMute)
+{
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke([](const UserControlPressed& m)->CECFrame& {
+            EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_MUTE);
+            return CECFrame::getInstance();
+        }));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\":0,\"keyCode\":67}"), response));
+    EXPECT_EQ(response, "{\"success\":true}");
+}
+
+#define KEY_EVENT_TEST(NAME, CODE, EXPECT_ENUM) \
+TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEvent##NAME) { \
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_))) \
+        .WillByDefault(::testing::Invoke([](const UserControlPressed& m)->CECFrame& { \
+            EXPECT_EQ(m.uiCommand.toInt(), EXPECT_ENUM); \
+            return CECFrame::getInstance(); \
+        })); \
+    std::stringstream ss; \
+    ss << "{\"logicalAddress\":0,\"keyCode\":" << CODE << "}"; \
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), Core::ToString(ss.str()), response)); \
+    EXPECT_EQ(response, "{\"success\":true}"); \
+}
+
+KEY_EVENT_TEST(Up, 1, UICommand::UI_COMMAND_UP)
+KEY_EVENT_TEST(Down, 2, UICommand::UI_COMMAND_DOWN)
+KEY_EVENT_TEST(Left, 3, UICommand::UI_COMMAND_LEFT)
+KEY_EVENT_TEST(Right, 4, UICommand::UI_COMMAND_RIGHT)
+KEY_EVENT_TEST(Select, 0, UICommand::UI_COMMAND_SELECT)
+KEY_EVENT_TEST(Home, 9, UICommand::UI_COMMAND_HOME)
+KEY_EVENT_TEST(Back, 13, UICommand::UI_COMMAND_BACK)
+KEY_EVENT_TEST(Number0, 32, UICommand::UI_COMMAND_NUM_0)
+KEY_EVENT_TEST(Number1, 33, UICommand::UI_COMMAND_NUM_1)
+KEY_EVENT_TEST(Number2, 34, UICommand::UI_COMMAND_NUM_2)
+KEY_EVENT_TEST(Number3, 35, UICommand::UI_COMMAND_NUM_3)
+KEY_EVENT_TEST(Number4, 36, UICommand::UI_COMMAND_NUM_4)
+KEY_EVENT_TEST(Number5, 37, UICommand::UI_COMMAND_NUM_5)
+KEY_EVENT_TEST(Number6, 38, UICommand::UI_COMMAND_NUM_6)
+KEY_EVENT_TEST(Number7, 39, UICommand::UI_COMMAND_NUM_7)
+KEY_EVENT_TEST(Number8, 40, UICommand::UI_COMMAND_NUM_8)
+KEY_EVENT_TEST(Number9, 41, UICommand::UI_COMMAND_NUM_9)
+
+TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEventMalformed)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\":0}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, DeviceListAfterAddAndVendorUpdate)
+{
+    Header header;
+    header.from = LogicalAddress(4);
+    VendorID vid(0x01,0x02,0x03);
+    DeviceVendorID dvid(vid);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(dvid, header);
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T("{}"), response));
+    EXPECT_THAT(response, ::testing::HasSubstr("\"success\":true"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, ImageViewOnProcess)
+{
+    Header header;
+    header.from = LogicalAddress(5);
+    ImageViewOn msg;
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(msg, header);
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T("{}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, RequestActiveSourceProcess)
+{
+    Header header;
+    header.from = LogicalAddress(6);
+    RequestActiveSource msg;
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(msg, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, CecVersionProcess)
+{
+    Header header;
+    header.from = LogicalAddress(7);
+    CECVersion ver(Version::V_1_4);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(ver, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, GiveOSDNameProcess)
+{
+    Header header;
+    header.from = LogicalAddress(8);
+    GiveOSDName give;
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(give, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, GivePhysicalAddressProcess)
+{
+    Header header;
+    header.from = LogicalAddress(9);
+    GivePhysicalAddress gpa;
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(gpa, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, GiveDeviceVendorIDProcess)
+{
+    Header header;
+    header.from = LogicalAddress(10);
+    GiveDeviceVendorID gvid;
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(gvid, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, RoutingChangeProcess)
+{
+    Header header;
+    header.from = LogicalAddress(11);
+    PhysicalAddress from(1,0,0,0);
+    PhysicalAddress to(0x0F,0x0F,0x0F,0x0F);
+    RoutingChange rc(from, to);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(rc, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, RoutingInformationProcess)
+{
+    Header header;
+    header.from = LogicalAddress(12);
+    PhysicalAddress to(0x0F,0x0F,0x0F,0x0F);
+    RoutingInformation ri(to);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(ri, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SetStreamPathProcess)
+{
+    Header header;
+    header.from = LogicalAddress(13);
+    PhysicalAddress to(0x0F,0x0F,0x0F,0x0F);
+    SetStreamPath ssp(to);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(ssp, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, ReportPhysicalAddressProcess)
+{
+    Header header;
+    header.from = LogicalAddress(14);
+    PhysicalAddress pa(1,2,3,0);
+    ReportPhysicalAddress rpa(pa, header.from.toInt());
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(rpa, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, DeviceVendorIDProcess)
+{
+    Header header;
+    header.from = LogicalAddress(3);
+    VendorID v(0x11,0x22,0x33);
+    DeviceVendorID dvid(v);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(dvid, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, GiveDevicePowerStatusProcess)
+{
+    Header header;
+    header.from = LogicalAddress(2);
+    GiveDevicePowerStatus gdp;
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(gdp, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, ReportPowerStatusProcess)
+{
+    Header header;
+    header.from = LogicalAddress(0);
+    ReportPowerStatus rps(PowerStatus(1));
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(rps, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, UserControlPressedProcess)
+{
+    Header header;
+    header.from = LogicalAddress(1);
+    UserControlPressed ucp(UICommand::UI_COMMAND_VOLUME_UP);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(ucp, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, UserControlReleasedProcess)
+{
+    Header header;
+    header.from = LogicalAddress(1);
+    UserControlReleased ucr;
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(ucr, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, AbortProcess)
+{
+    Header header;
+    header.from = LogicalAddress(4);
+    Abort abortMsg;
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(abortMsg, header);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SetOSDNameProcessEvent)
+{
+    NotificationHandler notif;
+    ASSERT_NE(nullptr, Plugin::HdmiCecSourceImplementation::_instance);
+    Plugin::HdmiCecSourceImplementation::_instance->Register(&notif);
+    Header header;
+    header.from = LogicalAddress(5);
+    OSDName newName("EVENT_OSD");
+    SetOSDName setName(newName);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(setName, header);
+    notif.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnDeviceInfoUpdated);
+    Plugin::HdmiCecSourceImplementation::_instance->Unregister(&notif);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, StandbyMessageProcessEvent)
+{
+    NotificationHandler notif;
+    ASSERT_NE(nullptr, Plugin::HdmiCecSourceImplementation::_instance);
+    Plugin::HdmiCecSourceImplementation::_instance->Register(&notif);
+    Header header;
+    header.from = LogicalAddress(2);
+    Standby standby;
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(standby, header);
+    notif.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_StandbyMessageReceived);
+    Plugin::HdmiCecSourceImplementation::_instance->Unregister(&notif);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, ActiveSourceEventNotification)
+{
+    NotificationHandler notif;
+    ASSERT_NE(nullptr, Plugin::HdmiCecSourceImplementation::_instance);
+    Plugin::HdmiCecSourceImplementation::_instance->Register(&notif);
+    Header header;
+    header.from = LogicalAddress(2);
+    PhysicalAddress pa(0x0F,0x0F,0x0F,0x0F);
+    ActiveSource as(pa);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(as, header);
+    notif.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnActiveSourceStatusUpdated);
+    Plugin::HdmiCecSourceImplementation::_instance->Unregister(&notif);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, KeyPressEventNotification)
+{
+    NotificationHandler notif;
+    ASSERT_NE(nullptr, Plugin::HdmiCecSourceImplementation::_instance);
+    Plugin::HdmiCecSourceImplementation::_instance->Register(&notif);
+    Header header;
+    header.from = LogicalAddress(3);
+    UserControlPressed ucp(UICommand::UI_COMMAND_NUM_5);
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(ucp, header);
+    notif.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyPressEvent);
+    Plugin::HdmiCecSourceImplementation::_instance->Unregister(&notif);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, KeyReleaseEventNotification)
+{
+    NotificationHandler notif;
+    ASSERT_NE(nullptr, Plugin::HdmiCecSourceImplementation::_instance);
+    Plugin::HdmiCecSourceImplementation::_instance->Register(&notif);
+    Header header;
+    header.from = LogicalAddress(3);
+    UserControlReleased ucr;
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(ucr, header);
+    notif.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyReleaseEvent);
+    Plugin::HdmiCecSourceImplementation::_instance->Unregister(&notif);
+}
