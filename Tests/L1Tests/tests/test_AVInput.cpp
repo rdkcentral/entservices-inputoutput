@@ -147,12 +147,14 @@ protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
     CompositeInputImplMock* p_compositeInputImplMock = nullptr;
     HostImplMock* p_HostImplMock = nullptr;
-    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
-    IARM_EventHandler_t dsAVEventHandler;
-    IARM_EventHandler_t dsAVSignalStatusEventHandler;
-    IARM_EventHandler_t dsAVStatusEventHandler;
-    IARM_EventHandler_t dsAVVideoModeEventHandler;
-    IARM_EventHandler_t dsAviContentTypeEventHandler;
+    // <pca>
+    // IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
+    // IARM_EventHandler_t dsAVEventHandler;
+    // IARM_EventHandler_t dsAVSignalStatusEventHandler;
+    // IARM_EventHandler_t dsAVStatusEventHandler;
+    // IARM_EventHandler_t dsAVVideoModeEventHandler;
+    // IARM_EventHandler_t dsAviContentTypeEventHandler;
+    // </pca>
 
     AVInputDsTest()
         : AVInputTest()
@@ -276,6 +278,15 @@ protected:
     PLUGINHOST_DISPATCHER* dispatcher;
     Core::JSONRPC::Message message;
 
+    // <pca>
+    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
+    IARM_EventHandler_t dsAVEventHandler;
+    IARM_EventHandler_t dsAVSignalStatusEventHandler;
+    IARM_EventHandler_t dsAVStatusEventHandler;
+    IARM_EventHandler_t dsAVVideoModeEventHandler;
+    IARM_EventHandler_t dsAviContentTypeEventHandler;
+    // </pca>
+
     Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
     Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
     Exchange::IAVInput::IInputStatusChangedNotification*        InputStatusChangedNotification      = nullptr;
@@ -289,6 +300,7 @@ protected:
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
                 [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
+                    printf("*** _DEBUG: Mock IARM_Bus_RegisterEventHandler called: Mark 1\n");
                     if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
                         EXPECT_TRUE(handler != nullptr);
                         dsAVEventHandler = handler;
@@ -316,6 +328,7 @@ protected:
                     if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG)) {
                         EXPECT_TRUE(handler != nullptr);
                         dsAVEventHandler = handler;
+                        printf("*** _DEBUG: Mock IARM_Bus_RegisterEventHandler called: Mark 2\n");
                     }
                     if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS)) {
                         EXPECT_TRUE(handler != nullptr);

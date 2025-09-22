@@ -48,6 +48,7 @@ namespace Plugin {
         , _service(nullptr)
     {
         LOGINFO("Create AVInputImplementation Instance");
+        printf("*** _DEBUG: AVInputImplementation ctor: entry\n");
         AVInputImplementation::_instance = this;
         InitializeIARM();
     }
@@ -61,6 +62,7 @@ namespace Plugin {
 
     void AVInputImplementation::InitializeIARM()
     {
+        printf("*** _DEBUG: AVInputImplementation::InitializeIARM(): entry\n");
         if (Utils::IARM::init()) {
             IARM_Result_t res;
             IARM_CHECK(IARM_Bus_RegisterEventHandler(
