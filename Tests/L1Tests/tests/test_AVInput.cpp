@@ -155,6 +155,8 @@ TEST_F(AVInputTest, contentProtected)
 #endif
 // </pca>
 
+// <pca> debug
+#if 0
 class AVInputDsTest : public AVInputTest {
 protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
@@ -203,6 +205,8 @@ protected:
         }
     }
 };
+#endif
+// </pca>
 
 // <pca> debug
 #if 0
