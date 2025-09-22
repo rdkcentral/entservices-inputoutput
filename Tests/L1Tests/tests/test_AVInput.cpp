@@ -33,6 +33,9 @@
 
 #include "AVInputImplementation.h"
 #include "AVInputMock.h"
+// <pca>
+#include "WorkerPoolImplementation.h"
+// </pca>
 
 using namespace WPEFramework;
 
@@ -45,6 +48,9 @@ protected:
 
     NiceMock<ServiceMock> service;
     NiceMock<COMLinkMock> comLinkMock;
+    // <pca>
+    Core::ProxyType<WorkerPoolImplementation> workerPool;
+    // </pca>
 
     Core::JSONRPC::Handler& handler;
     DECL_CORE_JSONRPC_CONX connection;
@@ -58,6 +64,10 @@ protected:
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
         , INIT_CONX(1, 0)
+        // <pca>
+        , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
+          2, Core::Thread::DefaultStackSize(), 16))
+        // </pca>
     {
         p_avInputMock  = new NiceMock<AVInputMock>;
 
@@ -73,6 +83,11 @@ protected:
                 .WillByDefault(::testing::Return(AVInputImpl));
         #endif
 
+        // <pca>
+        Core::IWorkerPool::Assign(&(*workerPool));
+        workerPool->Run();
+        // </pca>
+
         p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
 
@@ -82,6 +97,10 @@ protected:
     virtual ~AVInputTest()
     {
         plugin->Deinitialize(&service);
+        // <pca>
+        Core::IWorkerPool::Assign(nullptr);
+        workerPool.Release();
+        // </pca>
 
         IarmBus::setImpl(nullptr);
         if (p_iarmBusImplMock != nullptr) {
