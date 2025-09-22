@@ -1044,72 +1044,72 @@ TEST_F(HdmiCecSourceInitializedTest, AbortProcess)
 
 TEST_F(HdmiCecSourceInitializedTest, SetOSDNameProcessEvent)
 {
-    NotificationHandler notif;
+    Core::ProxyType<NotificationHandler> notif = Core::ProxyType<NotificationHandler>::Create();
     ASSERT_NE(nullptr, Plugin::HdmiCecSourceImplementation::_instance);
-    Plugin::HdmiCecSourceImplementation::_instance->Register(&notif);
+    Plugin::HdmiCecSourceImplementation::_instance->Register(notif.operator->());
     Header header;
     header.from = LogicalAddress(5);
     OSDName newName("EVENT_OSD");
     SetOSDName setName(newName);
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(setName, header);
-    notif.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnDeviceInfoUpdated);
-    Plugin::HdmiCecSourceImplementation::_instance->Unregister(&notif);
+    notif->WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnDeviceInfoUpdated);
+    Plugin::HdmiCecSourceImplementation::_instance->Unregister(notif.operator->());
 }
 
 TEST_F(HdmiCecSourceInitializedTest, StandbyMessageProcessEvent)
 {
-    NotificationHandler notif;
+    Core::ProxyType<NotificationHandler> notif = Core::ProxyType<NotificationHandler>::Create();
     ASSERT_NE(nullptr, Plugin::HdmiCecSourceImplementation::_instance);
-    Plugin::HdmiCecSourceImplementation::_instance->Register(&notif);
+    Plugin::HdmiCecSourceImplementation::_instance->Register(notif.operator->());
     Header header;
     header.from = LogicalAddress(2);
     Standby standby;
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(standby, header);
-    notif.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_StandbyMessageReceived);
-    Plugin::HdmiCecSourceImplementation::_instance->Unregister(&notif);
+    notif->WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_StandbyMessageReceived);
+    Plugin::HdmiCecSourceImplementation::_instance->Unregister(notif.operator->());
 }
 
 TEST_F(HdmiCecSourceInitializedTest, ActiveSourceEventNotification)
 {
-    NotificationHandler notif;
+    Core::ProxyType<NotificationHandler> notif = Core::ProxyType<NotificationHandler>::Create();
     ASSERT_NE(nullptr, Plugin::HdmiCecSourceImplementation::_instance);
-    Plugin::HdmiCecSourceImplementation::_instance->Register(&notif);
+    Plugin::HdmiCecSourceImplementation::_instance->Register(notif.operator->());
     Header header;
     header.from = LogicalAddress(2);
     PhysicalAddress pa(0x0F,0x0F,0x0F,0x0F);
     ActiveSource as(pa);
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(as, header);
-    notif.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnActiveSourceStatusUpdated);
-    Plugin::HdmiCecSourceImplementation::_instance->Unregister(&notif);
+    notif->WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnActiveSourceStatusUpdated);
+    Plugin::HdmiCecSourceImplementation::_instance->Unregister(notif.operator->());
 }
 
 TEST_F(HdmiCecSourceInitializedTest, KeyPressEventNotification)
 {
-    NotificationHandler notif;
+    Core::ProxyType<NotificationHandler> notif = Core::ProxyType<NotificationHandler>::Create();
     ASSERT_NE(nullptr, Plugin::HdmiCecSourceImplementation::_instance);
-    Plugin::HdmiCecSourceImplementation::_instance->Register(&notif);
+    Plugin::HdmiCecSourceImplementation::_instance->Register(notif.operator->());
     Header header;
     header.from = LogicalAddress(3);
     UserControlPressed ucp(UICommand::UI_COMMAND_NUM_5);
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(ucp, header);
-    notif.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyPressEvent);
-    Plugin::HdmiCecSourceImplementation::_instance->Unregister(&notif);
+    notif->WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyPressEvent);
+    Plugin::HdmiCecSourceImplementation::_instance->Unregister(notif.operator->());
 }
 
 TEST_F(HdmiCecSourceInitializedTest, KeyReleaseEventNotification)
 {
-    NotificationHandler notif;
+    Core::ProxyType<NotificationHandler> notif = Core::ProxyType<NotificationHandler>::Create();
     ASSERT_NE(nullptr, Plugin::HdmiCecSourceImplementation::_instance);
-    Plugin::HdmiCecSourceImplementation::_instance->Register(&notif);
+    Plugin::HdmiCecSourceImplementation::_instance->Register(notif.operator->());
     Header header;
     header.from = LogicalAddress(3);
     UserControlReleased ucr;
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(ucr, header);
-    notif.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyReleaseEvent);
-    Plugin::HdmiCecSourceImplementation::_instance->Unregister(&notif);
+    notif->WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnKeyReleaseEvent);
+    Plugin::HdmiCecSourceImplementation::_instance->Unregister(notif.operator->());
 }
