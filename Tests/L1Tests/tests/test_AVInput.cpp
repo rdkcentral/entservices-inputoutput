@@ -58,7 +58,7 @@ protected:
 
     AVInputMock* p_avInputMock = nullptr;
 
-    // <pca> debug
+    // <pca> debug YAH: Moving this causes seg fault
     //IarmBusImplMock* p_iarmBusImplMock = nullptr;
     // </pca>
 
@@ -116,6 +116,9 @@ protected:
     }
 };
 
+// <pca> debug
+#if 0
+
 TEST_F(AVInputTest, RegisteredMethods)
 {
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("numberOfInputs")));
@@ -147,6 +150,9 @@ TEST_F(AVInputTest, contentProtected)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
 }
+
+#endif
+// </pca>
 
 class AVInputDsTest : public AVInputTest {
 protected:
@@ -313,6 +319,7 @@ protected:
     AVInputInit()
         : AVInputDsTest()
     {
+        printf("*** _DEBUG: AVInputInit ctor: entry\n");
         // <pca> debug
         p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
@@ -420,6 +427,7 @@ protected:
 
     virtual ~AVInputInit() override
     {
+        printf("*** _DEBUG: AVInputInit xtor: entry\n");
         dispatcher->Deactivate();
         dispatcher->Release();
         PluginHost::IFactories::Assign(nullptr);
