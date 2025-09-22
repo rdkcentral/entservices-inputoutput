@@ -299,7 +299,7 @@ protected:
     Core::JSONRPC::Message message;
 
     // <pca> debug
-    IarmBusImplMock* p_iarmBusImplMock = nullptr;
+    //IarmBusImplMock* p_iarmBusImplMock = nullptr;
     // </pca>
 
     // <pca>
@@ -323,8 +323,8 @@ protected:
     {
         printf("*** _DEBUG: AVInputInit ctor: entry\n");
         // <pca> debug
-        p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
-        IarmBus::setImpl(p_iarmBusImplMock);
+        // p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
+        // IarmBus::setImpl(p_iarmBusImplMock);
         // </pca>
 
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
@@ -435,11 +435,11 @@ protected:
         PluginHost::IFactories::Assign(nullptr);
 
         // <pca> debug
-        IarmBus::setImpl(nullptr);
-        if (p_iarmBusImplMock != nullptr) {
-            delete p_iarmBusImplMock;
-            p_iarmBusImplMock = nullptr;
-        }
+        // IarmBus::setImpl(nullptr);
+        // if (p_iarmBusImplMock != nullptr) {
+        //     delete p_iarmBusImplMock;
+        //     p_iarmBusImplMock = nullptr;
+        // }
         // </pca>
     }
 };
