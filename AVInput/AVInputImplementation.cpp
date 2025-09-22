@@ -573,7 +573,12 @@ namespace Plugin {
         printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 2");
 
         try {
-            switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
+            // <pca> debug
+            //switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
+            int inputType = AVInputUtils::getTypeOfInput(typeOfInput);
+            printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 2b: inputType=%d", inputType);
+            switch(inputType) {
+            // </pca>
                 case INPUT_TYPE_INT_HDMI: {
                     device::HdmiInput::getInstance().selectPort(id, requestAudioMix, plane, topMost);
                     break;
