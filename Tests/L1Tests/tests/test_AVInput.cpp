@@ -837,6 +837,7 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
 
 TEST_F(AVInputInit, onDevicesChangedHDMI)
 {
+    printf("*** _DEBUG: AVInputInit.onDevicesChangedHDMI: entry\n");
     Core::Event onDevicesChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
