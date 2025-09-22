@@ -21,6 +21,7 @@
 
 #include <string>
 
+// <pca>
 static const std::string    INPUT_TYPE_STRING_ALL       = "ALL";
 static const std::string    INPUT_TYPE_STRING_HDMI      = "HDMI";
 static const std::string    INPUT_TYPE_STRING_COMPOSITE = "COMPOSITE";
@@ -34,7 +35,7 @@ namespace Plugin {
 
 class AVInputUtils {
 public:
-    static const int getTypeOfInput(const std::string& type);
+    static int getTypeOfInput(const std::string& type);
     static const std::string& getTypeOfInput(const int type);
 
 private:
