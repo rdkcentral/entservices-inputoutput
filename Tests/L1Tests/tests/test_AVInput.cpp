@@ -51,6 +51,13 @@ protected:
     // <pca>
     Core::ProxyType<WorkerPoolImplementation> workerPool;
 
+    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
+    IARM_EventHandler_t dsAVEventHandler;
+    IARM_EventHandler_t dsAVSignalStatusEventHandler;
+    IARM_EventHandler_t dsAVStatusEventHandler;
+    IARM_EventHandler_t dsAVVideoModeEventHandler;
+    IARM_EventHandler_t dsAviContentTypeEventHandler;
+
     Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
     Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
     Exchange::IAVInput::IInputStatusChangedNotification*        InputStatusChangedNotification      = nullptr;
@@ -248,12 +255,14 @@ protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
     CompositeInputImplMock* p_compositeInputImplMock = nullptr;
     HostImplMock* p_HostImplMock = nullptr;
-    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
-    IARM_EventHandler_t dsAVEventHandler;
-    IARM_EventHandler_t dsAVSignalStatusEventHandler;
-    IARM_EventHandler_t dsAVStatusEventHandler;
-    IARM_EventHandler_t dsAVVideoModeEventHandler;
-    IARM_EventHandler_t dsAviContentTypeEventHandler;
+    // <pca>
+    // IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
+    // IARM_EventHandler_t dsAVEventHandler;
+    // IARM_EventHandler_t dsAVSignalStatusEventHandler;
+    // IARM_EventHandler_t dsAVStatusEventHandler;
+    // IARM_EventHandler_t dsAVVideoModeEventHandler;
+    // IARM_EventHandler_t dsAviContentTypeEventHandler;
+    // </pca>
 
     AVInputDsTest()
         : AVInputTest()
