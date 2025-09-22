@@ -18,6 +18,7 @@
  */
 
 #include "AVInputUtils.h"
+#include <stdexcept>
 
 namespace WPEFramework {
 namespace Plugin {
@@ -37,8 +38,7 @@ const int AVInputUtils::getTypeOfInput(const std::string& sType) {
         return INPUT_TYPE_INT_ALL;
     }
     else {
-        printf("*** _DEBUG: AVInputUtils::getTypeOfInput: Mark 4");
-        throw "Invalid type of INPUT, please specify HDMI/COMPOSITE/ALL";
+        throw std::invalid_argument("Invalid type of INPUT, please specify HDMI/COMPOSITE/ALL");
     }
 }
 
@@ -47,7 +47,7 @@ const std::string& AVInputUtils::getTypeOfInput(const int type) {
         case INPUT_TYPE_INT_HDMI: return INPUT_TYPE_STRING_HDMI;
         case INPUT_TYPE_INT_COMPOSITE: return INPUT_TYPE_STRING_COMPOSITE;
         case INPUT_TYPE_INT_ALL: return INPUT_TYPE_STRING_ALL;
-        default: throw "Invalid input type";
+        default: throw std::invalid_argument("Invalid input type");
     }
 }
 
