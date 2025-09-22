@@ -636,7 +636,7 @@ namespace Plugin {
                     return Core::ERROR_GENERAL;
                 }
             }
-        } catch (const device::Exception& err) {
+        } catch(...) {
             LOGWARN("AVInputImplementation::StopInput Failed");
             successResult.success = false;
             ret = Core::ERROR_GENERAL;
