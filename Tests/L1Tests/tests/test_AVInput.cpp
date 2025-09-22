@@ -58,7 +58,9 @@ protected:
 
     AVInputMock* p_avInputMock = nullptr;
 
-    IarmBusImplMock* p_iarmBusImplMock = nullptr;
+    // <pca> debug
+    //IarmBusImplMock* p_iarmBusImplMock = nullptr;
+    // </pca>
 
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
@@ -88,8 +90,10 @@ protected:
         workerPool->Run();
         // </pca>
 
-        p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
-        IarmBus::setImpl(p_iarmBusImplMock);
+        // <pca> debug
+        // p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
+        // IarmBus::setImpl(p_iarmBusImplMock);
+        // </pca>
 
         plugin->Initialize(&service);
 
@@ -102,11 +106,13 @@ protected:
         workerPool.Release();
         // </pca>
 
-        IarmBus::setImpl(nullptr);
-        if (p_iarmBusImplMock != nullptr) {
-            delete p_iarmBusImplMock;
-            p_iarmBusImplMock = nullptr;
-        }
+        // <pca> debug
+        // IarmBus::setImpl(nullptr);
+        // if (p_iarmBusImplMock != nullptr) {
+        //     delete p_iarmBusImplMock;
+        //     p_iarmBusImplMock = nullptr;
+        // }
+        // </pca>
     }
 };
 
@@ -284,6 +290,10 @@ protected:
     PLUGINHOST_DISPATCHER* dispatcher;
     Core::JSONRPC::Message message;
 
+    // <pca> debug
+    IarmBusImplMock* p_iarmBusImplMock = nullptr;
+    // </pca>
+
     // <pca>
     IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
     IARM_EventHandler_t dsAVEventHandler;
@@ -303,6 +313,11 @@ protected:
     AVInputInit()
         : AVInputDsTest()
     {
+        // <pca> debug
+        p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
+        IarmBus::setImpl(p_iarmBusImplMock);
+        // </pca>
+
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
                 [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
@@ -408,6 +423,14 @@ protected:
         dispatcher->Deactivate();
         dispatcher->Release();
         PluginHost::IFactories::Assign(nullptr);
+
+        // <pca> debug
+        IarmBus::setImpl(nullptr);
+        if (p_iarmBusImplMock != nullptr) {
+            delete p_iarmBusImplMock;
+            p_iarmBusImplMock = nullptr;
+        }
+        // </pca>
     }
 };
 
