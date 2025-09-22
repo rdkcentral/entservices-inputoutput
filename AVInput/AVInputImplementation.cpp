@@ -585,6 +585,7 @@ namespace Plugin {
                 }
                 case INPUT_TYPE_INT_COMPOSITE: {
                     device::CompositeInput::getInstance().selectPort(id);
+                    break;
                 }
                 default: {
                     printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 3, portId=%s, typeOfInput=%s, requestAudioMix=%d, plane=%d, topMost=%d\n",
