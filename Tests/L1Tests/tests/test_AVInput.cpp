@@ -116,8 +116,6 @@ protected:
     }
 };
 
-// <pca> debug
-#if 0
 
 TEST_F(AVInputTest, RegisteredMethods)
 {
@@ -144,6 +142,9 @@ TEST_F(AVInputTest, RegisteredMethods)
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getSupportedGameFeatures")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getGameFeatureStatus")));
 }
+
+// <pca> debug
+#if 0
 
 TEST_F(AVInputTest, contentProtected)
 {
