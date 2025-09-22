@@ -87,12 +87,12 @@ namespace Plugin {
         if (nullptr != _avInput) {
 
             // Register for notifications
-            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
-            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
-            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
-            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
-            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
-            _avInput->Register(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
+            _avInput->RegisterDevicesChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
+            _avInput->RegisterSignalChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
+            _avInput->RegisterInputStatusChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
+            _avInput->RegisterVideoStreamInfoUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
+            _avInput->RegisterGameFeatureStatusUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
+            _avInput->RegisterHdmiContentTypeUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
 
             // Invoking Plugin API register to wpeframework
             Exchange::JAVInput::Register(*this, _avInput);
@@ -115,12 +115,12 @@ namespace Plugin {
 
         if (nullptr != _avInput) {
 
-            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
-            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
-            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
-            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
-            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
-            _avInput->Unregister(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
+            _avInput->UnregisterDevicesChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
+            _avInput->UnregisterSignalChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
+            _avInput->UnregisterInputStatusChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
+            _avInput->UnregisterVideoStreamInfoUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
+            _avInput->UnregisterGameFeatureStatusUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
+            _avInput->UnregisterHdmiContentTypeUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
 
             Exchange::JAVInput::Unregister(*this);
 
