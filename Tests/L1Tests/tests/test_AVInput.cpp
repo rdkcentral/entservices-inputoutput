@@ -50,20 +50,6 @@ protected:
     NiceMock<COMLinkMock> comLinkMock;
     // <pca>
     Core::ProxyType<WorkerPoolImplementation> workerPool;
-
-    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
-    IARM_EventHandler_t dsAVEventHandler;
-    IARM_EventHandler_t dsAVSignalStatusEventHandler;
-    IARM_EventHandler_t dsAVStatusEventHandler;
-    IARM_EventHandler_t dsAVVideoModeEventHandler;
-    IARM_EventHandler_t dsAviContentTypeEventHandler;
-
-    Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
-    Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
-    Exchange::IAVInput::IInputStatusChangedNotification*        InputStatusChangedNotification      = nullptr;
-    Exchange::IAVInput::IVideoStreamInfoUpdateNotification*     VideoStreamInfoUpdateNotification   = nullptr;
-    Exchange::IAVInput::IGameFeatureStatusUpdateNotification*   GameFeatureStatusUpdateNotification = nullptr;
-    Exchange::IAVInput::IHdmiContentTypeUpdateNotification*     HdmiContentTypeUpdateNotification   = nullptr;
     // </pca>
 
     Core::JSONRPC::Handler& handler;
@@ -96,100 +82,6 @@ protected:
             ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_, ::testing::_, ::testing::_))
                 .WillByDefault(::testing::Return(AVInputImpl));
         #endif
-
-        // <pca>
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVSignalStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVVideoModeEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVGameFeatureStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVGameFeatureStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVSignalStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVVideoModeEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAviContentTypeEventHandler = handler;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterDevicesChangedNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IDevicesChangedNotification* notification) {
-                    DevicesChangedNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterSignalChangedNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::ISignalChangedNotification* notification) {
-                    SignalChangedNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterInputStatusChangedNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IInputStatusChangedNotification* notification) {
-                    InputStatusChangedNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterVideoStreamInfoUpdateNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) {
-                    VideoStreamInfoUpdateNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterGameFeatureStatusUpdateNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) {
-                    GameFeatureStatusUpdateNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterHdmiContentTypeUpdateNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) {
-                    HdmiContentTypeUpdateNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-        // </pca>
 
         // <pca>
         Core::IWorkerPool::Assign(&(*workerPool));
@@ -255,14 +147,12 @@ protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
     CompositeInputImplMock* p_compositeInputImplMock = nullptr;
     HostImplMock* p_HostImplMock = nullptr;
-    // <pca>
-    // IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
-    // IARM_EventHandler_t dsAVEventHandler;
-    // IARM_EventHandler_t dsAVSignalStatusEventHandler;
-    // IARM_EventHandler_t dsAVStatusEventHandler;
-    // IARM_EventHandler_t dsAVVideoModeEventHandler;
-    // IARM_EventHandler_t dsAviContentTypeEventHandler;
-    // </pca>
+    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
+    IARM_EventHandler_t dsAVEventHandler;
+    IARM_EventHandler_t dsAVSignalStatusEventHandler;
+    IARM_EventHandler_t dsAVStatusEventHandler;
+    IARM_EventHandler_t dsAVVideoModeEventHandler;
+    IARM_EventHandler_t dsAviContentTypeEventHandler;
 
     AVInputDsTest()
         : AVInputTest()
@@ -383,118 +273,112 @@ protected:
     PLUGINHOST_DISPATCHER* dispatcher;
     Core::JSONRPC::Message message;
 
-    // <pca>
-    // Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
-    // Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
-    // Exchange::IAVInput::IInputStatusChangedNotification*        InputStatusChangedNotification      = nullptr;
-    // Exchange::IAVInput::IVideoStreamInfoUpdateNotification*     VideoStreamInfoUpdateNotification   = nullptr;
-    // Exchange::IAVInput::IGameFeatureStatusUpdateNotification*   GameFeatureStatusUpdateNotification = nullptr;
-    // Exchange::IAVInput::IHdmiContentTypeUpdateNotification*     HdmiContentTypeUpdateNotification   = nullptr;
-    // </pca>
+    Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
+    Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
+    Exchange::IAVInput::IInputStatusChangedNotification*        InputStatusChangedNotification      = nullptr;
+    Exchange::IAVInput::IVideoStreamInfoUpdateNotification*     VideoStreamInfoUpdateNotification   = nullptr;
+    Exchange::IAVInput::IGameFeatureStatusUpdateNotification*   GameFeatureStatusUpdateNotification = nullptr;
+    Exchange::IAVInput::IHdmiContentTypeUpdateNotification*     HdmiContentTypeUpdateNotification   = nullptr;
 
     AVInputInit()
         : AVInputDsTest()
     {
-        // <pca>
-        // ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-        //     .WillByDefault(::testing::Invoke(
-        //         [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVSignalStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVVideoModeEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVGameFeatureStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVGameFeatureStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVSignalStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVVideoModeEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAviContentTypeEventHandler = handler;
-        //             }
-        //             return IARM_RESULT_SUCCESS;
-        //         }));
-        // </pca>
+        ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAVEventHandler = handler;
+                    }
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAVStatusEventHandler = handler;
+                    }
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAVSignalStatusEventHandler = handler;
+                    }
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAVVideoModeEventHandler = handler;
+                    }
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAVGameFeatureStatusEventHandler = handler;
+                    }
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAVGameFeatureStatusEventHandler = handler;
+                    }
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAVEventHandler = handler;
+                    }
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAVSignalStatusEventHandler = handler;
+                    }
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAVStatusEventHandler = handler;
+                    }
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAVVideoModeEventHandler = handler;
+                    }
+                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE)) {
+                        EXPECT_TRUE(handler != nullptr);
+                        dsAviContentTypeEventHandler = handler;
+                    }
+                    return IARM_RESULT_SUCCESS;
+                }));
 
         PluginHost::IFactories::Assign(&factoriesImplementation);
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
             plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
         dispatcher->Activate(&service);
 
-        // <pca>
-        // ON_CALL(*p_avInputMock, RegisterDevicesChangedNotification(::testing::_))
-        //     .WillByDefault(::testing::Invoke(
-        //         [&](Exchange::IAVInput::IDevicesChangedNotification* notification) {
-        //             DevicesChangedNotification = notification;
-        //     return Core::ERROR_NONE;
-        //         }));
+        ON_CALL(*p_avInputMock, RegisterDevicesChangedNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IDevicesChangedNotification* notification) {
+                    DevicesChangedNotification = notification;
+            return Core::ERROR_NONE;
+                }));
 
-        // ON_CALL(*p_avInputMock, RegisterSignalChangedNotification(::testing::_))
-        //     .WillByDefault(::testing::Invoke(
-        //         [&](Exchange::IAVInput::ISignalChangedNotification* notification) {
-        //             SignalChangedNotification = notification;
-        //     return Core::ERROR_NONE;
-        //         }));
+        ON_CALL(*p_avInputMock, RegisterSignalChangedNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::ISignalChangedNotification* notification) {
+                    SignalChangedNotification = notification;
+            return Core::ERROR_NONE;
+                }));
 
-        // ON_CALL(*p_avInputMock, RegisterInputStatusChangedNotification(::testing::_))
-        //     .WillByDefault(::testing::Invoke(
-        //         [&](Exchange::IAVInput::IInputStatusChangedNotification* notification) {
-        //             InputStatusChangedNotification = notification;
-        //     return Core::ERROR_NONE;
-        //         }));
+        ON_CALL(*p_avInputMock, RegisterInputStatusChangedNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IInputStatusChangedNotification* notification) {
+                    InputStatusChangedNotification = notification;
+            return Core::ERROR_NONE;
+                }));
 
-        // ON_CALL(*p_avInputMock, RegisterVideoStreamInfoUpdateNotification(::testing::_))
-        //     .WillByDefault(::testing::Invoke(
-        //         [&](Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) {
-        //             VideoStreamInfoUpdateNotification = notification;
-        //     return Core::ERROR_NONE;
-        //         }));
+        ON_CALL(*p_avInputMock, RegisterVideoStreamInfoUpdateNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) {
+                    VideoStreamInfoUpdateNotification = notification;
+            return Core::ERROR_NONE;
+                }));
 
-        // ON_CALL(*p_avInputMock, RegisterGameFeatureStatusUpdateNotification(::testing::_))
-        //     .WillByDefault(::testing::Invoke(
-        //         [&](Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) {
-        //             GameFeatureStatusUpdateNotification = notification;
-        //     return Core::ERROR_NONE;
-        //         }));
+        ON_CALL(*p_avInputMock, RegisterGameFeatureStatusUpdateNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) {
+                    GameFeatureStatusUpdateNotification = notification;
+            return Core::ERROR_NONE;
+                }));
 
-        // ON_CALL(*p_avInputMock, RegisterHdmiContentTypeUpdateNotification(::testing::_))
-        //     .WillByDefault(::testing::Invoke(
-        //         [&](Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) {
-        //             HdmiContentTypeUpdateNotification = notification;
-        //     return Core::ERROR_NONE;
-        //         }));
-        // </pca>
+        ON_CALL(*p_avInputMock, RegisterHdmiContentTypeUpdateNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) {
+                    HdmiContentTypeUpdateNotification = notification;
+            return Core::ERROR_NONE;
+                }));
     }
 
     virtual ~AVInputInit() override
