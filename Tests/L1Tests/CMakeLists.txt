@@ -120,7 +120,7 @@ add_plugin_test_ex(PLUGIN_HDMICECSOURCE tests/test_HdmiCecSource.cpp "${HDMICECS
 
 # PLUGIN_AVINPUT
 set (AVINPUT_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/AVInput ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
-set (AVINPUT_LIBS ${NAMESPACE}AVInput ${NAMESPACE}AVInputImplementation)
+set (AVINPUT_LIBS ${NAMESPACE}AVInputUtils ${NAMESPACE}AVInput ${NAMESPACE}AVInputImplementation)
 add_plugin_test_ex(PLUGIN_AVINPUT tests/test_AVInput.cpp "${AVINPUT_INC}" "${AVINPUT_LIBS}")
 
 add_library(${MODULE_NAME} SHARED ${TEST_SRC})
