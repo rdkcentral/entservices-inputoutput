@@ -320,28 +320,48 @@ protected:
         ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const DataBlock&>(::testing::_)))
             .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
 
-        ON_CALL(*p_videoOutputPortMock, getDisplay())
-            .WillByDefault(::testing::ReturnRef(device::Display::getInstance()));
-
-        ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
-            .WillByDefault(::testing::Return(true));
-
-        ON_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
-            .WillByDefault(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
-
-        ON_CALL(*p_displayMock, getEDIDBytes(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](std::vector<uint8_t> &edidVec2) {
-                    edidVec2 = std::vector<uint8_t>({ 't', 'e', 's', 't' });
-                }));
-        //Set enabled needs to be
-        ON_CALL(*p_libCCECImplMock, getLogicalAddress(::testing::_))
-            .WillByDefault(::testing::Return(0));
-
-        ON_CALL(*p_connectionImplMock, open())
-            .WillByDefault(::testing::Return());
-        ON_CALL(*p_connectionImplMock, addFrameListener(::testing::_))
-            .WillByDefault(::testing::Return());
+        // Default encode handlers for all CEC message types used by the implementation to avoid runtime_error
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const ImageViewOn&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const TextViewOn&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const ActiveSource&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const RequestActiveSource&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const CECVersion&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const GiveOSDName&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const GivePhysicalAddress&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const GiveDeviceVendorID&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const RoutingChange&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const RoutingInformation&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const SetStreamPath&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const ReportPhysicalAddress&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const DeviceVendorID&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const GiveDevicePowerStatus&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const ReportPowerStatus&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlReleased&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const Abort&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const SetOSDName&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const Standby&>(::testing::_)))
+            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
+        // ...existing code...
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
                 [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
