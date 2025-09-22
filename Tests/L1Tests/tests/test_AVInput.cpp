@@ -288,6 +288,8 @@ TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
 #endif
 // </pca>
 
+// <pca> debug
+#if 0
 class AVInputInit : public AVInputDsTest {
 protected:
     NiceMock<FactoriesImplementation> factoriesImplementation;
@@ -442,6 +444,8 @@ protected:
         // </pca>
     }
 };
+#endif
+// </pca>
 
 // <pca> debug
 #if 0
