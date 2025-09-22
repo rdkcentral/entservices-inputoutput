@@ -557,12 +557,14 @@ namespace Plugin {
     Core::hresult AVInputImplementation::StartInput(const string& portId, const string& typeOfInput, const bool requestAudioMix, const int plane, const bool topMost, SuccessResult& successResult)
     {
         int id;
-        printf("*** _DEBUG: AVInputImplementation::StartInput: entry");
+        printf("*** _DEBUG: AVInputImplementation::StartInput: portId=%s, typeOfInput=%s, requestAudioMix=%d, plane=%d, topMost=%d\n",
+            portId.c_str(), typeOfInput.c_str(), requestAudioMix, plane, topMost);
 
         try {
-		    id = stoi(portId);
+            id = stoi(portId);
         } catch (const std::exception& err) {
-            printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 1");
+            printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 1, portId=%s, typeOfInput=%s, requestAudioMix=%d, plane=%d, topMost=%d, err=%s\n",
+                portId.c_str(), typeOfInput.c_str(), requestAudioMix, plane, topMost, err.what());
             LOGERR("StartInput: Invalid paramater: portId: %s ", portId.c_str());
             successResult.success = false;
             return Core::ERROR_GENERAL;
@@ -580,14 +582,16 @@ namespace Plugin {
                     device::CompositeInput::getInstance().selectPort(id);
                 }
                 default: {
-                    printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 3");
+                    printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 3, portId=%s, typeOfInput=%s, requestAudioMix=%d, plane=%d, topMost=%d\n",
+                        portId.c_str(), typeOfInput.c_str(), requestAudioMix, plane, topMost);
                     LOGWARN("Invalid input type passed to StartInput");
                     successResult.success = false;
                     return Core::ERROR_GENERAL;
                 }
             }
         } catch(...) {
-            printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 4");
+            printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 4, portId=%s, typeOfInput=%s, requestAudioMix=%d, plane=%d, topMost=%d\n",
+                portId.c_str(), typeOfInput.c_str(), requestAudioMix, plane, topMost);
             successResult.success = false;
             return Core::ERROR_GENERAL;
         }
