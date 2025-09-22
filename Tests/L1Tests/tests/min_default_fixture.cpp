@@ -961,10 +961,10 @@ TEST_F(HdmiCecSourceInitializedTest, RoutingInformationProcess)
 {
     Header header;
     header.from = LogicalAddress(12);
-    PhysicalAddress to(0x0F,0x0F,0x0F,0x0F);
-    RoutingInformation ri(to);
+    RoutingInformation ri;
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(ri, header);
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T("{}"), response));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, SetStreamPathProcess)
