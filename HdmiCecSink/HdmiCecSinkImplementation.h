@@ -667,7 +667,6 @@ private:
         std::vector<uint8_t> m_connectedDevices;
         HdmiCecSinkProcessor *msgProcessor;
         HdmiCecSinkFrameListener *msgFrameListener;
-
         PowerManagerInterfaceRef _powerManagerPlugin;
         Core::Sink<PowerManagerNotification> _pwrMgrNotification;
         bool _registeredEventHandlers;
