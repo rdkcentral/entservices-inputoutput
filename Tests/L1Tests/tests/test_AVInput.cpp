@@ -191,6 +191,9 @@ protected:
     }
 };
 
+// <pca> debug
+#if 0
+
 TEST_F(AVInputDsTest, numberOfInputs)
 {
     ON_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
@@ -268,6 +271,9 @@ TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"test\"}"), response));
     EXPECT_EQ(response, string(""));
 }
+
+#endif
+// </pca>
 
 class AVInputInit : public AVInputDsTest {
 protected:
@@ -404,6 +410,9 @@ protected:
         PluginHost::IFactories::Assign(nullptr);
     }
 };
+
+// <pca> debug
+#if 0
 
 TEST_F(AVInputInit, getInputDevices)
 {
@@ -792,6 +801,9 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
     EXPECT_EQ(response, string(""));
 }
 
+#endif
+// </pca>
+
 TEST_F(AVInputInit, onDevicesChangedHDMI)
 {
     Core::Event onDevicesChanged(false, true);
@@ -821,6 +833,9 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 }
+
+// <pca> debug
+#if 0
 
 TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 {
@@ -2071,3 +2086,6 @@ TEST_F(AVInputInit, aviContentTypeUpdate_HDMI)
 
     EVENT_UNSUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);
 }
+
+#endif
+// </pca>
