@@ -134,18 +134,18 @@ namespace Plugin {
             ParamsType _params;
         };
 
-        virtual Core::hresult Register(Exchange::IAVInput::IDevicesChangedNotification* notification) override;
-        virtual Core::hresult Unregister(Exchange::IAVInput::IDevicesChangedNotification* notification) override;
-        virtual Core::hresult Register(Exchange::IAVInput::ISignalChangedNotification* notification) override;
-        virtual Core::hresult Unregister(Exchange::IAVInput::ISignalChangedNotification* notification) override;
-        virtual Core::hresult Register(Exchange::IAVInput::IInputStatusChangedNotification* notification) override;
-        virtual Core::hresult Unregister(Exchange::IAVInput::IInputStatusChangedNotification* notification) override;
-        virtual Core::hresult Register(Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) override;
-        virtual Core::hresult Unregister(Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) override;
-        virtual Core::hresult Register(Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) override;
-        virtual Core::hresult Unregister(Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) override;
-        virtual Core::hresult Register(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
-        virtual Core::hresult Unregister(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
+        virtual Core::hresult RegisterDevicesChangedNotification(Exchange::IAVInput::IDevicesChangedNotification* notification) override;
+        virtual Core::hresult UnregisterDevicesChangedNotification(Exchange::IAVInput::IDevicesChangedNotification* notification) override;
+        virtual Core::hresult RegisterSignalChangedNotification(Exchange::IAVInput::ISignalChangedNotification* notification) override;
+        virtual Core::hresult UnregisterSignalChangedNotification(Exchange::IAVInput::ISignalChangedNotification* notification) override;
+        virtual Core::hresult RegisterInputStatusChangedNotification(Exchange::IAVInput::IInputStatusChangedNotification* notification) override;
+        virtual Core::hresult UnregisterInputStatusChangedNotification(Exchange::IAVInput::IInputStatusChangedNotification* notification) override;
+        virtual Core::hresult RegisterVideoStreamInfoUpdateNotification(Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) override;
+        virtual Core::hresult UnregisterVideoStreamInfoUpdateNotification(Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) override;
+        virtual Core::hresult RegisterGameFeatureStatusUpdateNotification(Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) override;
+        virtual Core::hresult UnregisterGameFeatureStatusUpdateNotification(Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) override;
+        virtual Core::hresult RegisterHdmiContentTypeUpdateNotification(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
+        virtual Core::hresult UnregisterHdmiContentTypeUpdateNotification(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
 
         Core::hresult NumberOfInputs(uint32_t& numberOfInputs, bool& success) override;
         Core::hresult GetInputDevices(const string& typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices, bool& success);

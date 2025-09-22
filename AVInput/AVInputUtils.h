@@ -21,7 +21,6 @@
 
 #include <string>
 
-// <pca>
 static const std::string    INPUT_TYPE_STRING_ALL       = "ALL";
 static const std::string    INPUT_TYPE_STRING_HDMI      = "HDMI";
 static const std::string    INPUT_TYPE_STRING_COMPOSITE = "COMPOSITE";
@@ -31,16 +30,15 @@ static const int            INPUT_TYPE_INT_HDMI         = 0;
 static const int            INPUT_TYPE_INT_COMPOSITE    = 1;
 
 namespace WPEFramework {
-namespace Plugin {
+    namespace Plugin {
+        class AVInputUtils {
+        public:
+            static const int getTypeOfInput(const std::string& type);
+            static const std::string& getTypeOfInput(const int type);
 
-class AVInputUtils {
-public:
-    static const int getTypeOfInput(const std::string& type);
-    static const std::string& getTypeOfInput(const int type);
+        private:
+            AVInputUtils() = delete;
+        };
 
-private:
-    AVInputUtils() = delete;
-};
-
-} // namespace WPEFramework
+    } // namespace WPEFramework
 } // namespace Plugin

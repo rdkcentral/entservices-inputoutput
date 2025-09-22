@@ -318,84 +318,84 @@ namespace Plugin {
         return status;
     }
 
-    Core::hresult AVInputImplementation::Register(Exchange::IAVInput::IDevicesChangedNotification* notification)
+    Core::hresult AVInputImplementation::RegisterDevicesChangedNotification(Exchange::IAVInput::IDevicesChangedNotification* notification)
     {
         Core::hresult errorCode = Register(_devicesChangedNotifications, notification);
         LOGINFO("IDevicesChangedNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::IDevicesChangedNotification* notification)
+    Core::hresult AVInputImplementation::UnregisterDevicesChangedNotification(Exchange::IAVInput::IDevicesChangedNotification* notification)
     {
         Core::hresult errorCode = Unregister(_devicesChangedNotifications, notification);
         LOGINFO("IDevicesChangedNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Register(Exchange::IAVInput::ISignalChangedNotification* notification)
+    Core::hresult AVInputImplementation::RegisterSignalChangedNotification(Exchange::IAVInput::ISignalChangedNotification* notification)
     {
         Core::hresult errorCode = Register(_signalChangedNotifications, notification);
         LOGINFO("ISignalChangedNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::ISignalChangedNotification* notification)
+    Core::hresult AVInputImplementation::UnregisterSignalChangedNotification(Exchange::IAVInput::ISignalChangedNotification* notification)
     {
         Core::hresult errorCode = Unregister(_signalChangedNotifications, notification);
         LOGINFO("ISignalChangedNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Register(Exchange::IAVInput::IInputStatusChangedNotification* notification)
+    Core::hresult AVInputImplementation::RegisterInputStatusChangedNotification(Exchange::IAVInput::IInputStatusChangedNotification* notification)
     {
         Core::hresult errorCode = Register(_inputStatusChangedNotifications, notification);
         LOGINFO("IInputStatusChangedNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::IInputStatusChangedNotification* notification)
+    Core::hresult AVInputImplementation::UnregisterInputStatusChangedNotification(Exchange::IAVInput::IInputStatusChangedNotification* notification)
     {
         Core::hresult errorCode = Unregister(_inputStatusChangedNotifications, notification);
         LOGINFO("IInputStatusChangedNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Register(Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification)
+    Core::hresult AVInputImplementation::RegisterVideoStreamInfoUpdateNotification(Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification)
     {
         Core::hresult errorCode = Register(_videoStreamInfoUpdateNotifications, notification);
         LOGINFO("IVideoStreamInfoUpdateNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification)
+    Core::hresult AVInputImplementation::UnregisterVideoStreamInfoUpdateNotification(Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification)
     {
         Core::hresult errorCode = Unregister(_videoStreamInfoUpdateNotifications, notification);
         LOGINFO("IVideoStreamInfoUpdateNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Register(Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification)
+    Core::hresult AVInputImplementation::RegisterGameFeatureStatusUpdateNotification(Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification)
     {
         Core::hresult errorCode = Register(_gameFeatureStatusUpdateNotifications, notification);
         LOGINFO("IGameFeatureStatusUpdateNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification)
+    Core::hresult AVInputImplementation::UnregisterGameFeatureStatusUpdateNotification(Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification)
     {
         Core::hresult errorCode = Unregister(_gameFeatureStatusUpdateNotifications, notification);
         LOGINFO("IGameFeatureStatusUpdateNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Register(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification)
+    Core::hresult AVInputImplementation::RegisterHdmiContentTypeUpdateNotification(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification)
     {
         Core::hresult errorCode = Register(_hdmiContentTypeUpdateNotifications, notification);
         LOGINFO("IHdmiContentTypeUpdateNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::Unregister(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification)
+    Core::hresult AVInputImplementation::UnregisterHdmiContentTypeUpdateNotification(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification)
     {
         Core::hresult errorCode = Unregister(_hdmiContentTypeUpdateNotifications, notification);
         LOGINFO("IHdmiContentTypeUpdateNotification %p, errorCode: %u", notification, errorCode);
@@ -573,12 +573,7 @@ namespace Plugin {
         printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 2");
 
         try {
-            // <pca> debug
-            //switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
-            int inputType = AVInputUtils::getTypeOfInput(typeOfInput);
-            printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 2b: inputType=%d", inputType);
-            switch(inputType) {
-            // </pca>
+            switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
                 case INPUT_TYPE_INT_HDMI: {
                     device::HdmiInput::getInstance().selectPort(id, requestAudioMix, plane, topMost);
                     break;
