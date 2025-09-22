@@ -628,6 +628,7 @@ namespace Plugin {
                 }
                 case INPUT_TYPE_INT_COMPOSITE: {
                     device::CompositeInput::getInstance().selectPort(-1);
+                    break;
                 }
                 default: {
                     LOGWARN("Invalid input type passed to StopInput");
@@ -653,7 +654,8 @@ namespace Plugin {
                     break;
                 }
                 case INPUT_TYPE_INT_COMPOSITE: {
-                    device::CompositeInput::getInstance().scaleVideo(x, y, w, h);    
+                    device::CompositeInput::getInstance().scaleVideo(x, y, w, h);
+                    break;
                 }
                 default: {
                     successResult.success = false;
@@ -683,6 +685,7 @@ namespace Plugin {
                 case INPUT_TYPE_INT_COMPOSITE: {
                     num = device::CompositeInput::getInstance().getNumberOfInputs();
                     isHdmi = false;
+                    break;
                 }
                 default: {
                     LOGERR("getInputDevices: Invalid input type");
@@ -736,6 +739,7 @@ namespace Plugin {
                 case INPUT_TYPE_INT_HDMI:
                 case INPUT_TYPE_INT_COMPOSITE: {
                     result = getInputDevices(typeOfInput, inputDeviceList);
+                    break;
                 }
                 default: {
                     LOGERR("GetInputDevices: Invalid input type");
