@@ -22,7 +22,7 @@
 namespace WPEFramework {
 namespace Plugin {
 
-int getTypeOfInput(const std::string& sType) {
+const int AVInputUtils::getTypeOfInput(const std::string& sType) {
     if (sType == INPUT_TYPE_STRING_HDMI)
         return INPUT_TYPE_INT_HDMI;
     else if (sType == INPUT_TYPE_STRING_COMPOSITE)
@@ -32,7 +32,7 @@ int getTypeOfInput(const std::string& sType) {
     else throw "Invalid type of INPUT, please specify HDMI/COMPOSITE/ALL";
 }
 
-const std::string& getTypeOfInput(const int type) {
+const std::string& AVInputUtils::getTypeOfInput(const int type) {
     switch(type) {
         case INPUT_TYPE_INT_HDMI: return INPUT_TYPE_STRING_HDMI;
         case INPUT_TYPE_INT_COMPOSITE: return INPUT_TYPE_STRING_COMPOSITE;

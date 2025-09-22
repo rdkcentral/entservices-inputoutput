@@ -34,8 +34,8 @@ namespace Plugin {
 
 class AVInputUtils {
 public:
-    static int getTypeOfInput(const std::string& type);
-    static std::string& getTypeOfInput(const int type);
+    static const int getTypeOfInput(const std::string& type);
+    static const std::string& getTypeOfInput(const int type);
 
 private:
     AVInputUtils() = delete;
