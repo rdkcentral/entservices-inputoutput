@@ -557,14 +557,18 @@ namespace Plugin {
     Core::hresult AVInputImplementation::StartInput(const string& portId, const string& typeOfInput, const bool requestAudioMix, const int plane, const bool topMost, SuccessResult& successResult)
     {
         int id;
+        printf("*** _DEBUG: AVInputImplementation::StartInput: entry");
 
         try {
 		    id = stoi(portId);
         } catch (const std::exception& err) {
+            printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 1");
             LOGERR("StartInput: Invalid paramater: portId: %s ", portId.c_str());
             successResult.success = false;
             return Core::ERROR_GENERAL;
         }
+
+        printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 2");
 
         try {
             switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
@@ -576,15 +580,19 @@ namespace Plugin {
                     device::CompositeInput::getInstance().selectPort(id);
                 }
                 default: {
+                    printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 3");
                     LOGWARN("Invalid input type passed to StartInput");
                     successResult.success = false;
                     return Core::ERROR_GENERAL;
                 }
             }
         } catch(...) {
+            printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 4");
             successResult.success = false;
             return Core::ERROR_GENERAL;
         }
+
+        printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 5");
 
         successResult.success = true;
         return Core::ERROR_NONE;
