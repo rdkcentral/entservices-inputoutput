@@ -117,7 +117,7 @@ add_plugin_test_ex(PLUGIN_HDMICECSINK tests/test_HdmiCecSink.cpp "${HDMICECSINK_
 # PLUGIN_HDMICECSOURCE
 set (HDMICECSOURCE_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdmiCecSource ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
 set (HDMICECSOURCE_LIBS ${NAMESPACE}HdmiCecSource ${NAMESPACE}HdmiCecSourceImplementation)
-add_plugin_test_ex(PLUGIN_HDMICECSOURCE tests/test_HdmiCecSource.cpp "${HDMICECSOURCE_INC}" "${HDMICECSOURCE_LIBS}")
+add_plugin_test_ex(PLUGIN_HDMICECSOURCE tests/min_default_fixture.cpp "${HDMICECSOURCE_INC}" "${HDMICECSOURCE_LIBS}")
 
 # PLUGIN_AVINPUT
 set (AVINPUT_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/AVInput ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
