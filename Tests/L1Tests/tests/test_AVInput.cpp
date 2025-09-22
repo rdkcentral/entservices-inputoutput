@@ -255,12 +255,12 @@ protected:
     Core::JSONRPC::Message message;
 
     // <pca>
-    Exchange::IAVInput:IDevicesChangedNotification *DevicesChangedNotification = nullptr;
-    Exchange::IAVInput:ISignalChangedNotification *SignalChangedNotification = nullptr;
-    Exchange::IAVInput:IInputStatusChangedNotification *InputStatusChangedNotification = nullptr;
-    Exchange::IAVInput:IVideoStreamInfoUpdateNotification *VideoStreamInfoUpdateNotification = nullptr;
-    Exchange::IAVInput:IGameFeatureStatusUpdateNotification *GameFeatureStatusUpdateNotification = nullptr;
-    Exchange::IAVInput:IHdmiContentTypeUpdateNotification *HdmiContentTypeUpdateNotification = nullptr;
+    WPEFramework::Exchange::IAVInput:IDevicesChangedNotification *DevicesChangedNotification = nullptr;
+    WPEFramework::Exchange::IAVInput:ISignalChangedNotification *SignalChangedNotification = nullptr;
+    WPEFramework::Exchange::IAVInput:IInputStatusChangedNotification *InputStatusChangedNotification = nullptr;
+    WPEFramework::Exchange::IAVInput:IVideoStreamInfoUpdateNotification *VideoStreamInfoUpdateNotification = nullptr;
+    WPEFramework::Exchange::IAVInput:IGameFeatureStatusUpdateNotification *GameFeatureStatusUpdateNotification = nullptr;
+    WPEFramework::Exchange::IAVInput:IHdmiContentTypeUpdateNotification *HdmiContentTypeUpdateNotification = nullptr;
     // </pca>
 
     AVInputInit()
@@ -324,42 +324,42 @@ protected:
         // <pca>
         ON_CALL(*p_avInputMock, Register(::testing::_))
             .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IDevicesChangedNotification* notification) {
+                [&](WPEFramework::Exchange::IAVInput::IDevicesChangedNotification* notification) {
                     DevicesChangedNotification = notification;
             return Core::ERROR_NONE;
                 }));
 
         ON_CALL(*p_avInputMock, Register(::testing::_))
             .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::ISignalChangedNotification* notification) {
+                [&](WPEFramework::Exchange::IAVInput::ISignalChangedNotification* notification) {
                     SignalChangedNotification = notification;
             return Core::ERROR_NONE;
                 }));
 
         ON_CALL(*p_avInputMock, Register(::testing::_))
             .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IInputStatusChangedNotification* notification) {
+                [&](WPEFramework::Exchange::IAVInput::IInputStatusChangedNotification* notification) {
                     InputStatusChangedNotification = notification;
             return Core::ERROR_NONE;
                 }));
 
         ON_CALL(*p_avInputMock, Register(::testing::_))
             .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) {
+                [&](WPEFramework::Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) {
                     VideoStreamInfoUpdateNotification = notification;
             return Core::ERROR_NONE;
                 }));
 
         ON_CALL(*p_avInputMock, Register(::testing::_))
             .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) {
+                [&](WPEFramework::Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) {
                     GameFeatureStatusUpdateNotification = notification;
             return Core::ERROR_NONE;
                 }));
 
         ON_CALL(*p_avInputMock, Register(::testing::_))
             .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) {
+                [&](WPEFramework::Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) {
                     HdmiContentTypeUpdateNotification = notification;
             return Core::ERROR_NONE;
                 }));
