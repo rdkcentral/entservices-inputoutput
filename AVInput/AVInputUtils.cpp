@@ -23,13 +23,32 @@ namespace WPEFramework {
 namespace Plugin {
 
 const int AVInputUtils::getTypeOfInput(const std::string& sType) {
-    if (sType == INPUT_TYPE_STRING_HDMI)
+    // <pca> debug
+    // if (sType == INPUT_TYPE_STRING_HDMI)
+    //     return INPUT_TYPE_INT_HDMI;
+    // else if (sType == INPUT_TYPE_STRING_COMPOSITE)
+    //     return INPUT_TYPE_INT_COMPOSITE;
+    // else if (sType == INPUT_TYPE_STRING_ALL)
+    //     return INPUT_TYPE_INT_ALL;
+    // else throw "Invalid type of INPUT, please specify HDMI/COMPOSITE/ALL";
+    printf("*** _DEBUG: AVInputUtils::getTypeOfInput: sType=%s", sType.c_str());
+    if (sType == INPUT_TYPE_STRING_HDMI) {
+        printf("*** _DEBUG: AVInputUtils::getTypeOfInput: Mark 1");
         return INPUT_TYPE_INT_HDMI;
-    else if (sType == INPUT_TYPE_STRING_COMPOSITE)
+    }
+    else if (sType == INPUT_TYPE_STRING_COMPOSITE) {
+        printf("*** _DEBUG: AVInputUtils::getTypeOfInput: Mark 2");
         return INPUT_TYPE_INT_COMPOSITE;
-    else if (sType == INPUT_TYPE_STRING_ALL)
+    }
+    else if (sType == INPUT_TYPE_STRING_ALL) {
+        printf("*** _DEBUG: AVInputUtils::getTypeOfInput: Mark 3");
         return INPUT_TYPE_INT_ALL;
-    else throw "Invalid type of INPUT, please specify HDMI/COMPOSITE/ALL";
+    }
+    else {
+        printf("*** _DEBUG: AVInputUtils::getTypeOfInput: Mark 4");
+        throw "Invalid type of INPUT, please specify HDMI/COMPOSITE/ALL";
+    }
+    // </pca>
 }
 
 const std::string& AVInputUtils::getTypeOfInput(const int type) {
