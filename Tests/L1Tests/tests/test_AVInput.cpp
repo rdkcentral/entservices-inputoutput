@@ -150,7 +150,7 @@ TEST_F(AVInputTest, contentProtected)
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 class AVInputDsTest : public AVInputTest {
 protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
@@ -202,8 +202,6 @@ protected:
 #endif
 // </pca>
 
-// <pca> debug
-#if 0
 
 TEST_F(AVInputDsTest, numberOfInputs)
 {
@@ -213,6 +211,9 @@ TEST_F(AVInputDsTest, numberOfInputs)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("numberOfInputs"), _T("{}"), response));
     EXPECT_EQ(response, string("{\"numberOfInputs\":1,\"success\":true}"));
 }
+
+// <pca> debug
+#if 0
 
 TEST_F(AVInputDsTest, currentVideoMode)
 {
