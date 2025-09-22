@@ -55,6 +55,7 @@ protected:
     Core::JSONRPC::Message message;
     string response;
 
+    HostImplMock             *p_hostImplMock = nullptr ;
     WrapsImplMock *p_wrapsImplMock = nullptr;
     IarmBusImplMock  *p_iarmBusImplMock   = nullptr;
     Core::ProxyType<Plugin::HdcpProfileImplementation> hdcpProfileImpl;
@@ -63,7 +64,7 @@ protected:
     NiceMock<ServiceMock> service;
     PLUGINHOST_DISPATCHER* dispatcher;
     Core::ProxyType<WorkerPoolImplementation> workerPool;
-    
+
     NiceMock<FactoriesImplementation> factoriesImplementation;
 
     HDCPProfileTest()
@@ -72,14 +73,16 @@ protected:
         , INIT_CONX(1, 0)
         , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(2, Core::Thread::DefaultStackSize(), 16))
     {
+        p_hostImplMock  = new NiceMock <HostImplMock>;
         p_wrapsImplMock = new NiceMock<WrapsImplMock>;
         printf("Pass created wrapsImplMock: %p ", p_wrapsImplMock);
+        device::Host::setImpl(p_hostImplMock);
         Wraps::setImpl(p_wrapsImplMock);
-        
-        p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
-    	IarmBus::setImpl(p_iarmBusImplMock);
 
-        
+        p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
+        IarmBus::setImpl(p_iarmBusImplMock);
+
+
         ON_CALL(service, COMLink())
         .WillByDefault(::testing::Invoke(
               [this]() {
@@ -87,30 +90,29 @@ protected:
                     return &comLinkMock;
                 }));
 
+#ifdef USE_THUNDER_R4
+        ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
+            .WillByDefault(::testing::Invoke(
+                    [&](const RPC::Object& object, const uint32_t waitTime, uint32_t& connectionId) {
+                        hdcpProfileImpl = Core::ProxyType<Plugin::HdcpProfileImplementation>::Create();
+                        TEST_LOG("Pass created hdcpProfileImpl: %p ", &hdcpProfileImpl);
+                        return &hdcpProfileImpl;
+                }));
+#else
+        ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_, ::testing::_, ::testing::_))
+             .WillByDefault(::testing::Return(hdcpProfileImpl));
+#endif /*USE_THUNDER_R4 */
 
-        #ifdef USE_THUNDER_R4
-            ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
-                .WillByDefault(::testing::Invoke(
-                        [&](const RPC::Object& object, const uint32_t waitTime, uint32_t& connectionId) {
-                            hdcpProfileImpl = Core::ProxyType<Plugin::HdcpProfileImplementation>::Create();
-                            TEST_LOG("Pass created hdcpProfileImpl: %p ", &hdcpProfileImpl);
-                            return &hdcpProfileImpl;
-                    }));
-         #else
-            ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_, ::testing::_, ::testing::_))
-                 .WillByDefault(::testing::Return(hdcpProfileImpl));
-         #endif /*USE_THUNDER_R4 */
-        
-                PluginHost::IFactories::Assign(&factoriesImplementation);
-        
-                Core::IWorkerPool::Assign(&(*workerPool));
-                workerPool->Run();
-        
-                dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
-                plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
-                dispatcher->Activate(&service);
-        
-                EXPECT_EQ(string(""), plugin->Initialize(&service));
+        PluginHost::IFactories::Assign(&factoriesImplementation);
+
+        Core::IWorkerPool::Assign(&(*workerPool));
+        workerPool->Run();
+
+        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
+        plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        dispatcher->Activate(&service);
+
+        EXPECT_EQ(string(""), plugin->Initialize(&service));
 
     }
     virtual ~HDCPProfileTest() override
@@ -138,21 +140,24 @@ protected:
             delete p_iarmBusImplMock;
             p_iarmBusImplMock = nullptr;
         }
+        device::Host::setImpl(nullptr);
+        if (p_hostImplMock != nullptr)
+        {
+            delete p_hostImplMock;
+            p_hostImplMock = nullptr;
+        }
         
     }
 };
 
 class HDCPProfileDsTest : public HDCPProfileTest {
 protected:
-    HostImplMock             *p_hostImplMock = nullptr ;
     VideoOutputPortConfigImplMock      *p_videoOutputPortConfigImplMock = nullptr ;
     VideoOutputPortMock                *p_videoOutputPortMock = nullptr ;
 
     HDCPProfileDsTest()
         : HDCPProfileTest()
     {
-        p_hostImplMock  = new NiceMock <HostImplMock>;
-        device::Host::setImpl(p_hostImplMock);
         p_videoOutputPortConfigImplMock  = new NiceMock <VideoOutputPortConfigImplMock>;
         device::VideoOutputPortConfig::setImpl(p_videoOutputPortConfigImplMock);
         p_videoOutputPortMock  = new NiceMock <VideoOutputPortMock>;
@@ -171,12 +176,6 @@ protected:
         {
             delete p_videoOutputPortConfigImplMock;
             p_videoOutputPortConfigImplMock = nullptr;
-        }
-        device::Host::setImpl(nullptr);
-        if (p_hostImplMock != nullptr)
-        {
-            delete p_hostImplMock;
-            p_hostImplMock = nullptr;
         }
     }
 };
@@ -208,6 +207,10 @@ protected:
 };
 
 class HDCPProfileEventIarmTest : public HDCPProfileEventTest {
+public:
+    device::Host::IDisplayDeviceEvents* _displayDeviceEvents = nullptr;
+    device::Host::IVideoOutputPortEvents* _videoOutputPortEvents = nullptr;
+
 protected:
     ManagerImplMock   *p_managerImplMock = nullptr ;
     IARM_EventHandler_t dsHdmiEventHandler;
@@ -221,18 +224,6 @@ protected:
         EXPECT_CALL(*p_managerImplMock, Initialize())
             .Times(::testing::AnyNumber())
             .WillRepeatedly(::testing::Return());
-
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG)) {
-                        dsHdmiEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDCP_STATUS)) {
-                         dsHdmiEventHandler = handler;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                }));
 
         EXPECT_EQ(string(""), plugin->Initialize(&service));
     }
@@ -381,8 +372,6 @@ TEST_F(HDCPProfileDsTest, getSettopHDCPSupport_Hdcp_v2x)
 
 TEST_F(HDCPProfileEventIarmTest, onDisplayConnectionChanged)
 {
-    ASSERT_TRUE(dsHdmiEventHandler != nullptr);
-
     Core::Event onDisplayConnectionChanged(false, true);
 
     NiceMock<VideoOutputPortMock> videoOutputPortMock;
@@ -439,9 +428,7 @@ TEST_F(HDCPProfileEventIarmTest, onDisplayConnectionChanged)
 
     EVENT_SUBSCRIBE(0, _T("onDisplayConnectionChanged"), _T("client.events"), message);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_hpd.event = dsDISPLAY_EVENT_CONNECTED;
-    dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, &eventData, 0);
+    Plugin::HdcpProfileImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED);
 
     EXPECT_EQ(Core::ERROR_NONE, onDisplayConnectionChanged.Lock());
 
@@ -450,8 +437,6 @@ TEST_F(HDCPProfileEventIarmTest, onDisplayConnectionChanged)
 
 TEST_F(HDCPProfileEventIarmTest, onHdmiOutputHDCPStatusEvent)
 {
-    ASSERT_TRUE(dsHdmiEventHandler != nullptr);
-
     Core::Event onDisplayConnectionChanged(false, true);
 
     NiceMock<VideoOutputPortMock> videoOutputPortMock;
@@ -507,9 +492,7 @@ TEST_F(HDCPProfileEventIarmTest, onHdmiOutputHDCPStatusEvent)
 
     EVENT_SUBSCRIBE(0, _T("onDisplayConnectionChanged"), _T("client.events"), message);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_hdcp.hdcpStatus = dsDISPLAY_HDCPPROTOCOL_CHANGE;
-    dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDCP_STATUS, &eventData, 0);
+    Plugin::HdcpProfileImplementation::_instance->OnHDCPStatusChange(dsHDCP_STATUS_AUTHENTICATED);
 
     EXPECT_EQ(Core::ERROR_NONE, onDisplayConnectionChanged.Lock());
 

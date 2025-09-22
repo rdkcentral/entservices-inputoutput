@@ -139,11 +139,8 @@
                  {
                      LOGWARN("Failed to Invoke RPC method: GetPowerState");
                  }
-                 else
-                 {
-                     LOGINFO("Received OnHDCPStatusChange  event data:%d  param.curState: %d \r\n", hdcpStatus,pwrStateCur);
-                     HdcpProfileImplementation::_instance->onHdmiOutputHDCPStatusEvent(hdcpStatus);
-                 }
+                 LOGINFO("Received OnHDCPStatusChange  event data:%d  param.curState: %d \r\n", hdcpStatus,pwrStateCur);
+                 HdcpProfileImplementation::_instance->onHdmiOutputHDCPStatusEvent(hdcpStatus);
              }
          }
 
