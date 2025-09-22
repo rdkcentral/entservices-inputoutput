@@ -19,6 +19,9 @@
 
 #include "AVInputUtils.h"
 
+namespace WPEFramework {
+namespace Plugin {
+
 int getTypeOfInput(const std::string& sType) {
     if (sType == INPUT_TYPE_STRING_HDMI)
         return INPUT_TYPE_INT_HDMI;
@@ -38,3 +41,5 @@ const std::string& getTypeOfInput(const int type) {
     }
 }
 
+} // namespace WPEFramework
+} // namespace Plugin

@@ -29,6 +29,9 @@ static const int            INPUT_TYPE_INT_ALL          = -1;
 static const int            INPUT_TYPE_INT_HDMI         = 0;
 static const int            INPUT_TYPE_INT_COMPOSITE    = 1;
 
+namespace WPEFramework {
+namespace Plugin {
+
 class AVInputUtils {
 public:
     static int getTypeOfInput(const std::string& type);
@@ -37,3 +40,6 @@ public:
 private:
     AVInputUtils() = delete;
 };
+
+} // namespace WPEFramework
+} // namespace Plugin
