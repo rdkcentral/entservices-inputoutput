@@ -58,9 +58,7 @@ protected:
 
     AVInputMock* p_avInputMock = nullptr;
 
-    // <pca> debug YAH: Moving this causes seg fault
-    //IarmBusImplMock* p_iarmBusImplMock = nullptr;
-    // </pca>
+    IarmBusImplMock* p_iarmBusImplMock = nullptr;
 
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
@@ -90,10 +88,8 @@ protected:
         workerPool->Run();
         // </pca>
 
-        // <pca> debug
-        // p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
-        // IarmBus::setImpl(p_iarmBusImplMock);
-        // </pca>
+        p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
+        IarmBus::setImpl(p_iarmBusImplMock);
 
         plugin->Initialize(&service);
 
@@ -106,13 +102,11 @@ protected:
         workerPool.Release();
         // </pca>
 
-        // <pca> debug
-        // IarmBus::setImpl(nullptr);
-        // if (p_iarmBusImplMock != nullptr) {
-        //     delete p_iarmBusImplMock;
-        //     p_iarmBusImplMock = nullptr;
-        // }
-        // </pca>
+        IarmBus::setImpl(nullptr);
+        if (p_iarmBusImplMock != nullptr) {
+            delete p_iarmBusImplMock;
+            p_iarmBusImplMock = nullptr;
+        }
     }
 };
 
