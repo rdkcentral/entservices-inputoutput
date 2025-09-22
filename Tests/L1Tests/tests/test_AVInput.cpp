@@ -270,6 +270,9 @@ TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
 class AVInputInit : public AVInputDsTest {
 protected:
     NiceMock<FactoriesImplementation> factoriesImplementation;
+    // <pca>
+    NiceMock<ServiceMock> service;
+    // </pca>
     PLUGINHOST_DISPATCHER* dispatcher;
     Core::JSONRPC::Message message;
 
