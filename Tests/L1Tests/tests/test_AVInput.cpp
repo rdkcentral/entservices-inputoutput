@@ -288,7 +288,7 @@ TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 class AVInputInit : public AVInputDsTest {
 protected:
     NiceMock<FactoriesImplementation> factoriesImplementation;
@@ -447,7 +447,7 @@ protected:
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputInit, getInputDevices)
 {
@@ -458,6 +458,10 @@ TEST_F(AVInputInit, getInputDevices)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getInputDevices"), _T("{}"), response));
     EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\"},{\"id\":0,\"connected\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
 }
+
+// <pca> debug
+#endif
+#if 0
 
 TEST_F(AVInputInit, getInputDevices_HDMI)
 {
