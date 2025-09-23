@@ -92,8 +92,7 @@ protected:
         p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
 
-        // <pca>
-                ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
+        ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
                 [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
                     printf("*** _DEBUG: Mock IARM_Bus_RegisterEventHandler called: Mark 1\n");
@@ -144,7 +143,6 @@ protected:
                     }
                     return IARM_RESULT_SUCCESS;
                 }));
-                // </pca>
 
         Core::IWorkerPool::Assign(&(*workerPool));
         workerPool->Run();
@@ -357,62 +355,6 @@ protected:
         : AVInputDsTest()
     {
         printf("*** _DEBUG: AVInputInit ctor: entry\n");
-
-        // <pca>
-        // ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-        //     .WillByDefault(::testing::Invoke(
-        //         [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-        //             printf("*** _DEBUG: Mock IARM_Bus_RegisterEventHandler called: Mark 1\n");
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVSignalStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVVideoModeEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVGameFeatureStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVGameFeatureStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVEventHandler = handler;
-        //                 printf("*** _DEBUG: Mock IARM_Bus_RegisterEventHandler called: Mark 2\n");
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVSignalStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVStatusEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAVVideoModeEventHandler = handler;
-        //             }
-        //             if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE)) {
-        //                 EXPECT_TRUE(handler != nullptr);
-        //                 dsAviContentTypeEventHandler = handler;
-        //             }
-        //             return IARM_RESULT_SUCCESS;
-        //         }));
-        // </pca>
-
-        printf("*** _DEBUG: AVInputInit ctor: Mark 1\n");
 
         PluginHost::IFactories::Assign(&factoriesImplementation);
 

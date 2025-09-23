@@ -239,6 +239,21 @@ namespace Plugin {
         }
     }
 
+    // <pca>
+    // void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
+    // {
+    //     Core::JSON::ArrayType<InputDeviceJson> deviceArray;
+    //     if (devices != nullptr)
+    //     {
+    //         Exchange::IAVInput::InputDevice resultItem{};
+
+    //         while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
+
+    //         Core::JSON::Container eventPayload;
+    //         eventPayload.Add(_T("deviceArray"), &deviceArray);
+    //         _parent.Notify(_T("onDevicesChanged"), eventPayload);
+    //     }
+    // }
     void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
     {
         Core::JSON::ArrayType<InputDeviceJson> deviceArray;
@@ -246,13 +261,16 @@ namespace Plugin {
         {
             Exchange::IAVInput::InputDevice resultItem{};
 
-            while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
+            if (devices->Count() > 0) {
+                while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
+            }
 
             Core::JSON::Container eventPayload;
             eventPayload.Add(_T("deviceArray"), &deviceArray);
             _parent.Notify(_T("onDevicesChanged"), eventPayload);
         }
     }
+    // </pca>s
 
 } // namespace Plugin
 } // namespace WPEFramework
