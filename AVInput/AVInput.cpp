@@ -264,10 +264,9 @@ namespace Plugin {
             Core::JSON::Container eventPayload;
 
             if(0 == devices->Count()) {
-                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices->Count() = 0!!!\n");
+                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices->Count() = 0!\n");
                 
-                Core::JSON::String empty = Core::JSON::String("\"devices\":[]");
-                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): empty value=%s\n", empty.Value().c_str());
+                Core::JSON::String empty = Core::JSON::String("[]");
                 eventPayload.Add(_T("devices"), &empty);
 
                 string toStr;
