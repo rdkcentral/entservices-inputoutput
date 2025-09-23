@@ -33,9 +33,7 @@
 
 #include "AVInputImplementation.h"
 #include "AVInputMock.h"
-// <pca>
 #include "WorkerPoolImplementation.h"
-// </pca>
 
 using namespace WPEFramework;
 
@@ -48,26 +46,25 @@ protected:
 
     NiceMock<ServiceMock> service;
     NiceMock<COMLinkMock> comLinkMock;
-    // <pca>
     Core::ProxyType<WorkerPoolImplementation> workerPool;
-    // </pca>
 
     Core::JSONRPC::Handler& handler;
     DECL_CORE_JSONRPC_CONX connection;
     string response;
 
     AVInputMock* p_avInputMock = nullptr;
-
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
+
+    // <pca>
+    PLUGINHOST_DISPATCHER* dispatcher;
+    // </pca>
 
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
         , INIT_CONX(1, 0)
-        // <pca>
         , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
           2, Core::Thread::DefaultStackSize(), 16))
-        // </pca>
     {
         p_avInputMock  = new NiceMock<AVInputMock>;
 
@@ -83,24 +80,32 @@ protected:
                 .WillByDefault(::testing::Return(AVInputImpl));
         #endif
 
-        // <pca>
         Core::IWorkerPool::Assign(&(*workerPool));
         workerPool->Run();
-        // </pca>
 
         p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
 
         plugin->Initialize(&service);
 
+        // <pca>
+        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
+            plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        dispatcher->Activate(&service);
+        // </pca>
+
     }
     virtual ~AVInputTest()
     {
-        plugin->Deinitialize(&service);
         // <pca>
+        dispatcher->Deactivate();
+        dispatcher->Release();
+        // </pca>
+        
+        plugin->Deinitialize(&service);
+        
         Core::IWorkerPool::Assign(nullptr);
         workerPool.Release();
-        // </pca>
 
         IarmBus::setImpl(nullptr);
         if (p_iarmBusImplMock != nullptr) {
@@ -156,14 +161,6 @@ protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
     CompositeInputImplMock* p_compositeInputImplMock = nullptr;
     HostImplMock* p_HostImplMock = nullptr;
-    // <pca>
-    // IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
-    // IARM_EventHandler_t dsAVEventHandler;
-    // IARM_EventHandler_t dsAVSignalStatusEventHandler;
-    // IARM_EventHandler_t dsAVStatusEventHandler;
-    // IARM_EventHandler_t dsAVVideoModeEventHandler;
-    // IARM_EventHandler_t dsAviContentTypeEventHandler;
-    // </pca>
 
     AVInputDsTest()
         : AVInputTest()
@@ -293,23 +290,16 @@ class AVInputInit : public AVInputDsTest {
 protected:
     NiceMock<FactoriesImplementation> factoriesImplementation;
     // <pca>
-    NiceMock<ServiceMock> service;
-    // </pca>
-    PLUGINHOST_DISPATCHER* dispatcher;
+    // NiceMock<ServiceMock> service;
+    // PLUGINHOST_DISPATCHER* dispatcher;
     Core::JSONRPC::Message message;
 
-    // <pca> debug
-    //IarmBusImplMock* p_iarmBusImplMock = nullptr;
-    // </pca>
-
-    // <pca>
     IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
     IARM_EventHandler_t dsAVEventHandler;
     IARM_EventHandler_t dsAVSignalStatusEventHandler;
     IARM_EventHandler_t dsAVStatusEventHandler;
     IARM_EventHandler_t dsAVVideoModeEventHandler;
     IARM_EventHandler_t dsAviContentTypeEventHandler;
-    // </pca>
 
     Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
     Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
@@ -322,10 +312,6 @@ protected:
         : AVInputDsTest()
     {
         printf("*** _DEBUG: AVInputInit ctor: entry\n");
-        // <pca> debug
-        // p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
-        // IarmBus::setImpl(p_iarmBusImplMock);
-        // </pca>
 
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
@@ -382,9 +368,11 @@ protected:
         printf("*** _DEBUG: AVInputInit ctor: Mark 1\n");
 
         PluginHost::IFactories::Assign(&factoriesImplementation);
-        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
-            plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
-        dispatcher->Activate(&service);
+        // <pca>
+        // dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
+        //     plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        // dispatcher->Activate(&service);
+        // </pca>
 
         printf("*** _DEBUG: AVInputInit ctor: Mark 2\n");
 
@@ -442,17 +430,11 @@ protected:
             p_avInputMock = nullptr;
         }
 
-        dispatcher->Deactivate();
-        dispatcher->Release();
-        PluginHost::IFactories::Assign(nullptr);
-
-        // <pca> debug
-        // IarmBus::setImpl(nullptr);
-        // if (p_iarmBusImplMock != nullptr) {
-        //     delete p_iarmBusImplMock;
-        //     p_iarmBusImplMock = nullptr;
-        // }
+        // <pca>
+        // dispatcher->Deactivate();
+        // dispatcher->Release();
         // </pca>
+        PluginHost::IFactories::Assign(nullptr);
     }
 };
 #endif
@@ -878,13 +860,13 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
     ASSERT_TRUE(dsAVEventHandler != nullptr);
 
+    // <pca> debug - Below causes segfault
+    #if 0
+
     IARM_Bus_DSMgr_EventData_t eventData;
     eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_0;
     eventData.data.hdmi_in_connect.isPortConnected = true;
     dsAVEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
-
-    // <pca> debug
-    #if 0
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 

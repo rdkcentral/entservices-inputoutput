@@ -45,9 +45,6 @@ namespace Plugin {
 
     AVInputImplementation::AVInputImplementation()
         : _adminLock()
-        // <pca> debug 2
-        //, _service(nullptr)
-        // </pca>
     {
         LOGINFO("Create AVInputImplementation Instance");
         printf("*** _DEBUG: AVInputImplementation ctor: entry\n");
@@ -59,9 +56,6 @@ namespace Plugin {
     {
         DeinitializeIARM();
         AVInputImplementation::_instance = nullptr;
-        // <pca> debug 2
-        //_service = nullptr;
-        // </pca>
     }
 
     void AVInputImplementation::InitializeIARM()
