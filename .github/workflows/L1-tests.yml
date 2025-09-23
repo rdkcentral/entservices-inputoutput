@@ -123,7 +123,7 @@ jobs:
         with:
           repository: rdkcentral/entservices-testframework
           path: entservices-testframework
-          ref: feature/RDKEMW-6167
+          ref: develop
           token: ${{ secrets.RDKCM_RDKE }}
 
       - name: Checkout entservices-inputoutput
@@ -460,8 +460,8 @@ jobs:
           -DDS_FOUND=ON
           -DHAS_FRONT_PANEL=ON
           -DRDK_SERVICES_L1_TEST=ON
-          -DPLUGIN_AVINPUT=OFF
-          -DPLUGIN_HDCPPROFILE=OFF
+          -DPLUGIN_AVINPUT=ON
+          -DPLUGIN_HDCPPROFILE=ON
           -DPLUGIN_HDMICECSOURCE=ON
           -DPLUGIN_HDMICECSINK=ON
           -DUSE_THUNDER_R4=ON
