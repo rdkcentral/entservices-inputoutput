@@ -26,9 +26,7 @@
 #include "ManagerMock.h"
 #include "VideoOutputPortConfigMock.h"
 #include "VideoOutputPortMock.h"
-#include "IarmBusMock.h"
 #include "ServiceMock.h"
-#include "dsMgr.h"
 #include "dsDisplay.h"
 #include "ThunderPortability.h"
 #include "PowerManagerMock.h"
@@ -39,10 +37,10 @@
 #include <cstdio>
 #include "COMLinkMock.h"
 #include "WrapsMock.h"
-#include "IarmBusMock.h"
 #include "WorkerPoolImplementation.h"
 #include "HdcpProfileImplementation.h"
 
+#define TEST_LOG(x, ...) fprintf(stderr, "\033[1;32m[%s:%d](%s)<PID:%d><TID:%d>" x "\n\033[0m", __FILE__, __LINE__, __FUNCTION__, getpid(), gettid(), ##__VA_ARGS__); fflush(stderr);
 using namespace WPEFramework;
 
 using ::testing::NiceMock;
@@ -57,7 +55,6 @@ protected:
 
     HostImplMock             *p_hostImplMock = nullptr ;
     WrapsImplMock *p_wrapsImplMock = nullptr;
-    IarmBusImplMock  *p_iarmBusImplMock   = nullptr;
     Core::ProxyType<Plugin::HdcpProfileImplementation> hdcpProfileImpl;
 
     NiceMock<COMLinkMock> comLinkMock;
@@ -79,8 +76,6 @@ protected:
         device::Host::setImpl(p_hostImplMock);
         Wraps::setImpl(p_wrapsImplMock);
 
-        p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
-        IarmBus::setImpl(p_iarmBusImplMock);
 
 
         ON_CALL(service, COMLink())
@@ -134,12 +129,6 @@ protected:
             p_wrapsImplMock = nullptr;
         }
         PluginHost::IFactories::Assign(nullptr);
-        IarmBus::setImpl(nullptr);
-         if (p_iarmBusImplMock != nullptr)
-        {
-            delete p_iarmBusImplMock;
-            p_iarmBusImplMock = nullptr;
-        }
         device::Host::setImpl(nullptr);
         if (p_hostImplMock != nullptr)
         {
@@ -213,7 +202,6 @@ public:
 
 protected:
     ManagerImplMock   *p_managerImplMock = nullptr ;
-    IARM_EventHandler_t dsHdmiEventHandler;
 
     HDCPProfileEventIarmTest()
         : HDCPProfileEventTest()
