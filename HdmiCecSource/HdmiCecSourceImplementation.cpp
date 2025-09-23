@@ -750,7 +750,8 @@ namespace WPEFramework
 
            if(!HdmiCecSourceImplementation::_instance  || !_instance->cecEnableStatus)
            {
-               LOGINFO("HdmiCecSourceImplementation::OnDisplayHDMIHotPlug failed _instance:%p cecEnableStatus:%d  \r\n", HdmiCecSourceImplementation::_instance, _instance->cecEnableStatus);
+			   bool cecEnableStatus = _instance ? _instance->cecEnableStatus : false;
+               LOGINFO("HdmiCecSourceImplementation::OnDisplayHDMIHotPlug failed _instance:%p cecEnableStatus:%d  \r\n", HdmiCecSourceImplementation::_instance, cecEnableStatus);
                return;
            }
 
