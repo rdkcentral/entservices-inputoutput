@@ -430,6 +430,12 @@ protected:
     virtual ~AVInputInit() override
     {
         printf("*** _DEBUG: AVInputInit xtor: entry\n");
+
+        if (p_avInputMock != nullptr) {
+            delete p_avInputMock;
+            p_avInputMock = nullptr;
+        }
+
         dispatcher->Deactivate();
         dispatcher->Release();
         PluginHost::IFactories::Assign(nullptr);
