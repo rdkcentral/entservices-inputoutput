@@ -261,15 +261,20 @@ namespace Plugin {
         if (devices != nullptr)
         {
             Exchange::IAVInput::InputDevice resultItem{};
+            Core::JSON::Container eventPayload;
 
             if(0 == devices->Count()) {
-                deviceArray.Add() = resultItem; // Empty array
-            } else while(devices->Next(resultItem)) {
-                deviceArray.Add() = resultItem;
+                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices->Count()=0\n");
+                eventPayload.Add(_T("devices"), new Core::JSON::String("[]")); // Empty array
             }
-
-            Core::JSON::Container eventPayload;
-            eventPayload.Add(_T("deviceArray"), &deviceArray);
+            else {
+                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices->Count()=%d\n", devices->Count());
+                while(devices->Next(resultItem) == true) {
+                    deviceArray.Add() = resultItem;
+                }
+                eventPayload.Add(_T("devices"), &deviceArray);
+            }
+            
             _parent.Notify(_T("onDevicesChanged"), eventPayload);
         }
     }
