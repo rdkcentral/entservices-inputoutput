@@ -57,6 +57,13 @@ protected:
 
     PLUGINHOST_DISPATCHER* dispatcher;
 
+    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler   = nullptr;
+    IARM_EventHandler_t dsAVEventHandler                    = nullptr;    
+    IARM_EventHandler_t dsAVSignalStatusEventHandler        = nullptr;
+    IARM_EventHandler_t dsAVStatusEventHandler              = nullptr;
+    IARM_EventHandler_t dsAVVideoModeEventHandler           = nullptr;
+    IARM_EventHandler_t dsAviContentTypeEventHandler        = nullptr;
+
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
@@ -338,13 +345,6 @@ class AVInputInit : public AVInputDsTest {
 protected:
     NiceMock<FactoriesImplementation> factoriesImplementation;
     Core::JSONRPC::Message message;
-
-    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler   = nullptr;
-    IARM_EventHandler_t dsAVEventHandler                    = nullptr;    
-    IARM_EventHandler_t dsAVSignalStatusEventHandler        = nullptr;
-    IARM_EventHandler_t dsAVStatusEventHandler              = nullptr;
-    IARM_EventHandler_t dsAVVideoModeEventHandler           = nullptr;
-    IARM_EventHandler_t dsAviContentTypeEventHandler        = nullptr;
 
     Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
     Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
