@@ -239,6 +239,23 @@ namespace Plugin {
         }
     }
 
+    // <pca>
+    // void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
+    // {
+    //     printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: entry: devices=%p\n", devices);
+
+    //     Core::JSON::ArrayType<InputDeviceJson> deviceArray;
+    //     if (devices != nullptr)
+    //     {
+    //         Exchange::IAVInput::InputDevice resultItem{};
+
+    //         while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
+
+    //         Core::JSON::Container eventPayload;
+    //         eventPayload.Add(_T("devices"), &deviceArray);
+    //         _parent.Notify(_T("onDevicesChanged"), eventPayload);
+    //     }
+    // }
     void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
     {
         printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: entry: devices=%p\n", devices);
@@ -247,18 +264,25 @@ namespace Plugin {
         if (devices != nullptr)
         {
             Exchange::IAVInput::InputDevice resultItem{};
+            Core::JSON::Container eventPayload;
+
+            if(devices.Count() == 0) {
+                Core::JSON::String emptyArray = Core::JSON::String("[]", false);
+
+                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: No devices connected, sending empty array\n");
+                eventPayload.Add(_T("devices"), &emptyArray);
+                _parent.Notify(_T("onDevicesChanged"), eventPayload);
+                return;
+            }
 
             while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
 
-            string deviceArrayStr;
-            Core::JSON::IElement::ToString(&deviceArray, &deviceArrayStr);
-            printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: deviceArrayStr=%s\n", deviceArrayStr.c_str());
-
-            Core::JSON::Container eventPayload;
-            eventPayload.Add(_T("deviceArray"), &deviceArray);
+            
+            eventPayload.Add(_T("devices"), &deviceArray);
             _parent.Notify(_T("onDevicesChanged"), eventPayload);
         }
     }
+    // </pca>
 
 } // namespace Plugin
 } // namespace WPEFramework
