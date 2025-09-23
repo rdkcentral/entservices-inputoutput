@@ -861,19 +861,19 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
     ASSERT_TRUE(dsAVEventHandler != nullptr);
 
     // <pca> debug
-    #if 1
+    #if 0
 
     IARM_Bus_DSMgr_EventData_t eventData;
     eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_0;
     eventData.data.hdmi_in_connect.isPortConnected = true;
     dsAVEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
 
+    #endif
+    // </pca>
+
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
-
-    #endif
-    // </pca>
 }
 #endif
 // </pca>
