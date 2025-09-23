@@ -251,7 +251,7 @@ namespace Plugin {
             while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
 
             string deviceArrayStr;
-            deviceArray.ToString(&deviceArrayStr);
+            Core::JSON::IElement::ToString(&deviceArray, &deviceArrayStr);
             printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: deviceArrayStr=%s\n", deviceArrayStr.c_str());
 
             Core::JSON::Container eventPayload;
