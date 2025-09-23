@@ -36,6 +36,7 @@
 #include "PowerManagerMock.h"
 #include "ManagerMock.h"
 #include "HostMock.h"
+#include "HdmiInputMock.h"
 
 
 using namespace WPEFramework;
@@ -72,6 +73,7 @@ protected:
     IarmBusImplMock         *p_iarmBusImplMock = nullptr ;
     ManagerImplMock         *p_managerImplMock = nullptr ;
     HostImplMock            *p_hostImplMock = nullptr ;
+    HdmiInputImplMock       *p_hdmiInputImplMock = nullptr;
     ConnectionImplMock      *p_connectionImplMock = nullptr ;
     MessageEncoderMock      *p_messageEncoderMock = nullptr ;
     LibCCECImplMock         *p_libCCECImplMock = nullptr ;
@@ -98,6 +100,9 @@ protected:
 
         p_hostImplMock      = new NiceMock <HostImplMock>;
         device::Host::setImpl(p_hostImplMock);
+
+        p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
+        device::HdmiInput::setImpl(p_hdmiInputImplMock);
 
         p_libCCECImplMock  = new testing::NiceMock <LibCCECImplMock>;
         LibCCEC::setImpl(p_libCCECImplMock);
@@ -160,6 +165,12 @@ protected:
         {
             delete p_hostImplMock;
             p_hostImplMock = nullptr;
+        }
+        device::HdmiInput::setImpl(nullptr);
+        if (p_hdmiInputImplMock != nullptr)
+        {
+            delete p_hdmiInputImplMock;
+            p_hdmiInputImplMock = nullptr;
         }
         LibCCEC::setImpl(nullptr);
         if (p_libCCECImplMock != nullptr)
