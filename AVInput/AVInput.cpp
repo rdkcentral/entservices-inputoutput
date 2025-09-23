@@ -268,10 +268,10 @@ namespace Plugin {
                 //Core::JSON::ArrayType<InputDeviceJson>* emptyArray = new Core::JSON::ArrayType<InputDeviceJson>();
                 //eventPayload.Add(_T("devices"), emptyArray); // Empty array
                 //eventPayload.Add(_T("devices"), new Core::JSON::String("[]", true)); // Empty array
-                eventPayload.Add(_T("foo"), "bar"); // Dummy entry
-                eventPayload.Add(_T("fooZ"), "[]"); // Dummy entry
-                eventPayload.Add(_T("fooZZ"), new Core::JSON::String("[]", true)); // Dummy entry
-                eventPayload.Add(_T("fooZZZ"), new Core::JSON::String("[]", false)); // Dummy entry
+                eventPayload.Add(_T("foo"), new Core::JSON::String("bar", true)); // Dummy entry
+                eventPayload.Add(_T("fooZ"), new Core::JSON::String("bar", false)); // Dummy entry
+                eventPayload.Add(_T("fooZZZ"), new Core::JSON::String("[]", true)); // Dummy entry
+                eventPayload.Add(_T("fooZZZZ"), new Core::JSON::String("[]", false)); // Dummy entry
             }
             else {
                 printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices->Count()=%d\n", devices->Count());
