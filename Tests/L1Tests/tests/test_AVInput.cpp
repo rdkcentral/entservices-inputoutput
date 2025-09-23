@@ -196,7 +196,7 @@ TEST_F(AVInputTest, RegisteredMethods)
 }
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputTest, contentProtected)
 {
@@ -263,7 +263,7 @@ TEST_F(AVInputDsTest, numberOfInputs)
 }
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputDsTest, currentVideoMode)
 {
@@ -435,7 +435,7 @@ TEST_F(AVInputInit, getInputDevices)
 
 // <pca> debug
 #endif
-#if 0
+#if 1
 
 TEST_F(AVInputInit, getInputDevices_HDMI)
 {
@@ -853,7 +853,7 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
 // </pca>
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 {
