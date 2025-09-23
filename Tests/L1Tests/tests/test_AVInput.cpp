@@ -862,8 +862,6 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
     printf("*** _DEBUG: AVInputInit.onDevicesChangedHDMI: entry\n");
     Core::Event onDevicesChanged(false, true);
 
-    // <pca> debug
-    #if 0
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
         .Times(1)
         .WillOnce(::testing::Invoke(
@@ -876,6 +874,9 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
 
                 return Core::ERROR_NONE;
             }));
+
+    // <pca> debug
+    #if 0
 
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
