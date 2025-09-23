@@ -859,7 +859,7 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
 #if 1
 TEST_F(AVInputInit, onDevicesChangedHDMI)
 {
-    printf("*** _DEBUG: AVInputInit.onDevicesChangedHDMI: entry\n");
+    printf("*** _DEBUG: AVInputInit.onDevicesChangedHDMI: entry: dsAVEventHandler=%p\n", dsAVEventHandler);
     Core::Event onDevicesChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -875,12 +875,12 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
                 return Core::ERROR_NONE;
             }));
 
+    EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
+    ASSERT_TRUE(dsAVEventHandler != nullptr);
+
     // <pca> debug
     #if 0
 
-    EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
-
-    ASSERT_TRUE(dsAVEventHandler != nullptr);
     IARM_Bus_DSMgr_EventData_t eventData;
     eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_0;
     eventData.data.hdmi_in_connect.isPortConnected = true;
