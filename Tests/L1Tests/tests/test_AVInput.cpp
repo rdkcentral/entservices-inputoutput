@@ -471,10 +471,6 @@ TEST_F(AVInputInit, getInputDevices)
     EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\"},{\"id\":0,\"connected\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
 }
 
-// <pca> debug
-#endif
-#if 0
-
 TEST_F(AVInputInit, getInputDevices_HDMI)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
@@ -484,6 +480,10 @@ TEST_F(AVInputInit, getInputDevices_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getInputDevices"), _T("{\"typeOfInput\": \"HDMI\"}"), response));
     EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":true,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
 }
+
+// <pca> debug
+#endif
+#if 0
 
 TEST_F(AVInputInit, getInputDevices_COMPOSITE)
 {
