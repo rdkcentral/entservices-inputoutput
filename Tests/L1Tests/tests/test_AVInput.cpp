@@ -379,10 +379,14 @@ protected:
                     return IARM_RESULT_SUCCESS;
                 }));
 
+        printf("*** _DEBUG: AVInputInit ctor: Mark 1\n");
+
         PluginHost::IFactories::Assign(&factoriesImplementation);
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
             plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
         dispatcher->Activate(&service);
+
+        printf("*** _DEBUG: AVInputInit ctor: Mark 2\n");
 
         ON_CALL(*p_avInputMock, RegisterDevicesChangedNotification(::testing::_))
             .WillByDefault(::testing::Invoke(
@@ -425,6 +429,8 @@ protected:
                     HdmiContentTypeUpdateNotification = notification;
             return Core::ERROR_NONE;
                 }));
+
+        printf("*** _DEBUG: AVInputInit ctor: Mark 3\n");
     }
 
     virtual ~AVInputInit() override
