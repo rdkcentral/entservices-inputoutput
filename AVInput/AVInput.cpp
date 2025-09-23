@@ -269,7 +269,8 @@ namespace Plugin {
             if(devices->Count() == 0) {
                 printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: No devices connected, sending empty array!\n");
                 Core::JSON::ArrayType<JsonValue> emptyArray;
-                std::string serialized = emptyArray.ToString();
+                Core::string serialized;
+                emptyArray.ToString(serialized);
                 printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: serialized empty array=%s\n", serialized.c_str());
                 //emptyArray.Add() = Core::JSON::String("foo");
                 eventPayload.Add(_T("devices"), &emptyArray);
