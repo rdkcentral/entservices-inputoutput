@@ -260,27 +260,22 @@ namespace Plugin {
     {
         printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: entry: devices=%p\n", devices);
 
-        Core::JSON::ArrayType<InputDeviceJson> deviceArray;
         if (devices != nullptr)
         {
             Exchange::IAVInput::InputDevice resultItem{};
             Core::JSON::Container eventPayload;
 
             if(devices->Count() == 0) {
-                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: No devices connected, sending empty array!\n");
-                Core::JSON::ArrayType<JsonValue> emptyArray;
-                Core::string serialized;
-                emptyArray.ToString(serialized);
-                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: serialized empty array=%s\n", serialized.c_str());
-                //emptyArray.Add() = Core::JSON::String("foo");
-                eventPayload.Add(_T("devices"), &emptyArray);
-                _parent.Notify(_T("onDevicesChanged"), eventPayload);
+                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: No devices connected, sending empty array!!\n");
+                JsonObject params;
+                JsonArray emptyArray;
+                params["devices"] = emptyArray;
+                _parent.Notify(_T("onDevicesChanged"), params);
                 return;
             }
 
+            Core::JSON::ArrayType<InputDeviceJson> deviceArray;
             while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
-
-            
             eventPayload.Add(_T("devices"), &deviceArray);
             _parent.Notify(_T("onDevicesChanged"), eventPayload);
         }
