@@ -101,7 +101,7 @@ protected:
         dispatcher->Deactivate();
         dispatcher->Release();
         // </pca>
-        
+
         plugin->Deinitialize(&service);
         
         Core::IWorkerPool::Assign(nullptr);
@@ -860,8 +860,8 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
     ASSERT_TRUE(dsAVEventHandler != nullptr);
 
-    // <pca> debug - Below causes segfault
-    #if 0
+    // <pca> debug
+    #if 1
 
     IARM_Bus_DSMgr_EventData_t eventData;
     eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_0;
