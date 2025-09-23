@@ -850,7 +850,7 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 TEST_F(AVInputInit, onDevicesChangedHDMI)
 {
     printf("*** _DEBUG: AVInputInit.onDevicesChangedHDMI: entry\n");
