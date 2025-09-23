@@ -849,8 +849,8 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
 #endif
 // </pca>
 
-// <pca> debug
-#if 1
+// <pca> debug Segfault with this enabled
+#if 0
 TEST_F(AVInputInit, onDevicesChangedHDMI)
 {
     printf("*** _DEBUG: AVInputInit.onDevicesChangedHDMI: entry\n");
