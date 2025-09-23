@@ -265,20 +265,19 @@ namespace Plugin {
 
             if(0 == devices->Count()) {
                 printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices->Count()=0\n");
-                eventPayload.Add(_T("devices"), new Core::JSON::String("[]")); // Empty array
+                Core::JSON::ArrayType<InputDeviceJson>* emptyArray = new Core::JSON::ArrayType<InputDeviceJson>();
+                eventPayload.Add(_T("devices"), emptyArray); // Empty array
             }
             else {
                 printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices->Count()=%d\n", devices->Count());
-                while(devices->Next(resultItem) == true) {
-                    deviceArray.Add() = resultItem;
-                }
+                while(devices->Next(resultItem)) deviceArray.Add() = resultItem;
                 eventPayload.Add(_T("devices"), &deviceArray);
             }
             
             _parent.Notify(_T("onDevicesChanged"), eventPayload);
         }
     }
-    // </pca>s
+    // </pca>
 
 } // namespace Plugin
 } // namespace WPEFramework
