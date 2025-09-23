@@ -266,7 +266,7 @@ namespace Plugin {
             Exchange::IAVInput::InputDevice resultItem{};
             Core::JSON::Container eventPayload;
 
-            if(devices.Count() == 0) {
+            if(devices->Count() == 0) {
                 Core::JSON::String emptyArray = Core::JSON::String("[]", false);
 
                 printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: No devices connected, sending empty array\n");
