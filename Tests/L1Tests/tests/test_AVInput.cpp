@@ -855,7 +855,7 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
 #endif
 // </pca>
 
-// <pca> debug Segfault with this enabled
+// <pca> debug
 #if 1
 TEST_F(AVInputInit, onDevicesChangedHDMI)
 {
@@ -878,13 +878,13 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
     ASSERT_TRUE(dsAVEventHandler != nullptr);
 
-    // <pca> debug
-    #if 0
-
     IARM_Bus_DSMgr_EventData_t eventData;
     eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_0;
     eventData.data.hdmi_in_connect.isPortConnected = true;
     dsAVEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
+
+    // <pca> debug
+    #if 0
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
