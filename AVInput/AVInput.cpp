@@ -269,12 +269,12 @@ namespace Plugin {
                 Core::JSON::String empty = Core::JSON::String("[]");
                 eventPayload.Add(_T("devices"), &empty);
 
-                string toStr;
-                empty.ToString(toStr);
-                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): empty=%s\n", toStr.c_str());
+                // string toStr;
+                // empty.ToString(toStr);
+                // printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): empty=%s\n", toStr.c_str());
                 
-                eventPayload.ToString(toStr);
-                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): eventPayload=%s\n", toStr.c_str());
+                // eventPayload.ToString(toStr);
+                // printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): eventPayload=%s\n", toStr.c_str());
 
                 //eventPayload.Add(_T("devices"), new Core::JSON::String("[]", true)); // Empty array
                 // eventPayload.Add(_T("foo"), new Core::JSON::String("bar", true)); // Dummy entry
