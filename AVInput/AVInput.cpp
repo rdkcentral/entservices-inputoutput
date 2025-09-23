@@ -267,9 +267,8 @@ namespace Plugin {
             Core::JSON::Container eventPayload;
 
             if(devices->Count() == 0) {
-                Core::JSON::String emptyArray = Core::JSON::String("[]", false);
-
                 printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: No devices connected, sending empty array\n");
+                Core::JSON::ArrayType<JsonValue> emptyArray;
                 eventPayload.Add(_T("devices"), &emptyArray);
                 _parent.Notify(_T("onDevicesChanged"), eventPayload);
                 return;
