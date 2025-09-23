@@ -631,7 +631,6 @@ namespace WPEFramework
         , m_audio_output_delay(DEFAULT_AUDIO_OUTPUT_DELAY)
         , m_arcRoutingThread()
         , m_currentArcRoutingState(ARC_STATE_ARC_TERMINATED)
-        , m_semSignaltoArcRoutingThread(1)
         , m_arcstarting(false)
         , smConnection(nullptr)
         , m_connectedDevices()
