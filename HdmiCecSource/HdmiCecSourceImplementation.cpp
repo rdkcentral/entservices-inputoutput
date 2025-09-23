@@ -1141,10 +1141,10 @@ namespace WPEFramework
         {
             LOGINFO("Entered getPhysicalAddress ");
 
-            uint32_t physAddress = 0x0F0F0F0F;
+            uint32_t physAddress = 0xFFFF;
             try {
                     LibCCEC::getInstance().getPhysicalAddress(&physAddress);
-                    physical_addr = {(uint8_t)((physAddress >> 24) & 0xFF),(uint8_t)((physAddress >> 16) & 0xFF),(uint8_t) ((physAddress >> 8)  & 0xFF),(uint8_t)((physAddress) & 0xFF)};
+		    physical_addr = {(uint8_t)((physAddress >> 12) & 0x0F),(uint8_t)((physAddress >> 8) & 0x0F),(uint8_t) ((physAddress >> 4)  & 0x0F),(uint8_t)((physAddress) & 0x0F)};
                     LOGINFO("getPhysicalAddress: physicalAddress: %s ", physical_addr.toString().c_str());
             }
             catch (const std::exception& e)
