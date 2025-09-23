@@ -239,59 +239,24 @@ namespace Plugin {
         }
     }
 
-    // <pca>
-    // void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
-    // {
-    //     Core::JSON::ArrayType<InputDeviceJson> deviceArray;
-    //     if (devices != nullptr)
-    //     {
-    //         Exchange::IAVInput::InputDevice resultItem{};
-
-    //         while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
-
-    //         Core::JSON::Container eventPayload;
-    //         eventPayload.Add(_T("deviceArray"), &deviceArray);
-    //         _parent.Notify(_T("onDevicesChanged"), eventPayload);
-    //     }
-    // }
     void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
     {
-        printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices=%p\n", devices);
+        printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: entry: devices=%p\n", devices);
+
         Core::JSON::ArrayType<InputDeviceJson> deviceArray;
         if (devices != nullptr)
         {
             Exchange::IAVInput::InputDevice resultItem{};
+
+            while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
+
+            printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: deviceArray.string()=%s\n", deviceArray.String().c_str());
+
             Core::JSON::Container eventPayload;
-
-            if(0 == devices->Count()) {
-                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices->Count() = 0!\n");
-                
-                Core::JSON::String empty = Core::JSON::String("[]");
-                eventPayload.Add(_T("devices"), &empty);
-
-                // string toStr;
-                // empty.ToString(toStr);
-                // printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): empty=%s\n", toStr.c_str());
-                
-                // eventPayload.ToString(toStr);
-                // printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): eventPayload=%s\n", toStr.c_str());
-
-                //eventPayload.Add(_T("devices"), new Core::JSON::String("[]", true)); // Empty array
-                // eventPayload.Add(_T("foo"), new Core::JSON::String("bar", true)); // Dummy entry
-                // eventPayload.Add(_T("fooZ"), new Core::JSON::String("bar", false)); // Dummy entry
-                // eventPayload.Add(_T("fooZZZ"), new Core::JSON::String("[]", true)); // Dummy entry
-                // eventPayload.Add(_T("fooZZZZ"), new Core::JSON::String("[]", false)); // Dummy entry
-            }
-            else {
-                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices->Count()=%d\n", devices->Count());
-                while(devices->Next(resultItem)) deviceArray.Add() = resultItem;
-                eventPayload.Add(_T("devices"), &deviceArray);
-            }
-            
+            eventPayload.Add(_T("deviceArray"), &deviceArray);
             _parent.Notify(_T("onDevicesChanged"), eventPayload);
         }
     }
-    // </pca>
 
 } // namespace Plugin
 } // namespace WPEFramework
