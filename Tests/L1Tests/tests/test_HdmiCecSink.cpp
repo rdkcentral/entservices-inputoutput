@@ -35,6 +35,7 @@
 #include "ThunderPortability.h"
 #include "PowerManagerMock.h"
 #include "ManagerMock.h"
+#include "HostMock.h"
 
 
 using namespace WPEFramework;
@@ -70,6 +71,7 @@ class HdmiCecSinkWOInitializeTest : public ::testing::Test {
 protected:
     IarmBusImplMock         *p_iarmBusImplMock = nullptr ;
     ManagerImplMock         *p_managerImplMock = nullptr ;
+    HostImplMock            *p_hostImplMock = nullptr ;
     ConnectionImplMock      *p_connectionImplMock = nullptr ;
     MessageEncoderMock      *p_messageEncoderMock = nullptr ;
     LibCCECImplMock         *p_libCCECImplMock = nullptr ;
@@ -93,6 +95,9 @@ protected:
 
         p_managerImplMock  = new NiceMock <ManagerImplMock>;
         device::Manager::setImpl(p_managerImplMock);
+
+        p_hostImplMock      = new NiceMock <HostImplMock>;
+        device::Host::setImpl(p_hostImplMock);
 
         p_libCCECImplMock  = new testing::NiceMock <LibCCECImplMock>;
         LibCCEC::setImpl(p_libCCECImplMock);
@@ -149,6 +154,12 @@ protected:
         {
             delete p_managerImplMock;
             p_managerImplMock = nullptr;
+        }
+        device::Host::setImpl(nullptr);
+        if (p_hostImplMock != nullptr)
+        {
+            delete p_hostImplMock;
+            p_hostImplMock = nullptr;
         }
         LibCCEC::setImpl(nullptr);
         if (p_libCCECImplMock != nullptr)
@@ -217,30 +228,6 @@ protected:
 
     HdmiCecSinkDsTest(): HdmiCecSinkTest()
     {
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-            .WillByDefault(
-                [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                    if (strcmp(methodName, IARM_BUS_PWRMGR_API_GetPowerState) == 0) {
-                        auto* param = static_cast<IARM_Bus_PWRMgr_GetPowerState_Param_t*>(arg);
-                        param->curState  = IARM_BUS_PWRMGR_POWERSTATE_ON;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetNumberOfInputs) == 0) {
-                        auto* param = static_cast<dsHdmiInGetNumberOfInputsParam_t*>(arg);
-                        param->result = dsERR_NONE;
-                        param->numHdmiInputs = 3;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetStatus) == 0) {
-                        auto* param = static_cast<dsHdmiInGetStatusParam_t*>(arg);
-                        param->result = dsERR_NONE;
-                        param->status.isPortConnected[1] = 1;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsGetHDMIARCPortId) == 0) {
-                        auto* param = static_cast<dsGetHDMIARCPortIdParam_t*>(arg);
-                        param->portId = 1;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                });
-
         EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
         EXPECT_EQ(response, string("{\"success\":true}"));
     }
