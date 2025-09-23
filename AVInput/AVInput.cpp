@@ -256,13 +256,16 @@ namespace Plugin {
     // }
     void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
     {
+        printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): devices=%p\n", devices);
         Core::JSON::ArrayType<InputDeviceJson> deviceArray;
         if (devices != nullptr)
         {
             Exchange::IAVInput::InputDevice resultItem{};
 
-            if (devices->Count() > 0) {
-                while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
+            if(0 == devices->Count()) {
+                deviceArray.Add() = resultItem; // Empty array
+            } else while(devices->Next(resultItem)) {
+                deviceArray.Add() = resultItem;
             }
 
             Core::JSON::Container eventPayload;
