@@ -294,12 +294,12 @@ protected:
     // PLUGINHOST_DISPATCHER* dispatcher;
     Core::JSONRPC::Message message;
 
-    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler;
-    IARM_EventHandler_t dsAVEventHandler;
-    IARM_EventHandler_t dsAVSignalStatusEventHandler;
-    IARM_EventHandler_t dsAVStatusEventHandler;
-    IARM_EventHandler_t dsAVVideoModeEventHandler;
-    IARM_EventHandler_t dsAviContentTypeEventHandler;
+    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler   = nullptr;
+    IARM_EventHandler_t dsAVEventHandler                    = nullptr;    
+    IARM_EventHandler_t dsAVSignalStatusEventHandler        = nullptr;
+    IARM_EventHandler_t dsAVStatusEventHandler              = nullptr;
+    IARM_EventHandler_t dsAVVideoModeEventHandler           = nullptr;
+    IARM_EventHandler_t dsAviContentTypeEventHandler        = nullptr;
 
     Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
     Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
@@ -870,7 +870,7 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
-    
+
     #endif
     // </pca>
 }
