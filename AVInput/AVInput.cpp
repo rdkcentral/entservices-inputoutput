@@ -278,8 +278,9 @@ namespace Plugin {
                 while(devices->Next(resultItem)) deviceArray.Add() = resultItem;
                 eventPayload.Add(_T("devices"), &deviceArray);
             }
-
-            printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): eventPayload=%s\n", eventPayload.ToString().c_str());
+            string toStr;
+            eventPayload.ToString(toStr);
+            printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged(): eventPayload=%s\n", toStr.c_str());
             
             _parent.Notify(_T("onDevicesChanged"), eventPayload);
         }
