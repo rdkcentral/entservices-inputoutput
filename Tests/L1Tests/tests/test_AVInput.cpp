@@ -837,9 +837,6 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
                 return Core::ERROR_NONE;
             }));
 
-    // <pca> debug
-    #if 1
-
     ASSERT_TRUE(dsAVEventHandler != nullptr);
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
@@ -851,15 +848,12 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
-
-    #endif
-    // </pca>
 }
 #endif
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 {

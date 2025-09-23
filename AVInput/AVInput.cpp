@@ -239,23 +239,6 @@ namespace Plugin {
         }
     }
 
-    // <pca>
-    // void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
-    // {
-    //     printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: entry: devices=%p\n", devices);
-
-    //     Core::JSON::ArrayType<InputDeviceJson> deviceArray;
-    //     if (devices != nullptr)
-    //     {
-    //         Exchange::IAVInput::InputDevice resultItem{};
-
-    //         while (devices->Next(resultItem) == true) { deviceArray.Add() = resultItem; }
-
-    //         Core::JSON::Container eventPayload;
-    //         eventPayload.Add(_T("devices"), &deviceArray);
-    //         _parent.Notify(_T("onDevicesChanged"), eventPayload);
-    //     }
-    // }
     void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
     {
         printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: entry: devices=%p\n", devices);
@@ -266,7 +249,6 @@ namespace Plugin {
             Core::JSON::Container eventPayload;
 
             if(devices->Count() == 0) {
-                printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: No devices connected, sending empty array!!\n");
                 JsonObject params;
                 JsonArray emptyArray;
                 params["devices"] = emptyArray;
@@ -280,7 +262,6 @@ namespace Plugin {
             _parent.Notify(_T("onDevicesChanged"), eventPayload);
         }
     }
-    // </pca>
 
 } // namespace Plugin
 } // namespace WPEFramework
