@@ -167,8 +167,11 @@ namespace Plugin {
 
     void AVInputImplementation::dsAVEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len)
     {
+        printf("*** _DEBUG: AVInputImplementation::dsAVEventHandler(): entry\n");
         if (!AVInputImplementation::_instance)
             return;
+
+        printf("*** _DEBUG: AVInputImplementation::dsAVEventHandler(): Mark 1\n");
 
         IARM_Bus_DSMgr_EventData_t* eventData = (IARM_Bus_DSMgr_EventData_t*)data;
         if (IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG == eventId) {
@@ -182,6 +185,7 @@ namespace Plugin {
             LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG  event data:%d", compositein_hotplug_port);
             AVInputImplementation::_instance->AVInputHotplug(compositein_hotplug_port, compositein_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, INPUT_TYPE_INT_COMPOSITE);
         }
+        printf("*** _DEBUG: AVInputImplementation::dsAVEventHandler(): exit\n");
     }
 
     void AVInputImplementation::dsAVSignalStatusEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len)
