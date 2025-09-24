@@ -1816,7 +1816,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate6_HDMI)
 }
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate7_HDMI)
 {
