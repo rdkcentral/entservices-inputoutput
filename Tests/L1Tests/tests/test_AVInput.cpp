@@ -71,7 +71,7 @@ protected:
         , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
           // <pca> debug
           //2, Core::Thread::DefaultStackSize(), 16))
-          1, Core::Thread::DefaultStackSize(), 64))
+          4, Core::Thread::DefaultStackSize(), 64))
           // </pca>
     {
         p_avInputMock  = new NiceMock<AVInputMock>;
