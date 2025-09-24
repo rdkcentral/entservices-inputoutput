@@ -1309,8 +1309,7 @@ TEST_F(AVInputInit, onSignalChangedDefaultCOMPOSITE)
         printf("*** _DEBUG: AVInputInit: onSignalChangedDefaultCOMPOSITE EXIT ***\n");
 }
 
-// <pca> debug // Tests completed up until this point at least
-#if 1
+// <pca> debug // Tests completed up until this point at least // </pca>
 
 TEST_F(AVInputInit, onInputStatusChangeOn_HDMI)
 {
@@ -1813,6 +1812,9 @@ TEST_F(AVInputInit, videoStreamInfoUpdate6_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
         printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate6_HDMI EXIT ***\n");
 }
+
+// <pca> debug
+#if 0
 
 TEST_F(AVInputInit, videoStreamInfoUpdate7_HDMI)
 {
