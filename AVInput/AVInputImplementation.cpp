@@ -565,7 +565,7 @@ namespace Plugin {
         }
 
         // <pca>
-        if plane != 0 && plane != 1 {
+        if(plane != 0 && plane != 1 ){
             LOGERR("StartInput: Invalid paramater: plane: %d ", plane);
             successResult.success = false;
             return Core::ERROR_GENERAL;
