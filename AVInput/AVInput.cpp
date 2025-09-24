@@ -241,8 +241,6 @@ namespace Plugin {
 
     void AVInput::Notification::OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices)
     {
-        printf("*** _DEBUG: AVInput::Notification::OnDevicesChanged: entry: devices=%p\n", devices);
-
         if (devices != nullptr)
         {
             Exchange::IAVInput::InputDevice resultItem{};

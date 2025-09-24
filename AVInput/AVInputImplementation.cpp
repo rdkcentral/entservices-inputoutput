@@ -47,7 +47,6 @@ namespace Plugin {
         : _adminLock()
     {
         LOGINFO("Create AVInputImplementation Instance");
-        printf("*** _DEBUG: AVInputImplementation ctor: entry\n");
         AVInputImplementation::_instance = this;
         InitializeIARM();
     }
@@ -60,7 +59,6 @@ namespace Plugin {
 
     void AVInputImplementation::InitializeIARM()
     {
-        printf("*** _DEBUG: AVInputImplementation::InitializeIARM(): entry\n");
         if (Utils::IARM::init()) {
             IARM_Result_t res;
             IARM_CHECK(IARM_Bus_RegisterEventHandler(
@@ -167,11 +165,8 @@ namespace Plugin {
 
     void AVInputImplementation::dsAVEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len)
     {
-        printf("*** _DEBUG: AVInputImplementation::dsAVEventHandler(): entry\n");
         if (!AVInputImplementation::_instance)
             return;
-
-        printf("*** _DEBUG: AVInputImplementation::dsAVEventHandler(): Mark 1\n");
 
         IARM_Bus_DSMgr_EventData_t* eventData = (IARM_Bus_DSMgr_EventData_t*)data;
         if (IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG == eventId) {
@@ -185,7 +180,6 @@ namespace Plugin {
             LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG  event data:%d", compositein_hotplug_port);
             AVInputImplementation::_instance->AVInputHotplug(compositein_hotplug_port, compositein_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, INPUT_TYPE_INT_COMPOSITE);
         }
-        printf("*** _DEBUG: AVInputImplementation::dsAVEventHandler(): exit\n");
     }
 
     void AVInputImplementation::dsAVSignalStatusEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len)
@@ -561,20 +555,14 @@ namespace Plugin {
     Core::hresult AVInputImplementation::StartInput(const string& portId, const string& typeOfInput, const bool requestAudioMix, const int plane, const bool topMost, SuccessResult& successResult)
     {
         int id;
-        printf("*** _DEBUG: AVInputImplementation::StartInput: portId=%s, typeOfInput=%s, requestAudioMix=%d, plane=%d, topMost=%d\n",
-            portId.c_str(), typeOfInput.c_str(), requestAudioMix, plane, topMost);
 
         try {
             id = stoi(portId);
         } catch (const std::exception& err) {
-            printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 1, portId=%s, typeOfInput=%s, requestAudioMix=%d, plane=%d, topMost=%d, err=%s\n",
-                portId.c_str(), typeOfInput.c_str(), requestAudioMix, plane, topMost, err.what());
             LOGERR("StartInput: Invalid paramater: portId: %s ", portId.c_str());
             successResult.success = false;
             return Core::ERROR_GENERAL;
         }
-
-        printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 2");
 
         try {
             switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
@@ -587,21 +575,15 @@ namespace Plugin {
                     break;
                 }
                 default: {
-                    printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 3, portId=%s, typeOfInput=%s, requestAudioMix=%d, plane=%d, topMost=%d\n",
-                        portId.c_str(), typeOfInput.c_str(), requestAudioMix, plane, topMost);
                     LOGWARN("Invalid input type passed to StartInput");
                     successResult.success = false;
                     return Core::ERROR_GENERAL;
                 }
             }
         } catch(...) {
-            printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 4, portId=%s, typeOfInput=%s, requestAudioMix=%d, plane=%d, topMost=%d\n",
-                portId.c_str(), typeOfInput.c_str(), requestAudioMix, plane, topMost);
             successResult.success = false;
             return Core::ERROR_GENERAL;
         }
-
-        printf("*** _DEBUG: AVInputImplementation::StartInput: Mark 5");
 
         successResult.success = true;
         return Core::ERROR_NONE;

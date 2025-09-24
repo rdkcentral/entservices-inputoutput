@@ -95,7 +95,6 @@ protected:
         ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
                 [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                    printf("*** _DEBUG: Mock IARM_Bus_RegisterEventHandler called: Mark 1\n");
                     if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
                         EXPECT_TRUE(handler != nullptr);
                         dsAVEventHandler = handler;
@@ -123,7 +122,6 @@ protected:
                     if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG)) {
                         EXPECT_TRUE(handler != nullptr);
                         dsAVEventHandler = handler;
-                        printf("*** _DEBUG: Mock IARM_Bus_RegisterEventHandler called: Mark 2\n");
                     }
                     if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS)) {
                         EXPECT_TRUE(handler != nullptr);
@@ -354,11 +352,7 @@ protected:
     AVInputInit()
         : AVInputDsTest()
     {
-        printf("*** _DEBUG: AVInputInit ctor: entry\n");
-
         PluginHost::IFactories::Assign(&factoriesImplementation);
-
-        printf("*** _DEBUG: AVInputInit ctor: Mark 2\n");
 
         ON_CALL(*p_avInputMock, RegisterDevicesChangedNotification(::testing::_))
             .WillByDefault(::testing::Invoke(
@@ -401,14 +395,10 @@ protected:
                     HdmiContentTypeUpdateNotification = notification;
             return Core::ERROR_NONE;
                 }));
-
-        printf("*** _DEBUG: AVInputInit ctor: Mark 3\n");
     }
 
     virtual ~AVInputInit() override
     {
-        printf("*** _DEBUG: AVInputInit xtor: entry\n");
-
         if (p_avInputMock != nullptr) {
             delete p_avInputMock;
             p_avInputMock = nullptr;
@@ -821,7 +811,6 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
 #if 1
 TEST_F(AVInputInit, onDevicesChangedHDMI)
 {
-    printf("*** _DEBUG: AVInputInit.onDevicesChangedHDMI: entry: dsAVEventHandler=%p\n", dsAVEventHandler);
     Core::Event onDevicesChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -853,7 +842,7 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 {
