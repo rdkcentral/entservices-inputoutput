@@ -1309,8 +1309,8 @@ TEST_F(AVInputInit, onSignalChangedDefaultCOMPOSITE)
         printf("*** _DEBUG: AVInputInit: onSignalChangedDefaultCOMPOSITE EXIT ***\n");
 }
 
-// <pca> debug
-#if 0
+// <pca> debug // Tests completed up until this point at least
+#if 1
 
 TEST_F(AVInputInit, onInputStatusChangeOn_HDMI)
 {
