@@ -1052,9 +1052,6 @@ TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
         printf("*** _DEBUG: AVInputInit: onSignalChangedNoSignalHDMI EXIT ***\n");
 }
 
-// <pca> debug
-#if 0
-
 TEST_F(AVInputInit, onSignalChangedUnstableHDMI)
 {
     printf("*** _DEBUG: AVInputInit: onSignalChangedUnstableHDMI ***\n");
@@ -1311,6 +1308,9 @@ TEST_F(AVInputInit, onSignalChangedDefaultCOMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
         printf("*** _DEBUG: AVInputInit: onSignalChangedDefaultCOMPOSITE EXIT ***\n");
 }
+
+// <pca> debug
+#if 0
 
 TEST_F(AVInputInit, onInputStatusChangeOn_HDMI)
 {
