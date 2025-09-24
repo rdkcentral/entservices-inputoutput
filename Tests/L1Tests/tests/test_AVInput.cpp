@@ -1816,7 +1816,6 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate6_HDMI)
 }
 
 // <pca> debug - Good until here (running AVInputEvents only)) </pca>
-#if 0
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate7_HDMI)
 {
@@ -2157,6 +2156,9 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
         printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdateDefault_HDMI EXIT ***\n");
 }
+
+// <pca> debug
+#if 0
 
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate1_COMPOSITE)
