@@ -1557,8 +1557,8 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
         //.Times(1)
         //.WillOnce(::testing::Invoke(
         .Times(::testing::AtMost(2))
-        // </pca>
         .WillRepeatedly(::testing::Invoke(
+        // </pca>
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
@@ -1604,6 +1604,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
         //.Times(1)
         //.WillOnce(::testing::Invoke(
         .Times(::testing::AtMost(2))
+        .WillRepeatedly(::testing::Invoke(
         // </pca>
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
