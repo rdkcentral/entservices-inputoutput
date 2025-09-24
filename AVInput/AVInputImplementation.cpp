@@ -564,10 +564,21 @@ namespace Plugin {
             return Core::ERROR_GENERAL;
         }
 
+        // <pca>
+        if plane != 0 && plane != 1 {
+            LOGERR("StartInput: Invalid paramater: plane: %d ", plane);
+            successResult.success = false;
+            return Core::ERROR_GENERAL;
+        }
+        // </pca>
+
         try {
             switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
                 case INPUT_TYPE_INT_HDMI: {
                     device::HdmiInput::getInstance().selectPort(id, requestAudioMix, plane, topMost);
+                    // <pca>
+                    planeType = plane;
+                    // </pca>
                     break;
                 }
                 case INPUT_TYPE_INT_COMPOSITE: {
