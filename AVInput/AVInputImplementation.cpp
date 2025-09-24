@@ -48,11 +48,9 @@ namespace Plugin {
     {
         LOGINFO("Create AVInputImplementation Instance");
 
-        // <pca>
         m_primVolume = DEFAULT_PRIM_VOL_LEVEL;
         m_inputVolume = DEFAULT_INPUT_VOL_LEVEL;
         m_currentVrrType = dsVRR_NONE;
-        // </pca>
         
         AVInputImplementation::_instance = this;
         InitializeIARM();
@@ -275,7 +273,6 @@ namespace Plugin {
                     AVInputImplementation::_instance->AVInputVRRChange(hdmi_in_port, AVInputImplementation::_instance->m_currentVrrType, false);
                 }
             } else {
-                // <pca> debug: AVInputVRRChange called twice here potentially. </pca>
                 if (AVInputImplementation::_instance->m_currentVrrType != dsVRR_NONE) {
                     printf("*** _DEBUG: AVInputImplementation::dsAVGameFeatureStatusEventHandler: Calling AVInputVRRChange twice!\n");
                     AVInputImplementation::_instance->AVInputVRRChange(hdmi_in_port, AVInputImplementation::_instance->m_currentVrrType, false);
@@ -1354,7 +1351,6 @@ namespace Plugin {
 
     Core::hresult AVInputImplementation::SetMixerLevels(const int primaryVolume, const int inputVolume, SuccessResult& successResult)
     {
-        // <pca>
         if( (primaryVolume >=0) && (inputVolume >=0) ) {
                 m_primVolume = primaryVolume;
                 m_inputVolume = inputVolume;
@@ -1373,7 +1369,6 @@ namespace Plugin {
                 LOGWARN("INPUT Volume greater than limit. Set to DEFAULT_INPUT_VOL_LEVEL(100) !!!\n");
                 m_inputVolume = DEFAULT_INPUT_VOL_LEVEL;
         }
-        // </pca>
 
         try {
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY, primaryVolume);

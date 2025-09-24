@@ -169,7 +169,7 @@ protected:
 };
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputTest, RegisteredMethods)
 {
@@ -256,7 +256,7 @@ protected:
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputDsTest, numberOfInputs)
 {
@@ -385,7 +385,7 @@ protected:
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputInit, getInputDevices)
 {
@@ -922,7 +922,7 @@ protected:
 };
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputEvents, onDevicesChangedHDMI)
 {
@@ -1551,22 +1551,12 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
     Core::Event gameFeatureStatusUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
-        // <pca>
         .Times(1)
         .WillOnce(::testing::Invoke(
-        // .Times(::testing::AtMost(2))
-        // .WillRepeatedly(::testing::Invoke(
-        // </pca>
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                // <pca>
                 EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM\",\"mode\":true}}");
-                // EXPECT_TRUE(
-                //     text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM\",\"mode\":true}}"
-                //     || text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"\",\"mode\":false}}"
-                // );
-                // </pca>
 
                 gameFeatureStatusUpdate.SetEvent();
 
@@ -1593,22 +1583,12 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
     Core::Event gameFeatureStatusUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
-        // <pca>
         .Times(1)
         .WillOnce(::testing::Invoke(
-        // .Times(::testing::AtMost(2))
-        // .WillRepeatedly(::testing::Invoke(
-        // </pca>
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                // <pca>
                 EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM-PRO\",\"mode\":true}}");
-                // EXPECT_TRUE(
-                //     text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM-PRO\",\"mode\":true}}"
-                //     || text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"\",\"mode\":false}}"
-                // );
-                // </pca>
 
                 gameFeatureStatusUpdate.SetEvent();
 
@@ -1631,7 +1611,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 
 // <pca> debug
 #endif
-#if 0
+#if 1
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate1_HDMI)
 {
