@@ -163,6 +163,13 @@ protected:
             delete p_iarmBusImplMock;
             p_iarmBusImplMock = nullptr;
         }
+
+        // <pca>
+        if (p_avInputMock != nullptr) {
+            delete p_avInputMock;
+            p_avInputMock = nullptr;
+        }
+        // </pca>
     }
 };
 
@@ -399,10 +406,12 @@ protected:
 
     virtual ~AVInputInit() override
     {
-        if (p_avInputMock != nullptr) {
-            delete p_avInputMock;
-            p_avInputMock = nullptr;
-        }
+        // <pca>
+        // if (p_avInputMock != nullptr) {
+        //     delete p_avInputMock;
+        //     p_avInputMock = nullptr;
+        // }
+        // </pca>
 
         PluginHost::IFactories::Assign(nullptr);
     }
