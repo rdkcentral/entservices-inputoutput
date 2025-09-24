@@ -56,7 +56,7 @@ using ParamsType = boost::variant<
     std::tuple<int, string, string, int>,                           // OnInputStatusChanged
     std::tuple<int, string, int, int, bool, int, int>,              // VideoStreamInfoUpdate
     std::tuple<int, string, bool>,                                  // GameFeatureStatusUpdate
-    std::tuple<int, int>                                            // HdmiContentTypeUpdate
+    std::tuple<int, int>                                            // AviContentTypeUpdate
 >;
 
 namespace WPEFramework {
@@ -148,8 +148,8 @@ namespace Plugin {
         virtual Core::hresult UnregisterVideoStreamInfoUpdateNotification(Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) override;
         virtual Core::hresult RegisterGameFeatureStatusUpdateNotification(Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) override;
         virtual Core::hresult UnregisterGameFeatureStatusUpdateNotification(Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) override;
-        virtual Core::hresult RegisterHdmiContentTypeUpdateNotification(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
-        virtual Core::hresult UnregisterHdmiContentTypeUpdateNotification(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) override;
+        virtual Core::hresult RegisterAviContentTypeUpdateNotification(Exchange::IAVInput::IAviContentTypeUpdateNotification* notification) override;
+        virtual Core::hresult UnregisterAviContentTypeUpdateNotification(Exchange::IAVInput::IAviContentTypeUpdateNotification* notification) override;
 
         Core::hresult NumberOfInputs(uint32_t& numberOfInputs, bool& success) override;
         Core::hresult GetInputDevices(const string& typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices, bool& success);
@@ -198,7 +198,7 @@ namespace Plugin {
         std::list<Exchange::IAVInput::IInputStatusChangedNotification*> _inputStatusChangedNotifications;
         std::list<Exchange::IAVInput::IVideoStreamInfoUpdateNotification*> _videoStreamInfoUpdateNotifications;
         std::list<Exchange::IAVInput::IGameFeatureStatusUpdateNotification*> _gameFeatureStatusUpdateNotifications;
-        std::list<Exchange::IAVInput::IHdmiContentTypeUpdateNotification*> _hdmiContentTypeUpdateNotifications;
+        std::list<Exchange::IAVInput::IAviContentTypeUpdateNotification*> _aviContentTypeUpdateNotifications;
 
         int m_primVolume;
         int m_inputVolume; // Player Volume

@@ -395,17 +395,17 @@ namespace Plugin {
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::RegisterHdmiContentTypeUpdateNotification(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification)
+    Core::hresult AVInputImplementation::RegisterAviContentTypeUpdateNotification(Exchange::IAVInput::IAviContentTypeUpdateNotification* notification)
     {
-        Core::hresult errorCode = Register(_hdmiContentTypeUpdateNotifications, notification);
-        LOGINFO("IHdmiContentTypeUpdateNotification %p, errorCode: %u", notification, errorCode);
+        Core::hresult errorCode = Register(_aviContentTypeUpdateNotifications, notification);
+        LOGINFO("IAviContentTypeUpdateNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
-    Core::hresult AVInputImplementation::UnregisterHdmiContentTypeUpdateNotification(Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification)
+    Core::hresult AVInputImplementation::UnregisterAviContentTypeUpdateNotification(Exchange::IAVInput::IAviContentTypeUpdateNotification* notification)
     {
-        Core::hresult errorCode = Unregister(_hdmiContentTypeUpdateNotifications, notification);
-        LOGINFO("IHdmiContentTypeUpdateNotification %p, errorCode: %u", notification, errorCode);
+        Core::hresult errorCode = Unregister(_aviContentTypeUpdateNotifications, notification);
+        LOGINFO("IAviContentTypeUpdateNotification %p, errorCode: %u", notification, errorCode);
         return errorCode;
     }
 
@@ -508,10 +508,10 @@ namespace Plugin {
                 int id = std::get<0>(*tupleValue);
                 int aviContentType = std::get<1>(*tupleValue);
 
-                std::list<IHdmiContentTypeUpdateNotification*>::const_iterator index(_hdmiContentTypeUpdateNotifications.begin());
+                std::list<IAviContentTypeUpdateNotification*>::const_iterator index(_aviContentTypeUpdateNotifications.begin());
 
-                while (index != _hdmiContentTypeUpdateNotifications.end()) {
-                    (*index)->HdmiContentTypeUpdate(id, aviContentType);
+                while (index != _aviContentTypeUpdateNotifications.end()) {
+                    (*index)->AviContentTypeUpdate(id, aviContentType);
                     ++index;
                 }
             }
@@ -1368,7 +1368,7 @@ namespace Plugin {
        	     LOGWARN("Primary Volume greater than limit. Set to MAX_PRIM_VOL_LEVEL(100) !!!\n");
        	     m_primVolume = MAX_PRIM_VOL_LEVEL;
         }
-        
+
         if(m_inputVolume > DEFAULT_INPUT_VOL_LEVEL) {
                 LOGWARN("INPUT Volume greater than limit. Set to DEFAULT_INPUT_VOL_LEVEL(100) !!!\n");
                 m_inputVolume = DEFAULT_INPUT_VOL_LEVEL;

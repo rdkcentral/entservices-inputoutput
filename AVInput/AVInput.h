@@ -73,7 +73,7 @@ namespace Plugin {
                              public Exchange::IAVInput::IInputStatusChangedNotification,
                              public Exchange::IAVInput::IVideoStreamInfoUpdateNotification,
                              public Exchange::IAVInput::IGameFeatureStatusUpdateNotification,
-                             public Exchange::IAVInput::IHdmiContentTypeUpdateNotification {
+                             public Exchange::IAVInput::IAviContentTypeUpdateNotification {
 
         public:
         
@@ -100,7 +100,7 @@ namespace Plugin {
                 INTERFACE_ENTRY(Exchange::IAVInput::IInputStatusChangedNotification)
                 INTERFACE_ENTRY(Exchange::IAVInput::IVideoStreamInfoUpdateNotification)
                 INTERFACE_ENTRY(Exchange::IAVInput::IGameFeatureStatusUpdateNotification)
-                INTERFACE_ENTRY(Exchange::IAVInput::IHdmiContentTypeUpdateNotification)
+                INTERFACE_ENTRY(Exchange::IAVInput::IAviContentTypeUpdateNotification)
                 INTERFACE_ENTRY(RPC::IRemoteConnection::INotification)
             END_INTERFACE_MAP
 
@@ -141,10 +141,10 @@ namespace Plugin {
                 Exchange::JAVInput::Event::GameFeatureStatusUpdate(_parent, id, gameFeature, mode);
             }
 
-            void HdmiContentTypeUpdate(const int id, const int aviContentType) override
+            void AviContentTypeUpdate(const int id, const int aviContentType) override
             {
-                LOGINFO("HdmiContentTypeUpdate: id %d, contentType %d\n", id, aviContentType);
-                Exchange::JAVInput::Event::HdmiContentTypeUpdate(_parent, id, aviContentType);
+                LOGINFO("AviContentTypeUpdate: id %d, contentType %d\n", id, aviContentType);
+                Exchange::JAVInput::Event::AviContentTypeUpdate(_parent, id, aviContentType);
             }
 
         private:

@@ -92,7 +92,7 @@ namespace Plugin {
             _avInput->RegisterInputStatusChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
             _avInput->RegisterVideoStreamInfoUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
             _avInput->RegisterGameFeatureStatusUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
-            _avInput->RegisterHdmiContentTypeUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
+            _avInput->RegisterAviContentTypeUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IAviContentTypeUpdateNotification>());
 
             // Invoking Plugin API register to wpeframework
             Exchange::JAVInput::Register(*this, _avInput);
@@ -120,7 +120,7 @@ namespace Plugin {
             _avInput->UnregisterInputStatusChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
             _avInput->UnregisterVideoStreamInfoUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IVideoStreamInfoUpdateNotification>());
             _avInput->UnregisterGameFeatureStatusUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
-            _avInput->UnregisterHdmiContentTypeUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IHdmiContentTypeUpdateNotification>());
+            _avInput->UnregisterAviContentTypeUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IAviContentTypeUpdateNotification>());
 
             Exchange::JAVInput::Unregister(*this);
 

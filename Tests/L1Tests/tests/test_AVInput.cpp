@@ -865,7 +865,7 @@ protected:
     Exchange::IAVInput::IInputStatusChangedNotification*        InputStatusChangedNotification      = nullptr;
     Exchange::IAVInput::IVideoStreamInfoUpdateNotification*     VideoStreamInfoUpdateNotification   = nullptr;
     Exchange::IAVInput::IGameFeatureStatusUpdateNotification*   GameFeatureStatusUpdateNotification = nullptr;
-    Exchange::IAVInput::IHdmiContentTypeUpdateNotification*     HdmiContentTypeUpdateNotification   = nullptr;
+    Exchange::IAVInput::IAviContentTypeUpdateNotification*      AviContentTypeUpdateNotification    = nullptr;
 
     AVInputEvents()
         : AVInputDsTest()
@@ -907,10 +907,10 @@ protected:
             return Core::ERROR_NONE;
                 }));
 
-        ON_CALL(*p_avInputMock, RegisterHdmiContentTypeUpdateNotification(::testing::_))
+        ON_CALL(*p_avInputMock, RegisterAviContentTypeUpdateNotification(::testing::_))
             .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) {
-                    HdmiContentTypeUpdateNotification = notification;
+                [&](Exchange::IAVInput::IAviContentTypeUpdateNotification* notification) {
+                    AviContentTypeUpdateNotification = notification;
             return Core::ERROR_NONE;
                 }));
     }
@@ -1587,9 +1587,6 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
         printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM EXIT ***\n");
 }
 
-#endif
-// </pca>
-
 TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 {
     printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO ***\n");
@@ -1633,6 +1630,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 }
 
 // <pca> debug
+#endif
 #if 0
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate1_HDMI)
