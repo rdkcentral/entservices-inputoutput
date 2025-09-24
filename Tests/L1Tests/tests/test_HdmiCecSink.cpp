@@ -34,6 +34,10 @@
 #include "RfcApiMock.h"
 #include "ThunderPortability.h"
 #include "PowerManagerMock.h"
+#include "ManagerMock.h"
+#include "HostMock.h"
+#include "HdmiInputMock.h"
+
 
 using namespace WPEFramework;
 using ::testing::NiceMock;
@@ -67,6 +71,9 @@ namespace
 class HdmiCecSinkWOInitializeTest : public ::testing::Test {
 protected:
     IarmBusImplMock         *p_iarmBusImplMock = nullptr ;
+    ManagerImplMock         *p_managerImplMock = nullptr ;
+    HostImplMock            *p_hostImplMock = nullptr ;
+    HdmiInputImplMock       *p_hdmiInputImplMock = nullptr;
     ConnectionImplMock      *p_connectionImplMock = nullptr ;
     MessageEncoderMock      *p_messageEncoderMock = nullptr ;
     LibCCECImplMock         *p_libCCECImplMock = nullptr ;
@@ -87,6 +94,15 @@ protected:
     {
         p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
+
+        p_managerImplMock  = new NiceMock <ManagerImplMock>;
+        device::Manager::setImpl(p_managerImplMock);
+
+        p_hostImplMock      = new NiceMock <HostImplMock>;
+        device::Host::setImpl(p_hostImplMock);
+
+        p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
+        device::HdmiInput::setImpl(p_hdmiInputImplMock);
 
         p_libCCECImplMock  = new testing::NiceMock <LibCCECImplMock>;
         LibCCEC::setImpl(p_libCCECImplMock);
@@ -121,15 +137,9 @@ protected:
         ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
            .WillByDefault(::testing::ReturnRef(CECFrame::getInstance()));
 
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsHdmiEventHandler = handler;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                }));
+        EXPECT_CALL(*p_managerImplMock, Initialize())
+            .Times(::testing::AnyNumber())
+            .WillRepeatedly(::testing::Return());
 
         ON_CALL(*p_connectionImplMock, open())
             .WillByDefault(::testing::Return());
@@ -143,6 +153,24 @@ protected:
         {
             delete p_iarmBusImplMock;
             p_iarmBusImplMock = nullptr;
+        }
+        device::Manager::setImpl(nullptr);
+        if (p_managerImplMock != nullptr)
+        {
+            delete p_managerImplMock;
+            p_managerImplMock = nullptr;
+        }
+        device::Host::setImpl(nullptr);
+        if (p_hostImplMock != nullptr)
+        {
+            delete p_hostImplMock;
+            p_hostImplMock = nullptr;
+        }
+        device::HdmiInput::setImpl(nullptr);
+        if (p_hdmiInputImplMock != nullptr)
+        {
+            delete p_hdmiInputImplMock;
+            p_hdmiInputImplMock = nullptr;
         }
         LibCCEC::setImpl(nullptr);
         if (p_libCCECImplMock != nullptr)
@@ -211,29 +239,21 @@ protected:
 
     HdmiCecSinkDsTest(): HdmiCecSinkTest()
     {
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-            .WillByDefault(
-                [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                    if (strcmp(methodName, IARM_BUS_PWRMGR_API_GetPowerState) == 0) {
-                        auto* param = static_cast<IARM_Bus_PWRMgr_GetPowerState_Param_t*>(arg);
-                        param->curState  = IARM_BUS_PWRMGR_POWERSTATE_ON;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetNumberOfInputs) == 0) {
-                        auto* param = static_cast<dsHdmiInGetNumberOfInputsParam_t*>(arg);
-                        param->result = dsERR_NONE;
-                        param->numHdmiInputs = 3;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetStatus) == 0) {
-                        auto* param = static_cast<dsHdmiInGetStatusParam_t*>(arg);
-                        param->result = dsERR_NONE;
-                        param->status.isPortConnected[1] = 1;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsGetHDMIARCPortId) == 0) {
-                        auto* param = static_cast<dsGetHDMIARCPortIdParam_t*>(arg);
-                        param->portId = 1;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                });
+        EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
+            .WillRepeatedly(::testing::Return(3));
+
+        ON_CALL(*p_hdmiInputImplMock, isPortConnected(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [](int8_t port) {
+                    return port == 1? true : false;
+                }));
+
+        ON_CALL(*p_hdmiInputImplMock, getHDMIARCPortId(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [](int &portId) {
+                    portId = 1;
+                    return dsERR_NONE;
+                }));
 
         EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
         EXPECT_EQ(response, string("{\"success\":true}"));
@@ -459,15 +479,8 @@ TEST_F(HdmiCecSinkDsTest, sendKeyPressEvent)
 TEST_F(HdmiCecSinkInitializedEventDsTest, onHdmiOutputHDCPStatusEvent)
 {
 
-    ASSERT_TRUE(dsHdmiEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_connect.port =dsHDMI_IN_PORT_1;
-    eventData.data.hdmi_in_connect.isPortConnected = true;
-
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("client.events.onDevicesChanged"), message);
-
-    dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData , 0);
+    plugin->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_1, true);
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("client.events.onDevicesChanged"), message);
 
 }
