@@ -2170,7 +2170,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate1_COMPOSITE)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":720,\"height\":480,\"progressive\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":24000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"width\":720,\"height\":480,\"progressive\":false,\"frameRateN\":24000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -2204,7 +2204,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate2_COMPOSITE)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":720,\"height\":576,\"progressive\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":25000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"width\":720,\"height\":576,\"progressive\":false,\"frameRateN\":25000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -2237,7 +2237,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":720,\"height\":576,\"progressive\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":60000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"width\":720,\"height\":576,\"progressive\":false,\"frameRateN\":60000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
