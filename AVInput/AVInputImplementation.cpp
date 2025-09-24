@@ -268,7 +268,9 @@ namespace Plugin {
                     AVInputImplementation::_instance->AVInputVRRChange(hdmi_in_port, AVInputImplementation::_instance->m_currentVrrType, false);
                 }
             } else {
+                // <pca> debug: AVInputVRRChange called twice here potentially. </pca>
                 if (AVInputImplementation::_instance->m_currentVrrType != dsVRR_NONE) {
+                    printf("*** _DEBUG: AVInputImplementation::dsAVGameFeatureStatusEventHandler: Calling AVInputVRRChange twice!\n");
                     AVInputImplementation::_instance->AVInputVRRChange(hdmi_in_port, AVInputImplementation::_instance->m_currentVrrType, false);
                 }
                 AVInputImplementation::_instance->AVInputVRRChange(hdmi_in_port, new_vrrType, true);
