@@ -131,6 +131,7 @@ set_source_files_properties(
         tests/test_HdmiCec2.cpp
         tests/test_HdmiCecSource.cpp
         tests/test_HdmiCecSink.cpp
+        tests/test_AVInput.cpp
         PROPERTIES COMPILE_FLAGS "-fexceptions")
 
 include_directories(${TEST_INC})

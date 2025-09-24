@@ -1815,7 +1815,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate6_HDMI)
         printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate6_HDMI EXIT ***\n");
 }
 
-// <pca> debug
+// <pca> debug - Good until here (running AVInputEvents only)) </pca>
 #if 0
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate7_HDMI)
