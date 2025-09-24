@@ -564,13 +564,11 @@ namespace Plugin {
             return Core::ERROR_GENERAL;
         }
 
-        // <pca>
         if(plane != 0 && plane != 1 ){
             LOGERR("StartInput: Invalid paramater: plane: %d ", plane);
             successResult.success = false;
             return Core::ERROR_GENERAL;
         }
-        // </pca>
 
         try {
             switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
@@ -588,9 +586,7 @@ namespace Plugin {
                     return Core::ERROR_GENERAL;
                 }
             }
-            // <pca>
             planeType = plane;
-            // </pca>
         } catch(...) {
             successResult.success = false;
             return Core::ERROR_GENERAL;

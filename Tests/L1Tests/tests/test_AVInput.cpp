@@ -172,7 +172,7 @@ protected:
 };
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputTest, RegisteredMethods)
 {
@@ -259,7 +259,7 @@ protected:
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputDsTest, numberOfInputs)
 {
@@ -388,7 +388,7 @@ protected:
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputInit, getInputDevices)
 {
@@ -2261,7 +2261,6 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
 
 // <pca> debug
 #if 0
-// </pca>
 
 TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
 {
