@@ -1551,7 +1551,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
     Core::Event gameFeatureStatusUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
-        // <pca> debug
+        // <pca>
         .Times(1)
         .WillOnce(::testing::Invoke(
         // .Times(::testing::AtMost(2))
@@ -1560,7 +1560,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                // <pca> debug
+                // <pca>
                 EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM\",\"mode\":true}}");
                 // EXPECT_TRUE(
                 //     text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM\",\"mode\":true}}"
@@ -1596,7 +1596,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
     Core::Event gameFeatureStatusUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
-        // <pca> debug
+        // <pca>
         .Times(1)
         .WillOnce(::testing::Invoke(
         // .Times(::testing::AtMost(2))
@@ -1605,7 +1605,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                // <pca> debug
+                // <pca>
                 EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM-PRO\",\"mode\":true}}");
                 // EXPECT_TRUE(
                 //     text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM-PRO\",\"mode\":true}}"
@@ -2281,7 +2281,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
 
 // <pca> debug
 #endif
-#if 0
+#if 1
 
 TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
 {
