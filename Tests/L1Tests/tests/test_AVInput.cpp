@@ -1591,7 +1591,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
         .Times(1)
-        .WillOnce(::testing::Invoke(=-09876543
+        .WillOnce(::testing::Invoke(
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
