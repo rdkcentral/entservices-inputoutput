@@ -47,6 +47,13 @@ namespace Plugin {
         : _adminLock()
     {
         LOGINFO("Create AVInputImplementation Instance");
+
+        // <pca>
+        m_primVolume = DEFAULT_PRIM_VOL_LEVEL;
+        m_inputVolume = DEFAULT_INPUT_VOL_LEVEL;
+        m_currentVrrType = dsVRR_NONE;
+        // </pca>
+        
         AVInputImplementation::_instance = this;
         InitializeIARM();
     }
@@ -1347,6 +1354,27 @@ namespace Plugin {
 
     Core::hresult AVInputImplementation::SetMixerLevels(const int primaryVolume, const int inputVolume, SuccessResult& successResult)
     {
+        // <pca>
+        if( (primaryVolume >=0) && (inputVolume >=0) ) {
+                m_primVolume = primaryVolume;
+                m_inputVolume = inputVolume;
+        } else {
+            LOGERR("Invalid params\n");
+            successResult.success = false;
+            return Core::ERROR_GENERAL;
+        }
+
+        if(m_primVolume > MAX_PRIM_VOL_LEVEL) {
+       	     LOGWARN("Primary Volume greater than limit. Set to MAX_PRIM_VOL_LEVEL(100) !!!\n");
+       	     m_primVolume = MAX_PRIM_VOL_LEVEL;
+        }
+        
+        if(m_inputVolume > DEFAULT_INPUT_VOL_LEVEL) {
+                LOGWARN("INPUT Volume greater than limit. Set to DEFAULT_INPUT_VOL_LEVEL(100) !!!\n");
+                m_inputVolume = DEFAULT_INPUT_VOL_LEVEL;
+        }
+        // </pca>
+
         try {
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY, primaryVolume);
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM, inputVolume);

@@ -1311,8 +1311,6 @@ TEST_F(AVInputEvents, onSignalChangedDefaultCOMPOSITE)
         printf("*** _DEBUG: AVInputEvents: onSignalChangedDefaultCOMPOSITE EXIT ***\n");
 }
 
-// <pca> debug // Tests completed up until this point at least // </pca>
-
 TEST_F(AVInputEvents, onInputStatusChangeOn_HDMI)
 {
     printf("*** _DEBUG: AVInputEvents: onInputStatusChangeOn_HDMI ***\n");
@@ -1554,20 +1552,20 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
         // <pca> debug
-        //.Times(1)
-        //.WillOnce(::testing::Invoke(
-        .Times(::testing::AtMost(2))
-        .WillRepeatedly(::testing::Invoke(
+        .Times(1)
+        .WillOnce(::testing::Invoke(
+        // .Times(::testing::AtMost(2))
+        // .WillRepeatedly(::testing::Invoke(
         // </pca>
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
                 // <pca> debug
-                //EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM\",\"mode\":true}}");
-                EXPECT_TRUE(
-                    text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM\",\"mode\":true}}"
-                    || text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"\",\"mode\":false}}"
-                );
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM\",\"mode\":true}}");
+                // EXPECT_TRUE(
+                //     text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM\",\"mode\":true}}"
+                //     || text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"\",\"mode\":false}}"
+                // );
                 // </pca>
 
                 gameFeatureStatusUpdate.SetEvent();
@@ -1592,8 +1590,6 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
 #endif
 // </pca>
 
-// <pca> debug - hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO enabled vvvvvvv </pca>
-
 TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 {
     printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO ***\n");
@@ -1601,20 +1597,20 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
         // <pca> debug
-        //.Times(1)
-        //.WillOnce(::testing::Invoke(
-        .Times(::testing::AtMost(2))
-        .WillRepeatedly(::testing::Invoke(
+        .Times(1)
+        .WillOnce(::testing::Invoke(
+        // .Times(::testing::AtMost(2))
+        // .WillRepeatedly(::testing::Invoke(
         // </pca>
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                // <pca>
-                //EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM-PRO\",\"mode\":true}}");
-                EXPECT_TRUE(
-                    text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM-PRO\",\"mode\":true}}"
-                    || text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"\",\"mode\":false}}"
-                );
+                // <pca> debug
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM-PRO\",\"mode\":true}}");
+                // EXPECT_TRUE(
+                //     text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"VRR-FREESYNC-PREMIUM-PRO\",\"mode\":true}}"
+                //     || text == "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.gameFeatureStatusUpdate\",\"params\":{\"id\":0,\"gameFeature\":\"\",\"mode\":false}}"
+                // );
                 // </pca>
 
                 gameFeatureStatusUpdate.SetEvent();
