@@ -46,26 +46,12 @@ protected:
 
     NiceMock<ServiceMock> service;
     NiceMock<COMLinkMock> comLinkMock;
-    // <pca> debug 3
     Core::JSONRPC::Handler& handler;
-    // </pca>
     Core::ProxyType<WorkerPoolImplementation> workerPool;
-
-    
-    // <pca> debug 3
-    //Core::JSONRPC::Handler& handler;
-    //DECL_CORE_JSONRPC_CONX connection;
-    // </pca>
     string response;
-
     AVInputMock* p_avInputMock = nullptr;
-
-    // <pca> debug 3
     DECL_CORE_JSONRPC_CONX connection;
-    // </pca>
-
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
-
     PLUGINHOST_DISPATCHER* dispatcher;
 
     IARM_EventHandler_t dsAVGameFeatureStatusEventHandler   = nullptr;
@@ -183,7 +169,7 @@ protected:
 };
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputTest, RegisteredMethods)
 {
@@ -270,7 +256,7 @@ protected:
 // </pca>
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputDsTest, numberOfInputs)
 {
@@ -935,6 +921,9 @@ protected:
     }
 };
 
+// <pca> debug
+#if 0
+
 TEST_F(AVInputEvents, onDevicesChangedHDMI)
 {
     printf("*** _DEBUG: AVInputEvents: onDevicesChangedHDMI ***\n");
@@ -1590,6 +1579,11 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
         printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM EXIT ***\n");
 }
 
+#endif
+// </pca>
+
+// <pca> debug - hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO enabled vvvvvvv </pca>
+
 TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 {
     printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO ***\n");
@@ -1621,6 +1615,9 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
         printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO EXIT ***\n");
 }
+
+// <pca> debug
+#if 0
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate1_HDMI)
 {
@@ -2271,6 +2268,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
 }
 
 // <pca> debug
+#endif
 #if 0
 
 TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
