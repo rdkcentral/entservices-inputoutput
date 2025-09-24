@@ -2158,8 +2158,6 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_HDMI)
 }
 
 // <pca> Good to here </pca>
-#if 1
-
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate1_COMPOSITE)
 {
@@ -2260,6 +2258,10 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
         printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdateDefault_COMPOSITE EXIT ***\n");
 }
+
+// <pca> debug
+#if 0
+// </pca>
 
 TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
 {
