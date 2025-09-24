@@ -850,9 +850,6 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
 #endif
 // </pca>
 
-// <pca> debug
-#if 1
-
 TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 {
     Core::Event onDevicesChanged(false, true);
@@ -882,6 +879,9 @@ TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 }
+
+// <pca> debug
+#if 0
 
 TEST_F(AVInputInit, onSignalChangedStableHDMI)
 {
