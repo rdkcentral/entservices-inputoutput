@@ -922,8 +922,6 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
 #endif
 // </pca>
 
-// <pca> debug
-#if 1
 TEST_F(AVInputInit, onDevicesChangedHDMI)
 {
     printf("*** _DEBUG: AVInputInit: onDevicesChangedHDMI ***\n");
@@ -954,8 +952,6 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 }
-#endif
-// </pca>
 
 TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 {
@@ -989,7 +985,7 @@ TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 }
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputInit, onSignalChangedStableHDMI)
 {
