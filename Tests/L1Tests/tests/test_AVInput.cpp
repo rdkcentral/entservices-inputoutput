@@ -69,10 +69,7 @@ protected:
         , handler(*(plugin))
         , INIT_CONX(1, 0)
         , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
-          // <pca> debug
-          //2, Core::Thread::DefaultStackSize(), 16))
-          4, Core::Thread::DefaultStackSize(), 64))
-          // </pca>
+          2, Core::Thread::DefaultStackSize(), 16))
     {
         p_avInputMock  = new NiceMock<AVInputMock>;
 
@@ -167,15 +164,15 @@ protected:
             p_iarmBusImplMock = nullptr;
         }
 
-        // <pca>
         if (p_avInputMock != nullptr) {
             delete p_avInputMock;
             p_avInputMock = nullptr;
         }
-        // </pca>
     }
 };
 
+// <pca> debug
+#if 0
 
 TEST_F(AVInputTest, RegisteredMethods)
 {
@@ -204,9 +201,6 @@ TEST_F(AVInputTest, RegisteredMethods)
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getGameFeatureStatus")));
     printf("*** _DEBUG: AVInputTest: RegisteredMethods: exit ***\n");
 }
-
-// <pca> debug
-#if 1
 
 TEST_F(AVInputTest, contentProtected)
 {
@@ -264,6 +258,8 @@ protected:
 #endif
 // </pca>
 
+// <pca> debug
+#if 0
 
 TEST_F(AVInputDsTest, numberOfInputs)
 {
@@ -275,9 +271,6 @@ TEST_F(AVInputDsTest, numberOfInputs)
     EXPECT_EQ(response, string("{\"numberOfInputs\":1,\"success\":true}"));
     printf("*** _DEBUG: AVInputDsTest: numberOfInputs: exit ***\n");
 }
-
-// <pca> debug
-#if 1
 
 TEST_F(AVInputDsTest, currentVideoMode)
 {
@@ -395,7 +388,7 @@ protected:
 // </pca>
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputInit, getInputDevices)
 {
@@ -408,10 +401,6 @@ TEST_F(AVInputInit, getInputDevices)
     EXPECT_EQ(response, string("{\"devices\":[{\"id\":0,\"connected\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\"},{\"id\":0,\"connected\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\"}],\"success\":true}"));
     printf("*** _DEBUG: AVInputInit: getInputDevices: exit ***\n");
 }
-
-// <pca> debug
-#endif
-#if 1
 
 TEST_F(AVInputInit, getInputDevices_HDMI)
 {
