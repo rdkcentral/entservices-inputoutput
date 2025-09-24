@@ -69,7 +69,10 @@ protected:
         , handler(*(plugin))
         , INIT_CONX(1, 0)
         , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
-          2, Core::Thread::DefaultStackSize(), 16))
+          // <pca> debug
+          //2, Core::Thread::DefaultStackSize(), 16))
+          1, Core::Thread::DefaultStackSize(), 32))
+          // </pca>
     {
         p_avInputMock  = new NiceMock<AVInputMock>;
 
