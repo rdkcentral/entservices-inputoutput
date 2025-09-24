@@ -168,9 +168,6 @@ protected:
     }
 };
 
-// <pca> debug
-#if 1
-
 TEST_F(AVInputTest, RegisteredMethods)
 {
     printf("*** _DEBUG: AVInputTest: RegisteredMethods ***\n");
@@ -207,11 +204,6 @@ TEST_F(AVInputTest, contentProtected)
     printf("*** _DEBUG: AVInputTest: contentProtected: exit ***\n");
 }
 
-#endif
-// </pca>
-
-// <pca> debug
-#if 1
 class AVInputDsTest : public AVInputTest {
 protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
@@ -252,11 +244,6 @@ protected:
         }
     }
 };
-#endif
-// </pca>
-
-// <pca> debug
-#if 1
 
 TEST_F(AVInputDsTest, numberOfInputs)
 {
@@ -360,11 +347,6 @@ TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
     printf("*** _DEBUG: AVInputDsTest: getVRRFrameRate_ErrorCase: exit ***\n");
 }
 
-#endif
-// </pca>
-
-// <pca> debug
-#if 1
 class AVInputInit : public AVInputDsTest {
 protected:
     NiceMock<FactoriesImplementation> factoriesImplementation;
@@ -381,11 +363,6 @@ protected:
         PluginHost::IFactories::Assign(nullptr);
     }
 };
-#endif
-// </pca>
-
-// <pca> debug
-#if 1
 
 TEST_F(AVInputInit, getInputDevices)
 {
@@ -852,9 +829,6 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
     printf("*** _DEBUG: AVInputInit: getGameFeatureStatus_InvalidParameters: exit ***\n");
 }
 
-#endif
-// </pca>
-
 class AVInputEvents : public AVInputDsTest {
 protected:
     NiceMock<FactoriesImplementation> factoriesImplementation;
@@ -920,9 +894,6 @@ protected:
         PluginHost::IFactories::Assign(nullptr);
     }
 };
-
-// <pca> debug
-#if 1
 
 TEST_F(AVInputEvents, onDevicesChangedHDMI)
 {
@@ -1609,10 +1580,6 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
         printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO EXIT ***\n");
 }
 
-// <pca> debug
-#endif
-#if 1
-
 TEST_F(AVInputEvents, videoStreamInfoUpdate1_HDMI)
 {
     printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate1_HDMI ***\n");
@@ -2257,10 +2224,6 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
         printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdateDefault_COMPOSITE EXIT ***\n");
 }
 
-// <pca> debug
-#endif
-#if 1
-
 TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
 {
     printf("*** _DEBUG: AVInputEvents: aviContentTypeUpdate_HDMI ***\n");
@@ -2292,6 +2255,3 @@ TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);
         printf("*** _DEBUG: AVInputEvents: aviContentTypeUpdate_HDMI EXIT ***\n");
 }
-
-#endif
-// </pca>
