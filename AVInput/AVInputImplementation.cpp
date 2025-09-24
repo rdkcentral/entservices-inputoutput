@@ -576,9 +576,6 @@ namespace Plugin {
             switch(AVInputUtils::getTypeOfInput(typeOfInput)) {
                 case INPUT_TYPE_INT_HDMI: {
                     device::HdmiInput::getInstance().selectPort(id, requestAudioMix, plane, topMost);
-                    // <pca>
-                    planeType = plane;
-                    // </pca>
                     break;
                 }
                 case INPUT_TYPE_INT_COMPOSITE: {
@@ -591,6 +588,9 @@ namespace Plugin {
                     return Core::ERROR_GENERAL;
                 }
             }
+            // <pca>
+            planeType = plane;
+            // </pca>
         } catch(...) {
             successResult.success = false;
             return Core::ERROR_GENERAL;

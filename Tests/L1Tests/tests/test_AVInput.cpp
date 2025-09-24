@@ -1620,7 +1620,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":1920,\"height\":1080,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":60000,\"frameRateD\":1001}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":1920,\"height\":1080,\"progressive\":false,\"frameRateN\":60000,\"frameRateD\":1001}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1654,7 +1654,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate2_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":720,\"height\":480,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":24000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":720,\"height\":480,\"progressive\":false,\"frameRateN\":24000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1688,7 +1688,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate3_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":720,\"height\":576,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":25000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":720,\"height\":576,\"progressive\":false,\"frameRateN\":25000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1722,7 +1722,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate4_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":3840,\"height\":2160,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":30000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":3840,\"height\":2160,\"progressive\":false,\"frameRateN\":30000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1756,7 +1756,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate5_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":4096,\"height\":2160,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":50000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":4096,\"height\":2160,\"progressive\":false,\"frameRateN\":50000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1790,7 +1790,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate6_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":4096,\"height\":2160,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":60000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":4096,\"height\":2160,\"progressive\":false,\"frameRateN\":60000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
