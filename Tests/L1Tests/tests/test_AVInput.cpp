@@ -46,13 +46,24 @@ protected:
 
     NiceMock<ServiceMock> service;
     NiceMock<COMLinkMock> comLinkMock;
+    // <pca> debug 3
+    Core::JSONRPC::Handler& handler;
+    // </pca>
     Core::ProxyType<WorkerPoolImplementation> workerPool;
 
-    Core::JSONRPC::Handler& handler;
-    DECL_CORE_JSONRPC_CONX connection;
+    
+    // <pca> debug 3
+    //Core::JSONRPC::Handler& handler;
+    //DECL_CORE_JSONRPC_CONX connection;
+    // </pca>
     string response;
 
     AVInputMock* p_avInputMock = nullptr;
+
+    // <pca> debug 3
+    DECL_CORE_JSONRPC_CONX connection;
+    // </pca>
+
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
 
     PLUGINHOST_DISPATCHER* dispatcher;
