@@ -2157,8 +2157,8 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_HDMI)
         printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdateDefault_HDMI EXIT ***\n");
 }
 
-// <pca> debug
-#if 0
+// <pca> Good to here </pca>
+#if 1
 
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate1_COMPOSITE)
