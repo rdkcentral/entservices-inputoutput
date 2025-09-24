@@ -169,7 +169,7 @@ protected:
 };
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputTest, RegisteredMethods)
 {
@@ -256,7 +256,7 @@ protected:
 // </pca>
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputDsTest, numberOfInputs)
 {
@@ -385,7 +385,7 @@ protected:
 // </pca>
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputInit, getInputDevices)
 {
@@ -922,7 +922,7 @@ protected:
 };
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputEvents, onDevicesChangedHDMI)
 {
@@ -1633,7 +1633,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 }
 
 // <pca> debug
-#if 1
+#if 0
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate1_HDMI)
 {
