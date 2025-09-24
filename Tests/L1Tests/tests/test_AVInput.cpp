@@ -169,7 +169,7 @@ protected:
 };
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputTest, RegisteredMethods)
 {
@@ -256,7 +256,7 @@ protected:
 // </pca>
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputDsTest, numberOfInputs)
 {
@@ -922,7 +922,7 @@ protected:
 };
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputEvents, onDevicesChangedHDMI)
 {
@@ -1591,7 +1591,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
         .Times(1)
-        .WillOnce(::testing::Invoke(
+        .WillOnce(::testing::Invoke(=-09876543
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
@@ -1617,7 +1617,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 }
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate1_HDMI)
 {
@@ -1822,8 +1822,6 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate6_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
         printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate6_HDMI EXIT ***\n");
 }
-
-// <pca> debug - Good until here (running AVInputEvents only)) </pca>
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate7_HDMI)
 {
@@ -2164,8 +2162,6 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
         printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdateDefault_HDMI EXIT ***\n");
 }
-
-// <pca> Good to here </pca>
 
 TEST_F(AVInputEvents, videoStreamInfoUpdate1_COMPOSITE)
 {
