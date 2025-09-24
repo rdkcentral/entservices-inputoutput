@@ -951,6 +951,7 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
+    printf("*** _DEBUG: AVInputInit: onDevicesChangedHDMI: exit ***\n");
 }
 
 TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
@@ -982,10 +983,8 @@ TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
+    printf("*** _DEBUG: AVInputInit: onDevicesChangedCOMPOSITE: exit ***\n");
 }
-
-// <pca> debug
-#if 0
 
 TEST_F(AVInputInit, onSignalChangedStableHDMI)
 {
@@ -1017,6 +1016,7 @@ TEST_F(AVInputInit, onSignalChangedStableHDMI)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
+    printf("*** _DEBUG: AVInputInit: onSignalChangedStableHDMI: exit ***\n");
 }
 
 TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
@@ -1051,6 +1051,9 @@ TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
         printf("*** _DEBUG: AVInputInit: onSignalChangedNoSignalHDMI EXIT ***\n");
 }
+
+// <pca> debug
+#if 0
 
 TEST_F(AVInputInit, onSignalChangedUnstableHDMI)
 {
