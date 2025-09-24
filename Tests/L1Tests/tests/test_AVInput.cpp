@@ -2260,7 +2260,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
 }
 
 // <pca> debug
-#if 0
+#if 1
 // </pca>
 
 TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
