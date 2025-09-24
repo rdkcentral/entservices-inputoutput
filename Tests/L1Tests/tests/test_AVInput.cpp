@@ -881,7 +881,7 @@ TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 }
 
 // <pca> debug
-#if 0
+#if 1
 
 TEST_F(AVInputInit, onSignalChangedStableHDMI)
 {
