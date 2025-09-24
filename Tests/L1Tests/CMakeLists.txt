@@ -100,24 +100,23 @@ macro(add_plugin_test plugin_name test_files)
 
     add_plugin_test_ex(${plugin_opt} "${test_files}" "../../${plugin_name}" "${NAMESPACE}${plugin_name}")
 endmacro()
-# <pca> debug 3
-# # PLUGIN_HDCPPROFILE
-# set (HDCPPROFILE_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdcpProfile ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
-# set (HDCPPROFILE_LIBS ${NAMESPACE}HdcpProfile ${NAMESPACE}HdcpProfileImplementation)
-# add_plugin_test_ex(PLUGIN_HDCPPROFILE tests/test_HdcpProfile.cpp "${HDCPPROFILE_INC}" "${HDCPPROFILE_LIBS}")
 
-# # PLUGIN_HDMICEC2
-# add_plugin_test_ex(PLUGIN_HDMICEC2 tests/test_HdmiCec2.cpp "../../HdmiCec_2" "${NAMESPACE}HdmiCec_2")
+# PLUGIN_HDCPPROFILE
+set (HDCPPROFILE_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdcpProfile ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
+set (HDCPPROFILE_LIBS ${NAMESPACE}HdcpProfile ${NAMESPACE}HdcpProfileImplementation)
+add_plugin_test_ex(PLUGIN_HDCPPROFILE tests/test_HdcpProfile.cpp "${HDCPPROFILE_INC}" "${HDCPPROFILE_LIBS}")
 
-# # PLUGIN_HDMICECSINK
-# set (HDMICECSINK_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdmiCecSink ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
-# add_plugin_test_ex(PLUGIN_HDMICECSINK tests/test_HdmiCecSink.cpp "${HDMICECSINK_INC}" "${NAMESPACE}HdmiCecSink")
+# PLUGIN_HDMICEC2
+add_plugin_test_ex(PLUGIN_HDMICEC2 tests/test_HdmiCec2.cpp "../../HdmiCec_2" "${NAMESPACE}HdmiCec_2")
 
-# # PLUGIN_HDMICECSOURCE
-# set (HDMICECSOURCE_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdmiCecSource ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
-# set (HDMICECSOURCE_LIBS ${NAMESPACE}HdmiCecSource ${NAMESPACE}HdmiCecSourceImplementation)
-# add_plugin_test_ex(PLUGIN_HDMICECSOURCE tests/test_HdmiCecSource.cpp "${HDMICECSOURCE_INC}" "${HDMICECSOURCE_LIBS}")
-# </pca>
+# PLUGIN_HDMICECSINK
+set (HDMICECSINK_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdmiCecSink ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
+add_plugin_test_ex(PLUGIN_HDMICECSINK tests/test_HdmiCecSink.cpp "${HDMICECSINK_INC}" "${NAMESPACE}HdmiCecSink")
+
+# PLUGIN_HDMICECSOURCE
+set (HDMICECSOURCE_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/HdmiCecSource ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
+set (HDMICECSOURCE_LIBS ${NAMESPACE}HdmiCecSource ${NAMESPACE}HdmiCecSourceImplementation)
+add_plugin_test_ex(PLUGIN_HDMICECSOURCE tests/test_HdmiCecSource.cpp "${HDMICECSOURCE_INC}" "${HDMICECSOURCE_LIBS}")
 
 # PLUGIN_AVINPUT
 set (AVINPUT_INC ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/AVInput ${CMAKE_SOURCE_DIR}/../entservices-inputoutput/helpers)
