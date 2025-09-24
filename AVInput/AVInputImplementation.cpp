@@ -402,6 +402,7 @@ namespace Plugin {
 
     void AVInputImplementation::dispatchEvent(Event event, const ParamsType params)
     {
+        printf("*** _DEBUG: AVInputImplementation::dispatchEvent: event: %d\n", event);
         Core::IWorkerPool::Instance().Submit(Job::Create(this, event, params));
     }
 
@@ -834,6 +835,7 @@ namespace Plugin {
             return;
         }
 
+        printf("*** _DEBUG: AVInputImplementation::AVInputHotplug: Calling dispatchEvent\n");
         ParamsType params = devices;
         dispatchEvent(ON_AVINPUT_DEVICES_CHANGED, params);
     }
@@ -884,6 +886,7 @@ namespace Plugin {
         }
 
         ParamsType params = std::make_tuple(port, locator.str(), signalStatusStr);
+        printf("*** _DEBUG: AVInputImplementation::AVInputSignalChange: Calling dispatchEvent\n");
         dispatchEvent(ON_AVINPUT_SIGNAL_CHANGED, params);
     }
 
@@ -909,6 +912,7 @@ namespace Plugin {
 
         string status = isPresented ? "started" : "stopped";
         ParamsType params = std::make_tuple(port, locator.str(), status, planeType);
+        printf("*** _DEBUG: AVInputImplementation::AVInputStatusChange: Calling dispatchEvent\n");
         dispatchEvent(ON_AVINPUT_STATUS_CHANGED, params);
     }
 
@@ -1076,6 +1080,7 @@ namespace Plugin {
         }
 
         ParamsType params = std::make_tuple(port, locator.str(), width, height, progressive, frameRateN, frameRateD);
+        printf("*** _DEBUG: AVInputImplementation::AVInputVideoModeUpdate: Calling dispatchEvent\n");
         dispatchEvent(ON_AVINPUT_VIDEO_STREAM_INFO_UPDATE, params);
     }
 
@@ -1083,12 +1088,14 @@ namespace Plugin {
     void AVInputImplementation::hdmiInputAviContentTypeChange(int port, int content_type)
     {
         ParamsType params = std::make_tuple(port, content_type);
+        printf("*** _DEBUG: AVInputImplementation::hdmiInputAviContentTypeChange: Calling dispatchEvent\n");
         dispatchEvent(ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE, params);
     }
 
     void AVInputImplementation::AVInputALLMChange(int port, bool allm_mode)
     {
         ParamsType params = std::make_tuple(port, STR_ALLM, allm_mode);
+        printf("*** _DEBUG: AVInputImplementation::AVInputALLMChange: Calling dispatchEvent\n");
         dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
     }
 
@@ -1114,6 +1121,7 @@ namespace Plugin {
         }
 
         ParamsType params = std::make_tuple(port, gameFeature, vrr_mode);
+        printf("*** _DEBUG: AVInputImplementation::AVInputVRRChange: Calling dispatchEvent\n");
         dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
     }
 
