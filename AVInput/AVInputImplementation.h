@@ -42,8 +42,12 @@
 
 #include "AVInputUtils.h"
 
-#define DEFAULT_PRIM_VOL_LEVEL 25
-#define MAX_PRIM_VOL_LEVEL 100
+#define INPUT_TYPE_ALL          "ALL"
+#define INPUT_TYPE_HDMI         "HDMI"
+#define INPUT_TYPE_COMPOSITE    "COMPOSITE"
+
+#define DEFAULT_PRIM_VOL_LEVEL  25
+#define MAX_PRIM_VOL_LEVEL      100
 #define DEFAULT_INPUT_VOL_LEVEL 100
 
 using ParamsType = boost::variant<
