@@ -377,70 +377,14 @@ protected:
     NiceMock<FactoriesImplementation> factoriesImplementation;
     Core::JSONRPC::Message message;
 
-    Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
-    Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
-    Exchange::IAVInput::IInputStatusChangedNotification*        InputStatusChangedNotification      = nullptr;
-    Exchange::IAVInput::IVideoStreamInfoUpdateNotification*     VideoStreamInfoUpdateNotification   = nullptr;
-    Exchange::IAVInput::IGameFeatureStatusUpdateNotification*   GameFeatureStatusUpdateNotification = nullptr;
-    Exchange::IAVInput::IHdmiContentTypeUpdateNotification*     HdmiContentTypeUpdateNotification   = nullptr;
-
     AVInputInit()
         : AVInputDsTest()
     {
         PluginHost::IFactories::Assign(&factoriesImplementation);
-
-        ON_CALL(*p_avInputMock, RegisterDevicesChangedNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IDevicesChangedNotification* notification) {
-                    DevicesChangedNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterSignalChangedNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::ISignalChangedNotification* notification) {
-                    SignalChangedNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterInputStatusChangedNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IInputStatusChangedNotification* notification) {
-                    InputStatusChangedNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterVideoStreamInfoUpdateNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) {
-                    VideoStreamInfoUpdateNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterGameFeatureStatusUpdateNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) {
-                    GameFeatureStatusUpdateNotification = notification;
-            return Core::ERROR_NONE;
-                }));
-
-        ON_CALL(*p_avInputMock, RegisterHdmiContentTypeUpdateNotification(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) {
-                    HdmiContentTypeUpdateNotification = notification;
-            return Core::ERROR_NONE;
-                }));
     }
 
     virtual ~AVInputInit() override
     {
-        // <pca>
-        // if (p_avInputMock != nullptr) {
-        //     delete p_avInputMock;
-        //     p_avInputMock = nullptr;
-        // }
-        // </pca>
-
         PluginHost::IFactories::Assign(nullptr);
     }
 };
@@ -922,9 +866,75 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
 #endif
 // </pca>
 
-TEST_F(AVInputInit, onDevicesChangedHDMI)
+class AVInputEvents : public AVInputDsTest {
+protected:
+    NiceMock<FactoriesImplementation> factoriesImplementation;
+    Core::JSONRPC::Message message;
+
+    Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
+    Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
+    Exchange::IAVInput::IInputStatusChangedNotification*        InputStatusChangedNotification      = nullptr;
+    Exchange::IAVInput::IVideoStreamInfoUpdateNotification*     VideoStreamInfoUpdateNotification   = nullptr;
+    Exchange::IAVInput::IGameFeatureStatusUpdateNotification*   GameFeatureStatusUpdateNotification = nullptr;
+    Exchange::IAVInput::IHdmiContentTypeUpdateNotification*     HdmiContentTypeUpdateNotification   = nullptr;
+
+    AVInputEvents()
+        : AVInputDsTest()
+    {
+        PluginHost::IFactories::Assign(&factoriesImplementation);
+
+        ON_CALL(*p_avInputMock, RegisterDevicesChangedNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IDevicesChangedNotification* notification) {
+                    DevicesChangedNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+
+        ON_CALL(*p_avInputMock, RegisterSignalChangedNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::ISignalChangedNotification* notification) {
+                    SignalChangedNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+
+        ON_CALL(*p_avInputMock, RegisterInputStatusChangedNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IInputStatusChangedNotification* notification) {
+                    InputStatusChangedNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+
+        ON_CALL(*p_avInputMock, RegisterVideoStreamInfoUpdateNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) {
+                    VideoStreamInfoUpdateNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+
+        ON_CALL(*p_avInputMock, RegisterGameFeatureStatusUpdateNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) {
+                    GameFeatureStatusUpdateNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+
+        ON_CALL(*p_avInputMock, RegisterHdmiContentTypeUpdateNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IHdmiContentTypeUpdateNotification* notification) {
+                    HdmiContentTypeUpdateNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+    }
+
+    virtual ~AVInputEvents() override
+    {
+        PluginHost::IFactories::Assign(nullptr);
+    }
+};
+
+TEST_F(AVInputEvents, onDevicesChangedHDMI)
 {
-    printf("*** _DEBUG: AVInputInit: onDevicesChangedHDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: onDevicesChangedHDMI ***\n");
     Core::Event onDevicesChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -951,12 +961,12 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
-    printf("*** _DEBUG: AVInputInit: onDevicesChangedHDMI: exit ***\n");
+    printf("*** _DEBUG: AVInputEvents: onDevicesChangedHDMI: exit ***\n");
 }
 
-TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
+TEST_F(AVInputEvents, onDevicesChangedCOMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: onDevicesChangedCOMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: onDevicesChangedCOMPOSITE ***\n");
     Core::Event onDevicesChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -983,12 +993,12 @@ TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
-    printf("*** _DEBUG: AVInputInit: onDevicesChangedCOMPOSITE: exit ***\n");
+    printf("*** _DEBUG: AVInputEvents: onDevicesChangedCOMPOSITE: exit ***\n");
 }
 
-TEST_F(AVInputInit, onSignalChangedStableHDMI)
+TEST_F(AVInputEvents, onSignalChangedStableHDMI)
 {
-    printf("*** _DEBUG: AVInputInit: onSignalChangedStableHDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedStableHDMI ***\n");
     Core::Event onSignalChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1016,12 +1026,12 @@ TEST_F(AVInputInit, onSignalChangedStableHDMI)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    printf("*** _DEBUG: AVInputInit: onSignalChangedStableHDMI: exit ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedStableHDMI: exit ***\n");
 }
 
-TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
+TEST_F(AVInputEvents, onSignalChangedNoSignalHDMI)
 {
-    printf("*** _DEBUG: AVInputInit: onSignalChangedNoSignalHDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedNoSignalHDMI ***\n");
     Core::Event onSignalChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1049,12 +1059,12 @@ TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onSignalChangedNoSignalHDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onSignalChangedNoSignalHDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onSignalChangedUnstableHDMI)
+TEST_F(AVInputEvents, onSignalChangedUnstableHDMI)
 {
-    printf("*** _DEBUG: AVInputInit: onSignalChangedUnstableHDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedUnstableHDMI ***\n");
     Core::Event onSignalChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1082,12 +1092,12 @@ TEST_F(AVInputInit, onSignalChangedUnstableHDMI)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onSignalChangedUnstableHDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onSignalChangedUnstableHDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onSignalChangedNotSupportedHDMI)
+TEST_F(AVInputEvents, onSignalChangedNotSupportedHDMI)
 {
-    printf("*** _DEBUG: AVInputInit: onSignalChangedNotSupportedHDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedNotSupportedHDMI ***\n");
     Core::Event onSignalChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1114,12 +1124,12 @@ TEST_F(AVInputInit, onSignalChangedNotSupportedHDMI)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onSignalChangedNotSupportedHDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onSignalChangedNotSupportedHDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onSignalChangedDefaultHDMI)
+TEST_F(AVInputEvents, onSignalChangedDefaultHDMI)
 {
-    printf("*** _DEBUG: AVInputInit: onSignalChangedDefaultHDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedDefaultHDMI ***\n");
     Core::Event onSignalChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1146,12 +1156,12 @@ TEST_F(AVInputInit, onSignalChangedDefaultHDMI)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onSignalChangedDefaultHDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onSignalChangedDefaultHDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onSignalChangedStableCOMPOSITE)
+TEST_F(AVInputEvents, onSignalChangedStableCOMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: onSignalChangedStableCOMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedStableCOMPOSITE ***\n");
     Core::Event onSignalChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1178,12 +1188,12 @@ TEST_F(AVInputInit, onSignalChangedStableCOMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onSignalChangedStableCOMPOSITE EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onSignalChangedStableCOMPOSITE EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onSignalChangedNoSignalCOMPOSITE)
+TEST_F(AVInputEvents, onSignalChangedNoSignalCOMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: onSignalChangedNoSignalCOMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedNoSignalCOMPOSITE ***\n");
     Core::Event onSignalChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1210,12 +1220,12 @@ TEST_F(AVInputInit, onSignalChangedNoSignalCOMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onSignalChangedNoSignalCOMPOSITE EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onSignalChangedNoSignalCOMPOSITE EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onSignalChangedUnstableCOMPOSITE)
+TEST_F(AVInputEvents, onSignalChangedUnstableCOMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: onSignalChangedUnstableCOMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedUnstableCOMPOSITE ***\n");
     Core::Event onSignalChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1242,12 +1252,12 @@ TEST_F(AVInputInit, onSignalChangedUnstableCOMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onSignalChangedUnstableCOMPOSITE EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onSignalChangedUnstableCOMPOSITE EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onSignalChangedNotSupportedCOMPOSITE)
+TEST_F(AVInputEvents, onSignalChangedNotSupportedCOMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: onSignalChangedNotSupportedCOMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedNotSupportedCOMPOSITE ***\n");
     Core::Event onSignalChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1274,12 +1284,12 @@ TEST_F(AVInputInit, onSignalChangedNotSupportedCOMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onSignalChangedNotSupportedCOMPOSITE EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onSignalChangedNotSupportedCOMPOSITE EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onSignalChangedDefaultCOMPOSITE)
+TEST_F(AVInputEvents, onSignalChangedDefaultCOMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: onSignalChangedDefaultCOMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: onSignalChangedDefaultCOMPOSITE ***\n");
     Core::Event onSignalChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1306,14 +1316,14 @@ TEST_F(AVInputInit, onSignalChangedDefaultCOMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onSignalChangedDefaultCOMPOSITE EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onSignalChangedDefaultCOMPOSITE EXIT ***\n");
 }
 
 // <pca> debug // Tests completed up until this point at least // </pca>
 
-TEST_F(AVInputInit, onInputStatusChangeOn_HDMI)
+TEST_F(AVInputEvents, onInputStatusChangeOn_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: onInputStatusChangeOn_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: onInputStatusChangeOn_HDMI ***\n");
     Core::Event onInputStatusChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1343,12 +1353,12 @@ TEST_F(AVInputInit, onInputStatusChangeOn_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onInputStatusChangeOn_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onInputStatusChangeOn_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOff_HDMI)
+TEST_F(AVInputEvents, onInputStatusChangeOff_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: onInputStatusChangeOff_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: onInputStatusChangeOff_HDMI ***\n");
     Core::Event onInputStatusChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1378,12 +1388,12 @@ TEST_F(AVInputInit, onInputStatusChangeOff_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onInputStatusChangeOff_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onInputStatusChangeOff_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOn_COMPOSITE)
+TEST_F(AVInputEvents, onInputStatusChangeOn_COMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: onInputStatusChangeOn_COMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: onInputStatusChangeOn_COMPOSITE ***\n");
     Core::Event onInputStatusChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1412,12 +1422,12 @@ TEST_F(AVInputInit, onInputStatusChangeOn_COMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onInputStatusChangeOn_COMPOSITE EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onInputStatusChangeOn_COMPOSITE EXIT ***\n");
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOff_COMPOSITE)
+TEST_F(AVInputEvents, onInputStatusChangeOff_COMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: onInputStatusChangeOff_COMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: onInputStatusChangeOff_COMPOSITE ***\n");
     Core::Event onInputStatusChanged(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1446,12 +1456,12 @@ TEST_F(AVInputInit, onInputStatusChangeOff_COMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: onInputStatusChangeOff_COMPOSITE EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: onInputStatusChangeOff_COMPOSITE EXIT ***\n");
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate)
+TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate)
 {
-    printf("*** _DEBUG: AVInputInit: hdmiGameFeatureStatusUpdate ***\n");
+    printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate ***\n");
     Core::Event gameFeatureStatusUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1478,12 +1488,12 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate)
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: hdmiGameFeatureStatusUpdate EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate EXIT ***\n");
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_HDMI_VRR)
+TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_HDMI_VRR)
 {
-    printf("*** _DEBUG: AVInputInit: hdmiGameFeatureStatusUpdate_HDMI_VRR ***\n");
+    printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_HDMI_VRR ***\n");
     Core::Event gameFeatureStatusUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1510,12 +1520,12 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_HDMI_VRR)
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: hdmiGameFeatureStatusUpdate_HDMI_VRR EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_HDMI_VRR EXIT ***\n");
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
+TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
 {
-    printf("*** _DEBUG: AVInputInit: hdmiGameFeatureStatusUpdate_AMD_FREESYNC ***\n");
+    printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC ***\n");
     Core::Event gameFeatureStatusUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1542,12 +1552,12 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: hdmiGameFeatureStatusUpdate_AMD_FREESYNC EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC EXIT ***\n");
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
+TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
 {
-    printf("*** _DEBUG: AVInputInit: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM ***\n");
+    printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM ***\n");
     Core::Event gameFeatureStatusUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1574,12 +1584,12 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM EXIT ***\n");
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
+TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 {
-    printf("*** _DEBUG: AVInputInit: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO ***\n");
+    printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO ***\n");
     Core::Event gameFeatureStatusUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1606,12 +1616,12 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate1_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate1_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate1_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate1_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1640,12 +1650,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate1_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate1_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate2_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate2_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate2_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate2_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1674,12 +1684,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate2_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate2_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate2_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate3_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate3_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate3_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate3_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1708,12 +1718,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate3_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate3_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate3_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate4_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate4_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate4_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate4_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1742,12 +1752,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate4_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate4_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate4_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate5_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate5_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate5_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate5_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1776,12 +1786,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate5_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate5_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate5_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate6_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate6_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate6_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate6_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1810,15 +1820,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate6_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate6_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate6_HDMI EXIT ***\n");
 }
 
 // <pca> debug
-#if 0
+#if 1
 
-TEST_F(AVInputInit, videoStreamInfoUpdate7_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate7_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate7_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate7_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1847,12 +1857,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate7_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate7_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate7_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate8_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate8_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate8_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate8_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1881,12 +1891,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate8_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate8_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate8_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate9_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate9_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate9_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate9_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1915,12 +1925,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate9_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate9_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate9_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate10_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate10_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate10_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate10_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1949,12 +1959,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate10_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate10_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate10_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate11_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate11_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate11_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate11_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -1983,12 +1993,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate11_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate11_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate11_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate12_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate12_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate12_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate12_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -2017,12 +2027,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate12_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate12_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate12_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate13_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate13_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate13_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate13_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -2051,12 +2061,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate13_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate13_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate13_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate14_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate14_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate14_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate14_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -2085,12 +2095,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate14_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate14_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate14_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate15_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate15_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate15_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate15_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -2119,12 +2129,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate15_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate15_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate15_HDMI EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdateDefault_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdateDefault_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdateDefault_HDMI ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -2153,13 +2163,13 @@ TEST_F(AVInputInit, videoStreamInfoUpdateDefault_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
     
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdateDefault_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdateDefault_HDMI EXIT ***\n");
 }
 
 
-TEST_F(AVInputInit, videoStreamInfoUpdate1_COMPOSITE)
+TEST_F(AVInputEvents, videoStreamInfoUpdate1_COMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate1_COMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate1_COMPOSITE ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -2187,13 +2197,13 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_COMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate1_COMPOSITE EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate1_COMPOSITE EXIT ***\n");
 }
 
 
-TEST_F(AVInputInit, videoStreamInfoUpdate2_COMPOSITE)
+TEST_F(AVInputEvents, videoStreamInfoUpdate2_COMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate2_COMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate2_COMPOSITE ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -2221,12 +2231,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdate2_COMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdate2_COMPOSITE EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdate2_COMPOSITE EXIT ***\n");
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdateDefault_COMPOSITE)
+TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
 {
-    printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdateDefault_COMPOSITE ***\n");
+    printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdateDefault_COMPOSITE ***\n");
     Core::Event videoStreamInfoUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -2254,12 +2264,12 @@ TEST_F(AVInputInit, videoStreamInfoUpdateDefault_COMPOSITE)
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: videoStreamInfoUpdateDefault_COMPOSITE EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: videoStreamInfoUpdateDefault_COMPOSITE EXIT ***\n");
 }
 
-TEST_F(AVInputInit, aviContentTypeUpdate_HDMI)
+TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
 {
-    printf("*** _DEBUG: AVInputInit: aviContentTypeUpdate_HDMI ***\n");
+    printf("*** _DEBUG: AVInputEvents: aviContentTypeUpdate_HDMI ***\n");
     Core::Event aviContentTypeUpdate(false, true);
 
     EXPECT_CALL(service, Submit(::testing::_, ::testing::_))
@@ -2286,7 +2296,7 @@ TEST_F(AVInputInit, aviContentTypeUpdate_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, aviContentTypeUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);
-        printf("*** _DEBUG: AVInputInit: aviContentTypeUpdate_HDMI EXIT ***\n");
+        printf("*** _DEBUG: AVInputEvents: aviContentTypeUpdate_HDMI EXIT ***\n");
 }
 
 #endif
