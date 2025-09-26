@@ -68,11 +68,11 @@ namespace WPEFramework {
 	        void process (const InActiveSource &msg, const Header &header);
 	        void process (const ImageViewOn &msg, const Header &header);
 	        void process (const TextViewOn &msg, const Header &header);
-	        void process (const RequestActiveSourceMessage &msg, const Header &header);
+	        void process (const RequestActiveSource &msg, const Header &header);
 	        void process (const Standby &msg, const Header &header);
 	        void process (const GetCECVersion &msg, const Header &header);
 	        void process (const CECVersion &msg, const Header &header);
-	        void process (const SetMenuLanguageMessage &msg, const Header &header);
+	        void process (const SetMenuLanguage &msg, const Header &header);
 	        void process (const GiveOSDName &msg, const Header &header);
 	        void process (const GivePhysicalAddress &msg, const Header &header);
 	        void process (const GiveDeviceVendorID &msg, const Header &header);
@@ -118,7 +118,7 @@ namespace WPEFramework {
 		std::unique_lock<std::mutex> lk;
 
 		CECDeviceInfo_2()
-		: m_logicalAddress(0),m_vendorID(0,0,0),m_osdName("NA"), m_isOSDNameUpdated (false), m_isVendorIDUpdated (false)
+		: m_logicalAddress(0),m_vendorID(0,0,0),m_osdName("NA"), m_deviceInfoStatus(0), m_isOSDNameUpdated (false), m_isVendorIDUpdated (false)
 		{
 			BITMASK_CLEAR(m_deviceInfoStatus, 0xFFFF); //Clear all bits
 		}

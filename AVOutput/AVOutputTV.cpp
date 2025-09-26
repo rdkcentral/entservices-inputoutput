@@ -2016,6 +2016,10 @@ namespace Plugin {
             returnResponse(false);
         }
 
+	if (isPlatformSupport("DimmingMode") != 0) {
+	    returnResponse(false);
+	}
+
         if (getParamIndex("DimmingMode",inputInfo,indexInfo) == -1) {
             LOGERR("%s: getParamIndex failed to get \n", __FUNCTION__);
             returnResponse(false);
@@ -2072,6 +2076,10 @@ namespace Plugin {
             returnResponse(false);
         }
 
+	if (isPlatformSupport("DimmingMode") != 0) {
+	    returnResponse(false);
+	}
+
         if( !isCapablityCheckPassed( "DimmingMode" , inputInfo )) {
             LOGERR("%s: CapablityCheck failed for DimmingMode\n", __FUNCTION__);
             returnResponse(false);
@@ -2117,6 +2125,10 @@ namespace Plugin {
             LOGERR("%s: CapablityCheck failed for DimmingMode\n", __FUNCTION__);
             returnResponse(false);
         }
+
+	if (isPlatformSupport("DimmingMode") != 0) {
+	    returnResponse(false);
+	}
 
         int retval= updateAVoutputTVParam("reset","DimmingMode", inputInfo,PQ_PARAM_DIMMINGMODE,dMode);
 
@@ -2171,6 +2183,8 @@ namespace Plugin {
             returnResponse(false);
         }
         else {
+            response["platformSupport"] = (info.isPlatformSupportVector[0].compare("true") == 0)  ? true : false;
+
             for (index = 0; index < info.rangeVector.size(); index++) {
                 supportedDimmingModeArray.Add(info.rangeVector[index]);
             }
@@ -2203,14 +2217,17 @@ namespace Plugin {
     uint32_t AVOutputTV::getSupportedDolbyVisionModes(const JsonObject& parameters, JsonObject& response)
     {
         LOGINFO("Entry\n");
-        tvDolbyMode_t dvModes[tvMode_Max];
-        tvDolbyMode_t *dvModesPtr = dvModes; // Pointer to statically allocated tvDolbyMode_t array 
+        tvDolbyMode_t dvModes[tvMode_Max] = { tvDolbyMode_Invalid };
+        tvDolbyMode_t *dvModesPtr[tvMode_Max] = { 0 };
         unsigned short totalAvailable = 0;
-
+        for (int i = 0; i < tvMode_Max; i++)
+        {
+            dvModesPtr[i] = &dvModes[i];
+        }
         // Set an initial value to indicate the mode type
         dvModes[0] = tvDolbyMode_Dark;
 
-        tvError_t ret = GetTVSupportedDolbyVisionModes(&dvModesPtr, &totalAvailable);
+        tvError_t ret = GetTVSupportedDolbyVisionModes(dvModesPtr, &totalAvailable);
         if(ret != tvERROR_NONE) {
             returnResponse(false);
         }
@@ -2235,6 +2252,7 @@ namespace Plugin {
         paramIndex_t indexInfo;
         int dolbyMode = 0;
         int err = 0;
+        tvVideoFormatType_t video_type = VIDEO_FORMAT_NONE;
 
         if (parsingGetInputArgument(parameters, "DolbyVisionMode",inputInfo) != 0) {
             LOGINFO("%s: Failed to parse argument\n", __FUNCTION__);
@@ -2245,6 +2263,12 @@ namespace Plugin {
 	    returnResponse(false);
 	}
 
+        GetCurrentVideoFormat(&video_type);
+        if(video_type != VIDEO_FORMAT_DV)
+        {
+            LOGERR("%s: Invalid video format: %d \n", __FUNCTION__,video_type);
+            returnResponse(false);
+        }
 
         if (getParamIndex("DolbyVisionMode",inputInfo,indexInfo) == -1) {
             LOGERR("%s: getParamIndex failed to get \n", __FUNCTION__);
@@ -2423,9 +2447,14 @@ namespace Plugin {
     uint32_t AVOutputTV::getSupportedPictureModes(const JsonObject& parameters, JsonObject& response)
     {
         LOGINFO("Entry\n");
-        pic_modes_t *pictureModes;
+        pic_modes_t pictureModes[PIC_MODES_SUPPORTED_MAX];
+        pic_modes_t *pictureModesPtr[PIC_MODES_SUPPORTED_MAX]={0};
         unsigned short totalAvailable = 0;
-        tvError_t ret = GetTVSupportedPictureModes(&pictureModes,&totalAvailable);
+        for (int i = 0; i < PIC_MODES_SUPPORTED_MAX; i++)
+        {
+            pictureModesPtr[i] = &pictureModes[i];
+        }
+        tvError_t ret = GetTVSupportedPictureModes(pictureModesPtr,&totalAvailable);
         if(ret != tvERROR_NONE) {
             returnResponse(false);
         }
