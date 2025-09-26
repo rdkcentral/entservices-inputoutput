@@ -36,7 +36,6 @@
 #include "UtilsIarm.h"
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
-#include "UtilsSearchRDKProfile.h"
 
 using CCECRequestActiveSource = ::RequestActiveSource;
 using CCECSetMenuLanguage = ::SetMenuLanguage;
@@ -651,14 +650,6 @@ namespace WPEFramework
                _powerManagerPlugin.Reset();
             }
             _registeredEventHandlers = false;
-        
-         profileType = searchRdkProfile();
-        
-         if (profileType == STB || profileType == NOT_FOUND)
-         {
-             LOGINFO("Invalid profile type for TV \n");
-             return ;
-         }
      
          CECDisable();
          m_currentArcRoutingState = ARC_STATE_ARC_EXIT;
@@ -707,7 +698,6 @@ namespace WPEFramework
        Core::hresult HdmiCecSinkImplementation::Configure(PluginHost::IShell *service)
        {
            InitializePowerManager(service);
-           profileType = searchRdkProfile();
 
            HdmiCecSinkImplementation::_instance = this;
            smConnection=NULL;
