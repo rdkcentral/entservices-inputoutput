@@ -121,6 +121,7 @@ touch audiocapturemgr/audiocapturemgr_iarm.h
 touch ccec/drivers/CecIARMBusMgr.h
 touch ccec/FrameListener.hpp
 touch ccec/Connection.hpp
+touch ccec/CCEC.hpp
 touch ccec/Assert.hpp
 touch ccec/Messages.hpp
 touch ccec/MessageDecoder.hpp
