@@ -42,6 +42,7 @@
 #include <interfaces/IPowerManager.h>
 #include "PowerManagerInterface.h"
 #include <interfaces/IHdmiCecSink.h>
+#include "host.hpp"
 
 using namespace WPEFramework;
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
@@ -483,7 +484,7 @@ private:
         // As the registration/unregistration of notifications is realized by the class PluginHost::JSONRPC,
         // this class exposes a public method called, Notify(), using this methods, all subscribed clients
         // will receive a JSONRPC message as a notification, in case this method is called.
-        class HdmiCecSinkImplementation : public Exchange::IHdmiCecSink {
+        class HdmiCecSinkImplementation : public Exchange::IHdmiCecSink, public device::Host::IHdmiInEvents {
 
         enum {
             POLL_THREAD_STATE_NONE,
@@ -670,8 +671,6 @@ private:
         PowerManagerInterfaceRef _powerManagerPlugin;
         Core::Sink<PowerManagerNotification> _pwrMgrNotification;
         bool _registeredEventHandlers;
-        void InitializeIARM();
-        void DeinitializeIARM();
         void allocateLogicalAddress(int deviceType);
         void allocateLAforTV();
         void pingDevices(std::vector<int> &connected , std::vector<int> &disconnected);
@@ -681,7 +680,6 @@ private:
         int requestStatus(const int logicalAddress);
         static void threadRun();
         void cecMonitoringThread();
-        static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
         void onHdmiHotPlug(int portId, int connectStatus);
         bool loadSettings();
         void persistSettings(bool enableStatus);
@@ -743,7 +741,16 @@ private:
         Core::hresult SetMenuLanguage(const string &language, HdmiCecSinkSuccess &successResult)  override;
         Core::hresult RequestAudioDevicePowerStatus(HdmiCecSinkSuccess &successResult) override;
 
-    private: 
+	 /*devicesetting APIs*/
+        virtual void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
+
+    private:
+        template <typename T>
+        T* baseInterface()
+        {
+            static_assert(std::is_base_of<T, HdmiCecSink>(), "base type mismatch");
+            return static_cast<T*>(this);
+        }
         std::list<Exchange::IHdmiCecSink::INotification*> _hdmiCecSinkNotifications;
         mutable Core::CriticalSection _adminLock;
         };
