@@ -36,7 +36,6 @@
 #include "UtilssyncPersistFile.h"
 #include "UtilsSearchRDKProfile.h"
 
-
 #define HDMICECSOURCE_METHOD_SET_ENABLED "SetEnabled"
 #define HDMICECSOURCE_METHOD_GET_ENABLED "GetEnabled"
 #define HDMICECSOURCE_METHOD_OTP_SET_ENABLED "SetOTPEnabled"
