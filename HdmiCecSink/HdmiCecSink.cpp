@@ -109,18 +109,18 @@ namespace WPEFramework
             return ;
         }
 
-         bool enabled = false;
+        if(nullptr != _hdmiCecSink)
+        {
+           bool enabled = false;
            bool ret = false;
            HdmiCecSink::_hdmiCecSink->GetEnabled(enabled,ret);
 
-           if(ret && enabled)
-           {
-                Exchange::IHdmiCecSink::HdmiCecSinkSuccess success;
-                HdmiCecSink::_hdmiCecSink->SetEnabled(false,success);
-           }
+            if(ret && enabled)
+            {
+                    Exchange::IHdmiCecSink::HdmiCecSinkSuccess success;
+                    HdmiCecSink::_hdmiCecSink->SetEnabled(false,success);
+            }
 
-           if(nullptr != _hdmiCecSink)
-           {
              _hdmiCecSink->Unregister(&_notification);
              Exchange::JHdmiCecSink::Unregister(*this);
              _hdmiCecSink->Release();

@@ -2,7 +2,7 @@
 * If not stated otherwise in this file or this component's LICENSE
 * file the following copyright and licenses apply:
 *
-* Copyright 2019 RDK Management
+* Copyright 2025 RDK Management
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -36,11 +36,10 @@
 #include "UtilsIarm.h"
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
-#include "UtilsSearchRDKProfile.h"
 
-using CCECRequestActiveSource = RequestActiveSource;
-using CCECSetMenuLanguage = SetMenuLanguage;
-using CCECRequestShortAudioDescriptor = RequestShortAudioDescriptor;
+using CCECRequestActiveSource = ::RequestActiveSource;
+using CCECSetMenuLanguage = ::SetMenuLanguage;
+using CCECRequestShortAudioDescriptor = ::RequestShortAudioDescriptor;
 
 #define TEST_ADD 0
 #define HDMICECSINK_REQUEST_MAX_RETRY                 3
@@ -128,7 +127,6 @@ namespace WPEFramework
                 size_t len = 0;
 
                 in.getBuffer(&buf, &len);
-                LOGINFO("HdmiCecSinkFrameListener::notify called. Frame size: %zu, Opcode: 0x%02X", len, len > 1 ? buf[1] : 0xFF);
                 for (unsigned int i = 0; i < len; i++) {
                    snprintf(strBuffer + (i*3) , sizeof(strBuffer) - (i*3), "%02X ",(uint8_t) *(buf + i));
                 }
@@ -602,11 +600,47 @@ namespace WPEFramework
 //=========================================== HdmiCecSinkImplementation =========================================
 
        HdmiCecSinkImplementation::HdmiCecSinkImplementation()
-       : _pwrMgrNotification(*this)
+        : deviceList()
+        , hdmiInputs()
+        , m_currentActiveSource(-1)
+        , m_numberOfDevices(0)
+        , m_audioDevicePowerStatusRequested(false)
+        , logicalAddressDeviceType("None")
+        , cecSettingEnabled(true)
+        , cecOTPSettingEnabled(true)
+        , cecEnableStatus(false)
+        , hdmiCecAudioDeviceConnected(false)
+        , m_isHdmiInConnected(false)
+        , m_numofHdmiInput(0)
+        , m_deviceType(0)
+        , m_logicalAddressAllocated(LogicalAddress::UNREGISTERED)
+        , m_pollThread()
+        , m_pollThreadState(POLL_THREAD_STATE_NONE)
+        , m_pollNextState(POLL_THREAD_STATE_NONE)
+        , m_pollThreadExit(false)
+        , m_sleepTime(0)
+        , m_sendKeyEventThreadExit(false)
+        , m_sendKeyEventThreadRun(false)
+        , m_isAudioStatusInfoUpdated(false)
+        , m_audioStatusReceived(false)
+        , m_audioStatusTimerStarted(false)
+        , m_sendKeyEventThread()
+        , m_video_latency(DEFAULT_VIDEO_LATENCY)
+        , m_latency_flags(DEFAULT_LATENCY_FLAGS)
+        , m_audio_output_delay(DEFAULT_AUDIO_OUTPUT_DELAY)
+        , m_arcRoutingThread()
+        , m_currentArcRoutingState(ARC_STATE_ARC_TERMINATED)
+        , m_arcstarting(false)
+        , smConnection(nullptr)
+        , m_connectedDevices()
+        , msgProcessor(nullptr)
+        , msgFrameListener(nullptr)
+        , _powerManagerPlugin()
+        , _pwrMgrNotification(*this)
         , _registeredEventHandlers(false)
-       {
-           LOGWARN("Initlaizing HdmiCecSinkImplementation");
-       }
+        {
+            LOGWARN("Initializing HdmiCecSinkImplementation");
+        }
 
        HdmiCecSinkImplementation::~HdmiCecSinkImplementation()
        {
@@ -616,14 +650,6 @@ namespace WPEFramework
                _powerManagerPlugin.Reset();
             }
             _registeredEventHandlers = false;
-        
-         profileType = searchRdkProfile();
-        
-         if (profileType == STB || profileType == NOT_FOUND)
-         {
-             LOGINFO("Invalid profile type for TV \n");
-             return ;
-         }
      
          CECDisable();
          m_currentArcRoutingState = ARC_STATE_ARC_EXIT;
@@ -672,7 +698,6 @@ namespace WPEFramework
        Core::hresult HdmiCecSinkImplementation::Configure(PluginHost::IShell *service)
        {
            InitializePowerManager(service);
-           profileType = searchRdkProfile();
 
            HdmiCecSinkImplementation::_instance = this;
            smConnection=NULL;
@@ -745,7 +770,7 @@ namespace WPEFramework
            for (int i = 0; i < m_numofHdmiInput; i++){
                 HdmiPortMap hdmiPort((uint8_t)i);
                 LOGINFO(" Add to vector [%d] \n", i);
-                hdmiInputs.push_back(hdmiPort);
+                hdmiInputs.push_back(std::move(hdmiPort));
             }
 
             LOGINFO("Check the HDMI State \n");
@@ -810,7 +835,7 @@ namespace WPEFramework
         }
 
 
-       const void HdmiCecSinkImplementation::InitializeIARM()
+       void HdmiCecSinkImplementation::InitializeIARM()
        {
             if (Utils::IARM::init())
             {
@@ -949,17 +974,17 @@ namespace WPEFramework
        }
        void HdmiCecSinkImplementation::updateArcState()
        {
+           std::lock_guard<std::mutex> lock(_instance->m_arcRoutingStateMutex);
            if ( m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED )
            {
             if (!(hdmiInputs[HdmiArcPortID].m_isConnected))
-        {
-                   std::lock_guard<std::mutex> lock(_instance->m_arcRoutingStateMutex);
-           m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
-        }
-                else
-                {
-                   LOGINFO("updateArcState :not updating ARC state current arc state %d ",m_currentArcRoutingState);
-                }
+            {
+                m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+            }
+            else
+            {
+                LOGINFO("updateArcState :not updating ARC state current arc state %d ",m_currentArcRoutingState);
+            }
            } 
       }
       void HdmiCecSinkImplementation::arcStartStopTimerFunction()
@@ -1028,7 +1053,7 @@ namespace WPEFramework
         {
             audiodescriptor.Add(descriptor);
         }
-       HdmiCecSinkImplementation::_instance->Send_ShortAudioDescriptor_Event(audiodescriptor);
+       HdmiCecSinkImplementation::_instance->Send_ShortAudioDescriptor_Event(std::move(audiodescriptor));
         }
 
        void HdmiCecSinkImplementation::updateCurrentLatency(int videoLatency, bool lowLatencyMode,int audioOutputCompensated, int audioOutputDelay = 0)
@@ -1546,7 +1571,7 @@ namespace WPEFramework
                             device.osdName = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_osdName.toString().c_str();
                             device.vendorID = HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_vendorID.toString().c_str();
 
-                            paths.push_back(device);
+                            paths.emplace_back(std::move(device));
 
                             snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s", _instance->deviceList[route[i]].m_logicalAddress.toString().c_str());
                             stringLength += _instance->deviceList[route[i]].m_logicalAddress.toString().length();
@@ -2342,9 +2367,9 @@ namespace WPEFramework
             for(i=0; i< 16; i++)
             {
                 if (HdmiCecSinkImplementation::_instance->deviceList[i].m_isDevicePresent) {
-                LOGWARN("------ Device ID = %d--------", i);
+                LOGINFO("------ Device ID = %d--------", i);
                 HdmiCecSinkImplementation::_instance->deviceList[i].printVariable();
-                LOGWARN("-----------------------------");
+                LOGINFO("-----------------------------");
                 }
             }
         }
@@ -3050,6 +3075,11 @@ namespace WPEFramework
             _instance->getPhysicalAddress();
 
             smConnection = new Connection(LogicalAddress::UNREGISTERED,false,"ServiceManager::Connection::");
+            if(!smConnection)
+            {
+                LOGERR("smConnection is NULL");
+                return;
+            }
             smConnection->open();
             allocateLogicalAddress(DeviceType::TV);
             LOGINFO("logical address allocalted: %x  \n",m_logicalAddressAllocated);
@@ -3060,17 +3090,15 @@ namespace WPEFramework
                 LibCCEC::getInstance().addLogicalAddress(logicalAddress);
                 smConnection->setSource(logicalAddress);
             }
+
             msgProcessor = new HdmiCecSinkProcessor(*smConnection);
             msgFrameListener = new HdmiCecSinkFrameListener(*msgProcessor);
-            LOGINFO("FrameListener registered: %p", msgFrameListener);
-            if(smConnection)
-            {
-                   LOGWARN("Start Thread %p", smConnection );
-                m_pollThreadState = POLL_THREAD_STATE_POLL;
-                            m_pollNextState = POLL_THREAD_STATE_NONE;
-                            m_pollThreadExit = false;
-                m_pollThread = std::thread(threadRun);
-            }
+            LOGWARN("Start Thread %p", smConnection );
+            m_pollThreadState = POLL_THREAD_STATE_POLL;
+            m_pollNextState = POLL_THREAD_STATE_NONE;
+            m_pollThreadExit = false;
+            m_pollThread = std::thread(threadRun);
+
             cecEnableStatus = true;
 
             params["cecEnable"] = string("true");
@@ -3097,9 +3125,8 @@ namespace WPEFramework
             if(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)
             {
                 stopArc();
-                while(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)    
-                {
-                     usleep(500000);
+                while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED) {
+                    usleep(500000);
                 }
             }
 

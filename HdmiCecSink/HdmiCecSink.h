@@ -262,4 +262,4 @@ namespace WPEFramework {
                 uint32_t _connectionId;
         };
 	} // namespace Plugin
-} // namespace WPEFramework
+} // namespace WPEFramework 
