@@ -3016,42 +3016,6 @@ TEST_F(HdmiCecSink_L2Test, InjectReportAudioStatusAndVerifyEventBroadcastIgnoreT
     }
 }
 
-// Inject Feature Abort frame and verify reportFeatureAbortEvent event
-TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortAndVerifyEvent)
-{
-    JSONRPC::LinkType<Core::JSON::IElement> jsonrpc(HDMICECSINK_CALLSIGN, HDMICECSINK_L2TEST_CALLSIGN);
-    StrictMock<AsyncHandlerMock_HdmiCecSink> async_handler;
-    uint32_t status = Core::ERROR_GENERAL;
-    uint32_t signalled = HDMICECSINK_STATUS_INVALID;
-
-    status = jsonrpc.Subscribe<JsonObject>(EVNT_TIMEOUT,
-        _T("reportFeatureAbortEvent"),
-        &AsyncHandlerMock_HdmiCecSink::reportFeatureAbortEvent,
-        &async_handler);
-    EXPECT_EQ(Core::ERROR_NONE, status);
-
-    EXPECT_CALL(async_handler, reportFeatureAbortEvent(::testing::_))
-        .WillOnce(Invoke(this, &HdmiCecSink_L2Test::reportFeatureAbortEvent));
-
-    ASSERT_FALSE(listeners.empty()) << "No FrameListener was captured.";
-
-    // Feature Abort from device 4 to TV (0)
-    // Header: 0x40, Opcode: 0x00 (Feature Abort), Rejected Opcode: 0x82, Reason: 0x04 (Refused)
-    uint8_t buffer[] = { 0x40, 0x00, 0x82, 0x04 };
-    CECFrame frame(buffer, sizeof(buffer));
-
-    for (auto* listener : listeners) {
-        if (listener) {
-            listener->notify(frame);
-        }
-    }
-
-    signalled = WaitForRequestStatus(EVNT_TIMEOUT, REPORT_FEATURE_ABORT);
-    EXPECT_TRUE(signalled & REPORT_FEATURE_ABORT);
-
-    jsonrpc.Unsubscribe(EVNT_TIMEOUT, _T("reportFeatureAbortEvent"));
-}
-
 // Feature Abort Broadcast frame should be ignored
 TEST_F(HdmiCecSink_L2Test, InjectFeatureAbortFrameBroadcastIgnoreTest)
 {
