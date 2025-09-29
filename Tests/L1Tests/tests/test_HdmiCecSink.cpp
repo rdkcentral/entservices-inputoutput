@@ -239,7 +239,23 @@ protected:
 
     HdmiCecSinkDsTest(): HdmiCecSinkTest()
     {
-        EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
+        EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
+            .WillRepeatedly(::testing::Return(3));
+
+        ON_CALL(*p_hdmiInputImplMock, isPortConnected(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [](int8_t port) {
+                    return port == 1? true : false;
+                }));
+
+        ON_CALL(*p_hdmiInputImplMock, getHDMIARCPortId(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [](int &portId) {
+                    portId = 1;
+                    return dsERR_NONE;
+                }));
+
+		EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
         EXPECT_EQ(response, string("{\"success\":true}"));
     }
     virtual ~HdmiCecSinkDsTest() override {
