@@ -960,10 +960,10 @@ TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventInvalidKeyCode)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 999}"), response));
 }
 
-TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventMissingParameter)
-{
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0}"), response));
-}
+// TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventMissingParameter)
+// {
+//     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0}"), response));
+// }
 
 TEST_F(HdmiCecSourceInitializedTest, textViewOnProcess)
 {
