@@ -521,35 +521,62 @@ TEST_F(HdmiCecSourceInitializedTest, RegisteredMethods)
 
 TEST_F(HdmiCecSourceInitializedTest, getEnabledTrue)
 {
-    //Get enabled just checks if CEC is on, which is a global variable.
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEnabled"), _T(""), response));
     EXPECT_EQ(response, string("{\"enabled\":true,\"success\":true}"));
+}
 
+TEST_F(HdmiCecSourceInitializedTest, getEnabledFalse)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": false}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEnabled"), _T(""), response));
+    EXPECT_EQ(response, string("{\"enabled\":false,\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setEnabledTrue)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setEnabledFalse)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": false}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setEnabledInvalidParameter)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setEnabled"), _T("{\"invalid\": true}"), response));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatusTrue)
 {
-    //SetsOTP to on.
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
+    EXPECT_EQ(response, string("{\"success\":true}"));
 
-    //Sets Activesource to true
-        EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\": true}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
-
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
     EXPECT_EQ(response, string("{\"status\":true,\"success\":true}"));
+}
 
-
+TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatusFalse)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
+    EXPECT_EQ(response, string("{\"status\":false,\"success\":true}"));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, getDeviceList)
 {
     int iCounter = 0;
-    //Checking to see if one of the values has been filled in (as the rest get filled in at the same time, and waiting if its not.
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
-                usleep (100 * 1000); //sleep for 100 milli sec
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+                usleep (100 * 1000);
                 iCounter ++;
         }
 
@@ -558,37 +585,129 @@ TEST_F(HdmiCecSourceInitializedTest, getDeviceList)
     SetOSDName osdName = SetOSDName(name);
 
     Header header;
-    header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
+    header.from = LogicalAddress(1);
 
     VendorID vendor(1,2,3);
     DeviceVendorID vendorid(vendor);
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
 
-    proc.process(osdName, header); //calls the process that sets osdName for LogicalAddress = 1
-    proc.process(vendorid, header); //calls the process that sets vendorID for LogicalAddress = 1
+    proc.process(osdName, header);
+    proc.process(vendorid, header);
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
 
     EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"123\",\"osdName\":\"TEST\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
 }
 
-TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage)
+TEST_F(HdmiCecSourceInitializedTest, getOSDName)
 {
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOSDName"), _T("{}"), response));
+    EXPECT_TRUE(response.find("\"success\":true") != string::npos);
 }
 
 TEST_F(HdmiCecSourceInitializedTest, setOSDName)
 {
-
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOSDName"), _T("{\"name\": \"CUSTOM8 Tv\"}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
+    EXPECT_EQ(response, string("{\"success\":true}"));
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOSDName"), _T("{}"), response));
-        EXPECT_EQ(response, string("{\"name\":\"CUSTOM8 Tv\",\"success\":true}"));
+    EXPECT_EQ(response, string("{\"name\":\"CUSTOM8 Tv\",\"success\":true}"));
+}
 
+TEST_F(HdmiCecSourceInitializedTest, setOSDNameInvalidParameter)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setOSDName"), _T("{\"invalid\": \"test\"}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, getVendorId)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVendorId"), _T(""), response));
+    EXPECT_TRUE(response.find("\"success\":true") != string::npos);
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setVendorId)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"0x0019FB\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVendorId"), _T(""), response));
+    EXPECT_EQ(response, string("{\"vendorid\":\"0019fb\",\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setVendorIdInvalidParameter)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setVendorId"), _T("{\"invalid\": \"test\"}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, getOTPEnabledTrue)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T(""), response));
+    EXPECT_EQ(response, string("{\"enabled\":true,\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, getOTPEnabledFalse)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": false}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T(""), response));
+    EXPECT_EQ(response, string("{\"enabled\":false,\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setOTPEnabledTrue)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setOTPEnabledFalse)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": false}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, setOTPEnabledInvalidParameter)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"invalid\": true}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, performOTPActionEnabledTrue)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, performOTPActionEnabledFalse)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\": false}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, performOTPActionWithoutParameter)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, performOTPActionInvalidParameter)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("performOTPAction"), _T("{\"invalid\": true}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventVolumeUp)
@@ -830,55 +949,20 @@ TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventNumber9)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 41}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
-TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatusTrueDuplicate)
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventInvalidLogicalAddress)
 {
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
-    EXPECT_EQ(response, string("{\"status\":true,\"success\":true}"));
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 16, \"keyCode\": 1}"), response));
 }
 
-TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatusFalseDuplicate)
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventInvalidKeyCode)
 {
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
-    EXPECT_EQ(response, string("{\"status\":false,\"success\":true}"));
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 999}"), response));
 }
 
-TEST_F(HdmiCecSourceInitializedTest, setVendorIdAndGetVendorIdDuplicate)
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventMissingParameter)
 {
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"0x0019FB\"}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVendorId"), _T(""), response));
-    EXPECT_EQ(response, string("{\"vendorid\":\"0019fb\",\"success\":true}"));
-}
-
-TEST_F(HdmiCecSourceInitializedTest, getOTPEnabledTrueDuplicate)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T(""), response));
-    EXPECT_EQ(response, string("{\"enabled\":true,\"success\":true}"));
-}
-
-TEST_F(HdmiCecSourceInitializedTest, getOTPEnabledFalseDuplicate)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": false}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T(""), response));
-    EXPECT_EQ(response, string("{\"enabled\":false,\"success\":true}"));
-}
-
-TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessageTestDuplicate)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0}"), response));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, textViewOnProcess)
@@ -928,18 +1012,6 @@ TEST_F(HdmiCecSourceInitializedTest, setMenuLanguageProcess)
     proc.process(msg, header);
 }
 
-TEST_F(HdmiCecSourceInitializedTest, setOSDStringProcess)
-{
-    DisplayControl display = DisplayControl::DEFAULT_TIME;
-    OSDString osdString = OSDString("Test String");
-    SetOSDString msg(display, osdString);
-    Header header;
-    header.from = LogicalAddress(1);
-
-    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    proc.process(msg, header);
-}
-
 TEST_F(HdmiCecSourceInitializedTest, getMenuLanguageProcess)
 {
     GetMenuLanguage msg;
@@ -956,7 +1028,7 @@ TEST_F(HdmiCecSourceInitializedTest, getMenuLanguageProcess)
     proc.process(msg, header);
 }
 
-TEST_F(HdmiCecSourceInitializedTest, routingInformationProcessFixed)
+TEST_F(HdmiCecSourceInitializedTest, routingInformationProcess)
 {
     RoutingInformation msg;
     Header header;
@@ -966,7 +1038,7 @@ TEST_F(HdmiCecSourceInitializedTest, routingInformationProcessFixed)
     proc.process(msg, header);
 }
 
-TEST_F(HdmiCecSourceInitializedTest, reportPhysicalAddressProcessFixed)
+TEST_F(HdmiCecSourceInitializedTest, reportPhysicalAddressProcess)
 {
     PhysicalAddress physAddr(0x0F, 0x0F, 0x0F, 0x0F);
     ReportPhysicalAddress msg(physAddr, DeviceType::TUNER);
@@ -980,8 +1052,7 @@ TEST_F(HdmiCecSourceInitializedTest, reportPhysicalAddressProcessFixed)
 TEST_F(HdmiCecSourceInitializedTest, featureAbortProcess)
 {
     OpCode opcode(0x83);
-    AbortReason reason = INVALID_OPERAND;
-    FeatureAbort msg(opcode, reason);
+    FeatureAbort msg(opcode, AbortReason());
     Header header;
     header.from = LogicalAddress(1);
 
@@ -989,10 +1060,10 @@ TEST_F(HdmiCecSourceInitializedTest, featureAbortProcess)
     proc.process(msg, header);
 }
 
-TEST_F(HdmiCecSourceInitializedTest, abortProcessFixed)
+TEST_F(HdmiCecSourceInitializedTest, abortProcess)
 {
     OpCode opcode(0x83);
-    Abort msg(opcode);
+    Abort msg;
     Header header;
     header.from = LogicalAddress(1);
 
@@ -1064,6 +1135,21 @@ TEST_F(HdmiCecSourceInitializedEventTest, onDeviceRemovedNotification)
     HdmiCecSourceImplementationImpl->Unregister(&notification);
 }
 
+TEST_F(HdmiCecSourceInitializedEventTest, onDeviceInfoUpdatedNotification)
+{
+    Core::Sink<NotificationHandler> notification;
+    HdmiCecSourceImplementationImpl = Core::ProxyType<Plugin::HdmiCecSourceImplementation>::Create();
+    HdmiCecSourceImplementationImpl->Register(&notification);
+
+    if (HdmiCecSourceNotification) {
+        HdmiCecSourceNotification->OnDeviceInfoUpdated(1);
+    }
+
+    EXPECT_TRUE(notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnDeviceInfoUpdated));
+
+    HdmiCecSourceImplementationImpl->Unregister(&notification);
+}
+
 TEST_F(HdmiCecSourceInitializedEventTest, onActiveSourceStatusUpdatedNotification)
 {
     Core::Sink<NotificationHandler> notification;
@@ -1072,6 +1158,21 @@ TEST_F(HdmiCecSourceInitializedEventTest, onActiveSourceStatusUpdatedNotificatio
 
     if (HdmiCecSourceNotification) {
         HdmiCecSourceNotification->OnActiveSourceStatusUpdated(true);
+    }
+
+    EXPECT_TRUE(notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnActiveSourceStatusUpdated));
+
+    HdmiCecSourceImplementationImpl->Unregister(&notification);
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, onActiveSourceStatusUpdatedNotificationFalse)
+{
+    Core::Sink<NotificationHandler> notification;
+    HdmiCecSourceImplementationImpl = Core::ProxyType<Plugin::HdmiCecSourceImplementation>::Create();
+    HdmiCecSourceImplementationImpl->Register(&notification);
+
+    if (HdmiCecSourceNotification) {
+        HdmiCecSourceNotification->OnActiveSourceStatusUpdated(false);
     }
 
     EXPECT_TRUE(notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnActiveSourceStatusUpdated));
