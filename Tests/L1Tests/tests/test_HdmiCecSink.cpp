@@ -480,7 +480,7 @@ TEST_F(HdmiCecSinkInitializedEventDsTest, onHdmiOutputHDCPStatusEvent)
 {
 
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("client.events.onDevicesChanged"), message);
-    plugin->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_1, true);
+    Plugin::HdcpProfileImplementation::_instance->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_1, true);
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("client.events.onDevicesChanged"), message);
 
 }
