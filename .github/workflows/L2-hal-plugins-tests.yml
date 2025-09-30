@@ -125,6 +125,7 @@ jobs:
           #apt install libjsoncpp-dev
           git clone -b develop https://github.com/rdkcentral/entservices-inputoutput.git
           cd entservices-inputoutput/L2HalMock
+          rm -rf build.sh
           #git clone -b peru https://github.com/rdk-e/FLASK-for-Hal-Mock.git
           git clone -b peru https://${{secrets.RDK_E_MANIFEST_USERNAME}}:${{ secrets.RDK_E_MANIFEST_PASSWORD}}@github.com/rdk-e/FLASK-for-Hal-Mock.git
           cd FLASK-for-Hal-Mock
