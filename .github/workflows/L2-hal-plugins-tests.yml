@@ -128,6 +128,7 @@ jobs:
           #git clone -b peru https://github.com/rdk-e/FLASK-for-Hal-Mock.git
           git clone -b peru https://${{secrets.RDK_E_MANIFEST_USERNAME}}:${{ secrets.RDK_E_MANIFEST_PASSWORD}}@github.com/rdk-e/FLASK-for-Hal-Mock.git
           cd FLASK-for-Hal-Mock
+          mv build.sh ..
           mv peru.yaml ..
           #cp -r peru.yaml __w/rdkservices/rdkservices/rdkservices/L2HalMock
           cd ..
