@@ -872,13 +872,13 @@ namespace WPEFramework
            }
        }
 
-       void HdmiCecSink::OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected)
+       void HdmiCecSinkImplementation::OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected)
        {
-           if(!HdmiCecSink::_instance)
+           if(!HdmiCecSinkImplementation::_instance)
                return;
 
            LOGINFO("Received HdmiCecSink::OnHdmiInEventHotPlug event port: %d isConnected: %d \r\n", port, isConnected);
-           HdmiCecSink::_instance->onHdmiHotPlug((int) port, isConnected);
+           HdmiCecSinkImplementation::_instance->onHdmiHotPlug((int) port, isConnected);
        }
 
        void HdmiCecSinkImplementation::onPowerModeChanged(const PowerState &currentState, const PowerState &newState)
