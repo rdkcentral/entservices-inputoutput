@@ -21,7 +21,10 @@
 
 #include "Module.h"
 #include "libIBus.h"
+
 #include "dsTypes.h"
+#include "host.hpp"
+#include "manager.hpp"
 
 #define DEFAULT_PRIM_VOL_LEVEL 25
 #define MAX_PRIM_VOL_LEVEL 100
@@ -30,9 +33,13 @@
 namespace WPEFramework {
 namespace Plugin {
 
-class AVInput: public PluginHost::IPlugin, public PluginHost::JSONRPC
-{
+class AVInput: public PluginHost::IPlugin, 
+               public PluginHost::JSONRPC,
+               public device::Host::IHdmiInEvents, 
+               public device::Host::ICompositeInEvents{
+
 private:
+
     AVInput(const AVInput &) = delete;
     AVInput &operator=(const AVInput &) = delete;
 
@@ -44,6 +51,15 @@ public:
     INTERFACE_ENTRY(PluginHost::IPlugin)
     INTERFACE_ENTRY(PluginHost::IDispatcher)
     END_INTERFACE_MAP
+
+private:
+
+    template <typename T>
+    T* baseInterface()
+    {
+        static_assert(std::is_base_of<T, AVInput>(), "base type mismatch");
+        return static_cast<T*>(this);
+    }
 
     int m_primVolume;
     int m_inputVolume; //Player Volume
@@ -57,9 +73,7 @@ public:
     virtual string Information() const override;
 
 protected:
-    void InitializeIARM();
-    void DeinitializeIARM();
-
+    
     void RegisterAll();
     void UnregisterAll();
 
@@ -124,6 +138,30 @@ private:
 
     void hdmiInputAviContentTypeChange(int port, int content_type);
     static void dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+
+private:
+
+    bool _registeredDsEventHandlers;
+
+public:
+
+    /* HdmiInEventNotification*/
+
+    void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
+    void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;   
+    void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented) override;
+    void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
+    void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
+    void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
+    void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
+
+    /* CompositeInEventNotification */
+
+    void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
+    void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
+    void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
+    void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
+    
 public:
     static AVInput* _instance;
 };
