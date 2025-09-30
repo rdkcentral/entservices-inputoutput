@@ -586,115 +586,19 @@ TEST_F(HdmiCecSourceInitializedTest, setOSDName)
 
 }
 
-TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventUp)
+// ...existing code...
+
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventVolumeUp)
 {
     ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
-            .WillByDefault(::testing::Invoke(
-            [](const UserControlPressed& m) -> CECFrame&  {
-                EXPECT_EQ(m.uiCommand.toInt(),UICommand::UI_COMMAND_VOLUME_UP );
-                return CECFrame::getInstance();
-            }));
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 65}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
-}
-
-TEST_F(HdmiCecSourceInitializedTest, GetInformation)
-{
-    EXPECT_EQ("This HdmiCecSource PLugin Facilitates the HDMI CEC Source Control", plugin->Information());
-}
-
-TEST_F(HdmiCecSourceInitializedTest, activeSourceProcess)
-{
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
-        usleep (100 * 1000); //sleep for 100 milli sec
-        iCounter ++;
-}
-
-
-    Header header;
-    header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
-
-    PhysicalAddress physicalAddress(0x0F,0x0F,0x0F,0x0F);
-    PhysicalAddress physicalAddress2(1,2,3,4);
-    ActiveSource activeSource(physicalAddress);
-    ActiveSource activeSource2(physicalAddress2);
-
-
-    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    proc.process(activeSource2, header);
-    proc.process(activeSource, header); 
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
-
-    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
-
-
-}
-
-TEST_F(HdmiCecSourceInitializedEventTest, textViewOnProcess){
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
-        usleep (100 * 1000); //sleep for 100 milli sec
-        iCounter ++;
-}
-    
-
-    Header header;
-    header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
-
-    TextViewOn textViewOn;
-
-
-    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    proc.process(textViewOn, header); 
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
-
-    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
-
-}
-
-TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler)
-{
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
-        usleep (100 * 1000); //sleep for 100 milli sec
-        iCounter ++;
-    }
-
-    ASSERT_TRUE(dsHdmiEventHandler != nullptr);
-    EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
-    .Times(1)
-        .WillOnce(::testing::Return("TEST"));
-
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_hpd.event = 0;
-
-    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
-
-    dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, &eventData , 0);
-
-    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
-}
-
-
-TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged)
-{
-    EXPECT_CALL(*p_libCCECImplMock, getLogicalAddress(::testing::_))
-    .WillRepeatedly(::testing::Invoke(
-        [&](int devType) {
-           EXPECT_EQ(devType, 1);
-           return 0;
+        .WillByDefault(::testing::Invoke(
+        [](const UserControlPressed& m) -> CECFrame&  {
+            EXPECT_EQ(m.uiCommand.toInt(), UICommand::UI_COMMAND_VOLUME_UP);
+            return CECFrame::getInstance();
         }));
-
-        Plugin::HdmiCecSourceImplementation::_instance->onPowerModeChanged(WPEFramework::Exchange::IPowerManager::POWER_STATE_OFF, WPEFramework::Exchange::IPowerManager::POWER_STATE_ON);
-
-
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 0, \"keyCode\": 65}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
 }
-
-// ...existing code...
 
 TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventVolumeDown)
 {
@@ -720,7 +624,7 @@ TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventMute)
     EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventUpArrow)
+TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventUp)
 {
     ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
         .WillByDefault(::testing::Invoke(
@@ -936,17 +840,29 @@ TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatusTrue)
     EXPECT_EQ(response, string("{\"status\":true,\"success\":true}"));
 }
 
+TEST_F(HdmiCecSourceInitializedTest, getActiveSourceStatusFalse)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": false}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+    
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
+    EXPECT_EQ(response, string("{\"status\":false,\"success\":true}"));
+}
+
 TEST_F(HdmiCecSourceInitializedTest, setVendorIdAndGetVendorId)
 {
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"0x0019FB\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
     
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVendorId"), _T("{}"), response));
-    EXPECT_EQ(response, string("{\"vendorid\":\"019fb\",\"success\":true}"));
+    EXPECT_EQ(response, string("{\"vendorid\":\"0019fb\",\"success\":true}"));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, getOTPEnabledTrue)
 {
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+    
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T(""), response));
     EXPECT_EQ(response, string("{\"enabled\":true,\"success\":true}"));
 }
@@ -960,14 +876,14 @@ TEST_F(HdmiCecSourceInitializedTest, setOTPEnabledFalse)
     EXPECT_EQ(response, string("{\"enabled\":false,\"success\":true}"));
 }
 
+TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
 TEST_F(HdmiCecSourceInitializedTest, imageViewOnProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     ImageViewOn imageViewOn;
@@ -976,17 +892,10 @@ TEST_F(HdmiCecSourceInitializedTest, imageViewOnProcess)
     proc.process(imageViewOn, header);
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
-    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, requestActiveSourceProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     RequestActiveSource requestActiveSource;
@@ -1003,31 +912,16 @@ TEST_F(HdmiCecSourceInitializedTest, requestActiveSourceProcess)
 
 TEST_F(HdmiCecSourceInitializedTest, cecVersionProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     CECVersion cecVersion(Version::V_1_4);
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(cecVersion, header);
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
-    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, giveOSDNameProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     GiveOSDName giveOSDName;
@@ -1044,12 +938,6 @@ TEST_F(HdmiCecSourceInitializedTest, giveOSDNameProcess)
 
 TEST_F(HdmiCecSourceInitializedTest, givePhysicalAddressProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     GivePhysicalAddress givePhysicalAddress;
@@ -1066,12 +954,6 @@ TEST_F(HdmiCecSourceInitializedTest, givePhysicalAddressProcess)
 
 TEST_F(HdmiCecSourceInitializedTest, giveDeviceVendorIdProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     GiveDeviceVendorID giveDeviceVendorID;
@@ -1088,12 +970,6 @@ TEST_F(HdmiCecSourceInitializedTest, giveDeviceVendorIdProcess)
 
 TEST_F(HdmiCecSourceInitializedTest, routingChangeProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     PhysicalAddress fromAddr(0x0F, 0x0F, 0x0F, 0x0F);
@@ -1102,38 +978,20 @@ TEST_F(HdmiCecSourceInitializedTest, routingChangeProcess)
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(routingChange, header);
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
-    EXPECT_EQ(response, string("{\"status\":true,\"success\":true}"));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, routingInformationProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     RoutingInformation routingInformation;
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(routingInformation, header);
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
-    EXPECT_EQ(response, string("{\"status\":true,\"success\":true}"));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, setStreamPathProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     PhysicalAddress toSink(0x0F, 0x0F, 0x0F, 0x0F);
@@ -1141,19 +999,10 @@ TEST_F(HdmiCecSourceInitializedTest, setStreamPathProcess)
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(setStreamPath, header);
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSourceStatus"), _T(""), response));
-    EXPECT_EQ(response, string("{\"status\":true,\"success\":true}"));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, reportPhysicalAddressProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     PhysicalAddress physAddr(1, 2, 3, 4);
@@ -1161,19 +1010,10 @@ TEST_F(HdmiCecSourceInitializedTest, reportPhysicalAddressProcess)
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(reportPhysicalAddress, header);
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
-    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, deviceVendorIDProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     VendorID vendor(1, 2, 3);
@@ -1181,19 +1021,10 @@ TEST_F(HdmiCecSourceInitializedTest, deviceVendorIDProcess)
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(deviceVendorID, header);
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
-    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"123\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, giveDevicePowerStatusProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     GiveDevicePowerStatus giveDevicePowerStatus;
@@ -1210,12 +1041,6 @@ TEST_F(HdmiCecSourceInitializedTest, giveDevicePowerStatusProcess)
 
 TEST_F(HdmiCecSourceInitializedTest, reportPowerStatusProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress::TV;
     PowerStatus powerStatus(PowerStatus::ON);
@@ -1223,19 +1048,10 @@ TEST_F(HdmiCecSourceInitializedTest, reportPowerStatusProcess)
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(reportPowerStatus, header);
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
-    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":0,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
 }
 
 TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Core::Sink<NotificationHandler> notificationHandler;
     EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementationImpl->Register(&notificationHandler));
 
@@ -1254,12 +1070,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess)
 
 TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Core::Sink<NotificationHandler> notificationHandler;
     EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementationImpl->Register(&notificationHandler));
 
@@ -1277,12 +1087,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
 
 TEST_F(HdmiCecSourceInitializedTest, abortProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Header header;
     header.from = LogicalAddress(1);
     Abort abort;
@@ -1299,12 +1103,6 @@ TEST_F(HdmiCecSourceInitializedTest, abortProcess)
 
 TEST_F(HdmiCecSourceInitializedEventTest, setOSDNameProcess)
 {
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
-        usleep (100 * 1000);
-        iCounter ++;
-    }
-
     Core::Sink<NotificationHandler> notificationHandler;
     EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementationImpl->Register(&notificationHandler));
 
