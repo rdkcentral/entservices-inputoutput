@@ -37,7 +37,7 @@
 #include "ManagerMock.h"
 #include "HostMock.h"
 #include "HdmiInputMock.h"
-
+#include "HdmiCecSinkImplementation.h"
 
 using namespace WPEFramework;
 using ::testing::NiceMock;
