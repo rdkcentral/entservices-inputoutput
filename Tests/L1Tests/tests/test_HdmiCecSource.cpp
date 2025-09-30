@@ -694,6 +694,8 @@ TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged)
 
 }
 
+// ...existing code...
+
 TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventVolumeDown)
 {
     ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
@@ -1115,8 +1117,7 @@ TEST_F(HdmiCecSourceInitializedTest, routingInformationProcess)
 
     Header header;
     header.from = LogicalAddress(1);
-    PhysicalAddress toSink(0x0F, 0x0F, 0x0F, 0x0F);
-    RoutingInformation routingInformation(toSink);
+    RoutingInformation routingInformation;
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     proc.process(routingInformation, header);
@@ -1236,7 +1237,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess)
     }
 
     Core::Sink<NotificationHandler> notificationHandler;
-    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementation::_instance->Register(&notificationHandler));
+    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementationImpl->Register(&notificationHandler));
 
     Header header;
     header.from = LogicalAddress(1);
@@ -1248,7 +1249,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess)
 
     EXPECT_TRUE(notificationHandler.WaitForRequestStatus(1000, HdmiCecSource_OnKeyPressEvent));
 
-    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementation::_instance->Unregister(&notificationHandler));
+    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementationImpl->Unregister(&notificationHandler));
 }
 
 TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
@@ -1260,7 +1261,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
     }
 
     Core::Sink<NotificationHandler> notificationHandler;
-    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementation::_instance->Register(&notificationHandler));
+    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementationImpl->Register(&notificationHandler));
 
     Header header;
     header.from = LogicalAddress(1);
@@ -1271,7 +1272,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedProcess)
 
     EXPECT_TRUE(notificationHandler.WaitForRequestStatus(1000, HdmiCecSource_OnKeyReleaseEvent));
 
-    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementation::_instance->Unregister(&notificationHandler));
+    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementationImpl->Unregister(&notificationHandler));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, abortProcess)
@@ -1284,8 +1285,7 @@ TEST_F(HdmiCecSourceInitializedTest, abortProcess)
 
     Header header;
     header.from = LogicalAddress(1);
-    OpCode opCode(0x82);
-    Abort abort(opCode);
+    Abort abort;
 
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke(
@@ -1306,7 +1306,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, setOSDNameProcess)
     }
 
     Core::Sink<NotificationHandler> notificationHandler;
-    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementation::_instance->Register(&notificationHandler));
+    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementationImpl->Register(&notificationHandler));
 
     Header header;
     header.from = LogicalAddress(1);
@@ -1318,5 +1318,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, setOSDNameProcess)
 
     EXPECT_TRUE(notificationHandler.WaitForRequestStatus(1000, HdmiCecSource_OnDeviceInfoUpdated));
 
-    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementation::_instance->Unregister(&notificationHandler));
+    EXPECT_EQ(Core::ERROR_NONE, HdmiCecSourceImplementationImpl->Unregister(&notificationHandler));
 }
+
+// ...existing code...
