@@ -126,13 +126,13 @@ jobs:
           git clone -b develop https://github.com/rdkcentral/entservices-inputoutput.git
           cd entservices-inputoutput/L2HalMock
           ls
-          #rm -rf build.sh
-          rm -rf peru.yaml
+          rm -rf build.sh
+          #rm -rf peru.yaml
           #git clone -b peru https://github.com/rdk-e/FLASK-for-Hal-Mock.git
           git clone -b peru https://${{secrets.RDK_E_MANIFEST_USERNAME}}:${{ secrets.RDK_E_MANIFEST_PASSWORD}}@github.com/rdk-e/FLASK-for-Hal-Mock.git
           cd FLASK-for-Hal-Mock
           ls
-          #mv build.sh ..
+          mv build.sh ..
           mv peru.yaml ..
           #cp -r peru.yaml __w/rdkservices/rdkservices/rdkservices/L2HalMock
           cd ..
@@ -140,7 +140,7 @@ jobs:
           sed -i 's/PASSWORD_PLACEHOLDER/${{ secrets.RDK_E_MANIFEST_PASSWORD }}/g' peru.yaml
           sed -i 's/CENTRAL_USERNAME_PLACEHOLDER/${{ secrets.HAL_EMULATOR_MANIFEST_USERNAME }}/g' peru.yaml
           sed -i 's/CENTRAL_PASSWORD_PLACEHOLDER/${{ secrets.HAL_EMULATOR_MANIFEST_PASSWORD }}/g' peru.yaml
-          peru sync
+          #peru sync
           chmod -Rf 777 build.sh
           ./build.sh $PLUGIN_NAME
         shell: bash
