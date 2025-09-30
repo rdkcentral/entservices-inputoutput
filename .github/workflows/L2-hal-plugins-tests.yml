@@ -140,6 +140,7 @@ jobs:
           sed -i 's/PASSWORD_PLACEHOLDER/${{ secrets.RDK_E_MANIFEST_PASSWORD }}/g' peru.yaml
           sed -i 's/CENTRAL_USERNAME_PLACEHOLDER/${{ secrets.HAL_EMULATOR_MANIFEST_USERNAME }}/g' peru.yaml
           sed -i 's/CENTRAL_PASSWORD_PLACEHOLDER/${{ secrets.HAL_EMULATOR_MANIFEST_PASSWORD }}/g' peru.yaml
+          peru sync
           chmod -Rf 777 build.sh
           ./build.sh $PLUGIN_NAME
         shell: bash
