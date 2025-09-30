@@ -984,13 +984,12 @@ namespace Plugin {
         std::string key;
 
         // Generate storage key based on parameter type
-        if (forParam == "CMS")
-            generateStorageIdentifierCMS(key, forParam, indexInfo);
-        else if (forParam.compare("WhiteBalance") == 0) {
-                generateStorageIdentifierWB(key, forParam, indexInfo);
+        if (forParam.compare("WhiteBalance") == 0) {
+            generateStorageIdentifierWB(key, forParam, indexInfo);
         }
-        else
+        else {
             generateStorageIdentifierV2(key, forParam, indexInfo);
+        }
 
         if (key.empty()) {
             LOGERR("%s generateStorageIdentifier failed\n", __FUNCTION__);
@@ -1763,11 +1762,11 @@ namespace Plugin {
         string key;
         TR181_ParamData_t param={0};
 
-        if (forParam.compare("CMS") == 0) {
+        if (forParam.compare("CMS") == 0 && m_cmsStatus == tvERROR_OPERATION_NOT_SUPPORTED) {
             generateStorageIdentifierCMS(key, forParam, indexInfo);
         }
         else if (forParam.compare("WhiteBalance") == 0) {
-                generateStorageIdentifierWB(key, forParam, indexInfo);
+            generateStorageIdentifierWB(key, forParam, indexInfo);
         }
         else {
             generateStorageIdentifierV2(key, forParam, indexInfo);
@@ -2875,8 +2874,12 @@ namespace Plugin {
         key += AVOUTPUT_GENERIC_STRING_RFC_PARAM;
         key += STRING_SOURCE + convertSourceIndexToStringV2(info.sourceIndex) + "." +
             STRING_PICMODE + convertPictureIndexToStringV2(info.pqmodeIndex) + "." +
-            STRING_FORMAT + convertVideoFormatToStringV2(info.formatIndex) + "." +
-            forParam;
+            STRING_FORMAT + convertVideoFormatToStringV2(info.formatIndex) + ".";
+        if( forParam == "CMS")
+            key += STRING_COLOR+getCMSColorStringFromEnum((tvDataComponentColor_t)info.colorIndex)+std::string(".")+STRING_COMPONENT+getCMSComponentStringFromEnum((tvComponentType_t)info.componentIndex)+std::string(".");
+
+        key += forParam;
+
         return tvERROR_NONE;
     }
 
@@ -3351,23 +3354,17 @@ namespace Plugin {
             const JsonObject& parameters,
             tvPQParameterIndex_t pqParamIndex, int level)
     {
-#if DEBUG
-        LOGINFO("Entry %s: Action: %s, Param: %s, Level: %d", __FUNCTION__, action.c_str(), tr181ParamName.c_str(), level);
-#endif
+
         std::vector<tvConfigContext_t> validContexts = getValidContextsFromParameters(parameters, tr181ParamName);
         if (validContexts.empty()) {
             LOGWARN("%s: No valid contexts found for parameters", __FUNCTION__);
             return (int)tvERROR_GENERAL;
         }
         if (validContexts.size() == 1){
-#if DEBUG
-            LOGINFO("Processing immediately");
-#endif
+
             return updateAVoutputTVParamV2Implementation(action, tr181ParamName, parameters, pqParamIndex, level);
         } else {
-#if DEBUG
-            LOGINFO("Queuing for background processing - no current values involved");
-#endif
+
             // Capture parameters by value for thread safety
             std::lock_guard<std::mutex> lock(queueMutex);
             paramUpdateQueue.push([this, action, tr181ParamName, parameters, pqParamIndex, level]() {
@@ -3384,36 +3381,54 @@ namespace Plugin {
         const JsonObject& parameters,
         tvPQParameterIndex_t pqParamIndex,int level)
     {
-#if DEBUG
+
         LOGINFO("Entry %s: Action: %s, Param: %s, Level: %d", __FUNCTION__, action.c_str(), tr181ParamName.c_str(), level);
-#endif
+
         int ret = 0;
         const bool isSet = (action == "set");
         const bool isReset = (action == "reset");
         const bool isSync = (action == "sync");
 
         std::vector<tvConfigContext_t> validContexts = getValidContextsFromParameters(parameters, tr181ParamName);
-#if DEBUG
+        std::vector<std::string> colors, components;
+
         LOGINFO("%s: Number of validContexts = %zu", __FUNCTION__, validContexts.size());
-#endif
+
         if (validContexts.empty()) {
             LOGWARN("%s: No valid contexts found for parameters", __FUNCTION__);
             return (int)tvERROR_GENERAL;
         }
         if (tr181ParamName == "CMS") {
-            JsonArray colorArray = getJsonArrayIfArray(parameters, "color");
-            JsonArray componentArray = getJsonArrayIfArray(parameters, "component");
+            if ( isReset )
+            {
+                JsonArray colorArray = getJsonArrayIfArray(parameters, "color");
+                JsonArray componentArray = getJsonArrayIfArray(parameters, "component");
 
-            std::vector<std::string> colors, components;
+                for (size_t i = 0; i < colorArray.Length(); ++i)
+                    colors.emplace_back(colorArray[i].String());
 
-            for (size_t i = 0; i < colorArray.Length(); ++i)
-                colors.emplace_back(colorArray[i].String());
+                for (size_t i = 0; i < componentArray.Length(); ++i)
+                    components.emplace_back(componentArray[i].String());
+            }
+            else if( isSet)
+            {
+                colors.emplace_back(parameters.HasLabel("color") ? parameters["color"].String() : "");
+                components.emplace_back(parameters.HasLabel("component") ? parameters["component"].String() : "");
+            }
+            else if(isSync)
+            {
+                colors = m_cmsColorList;
+                components = m_cmsComponentList;
+            }
 
-            for (size_t i = 0; i < componentArray.Length(); ++i)
-                components.emplace_back(componentArray[i].String());
-
-            if (colors.empty()) colors.push_back("Global");
-            if (components.empty()) components.push_back("Global");
+            if (colors.empty())
+            {
+                colors.push_back("Global");
+            }
+            if (components.empty())
+            {
+                components.push_back("Global");
+            }
 
             if (colors.size() == 1 && colors[0] == "Global")
                 colors = m_cmsColorList;
@@ -3462,10 +3477,9 @@ namespace Plugin {
                         paramIndex.colorIndex = static_cast<uint8_t>(colorValue);
                         paramIndex.colorTempIndex = 0;
                         paramIndex.controlIndex = 0;
-
                         int value = 0;
                         if (isReset) {
-                            ret |= updateAVoutputTVParamToHAL(tr181ParamName, paramIndex, 0, false);
+                            ret |= updateAVoutputTVParamToHALV2(tr181ParamName, paramIndex, 0, false);
                             level = 0;
                         }
 
@@ -3486,7 +3500,7 @@ namespace Plugin {
                                     level);
 
                         if (isSet) {
-                            ret |= updateAVoutputTVParamToHAL(tr181ParamName, paramIndex, level, true);
+                            ret |= updateAVoutputTVParamToHALV2(tr181ParamName, paramIndex, level, true);
                         }
                     }
                 }

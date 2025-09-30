@@ -5057,11 +5057,26 @@ namespace Plugin {
                 returnResponse(false);
             }
 
+            // Get Color and Component enum values
+            tvDataComponentColor_t colorLevel;
+            if ( getCMSColorEnumFromString(color,colorLevel ) == -1 ) {
+                LOGERR("%s : GetColorEnumFromString Failed!!! ",__FUNCTION__);
+                returnResponse(false);
+            }
+
+            tvComponentType_t componentLevel;
+            if ( getCMSComponentEnumFromString(component,componentLevel ) == -1 ) {
+                LOGERR("%s : GetComponentEnumFromString Failed!!! ",__FUNCTION__);
+                returnResponse(false);
+            }
+
             // Prepare paramIndex from context
             paramIndex_t indexInfo = {
                 .sourceIndex = static_cast<uint8_t>(validContext.videoSrcType),
                 .pqmodeIndex = static_cast<uint8_t>(validContext.pq_mode),
-                .formatIndex = static_cast<uint8_t>(validContext.videoFormatType)
+                .formatIndex = static_cast<uint8_t>(validContext.videoFormatType),
+                .colorIndex = static_cast<uint8_t>(colorLevel),
+                .componentIndex = static_cast<uint8_t>(componentLevel)
             };
 
             int level = 0;
