@@ -1441,8 +1441,7 @@ namespace Plugin {
             updateAVoutputTVParamV2("sync", "SDRGamma", paramJson, PQ_PARAM_SDR_GAMMA, level);
         }
 
-        //Commented due to missing HAL implementation
-        /*m_cmsStatus = GetCMSCaps(&m_maxCmsHue, &m_maxCmsSaturation, &m_maxCmsLuma,
+        m_cmsStatus = GetCMSCaps(&m_maxCmsHue, &m_maxCmsSaturation, &m_maxCmsLuma,
                                 &m_cmsColorArr, &m_cmsComponentArr,
                                 &m_numColor, &m_numComponent, &m_cmsCaps);
         if (m_cmsStatus == tvERROR_NONE) {
@@ -1455,7 +1454,7 @@ namespace Plugin {
                 m_cmsComponentList.push_back(componentStr);
             }
             syncCMSParamsV2();
-        }*/
+        }
         if(m_cmsStatus == tvERROR_OPERATION_NOT_SUPPORTED)
         {
             syncCMSParams();
