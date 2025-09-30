@@ -748,7 +748,7 @@ private:
         template <typename T>
         T* baseInterface()
         {
-            static_assert(std::is_base_of<T, HdmiCecSink>(), "base type mismatch");
+            static_assert(std::is_base_of<T, HdmiCecSinkImplementation>(), "base type mismatch");
             return static_cast<T*>(this);
         }
         std::list<Exchange::IHdmiCecSink::INotification*> _hdmiCecSinkNotifications;
