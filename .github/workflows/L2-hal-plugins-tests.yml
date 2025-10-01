@@ -137,6 +137,7 @@ jobs:
           mv peru.yaml ..
           #cp -r peru.yaml __w/rdkservices/rdkservices/rdkservices/L2HalMock
           cd ..
+          chmod -Rf 777 install_dependencies.sh
           ./install_dependencies.sh
           sed -i 's/USERNAME_PLACEHOLDER/${{ secrets.RDK_E_MANIFEST_USERNAME }}/g' peru.yaml
           sed -i 's/PASSWORD_PLACEHOLDER/${{ secrets.RDK_E_MANIFEST_PASSWORD }}/g' peru.yaml
