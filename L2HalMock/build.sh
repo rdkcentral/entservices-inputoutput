@@ -16,6 +16,11 @@ if grep -q "HdmiCecSink" <<< "$SelectedPlugins"; then
   HdmiCecSink="ON"
 fi
 
+if grep -q "HdcpProfile" <<< "$SelectedPlugins"; then
+  echo "Found: $SelectedPlugins"
+  HdcpProfile="ON"
+fi
+
 # Define ANSI color codes for green
 GREEN='\033[0;32m'     # Green text
 NC='\033[0m'           # No color (resets to default)
@@ -198,6 +203,7 @@ cmake -S . -B build \
 -DUSE_THUNDER_R4=ON \
 -DPLUGIN_HDMICECSOURCE=$HdmiCecSource \
 -DPLUGIN_HDMICECSINK=$HdmiCecSink \
+-DPLUGIN_HDCPPROFILE=$HdcpProfile \
 -DCOMCAST_CONFIG=OFF \
 -DCEC_INCLUDE_DIRS="$SCRIPTS_DIR/workspace/deps/rdk/hdmicec/ccec/include" \
 -DOSAL_INCLUDE_DIRS="$SCRIPTS_DIR/workspace/deps/rdk/hdmicec/osal/include" \
