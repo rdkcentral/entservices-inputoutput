@@ -469,7 +469,7 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
                 return port == 1 ? true : false;
             }));
 
-    ON_CALL(*p_hdmiInputImplMock, getHDMIARCPortId(::testing::_))
+    EXPECT_CALL(*p_hdmiInputImplMock, getHDMIARCPortId(::testing::_))
         .WillByDefault(::testing::Invoke(
             [](int& portId) {
                 portId = 1;
@@ -656,7 +656,7 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
                 return port == 1 ? true : false;
             }));
 
-    ON_CALL(*p_hdmiInputImplMock, getHDMIARCPortId(::testing::_))
+    EXPECT_CALL(*p_hdmiInputImplMock, getHDMIARCPortId(::testing::_))
         .WillByDefault(::testing::Invoke(
             [](int& portId) {
                 portId = 1;
