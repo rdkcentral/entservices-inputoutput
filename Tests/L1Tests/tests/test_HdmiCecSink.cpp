@@ -171,29 +171,21 @@ protected:
         ON_CALL(*p_connectionImplMock, open())
             .WillByDefault(::testing::Return());
 
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-            .WillByDefault(
-                [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                    if (strcmp(methodName, IARM_BUS_PWRMGR_API_GetPowerState) == 0) {
-                        auto* param = static_cast<IARM_Bus_PWRMgr_GetPowerState_Param_t*>(arg);
-                        param->curState  = IARM_BUS_PWRMGR_POWERSTATE_ON;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetNumberOfInputs) == 0) {
-                        auto* param = static_cast<dsHdmiInGetNumberOfInputsParam_t*>(arg);
-                        param->result = dsERR_NONE;
-                        param->numHdmiInputs = 3;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsHdmiInGetStatus) == 0) {
-                        auto* param = static_cast<dsHdmiInGetStatusParam_t*>(arg);
-                        param->result = dsERR_NONE;
-                        param->status.isPortConnected[1] = 1;
-                    }
-                    if (strcmp(methodName, IARM_BUS_DSMGR_API_dsGetHDMIARCPortId) == 0) {
-                        auto* param = static_cast<dsGetHDMIARCPortIdParam_t*>(arg);
-                        param->portId = 1;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                });
+        EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
+            .WillRepeatedly(::testing::Return(3));
+
+        ON_CALL(*p_hdmiInputImplMock, isPortConnected(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [](int8_t port) {
+                    return port == 1? true : false;
+                }));
+
+        ON_CALL(*p_hdmiInputImplMock, getHDMIARCPortId(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [](int &portId) {
+                    portId = 1;
+                    return dsERR_NONE;
+                }));
 
         ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
@@ -281,36 +273,6 @@ protected:
             delete p_wrapsImplMock;
             p_wrapsImplMock = nullptr;
         }
-    }
-};
-
-class HdmiCecSinkInitializedEventDsTest : public HdmiCecSinkDsTest {
-protected:
-    HdmiCecSinkInitializedEventDsTest(): HdmiCecSinkDsTest()
-    string response;
-
-    HdmiCecSinkDsTest(): HdmiCecSinkTest()
-    {
-        EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
-            .WillRepeatedly(::testing::Return(3));
-
-        ON_CALL(*p_hdmiInputImplMock, isPortConnected(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [](int8_t port) {
-                    return port == 1? true : false;
-                }));
-
-        ON_CALL(*p_hdmiInputImplMock, getHDMIARCPortId(::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [](int &portId) {
-                    portId = 1;
-                    return dsERR_NONE;
-                }));
-
-		EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
-    }
-    virtual ~HdmiCecSinkDsTest() override {
     }
 };
 
