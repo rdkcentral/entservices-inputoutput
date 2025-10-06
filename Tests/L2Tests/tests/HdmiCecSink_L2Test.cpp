@@ -475,7 +475,7 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
             [](int& portId) -> dsError_t {
                 fprintf(stderr, "[TEST MOCK] getHDMIARCPortId called (expectation)\n");
                 portId = 1;
-                return static_cast<dsError_t>(dsERR_NONE);
+                return static_cast<dsError_t>(0);
             }));
 
     /* Activate plugin in constructor */
@@ -662,7 +662,7 @@ HdmiCecSink_L2Test_STANDBY::HdmiCecSink_L2Test_STANDBY()
         .WillRepeatedly(::testing::Invoke(
             [](int& portId) -> dsError_t {
                 portId = 1;
-                return static_cast<dsError_t>(dsERR_NONE);
+                return static_cast<dsError_t>(0);
             }));
 
     /* Activate plugin in constructor */
