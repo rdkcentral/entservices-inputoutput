@@ -3574,6 +3574,7 @@ namespace WPEFramework
       {
          int portId = -1;
          dsError_t error = device::HdmiInput::getInstance().getHDMIARCPortId(portId);
+         LOGINFO("getHdmiArcPortID portId[%d] error[%d]", portId, error);
          if (dsERR_NONE == error)
          {
              LOGINFO("HDMI ARC port ID HdmiArcPortID[%d]", portId);
