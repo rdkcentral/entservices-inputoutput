@@ -470,8 +470,10 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
             }));
 
     EXPECT_CALL(*p_hdmiInputImplMock, getHDMIARCPortId(::testing::_))
+        .Times(::testing::AtLeast(1))
         .WillRepeatedly(::testing::Invoke(
             [](int& portId) -> dsError_t {
+                fprintf(stderr, "[TEST MOCK] getHDMIARCPortId called (expectation)\n");
                 portId = 1;
                 return dsERR_NONE;
             }));
