@@ -4075,44 +4075,55 @@ namespace Plugin {
 
     uint32_t AVOutputTV::getVideoSourceCaps(const JsonObject& parameters, JsonObject& response)
     {
+        tvVideoSrcType_t sources[VIDEO_SOURCE_MAX] = { VIDEO_SOURCE_IP };
+        tvVideoSrcType_t *sourcePtr[VIDEO_SOURCE_MAX] = { 0 };
+        unsigned short numOfSources = 0;
+        for (int i = 0; i < VIDEO_SOURCE_MAX; i++)
+        {
+            sourcePtr[i] = &sources[i];
+        }
 
-        JsonArray rangeArray;
-
-        std::vector<std::string> range;
-        std::vector<std::string> pqmode;
-        std::vector<std::string> source;
-        std::vector<std::string> format;
-
-        if (getCapabilitySource(rangeArray) != 0) {
+        tvError_t ret = GetTVSupportedVideoSources(sourcePtr, &numOfSources);
+        if(ret != tvERROR_NONE) {
             returnResponse(false);
         }
-        response["options"]=rangeArray;
-        LOGINFO("Exit\n");
-        returnResponse(true);
+        else {
+            JsonArray supportedVideoSources;
+            for(int count = 0;count <numOfSources;count++ ) {
+                supportedVideoSources.Add(convertSourceIndexToStringV2(int(sources[count])));
+            }
+
+            response["options"] = supportedVideoSources;
+            LOGINFO("Exit\n");
+            returnResponse(true);
+        }
     }
 
     uint32_t AVOutputTV::getVideoFormatCaps(const JsonObject& parameters, JsonObject& response)
     {
 
-        JsonArray rangeArray;
+        tvVideoFormatType_t formats[VIDEO_FORMAT_MAX] = { VIDEO_FORMAT_SDR };
+        tvVideoFormatType_t *formatPtr[VIDEO_FORMAT_MAX] = { 0 };
+        unsigned short numOfFormats = 0;
+        for (int i = 0; i < VIDEO_FORMAT_MAX; i++)
+        {
+            formatPtr[i] = &formats[i];
+        }
 
-        capVectors_t info;
-
-        tvError_t ret = getParamsCaps("VideoFormat",info);
-
+        tvError_t ret = GetTVSupportedVideoFormats(formatPtr, &numOfFormats);
         if(ret != tvERROR_NONE) {
             returnResponse(false);
         }
         else {
-            if ((info.rangeVector.front()).compare("none") != 0) {
-                for (unsigned int index = 0; index < info.rangeVector.size(); index++) {
-                    rangeArray.Add(info.rangeVector[index]);
-                }
-                response["options"]=rangeArray;
+            JsonArray supportedVideoFormats;
+            for(int count = 0;count <numOfFormats;count++ ) {
+                supportedVideoFormats.Add(convertVideoFormatToStringV2(int(formats[count])));
             }
+
+            response["options"] = supportedVideoFormats;
+            LOGINFO("Exit\n");
+            returnResponse(true);
         }
-        LOGINFO("Exit\n");
-        returnResponse(true);
     }
 
     uint32_t AVOutputTV::getVideoFrameRateCaps(const JsonObject& parameters, JsonObject& response)
