@@ -34,7 +34,10 @@
 namespace WPEFramework {
 namespace Plugin {
     
-    class AVInput : public PluginHost::IPlugin, public PluginHost::JSONRPC {
+    class AVInput: public PluginHost::IPlugin, 
+               public PluginHost::JSONRPC,
+               public device::Host::IHdmiInEvents, 
+               public device::Host::ICompositeInEvents {
 
     public:
 

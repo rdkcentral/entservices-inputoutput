@@ -26,6 +26,7 @@
 #include "CompositeInputMock.h"
 #include "FactoriesImplementation.h"
 #include "HdmiInputMock.h"
+#include "ManagerMock.h"
 #include "HostMock.h"
 #include "IarmBusMock.h"
 #include "ServiceMock.h"
@@ -52,14 +53,8 @@ protected:
     AVInputMock* p_avInputMock = nullptr;
     DECL_CORE_JSONRPC_CONX connection;
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
+    ManagerImplMock* p_managerImplMock = nullptr;
     PLUGINHOST_DISPATCHER* dispatcher;
-
-    IARM_EventHandler_t dsAVGameFeatureStatusEventHandler   = nullptr;
-    IARM_EventHandler_t dsAVEventHandler                    = nullptr;    
-    IARM_EventHandler_t dsAVSignalStatusEventHandler        = nullptr;
-    IARM_EventHandler_t dsAVStatusEventHandler              = nullptr;
-    IARM_EventHandler_t dsAVVideoModeEventHandler           = nullptr;
-    IARM_EventHandler_t dsAviContentTypeEventHandler        = nullptr;
 
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
@@ -89,55 +84,12 @@ protected:
         p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
         IarmBus::setImpl(p_iarmBusImplMock);
 
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVSignalStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVVideoModeEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVGameFeatureStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVGameFeatureStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVSignalStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVStatusEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAVVideoModeEventHandler = handler;
-                    }
-                    if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsAviContentTypeEventHandler = handler;
-                    }
-                    return IARM_RESULT_SUCCESS;
-                }));
+        p_managerImplMock  = new NiceMock <ManagerImplMock>;
+        device::Manager::setImpl(p_managerImplMock);
+
+        EXPECT_CALL(*p_managerImplMock, Initialize())
+            .Times(::testing::AnyNumber())
+            .WillRepeatedly(::testing::Return());
 
         Core::IWorkerPool::Assign(&(*workerPool));
         workerPool->Run();
@@ -164,6 +116,13 @@ protected:
         if (p_avInputMock != nullptr) {
             delete p_avInputMock;
             p_avInputMock = nullptr;
+        }
+
+        device::Manager::setImpl(nullptr);
+        if (p_managerImplMock != nullptr)
+        {
+            delete p_managerImplMock;
+            p_managerImplMock = nullptr;
         }
     }
 };
@@ -806,13 +765,9 @@ TEST_F(AVInputEvents, onDevicesChangedHDMI)
                 return Core::ERROR_NONE;
             }));
 
-    ASSERT_TRUE(dsAVEventHandler != nullptr);
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_connect.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_connect.isPortConnected = true;
-    dsAVEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, &eventData, 0);
+    plugin->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
@@ -838,11 +793,7 @@ TEST_F(AVInputEvents, onDevicesChangedCOMPOSITE)
 
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
-    ASSERT_TRUE(dsAVEventHandler != nullptr);
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_connect.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_connect.isPortConnected = true;
-    dsAVEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG, &eventData, 0);
+    plugin->OnCompositeInHotPlug(dsCOMPOSITE_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
@@ -869,11 +820,7 @@ TEST_F(AVInputEvents, onSignalChangedStableHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_STABLE;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_STABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -899,12 +846,8 @@ TEST_F(AVInputEvents, onSignalChangedNoSignalHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -930,12 +873,8 @@ TEST_F(AVInputEvents, onSignalChangedUnstableHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_UNSTABLE;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0,dsHDMI_IN_SIGNAL_STATUS_UNSTABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -960,12 +899,8 @@ TEST_F(AVInputEvents, onSignalChangedNotSupportedHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -990,12 +925,7 @@ TEST_F(AVInputEvents, onSignalChangedDefaultHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_sig_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_sig_status.status = dsHDMI_IN_SIGNAL_STATUS_MAX;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_MAX);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -1020,12 +950,7 @@ TEST_F(AVInputEvents, onSignalChangedStableCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_sig_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_sig_status.status = dsCOMP_IN_SIGNAL_STATUS_STABLE;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_STABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -1050,12 +975,8 @@ TEST_F(AVInputEvents, onSignalChangedNoSignalCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_sig_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_sig_status.status = dsCOMP_IN_SIGNAL_STATUS_NOSIGNAL;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOSIGNAL);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -1080,12 +1001,8 @@ TEST_F(AVInputEvents, onSignalChangedUnstableCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_sig_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_sig_status.status = dsCOMP_IN_SIGNAL_STATUS_UNSTABLE;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_UNSTABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -1110,12 +1027,7 @@ TEST_F(AVInputEvents, onSignalChangedNotSupportedCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_sig_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_sig_status.status = dsCOMP_IN_SIGNAL_STATUS_NOTSUPPORTED;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOTSUPPORTED);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -1140,12 +1052,7 @@ TEST_F(AVInputEvents, onSignalChangedDefaultCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_sig_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_sig_status.status = dsCOMP_IN_SIGNAL_STATUS_MAX;
-    dsAVSignalStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, &eventData, 0);
+    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_MAX);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
@@ -1170,15 +1077,11 @@ TEST_F(AVInputEvents, onInputStatusChangeOn_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("startInput"), _T("{\"portId\": \"0\" , \"typeOfInput\":\"HDMI\", \"requestAudioMix\": true, \"plane\" : 1, \"topMost\" : true}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_status.isPresented = true;
-    dsAVStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS, &eventData, 0);
+    plugin->OnHdmiInEventStatus(dsHDMI_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
@@ -1203,15 +1106,12 @@ TEST_F(AVInputEvents, onInputStatusChangeOff_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
+   
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("stopInput"), _T("{\"typeOfInput\":\"HDMI\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_status.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_status.isPresented = false;
+    plugin->OnHdmiInEventStatus(dsHDMI_IN_PORT_0, false);
 
-    dsAVStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS, &eventData, 0);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
@@ -1236,14 +1136,10 @@ TEST_F(AVInputEvents, onInputStatusChangeOn_COMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("startInput"), _T("{\"portId\": \"0\" , \"typeOfInput\":\"COMPOSITE\", \"requestAudioMix\": true, \"plane\" : 1, \"topMost\" : true}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_status.isPresented = true;
-    dsAVStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS, &eventData, 0);
+    plugin->OnCompositeInStatus(dsCOMPOSITE_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
@@ -1268,14 +1164,10 @@ TEST_F(AVInputEvents, onInputStatusChangeOff_COMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("stopInput"), _T("{\"typeOfInput\":\"COMPOSITE\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_status.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_status.isPresented = false;
-    dsAVStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS, &eventData, 0);
+    plugin->OnCompositeInStatus(dsCOMPOSITE_IN_PORT_0, false);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
@@ -1300,12 +1192,8 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate)
             }));
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_allm_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_allm_mode.allm_mode = true;
-    dsAVGameFeatureStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS, &eventData, 0);
+    plugin->OnHdmiInAllmStatus(dsHDMI_IN_PORT_0,true);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
@@ -1330,12 +1218,8 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_HDMI_VRR)
             }));
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_vrr_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_vrr_mode.vrr_type = dsVRR_HDMI_VRR;
-    dsAVGameFeatureStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS, &eventData, 0);
+    plugin->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0,dsVRR_HDMI_VRR);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
@@ -1360,12 +1244,8 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
             }));
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_vrr_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_vrr_mode.vrr_type = dsVRR_AMD_FREESYNC;
-    dsAVGameFeatureStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS, &eventData, 0);
+    plugin->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
@@ -1390,12 +1270,8 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
             }));
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_vrr_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_vrr_mode.vrr_type = dsVRR_AMD_FREESYNC_PREMIUM;
-    dsAVGameFeatureStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS, &eventData, 0);
+    
+    plugin->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC_PREMIUM);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
@@ -1420,12 +1296,8 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
             }));
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_vrr_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_vrr_mode.vrr_type = dsVRR_AMD_FREESYNC_PREMIUM_PRO;
-    dsAVGameFeatureStatusEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS, &eventData, 0);
+    plugin->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC_PREMIUM_PRO);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
@@ -1450,14 +1322,13 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate1_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_1920x1080;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_59dot94;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_1920x1080;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_59dot94;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0,videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1482,14 +1353,13 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate2_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_720x480;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_24;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_720x480;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_24;
+    
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1514,14 +1384,13 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate3_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_720x576;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_25;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_720x576;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_25;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1546,14 +1415,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate4_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_3840x2160;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_30;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_3840x2160;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_30;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1578,15 +1447,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate5_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_4096x2160;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_50;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
-
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_4096x2160;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_50;
+    
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
@@ -1610,14 +1478,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate6_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
+    
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_4096x2160;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_60;
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_4096x2160;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_60;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1642,14 +1510,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate7_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_4096x2160;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_23dot98;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_4096x2160;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_23dot98;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1674,14 +1542,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate8_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_4096x2160;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_29dot97;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_4096x2160;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_29dot97;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1706,14 +1574,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate9_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_29dot97;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_29dot97;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
     
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1738,14 +1606,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate10_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_100;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_100;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1770,14 +1638,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate11_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_119dot88;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_119dot88;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1802,14 +1670,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate12_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_120;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_120;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1834,14 +1702,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate13_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_200;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_200;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1866,14 +1734,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate14_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_239dot76;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_239dot76;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1898,14 +1766,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate15_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_240;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_1280x720;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_240;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1930,14 +1798,14 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_HDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_video_mode.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_MAX;
-    eventData.data.hdmi_in_video_mode.resolution.interlaced = true;
-    eventData.data.hdmi_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_MAX;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_MAX;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_MAX;
+
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
     
@@ -1962,13 +1830,12 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate1_COMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_video_mode.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_720x480;
-    eventData.data.composite_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_24;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_720x480;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_24;
+
+    plugin->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1994,13 +1861,12 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate2_COMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_video_mode.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_720x576;
-    eventData.data.composite_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_25;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_720x576;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_25;
+
+    plugin->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -2025,13 +1891,12 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.composite_in_video_mode.port = dsCOMPOSITE_IN_PORT_0;
-    eventData.data.composite_in_video_mode.resolution.pixelResolution = dsVIDEO_PIXELRES_MAX;
-    eventData.data.composite_in_video_mode.resolution.frameRate = dsVIDEO_FRAMERATE_MAX;
-    dsAVVideoModeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE, &eventData, 0);
+    dsVideoPortResolution_t videoPortResolution;
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_MAX;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_MAX;
+
+    plugin->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -2055,13 +1920,9 @@ TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
                 return Core::ERROR_NONE;
             }));
 
-    EVENT_SUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);
-    ASSERT_TRUE(dsAVSignalStatusEventHandler != nullptr);
+    EVENT_SUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);    
 
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_in_content_type.port = dsHDMI_IN_PORT_0;
-    eventData.data.hdmi_in_content_type.aviContentType = dsAVICONTENT_TYPE_GRAPHICS;
-    dsAviContentTypeEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE, &eventData, 0);
+    plugin->OnHdmiInAVIContentType(dsHDMI_IN_PORT_0, dsAVICONTENT_TYPE_GRAPHICS);
 
     EXPECT_EQ(Core::ERROR_NONE, aviContentTypeUpdate.Lock());
 
