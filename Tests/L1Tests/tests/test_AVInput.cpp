@@ -1487,6 +1487,13 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate6_HDMI)
 
     plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
+    dsVideoPortResolution_t videoPortResolution;
+    
+    videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_4096x2160;
+    videoPortResolution.interlaced = true;
+    videoPortResolution.frameRate = dsVIDEO_FRAMERATE_50;
+    
+    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
