@@ -1857,7 +1857,7 @@ TEST_F(HdmiCecSink_L2Test, GetDeviceList_COMRPC)
 }
 
 // Test cases to validate Hdmihotplug COMRPC
-TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC_PluggedIn&Out)
+TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC_PlugIn_and_PlugOut)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
         TEST_LOG("Invalid HdmiCecSink_Client");
