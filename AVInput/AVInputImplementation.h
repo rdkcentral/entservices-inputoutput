@@ -29,6 +29,7 @@
 #include "exception.hpp"
 #include "hdmiIn.hpp"
 #include "host.hpp"
+#include "manager.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -62,7 +63,13 @@ using ParamsType = boost::variant<
 namespace WPEFramework {
 namespace Plugin {
 
-    class AVInputImplementation : public Exchange::IAVInput {
+    // <pca> debug
+    //class AVInputImplementation : public Exchange::IAVInput {
+    class AVInputImplementation :
+        public Exchange::IAVInput,
+        public device::Host::IHdmiInEvents, 
+        public device::Host::ICompositeInEvents {
+    // </pca>
 
     public:
 
