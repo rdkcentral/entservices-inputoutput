@@ -113,15 +113,7 @@ jobs:
         if: contains(steps.getfile.outputs.files, 'HdmiCecSource') || contains(steps.getfile.outputs.files, 'HdmiCecSink')
       - name: Clone the Manifest and build the associated binaries
         run: |
-          
-          apt update
-          apt install csvtool
-          pip install peru
-          #apt-get install csvtool
-          apt-get install meson
-          apt-get update && apt-get install -y lynx
           rm -rf rdkservices
-          apt install -y libjsoncpp-dev
           #apt install libjsoncpp-dev
           git clone -b develop https://github.com/rdkcentral/entservices-inputoutput.git
           cd entservices-inputoutput/L2HalMock
