@@ -341,6 +341,7 @@ protected:
     IARM_EventHandler_t powerEventHandler = nullptr;
     FrameListener* registeredListener = nullptr;
     std::vector<FrameListener*> listeners;
+    device::Host::IHdmiInEvents* g_registeredHdmiInListener = nullptr;
 
     Core::ProxyType<RPC::InvokeServerType<1, 0, 4>> HdmiCecSink_Engine;
     Core::ProxyType<RPC::CommunicatorClient> HdmiCecSink_Client;
@@ -456,6 +457,15 @@ HdmiCecSink_L2Test::HdmiCecSink_L2Test()
             printf("[TEST] addFrameListener called with address: %p\n", static_cast<void*>(listener));
             this->listeners.push_back(listener);
         });
+
+    EXPECT_CALL(*p_hostImplMock, Register(::testing::A<device::Host::IHdmiInEvents*>()))
+        .WillOnce(::testing::Invoke(
+            [&](device::Host::IHdmiInEvents* listener) -> dsError_t {
+                this->g_registeredHdmiInListener = listener;
+                fprintf(stderr, "[TEST MOCK] Host::Register captured listener=%p\n", static_cast<void*>(listener));
+                fflush(stderr);
+                return static_cast<dsError_t>(0);
+            }));
 
     ON_CALL(*p_connectionMock, open())
         .WillByDefault(::testing::Return());
@@ -1847,7 +1857,7 @@ TEST_F(HdmiCecSink_L2Test, GetDeviceList_COMRPC)
 }
 
 // Test cases to validate Hdmihotplug COMRPC
-TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC)
+TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC_PluggedIn&Out)
 {
     if (CreateHdmiCecSinkInterfaceObject() != Core::ERROR_NONE) {
         TEST_LOG("Invalid HdmiCecSink_Client");
@@ -1856,7 +1866,10 @@ TEST_F(HdmiCecSink_L2Test, Hdmihotplug_COMRPC)
         if (m_controller_cecSink) {
             EXPECT_TRUE(m_cecSinkPlugin != nullptr);
             if (m_cecSinkPlugin) {
-                device::Host::IHdmiInEvents::getInstance().OnHdmiInEventHotPlug(dsHDMI_IN_PORT_1, true);
+                ASSERT_NE(g_registeredHdmiInListener, nullptr);
+                g_registeredHdmiInListener->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_1, true);
+                std::this_thread::sleep_for(std::chrono::seconds(2));
+                g_registeredHdmiInListener->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_1, false);
                 m_cecSinkPlugin->Release();
             }
             m_controller_cecSink->Release();
