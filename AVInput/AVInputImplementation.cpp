@@ -340,7 +340,7 @@ namespace Plugin {
         LOGINFO("Received OnHdmiInEventHotPlug callback, port: %d, isConnected: %s", port, isConnected ? "true" : "false");
 
         if(AVInputImplementation::_instance) {
-            AVInputImplementation::_instance->AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, HDMI);
+            AVInputImplementation::_instance->AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, INPUT_TYPE_INT_HDMI);
         }
     }
 
@@ -349,7 +349,7 @@ namespace Plugin {
         LOGINFO("Received OnHdmiInEventSignalStatus callback, port: %d, signalStatus: %d",port, signalStatus);
 
         if(AVInputImplementation::_instance) {
-            AVInputImplementation::_instance->AVInputSignalChange(port, signalStatus, HDMI);
+            AVInputImplementation::_instance->AVInputSignalChange(port, signalStatus, INPUT_TYPE_INT_HDMI);
         }
     }
 
@@ -358,7 +358,7 @@ namespace Plugin {
         LOGINFO("Received OnHdmiInEventStatus callback, port: %d, isPresented: %s",activePort, isPresented ? "true" : "false");
 
         if (AVInputImplementation::_instance) {
-            AVInputImplementation::_instance->AVInputStatusChange(activePort, isPresented, HDMI);
+            AVInputImplementation::_instance->AVInputStatusChange(activePort, isPresented, INPUT_TYPE_INT_HDMI);
         }
     }
 
@@ -371,7 +371,7 @@ namespace Plugin {
                 videoPortResolution.frameRate);
 
         if (AVInputImplementation::_instance) {
-            AVInputImplementation::_instance->AVInputVideoModeUpdate(port, videoPortResolution, HDMI);
+            AVInputImplementation::_instance->AVInputVideoModeUpdate(port, videoPortResolution, INPUT_TYPE_INT_HDMI);
         }
     }
 
@@ -416,7 +416,7 @@ namespace Plugin {
         LOGINFO("Received OnCompositeInHotPlug callback, port: %d, isConnected: %s",port, isConnected ? "true" : "false");
 
         if(AVInputImplementation::_instance) {
-            AVInputImplementation::_instance->AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED,COMPOSITE);
+            AVInputImplementation::_instance->AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, INPUT_TYPE_INT_COMPOSITE);
         }
     }
 
@@ -425,7 +425,7 @@ namespace Plugin {
         LOGINFO("Received OnCompositeInSignalStatus callback, port: %d, signalStatus: %d",port, signalStatus);
 
         if(AVInputImplementation::_instance) {
-            AVInputImplementation::_instance->AVInputSignalChange(port, signalStatus, COMPOSITE);
+            AVInputImplementation::_instance->AVInputSignalChange(port, signalStatus, INPUT_TYPE_INT_COMPOSITE);
         }
     }
 
@@ -435,7 +435,7 @@ namespace Plugin {
                 activePort, isPresented ? "true" : "false");
 
         if (AVInputImplementation::_instance) {
-            AVInputImplementation::_instance->AVInputStatusChange(activePort, isPresented, COMPOSITE);
+            AVInputImplementation::_instance->AVInputStatusChange(activePort, isPresented, INPUT_TYPE_INT_COMPOSITE);
         }
     }
 
@@ -448,7 +448,7 @@ namespace Plugin {
                 videoResolution.frameRate);
 
         if (AVInputImplementation::_instance) {
-            AVInputImplementation::_instance->AVInputVideoModeUpdate(activePort, videoResolution, COMPOSITE);
+            AVInputImplementation::_instance->AVInputVideoModeUpdate(activePort, videoResolution, INPUT_TYPE_INT_COMPOSITE);
         }
     }
 

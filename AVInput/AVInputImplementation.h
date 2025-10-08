@@ -231,6 +231,13 @@ namespace Plugin {
 
         bool _registeredDsEventHandlers;
 
+        template <typename T>
+        T* baseInterface()
+        {
+            static_assert(std::is_base_of<T, AVInputImplementation>(), "base type mismatch");
+            return static_cast<T*>(this);
+        }
+
         void dispatchEvent(Event, const ParamsType params);
         void Dispatch(Event event, const ParamsType params);
 

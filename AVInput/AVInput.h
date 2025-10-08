@@ -31,14 +31,18 @@
 #include "UtilsLogging.h"
 #include "tracing/Logging.h"
 
+#include "host.hpp"
+
 namespace WPEFramework {
 namespace Plugin {
     
     class AVInput: public PluginHost::IPlugin, 
-               public PluginHost::JSONRPC,
-               public device::Host::IHdmiInEvents, 
-               public device::Host::ICompositeInEvents {
-
+                // <pca>
+                // public PluginHost::JSONRPC,
+                // public device::Host::IHdmiInEvents, 
+                // public device::Host::ICompositeInEvents {
+                public PluginHost::JSONRPC {
+                // </pca>
     public:
 
         AVInput(const AVInput&) = delete;
@@ -149,6 +153,20 @@ namespace Plugin {
                 LOGINFO("AviContentTypeUpdate: id %d, contentType %d\n", id, aviContentType);
                 Exchange::JAVInput::Event::AviContentTypeUpdate(_parent, id, aviContentType);
             }
+
+            // <pca>
+            // void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
+            // void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
+            // void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;
+            // void OnHdmiInStatus(dsHdmiInPort_t activePort, bool isPresented) override;
+            // void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
+            // void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
+            // void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
+            // void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
+            // void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
+            // void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
+            // void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;            
+            // </pca>
 
         private:
             AVInput& _parent;
