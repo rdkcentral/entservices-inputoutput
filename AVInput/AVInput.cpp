@@ -18,13 +18,12 @@
 **/
 
 #include "AVInput.h"
-#include "dsMgr.h"
-#include "hdmiIn.hpp"
+
 #include "compositeIn.hpp"
+#include "hdmiIn.hpp"
 
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
-#include "host.hpp"
 
 #include "exception.hpp"
 #include <vector>
@@ -81,9 +80,9 @@ using namespace std;
 int getTypeOfInput(string sType)
 {
     int iType = -1;
-    if (strcmp (sType.c_str(), "HDMI") == 0)
+    if (0 == strcmp (sType.c_str(), "HDMI"))
         iType = HDMI;
-    else if (strcmp (sType.c_str(), "COMPOSITE") ==0)
+    else if (0 == strcmp (sType.c_str(), "COMPOSITE"))
         iType = COMPOSITE;
     else
         throw "Invalide type of INPUT, please specify HDMI/COMPOSITE";
@@ -113,6 +112,7 @@ AVInput* AVInput::_instance = nullptr;
 
 AVInput::AVInput()
     : PluginHost::JSONRPC()
+    , _registeredDsEventHandlers(false)
 {
     RegisterAll();
 }
@@ -125,111 +125,48 @@ AVInput::~AVInput()
 const string AVInput::Initialize(PluginHost::IShell * /* service */)
 {
     AVInput::_instance = this;
-    InitializeIARM();
+    try
+    {
+        device::Manager::Initialize();
+        LOGINFO("device::Manager::Initialize success");
+        if (!_registeredDsEventHandlers) {
+            _registeredDsEventHandlers = true;
+            device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
+            device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
+        }
+    }
+    catch(const device::Exception& err)
+    {
+        LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
+        LOG_DEVICE_EXCEPTION0();
+    }
 
     return (string());
 }
 
 void AVInput::Deinitialize(PluginHost::IShell * /* service */)
 {
-    DeinitializeIARM();
+
+    device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+    device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
+    _registeredDsEventHandlers = false;
+    try
+    {
+        device::Manager::DeInitialize();
+        LOGINFO("device::Manager::DeInitialize success");
+    }
+    catch(const device::Exception& err)
+    {
+        LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
+        LOG_DEVICE_EXCEPTION0();
+    }
+
     AVInput::_instance = nullptr;
 }
 
 string AVInput::Information() const
 {
     return (string());
-}
-
-void AVInput::InitializeIARM()
-{
-    if (Utils::IARM::init()) {
-        IARM_Result_t res;
-        IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG,
-            dsAVEventHandler));
-        IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS,
-            dsAVSignalStatusEventHandler));
-        IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS,
-            dsAVStatusEventHandler));
-        IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE,
-            dsAVVideoModeEventHandler));
-        IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS,
-            dsAVGameFeatureStatusEventHandler));
-	IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS,
-            dsAVGameFeatureStatusEventHandler));
-	IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG,
-            dsAVEventHandler));
-        IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS,
-            dsAVSignalStatusEventHandler));
-        IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS,
-            dsAVStatusEventHandler));
-	IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE,
-            dsAVVideoModeEventHandler));
-    	IARM_CHECK(IARM_Bus_RegisterEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE,
-            dsAviContentTypeEventHandler));
-    }
-}
-
-void AVInput::DeinitializeIARM()
-{
-    if (Utils::IARM::isConnected()) {
-        IARM_Result_t res;
-        IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, dsAVEventHandler));
-        IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS, dsAVSignalStatusEventHandler));
-        IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS, dsAVStatusEventHandler));
-        IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE, dsAVVideoModeEventHandler));
-        IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS, dsAVGameFeatureStatusEventHandler));
-       IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS, dsAVGameFeatureStatusEventHandler));
-        IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG, dsAVEventHandler));
-        IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS, dsAVSignalStatusEventHandler));
-        IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS, dsAVStatusEventHandler));
-    	IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE, dsAVVideoModeEventHandler));
-	IARM_CHECK(IARM_Bus_RemoveEventHandler(
-            IARM_BUS_DSMGR_NAME,
-            IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE, dsAviContentTypeEventHandler));
-    }
 }
 
 void AVInput::RegisterAll()
@@ -404,7 +341,7 @@ uint32_t AVInput::startInput(const JsonObject& parameters, JsonObject& response)
 
     try
     {
-        if (iType == HDMI) {
+        if (HDMI == iType) {
             device::HdmiInput::getInstance().selectPort(portId,audioMix,planeType,topMostPlane);
     }
     else if(iType == COMPOSITE) {
@@ -445,10 +382,10 @@ uint32_t AVInput::stopInput(const JsonObject& parameters, JsonObject& response)
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM,DEFAULT_INPUT_VOL_LEVEL);
 	    isAudioBalanceSet = false;
 	}
-	if (iType == HDMI) {
+	if (HDMI == iType) {
             device::HdmiInput::getInstance().selectPort(-1);
         }
-        else if (iType == COMPOSITE) {
+        else if (COMPOSITE == iType) {
             device::CompositeInput::getInstance().selectPort(-1);
         }
     }
@@ -526,7 +463,7 @@ bool AVInput::setVideoRectangle(int x, int y, int width, int height, int type)
 
     try
     {
-        if (type == HDMI) {
+        if (HDMI == type) {
             device::HdmiInput::getInstance().scaleVideo(x, y, width, height);
         }
         else {
@@ -616,7 +553,7 @@ JsonArray AVInput::getInputDevices(int iType)
     try
     {
         int num = 0;
-        if (iType == HDMI) {
+        if (HDMI == iType) {
             num = device::HdmiInput::getInstance().getNumberOfInputs();
         }
         else if (iType == COMPOSITE) {
@@ -629,11 +566,11 @@ JsonArray AVInput::getInputDevices(int iType)
                 JsonObject hash;
                 hash["id"] = i;
                 std::stringstream locator;
-                if (iType == HDMI) {
+                if (HDMI == iType) {
                     locator << "hdmiin://localhost/deviceid/" << i;
                     hash["connected"] = device::HdmiInput::getInstance().isPortConnected(i);
                 }
-                else if (iType == COMPOSITE) {
+                else if (COMPOSITE == iType) {
                     locator << "cvbsin://localhost/deviceid/" << i;
                     hash["connected"] = device::CompositeInput::getInstance().isPortConnected(i);
                 }
@@ -924,151 +861,12 @@ void AVInput::AVInputVideoModeUpdate( int port , dsVideoPortResolution_t resolut
     sendNotify(AVINPUT_EVENT_ON_VIDEO_MODE_UPDATED, params);
 }
 
-void AVInput::dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-{
-        if(!AVInput::_instance)
-                return;
-
-        if (IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE == eventId)
-        {
-                IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                int hdmi_in_port = eventData->data.hdmi_in_content_type.port;
-                int avi_content_type = eventData->data.hdmi_in_content_type.aviContentType;
-                LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_AVI_CONTENT_TYPE  event  port: %d, Content Type : %d", hdmi_in_port,avi_content_type);
-
-		AVInput::_instance->hdmiInputAviContentTypeChange(hdmi_in_port, avi_content_type);
-	}
-}
-
 void AVInput::hdmiInputAviContentTypeChange( int port , int content_type)
 {
 	JsonObject params;
 	params["id"] = port;
 	params["aviContentType"] = content_type;
 	sendNotify(AVINPUT_EVENT_ON_AVI_CONTENT_TYPE_CHANGED, params);
-}
-
-void AVInput::dsAVEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-{
-    if(!AVInput::_instance)
-        return;
-
-    IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-    if (IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG == eventId) {
-        int hdmiin_hotplug_port = eventData->data.hdmi_in_connect.port;
-        int hdmiin_hotplug_conn = eventData->data.hdmi_in_connect.isPortConnected;
-        LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG  event data:%d", hdmiin_hotplug_port);
-        AVInput::_instance->AVInputHotplug(hdmiin_hotplug_port, hdmiin_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, HDMI);
-    }
-    else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG == eventId) {
-        int compositein_hotplug_port = eventData->data.composite_in_connect.port;
-        int compositein_hotplug_conn = eventData->data.composite_in_connect.isPortConnected;
-        LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG  event data:%d", compositein_hotplug_port);
-        AVInput::_instance->AVInputHotplug(compositein_hotplug_port, compositein_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, COMPOSITE);
-    }
-}
-
-void AVInput::dsAVSignalStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-{
-    if(!AVInput::_instance)
-        return;
-    IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-    if (IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS == eventId) {
-        int hdmi_in_port = eventData->data.hdmi_in_sig_status.port;
-        int hdmi_in_signal_status = eventData->data.hdmi_in_sig_status.status;
-        LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS  event  port: %d, signal status: %d", hdmi_in_port,hdmi_in_signal_status);
-        AVInput::_instance->AVInputSignalChange(hdmi_in_port, hdmi_in_signal_status, HDMI);
-    }
-    else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS == eventId) {
-        int composite_in_port = eventData->data.composite_in_sig_status.port;
-        int composite_in_signal_status = eventData->data.composite_in_sig_status.status;
-        LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_SIGNAL_STATUS  event  port: %d, signal status: %d", composite_in_port,composite_in_signal_status);
-        AVInput::_instance->AVInputSignalChange(composite_in_port, composite_in_signal_status, COMPOSITE);
-    }
-}
-
-void AVInput::dsAVStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-{
-    if(!AVInput::_instance)
-        return;
-    IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-    if (IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS == eventId) {
-        int hdmi_in_port = eventData->data.hdmi_in_status.port;
-        bool hdmi_in_status = eventData->data.hdmi_in_status.isPresented;
-        LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS  event  port: %d, started: %d", hdmi_in_port,hdmi_in_status);
-        AVInput::_instance->AVInputStatusChange(hdmi_in_port, hdmi_in_status, HDMI);
-    }
-    else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS == eventId) {
-        int composite_in_port = eventData->data.composite_in_status.port;
-        bool composite_in_status = eventData->data.composite_in_status.isPresented;
-        LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS  event  port: %d, started: %d", composite_in_port,composite_in_status);
-        AVInput::_instance->AVInputStatusChange(composite_in_port, composite_in_status, COMPOSITE);
-    }
-}
-
-void AVInput::dsAVVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-{
-    if(!AVInput::_instance)
-        return;
-
-    if (IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE == eventId) {
-        IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-        int hdmi_in_port = eventData->data.hdmi_in_video_mode.port;
-        dsVideoPortResolution_t resolution = {};
-        resolution.pixelResolution =  eventData->data.hdmi_in_video_mode.resolution.pixelResolution;
-        resolution.interlaced =  eventData->data.hdmi_in_video_mode.resolution.interlaced;
-        resolution.frameRate =  eventData->data.hdmi_in_video_mode.resolution.frameRate;
-        LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE  event  port: %d, pixelResolution: %d, interlaced : %d, frameRate: %d \n", hdmi_in_port,resolution.pixelResolution, resolution.interlaced, resolution.frameRate);
-        AVInput::_instance->AVInputVideoModeUpdate(hdmi_in_port, resolution,HDMI);
-    }
-    else if (IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE == eventId) {
-        IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-        int composite_in_port = eventData->data.composite_in_video_mode.port;
-        dsVideoPortResolution_t resolution = {};
-        resolution.pixelResolution =  eventData->data.composite_in_video_mode.resolution.pixelResolution;
-        resolution.interlaced =  eventData->data.composite_in_video_mode.resolution.interlaced;
-        resolution.frameRate =  eventData->data.composite_in_video_mode.resolution.frameRate;
-        LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_VIDEO_MODE_UPDATE  event  port: %d, pixelResolution: %d, interlaced : %d, frameRate: %d \n", composite_in_port,resolution.pixelResolution, resolution.interlaced, resolution.frameRate);
-        AVInput::_instance->AVInputVideoModeUpdate(composite_in_port, resolution,COMPOSITE);
-    }
-}
-
-void AVInput::dsAVGameFeatureStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
-{
-    if(!AVInput::_instance)
-        return;
-
-    if (IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS == eventId)
-    {
-        IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-        int hdmi_in_port = eventData->data.hdmi_in_allm_mode.port;
-        bool allm_mode = eventData->data.hdmi_in_allm_mode.allm_mode;
-        LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS  event  port: %d, ALLM Mode: %d", hdmi_in_port,allm_mode);
-
-        AVInput::_instance->AVInputALLMChange(hdmi_in_port, allm_mode);
-    }
-    if (IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS == eventId)
-    {
-       IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-        int hdmi_in_port = eventData->data.hdmi_in_vrr_mode.port;
-        dsVRRType_t new_vrrType = eventData->data.hdmi_in_vrr_mode.vrr_type;
-        LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_VRR_STATUS  event  port: %d, VRR Type: %d", hdmi_in_port,new_vrrType);
-
-        if(new_vrrType == dsVRR_NONE)
-        {
-               if(AVInput::_instance->m_currentVrrType != dsVRR_NONE){
-                        AVInput::_instance->AVInputVRRChange(hdmi_in_port, AVInput::_instance->m_currentVrrType, false);
-                }
-        }
-       else
-       {
-              if(AVInput::_instance->m_currentVrrType != dsVRR_NONE){
-                      AVInput::_instance->AVInputVRRChange(hdmi_in_port, AVInput::_instance->m_currentVrrType, false);
-              }
-              AVInput::_instance->AVInputVRRChange(hdmi_in_port, new_vrrType, true);
-       }
-       AVInput::_instance->m_currentVrrType = new_vrrType;
-    }
 }
 
 void AVInput::AVInputALLMChange( int port , bool allm_mode)
@@ -1791,6 +1589,136 @@ int AVInput::getEdidVersion(int iPort)
     }
     return edidVersion;
 }
+
+/* HDMIInEventsNotification*/
+
+void AVInput::OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType)
+{
+    LOGINFO("Received OnHdmiInAVIContentType callback, port: %d, Content Type: %d", port, aviContentType);
+
+    if(AVInput::_instance) {
+        AVInput::_instance->hdmiInputAviContentTypeChange(port, aviContentType);
+    }
+}
+
+void AVInput::OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected)
+{
+    LOGINFO("Received OnHdmiInEventHotPlug callback, port: %d, isConnected: %s", port, isConnected ? "true" : "false");
+
+    if(AVInput::_instance) {
+        AVInput::_instance->AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, HDMI);
+    }
+}
+
+void AVInput::OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus)
+{
+    LOGINFO("Received OnHdmiInEventSignalStatus callback, port: %d, signalStatus: %d",port, signalStatus);
+
+    if(AVInput::_instance) {
+        AVInput::_instance->AVInputSignalChange(port, signalStatus, HDMI);
+    }
+}
+
+void AVInput::OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented)
+{
+    LOGINFO("Received OnHdmiInEventStatus callback, port: %d, isPresented: %s",activePort, isPresented ? "true" : "false");
+
+    if (AVInput::_instance) {
+        AVInput::_instance->AVInputStatusChange(activePort, isPresented, HDMI);
+    }
+}
+
+void AVInput::OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution)
+{
+    LOGINFO("Received OnHdmiInVideoModeUpdate callback, port: %d, pixelResolution: %d, interlaced: %d, frameRate: %d",
+            port,
+            videoPortResolution.pixelResolution,
+            videoPortResolution.interlaced,
+            videoPortResolution.frameRate);
+
+    if (AVInput::_instance) {
+        AVInput::_instance->AVInputVideoModeUpdate(port, videoPortResolution, HDMI);
+    }
+}
+
+void AVInput::OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus)
+{
+    LOGINFO("Received OnHdmiInAllmStatus callback, port: %d, ALLM Mode: %s",
+            port, allmStatus ? "true" : "false");
+
+    if (AVInput::_instance) {
+        AVInput::_instance->AVInputALLMChange(port, allmStatus);
+    }
+}
+
+void AVInput::OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType)
+{
+    LOGINFO("Received OnHdmiInVRRStatus callback, port: %d, VRR Type: %d",
+            port, vrrType);
+
+    if (!AVInput::_instance)
+        return;
+
+    // Handle transitions
+    if (dsVRR_NONE == vrrType) {
+        if (AVInput::_instance->m_currentVrrType != dsVRR_NONE) {
+            AVInput::_instance->AVInputVRRChange(port,AVInput::_instance->m_currentVrrType,false);
+        }
+    } else {
+        if (AVInput::_instance->m_currentVrrType != dsVRR_NONE) {
+            AVInput::_instance->AVInputVRRChange(port,AVInput::_instance->m_currentVrrType,false);
+        }
+        AVInput::_instance->AVInputVRRChange(port,vrrType,true);
+    }
+
+    AVInput::_instance->m_currentVrrType = vrrType;
+}
+
+
+/*CompositeInEventsNotification*/
+
+void AVInput::OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected)
+{
+    LOGINFO("Received OnCompositeInHotPlug callback, port: %d, isConnected: %s",port, isConnected ? "true" : "false");
+
+    if(AVInput::_instance) {
+        AVInput::_instance->AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED,COMPOSITE);
+    }
+}
+
+void AVInput::OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus)
+{
+    LOGINFO("Received OnCompositeInSignalStatus callback, port: %d, signalStatus: %d",port, signalStatus);
+
+    if(AVInput::_instance) {
+        AVInput::_instance->AVInputSignalChange(port, signalStatus, COMPOSITE);
+    }
+}
+
+void AVInput::OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented)
+{
+    LOGINFO("Received OnCompositeInStatus callback, port: %d, isPresented: %s",
+            activePort, isPresented ? "true" : "false");
+
+    if (AVInput::_instance) {
+        AVInput::_instance->AVInputStatusChange(activePort, isPresented, COMPOSITE);
+    }
+}
+
+void AVInput::OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution)
+{
+    LOGINFO("Received OnCompositeInVideoModeUpdate callback, port: %d, pixelResolution: %d, interlaced: %d, frameRate: %d",
+            activePort,
+            videoResolution.pixelResolution,
+            videoResolution.interlaced,
+            videoResolution.frameRate);
+
+    if (AVInput::_instance) {
+        AVInput::_instance->AVInputVideoModeUpdate(activePort, videoResolution, COMPOSITE);
+    }
+}
+
+
 
 } // namespace Plugin
 } // namespace WPEFramework
