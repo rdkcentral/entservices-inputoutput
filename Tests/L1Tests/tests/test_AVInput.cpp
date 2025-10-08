@@ -59,7 +59,7 @@ protected:
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         // <pca> debug
-        : AVInputImpl(Core::ProxyType<Plugin::AVInputImplementation>::Create())
+        , AVInputImpl(Core::ProxyType<Plugin::AVInputImplementation>::Create())
         // </pca>
         , handler(*(plugin))
         , INIT_CONX(1, 0)
