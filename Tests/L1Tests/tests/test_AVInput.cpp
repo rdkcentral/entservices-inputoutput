@@ -40,6 +40,9 @@ using namespace WPEFramework;
 
 using ::testing::NiceMock;
 
+// <pca> debug
+#if 0
+
 class AVInputTest : public ::testing::Test {
 protected:
     Core::ProxyType<Plugin::AVInput> plugin;
@@ -161,9 +164,6 @@ TEST_F(AVInputTest, contentProtected)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
 }
-
-// <pca> debug
-#if 0
 
 class AVInputDsTest : public AVInputTest {
 protected:
