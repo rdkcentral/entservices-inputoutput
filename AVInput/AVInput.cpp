@@ -86,10 +86,6 @@ namespace Plugin {
 
         if (nullptr != _avInput) {
 
-            // <pca> 2
-            _avInput->initialize(_avInputNotification);
-            // </pca>
-
             // Register for notifications
             _avInput->RegisterDevicesChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
             _avInput->RegisterSignalChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
@@ -118,11 +114,6 @@ namespace Plugin {
         _service->Unregister(&_avInputNotification);
 
         if (nullptr != _avInput) {
-
-            // <pca> 2
-            _avInput->deinitialize();
-            // If this works move the stuff below to AVInputImplementation::deinitialize()
-            // </pca>
 
             _avInput->UnregisterDevicesChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
             _avInput->UnregisterSignalChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());

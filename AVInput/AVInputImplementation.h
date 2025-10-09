@@ -63,7 +63,7 @@ using ParamsType = boost::variant<
 namespace WPEFramework {
 namespace Plugin {
 
-    // <pca> debug
+    // <pca>
     //class AVInputImplementation : public Exchange::IAVInput {
     class AVInputImplementation :
         public Exchange::IAVInput,
@@ -104,11 +104,6 @@ namespace Plugin {
             static_assert(std::is_base_of<T, AVInputImplementation>(), "base type mismatch");
             return static_cast<T*>(this);
         }
-
-        // <pca> 2
-        void initialize();
-        void deinitialize();
-        // </pca>
 
         class EXTERNAL Job : public Core::IDispatch {
 

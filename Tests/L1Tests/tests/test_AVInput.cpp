@@ -54,26 +54,27 @@ protected:
     AVInputMock* p_avInputMock = nullptr;
     DECL_CORE_JSONRPC_CONX connection;
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
-    ManagerImplMock* p_managerImplMock = nullptr;
+    // <pca> debug
+    //ManagerImplMock* p_managerImplMock = nullptr;
+    // </pca>
     PLUGINHOST_DISPATCHER* dispatcher;
 
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
-        // <pca> debug added
-        //, AVInputImpl(Core::ProxyType<Plugin::AVInputImplementation>::Create())
-        // </pca>
         , handler(*(plugin))
         , INIT_CONX(1, 0)
         , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
           2, Core::Thread::DefaultStackSize(), 16))
     {
-        p_managerImplMock  = new NiceMock <ManagerImplMock>;
-        device::Manager::setImpl(p_managerImplMock);
+        // <pca> debug
+        // p_managerImplMock  = new NiceMock <ManagerImplMock>;
+        // device::Manager::setImpl(p_managerImplMock);
 
-        EXPECT_CALL(*p_managerImplMock, Initialize())
-            .Times(::testing::AnyNumber())
-            .WillRepeatedly(::testing::Return());
-            
+        // EXPECT_CALL(*p_managerImplMock, Initialize())
+        //     .Times(::testing::AnyNumber())
+        //     .WillRepeatedly(::testing::Return());
+        // </pca>
+
         p_avInputMock  = new NiceMock<AVInputMock>;
 
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
@@ -122,12 +123,14 @@ protected:
             p_avInputMock = nullptr;
         }
 
-        device::Manager::setImpl(nullptr);
-        if (p_managerImplMock != nullptr)
-        {
-            delete p_managerImplMock;
-            p_managerImplMock = nullptr;
-        }
+        // <pca> debug
+        // device::Manager::setImpl(nullptr);
+        // if (p_managerImplMock != nullptr)
+        // {
+        //     delete p_managerImplMock;
+        //     p_managerImplMock = nullptr;
+        // }
+        // </pca>
     }
 };
 
