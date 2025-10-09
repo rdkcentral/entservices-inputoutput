@@ -98,6 +98,13 @@ namespace Plugin {
             ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE
         };
 
+        template <typename T>
+        T* baseInterface()
+        {
+            static_assert(std::is_base_of<T, AVInputImplementation>(), "base type mismatch");
+            return static_cast<T*>(this);
+        }
+
         class EXTERNAL Job : public Core::IDispatch {
 
         public:
@@ -230,13 +237,6 @@ namespace Plugin {
         int m_inputVolume; // Player Volume
 
         bool _registeredDsEventHandlers;
-
-        template <typename T>
-        T* baseInterface()
-        {
-            static_assert(std::is_base_of<T, AVInputImplementation>(), "base type mismatch");
-            return static_cast<T*>(this);
-        }
 
         void dispatchEvent(Event, const ParamsType params);
         void Dispatch(Event event, const ParamsType params);
