@@ -40,8 +40,6 @@ using namespace WPEFramework;
 
 using ::testing::NiceMock;
 
-// <pca> debug
-#if 0
 
 class AVInputTest : public ::testing::Test {
 protected:
@@ -93,9 +91,11 @@ protected:
         p_managerImplMock  = new NiceMock <ManagerImplMock>;
         device::Manager::setImpl(p_managerImplMock);
 
-        EXPECT_CALL(*p_managerImplMock, Initialize())
-            .Times(::testing::AnyNumber())
-            .WillRepeatedly(::testing::Return());
+        // <pca> debug
+        // EXPECT_CALL(*p_managerImplMock, Initialize())
+        //     .Times(::testing::AnyNumber())
+        //     .WillRepeatedly(::testing::Return());
+        // </pca>
 
         Core::IWorkerPool::Assign(&(*workerPool));
         workerPool->Run();
@@ -164,6 +164,9 @@ TEST_F(AVInputTest, contentProtected)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
 }
+
+// <pca> debug
+#if 0
 
 class AVInputDsTest : public AVInputTest {
 protected:
