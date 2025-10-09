@@ -53,19 +53,21 @@ namespace Plugin {
         
         AVInputImplementation::_instance = this;
         
-        try {
-            device::Manager::Initialize();
-            LOGINFO("device::Manager::Initialize success");
-            if (!_registeredDsEventHandlers) {
-                _registeredDsEventHandlers = true;
-                device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
-                device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
-            }
-        }
-        catch(const device::Exception& err) {
-            LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
-            LOG_DEVICE_EXCEPTION0();
-        }
+        // <pca> 2
+        // try {
+        //     device::Manager::Initialize();
+        //     LOGINFO("device::Manager::Initialize success");
+        //     if (!_registeredDsEventHandlers) {
+        //         _registeredDsEventHandlers = true;
+        //         device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
+        //         device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
+        //     }
+        // }
+        // catch(const device::Exception& err) {
+        //     LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
+        //     LOG_DEVICE_EXCEPTION0();
+        // }
+        // </pca>
     }
 
     AVInputImplementation::~AVInputImplementation()
@@ -84,6 +86,40 @@ namespace Plugin {
 
         AVInputImplementation::_instance = nullptr;
     }
+
+    // <pca> 2
+    void initialize(Core::Sink<Notification> notification)
+    {
+        try {
+            device::Manager::Initialize();
+            LOGINFO("initialize: device::Manager::Initialize success");
+            if (!_registeredDsEventHandlers) {
+                _registeredDsEventHandlers = true;
+                device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
+                device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
+            }
+        }
+        catch(const device::Exception& err) {
+            LOGINFO("initialize: Initialization failed due to device::manager::Initialize()");
+            LOG_DEVICE_EXCEPTION0();
+        }
+    }
+
+    void deinitialize()
+    {
+        device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+        device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
+        _registeredDsEventHandlers = false;
+        try {
+            device::Manager::DeInitialize();
+            LOGINFO("deinitialize: device::Manager::DeInitialize success");
+        }
+        catch(const device::Exception& err) {
+            LOGINFO("deinitialize: device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
+            LOG_DEVICE_EXCEPTION0();
+        }
+    }
+    // </pca>
 
     template <typename T>
     Core::hresult AVInputImplementation::Register(std::list<T*>& list, T* notification)

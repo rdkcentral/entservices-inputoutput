@@ -105,6 +105,11 @@ namespace Plugin {
             return static_cast<T*>(this);
         }
 
+        // <pca> 2
+        void initialize(Core::Sink<Notification> notification);
+        void deinitialize();
+        // </pca>
+
         class EXTERNAL Job : public Core::IDispatch {
 
         public:
