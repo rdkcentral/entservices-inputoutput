@@ -106,7 +106,7 @@ namespace Plugin {
         }
 
         // <pca> 2
-        void initialize(Core::Sink<Notification> notification);
+        void initialize();
         void deinitialize();
         // </pca>
 
