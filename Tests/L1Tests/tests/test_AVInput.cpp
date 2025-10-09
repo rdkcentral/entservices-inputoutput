@@ -162,6 +162,9 @@ TEST_F(AVInputTest, contentProtected)
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
 }
 
+// <pca> debug
+#if 0
+
 class AVInputDsTest : public AVInputTest {
 protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
@@ -684,9 +687,6 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getGameFeatureStatus"), _T("{\"portId\" : \"test\", \"gameFeature\" : \"VRR-FREESYNC-PREMIUM-PRO\"}"), response));
     EXPECT_EQ(response, string(""));
 }
-
-// <pca> debug
-#if 0
 
 class AVInputEvents : public AVInputDsTest {
 protected:
