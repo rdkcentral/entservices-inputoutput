@@ -170,11 +170,9 @@ protected:
         p_managerImplMock  = new NiceMock <ManagerImplMock>;
         device::Manager::setImpl(p_managerImplMock);
 
-        // <pca> debug
-        // EXPECT_CALL(*p_managerImplMock, Initialize())
-        //     .Times(::testing::AnyNumber())
-        //     .WillRepeatedly(::testing::Return());
-        // </pca>
+        EXPECT_CALL(*p_managerImplMock, Initialize())
+            .Times(::testing::AnyNumber())
+            .WillRepeatedly(::testing::Return());
     }
     virtual ~AVInputDsTest() override
     {
