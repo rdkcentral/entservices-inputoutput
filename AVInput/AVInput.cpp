@@ -28,6 +28,9 @@
 #define API_VERSION_NUMBER_MINOR 7
 #define API_VERSION_NUMBER_PATCH 1
 
+#define AV_HOT_PLUG_EVENT_CONNECTED     0
+#define AV_HOT_PLUG_EVENT_DISCONNECTED  1
+
 // Explicitly implementing getInputDevices method instead of autogenerating via IAVInput.h
 // because it requires optional parameters which are not supported in Thunder 4.x. This can 
 // be refactored after migrating to 5.x.
@@ -56,6 +59,9 @@ namespace Plugin {
         , _connectionId(0)
         , _avInput(nullptr)
         , _avInputNotification(this)
+        // <pca>
+        , _registeredDsEventHandlers(false)
+        // </pca>
     {
         Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_INPUT_DEVICES), &AVInput::getInputDevicesWrapper, this);
         SYSLOG(Logging::Startup, (_T("AVInput Constructor")));
@@ -94,6 +100,22 @@ namespace Plugin {
             _avInput->RegisterGameFeatureStatusUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
             _avInput->RegisterAviContentTypeUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IAviContentTypeUpdateNotification>());
 
+            // <pca>
+            try {
+                device::Manager::Initialize();
+                LOGINFO("device::Manager::Initialize success");
+                if (!_registeredDsEventHandlers) {
+                    _registeredDsEventHandlers = true;
+                    device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
+                    device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
+                }
+            }
+            catch(const device::Exception& err) {
+                LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
+                LOG_DEVICE_EXCEPTION0();
+            }
+        // </pca>
+
             // Invoking Plugin API register to wpeframework
             Exchange::JAVInput::Register(*this, _avInput);
         } else {
@@ -109,6 +131,20 @@ namespace Plugin {
         ASSERT(_service == service);
 
         SYSLOG(Logging::Shutdown, (string(_T("AVInput::Deinitialize"))));
+
+        // <pca>
+        device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+        device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
+        _registeredDsEventHandlers = false;
+        try {
+            device::Manager::DeInitialize();
+            LOGINFO("device::Manager::DeInitialize success");
+        }
+        catch(const device::Exception& err) {
+            LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
+            LOG_DEVICE_EXCEPTION0();
+        }
+        // </pca>
 
         // Make sure the Activated and Deactivated are no longer called before we start cleaning up.
         _service->Unregister(&_avInputNotification);
@@ -262,133 +298,133 @@ namespace Plugin {
     }
 
     // <pca>
-    // /* HDMIInEventsNotification*/
+    /* HDMIInEventsNotification*/
 
-    // void AVInput::Notification::OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType)
-    // {
-    //     LOGINFO("Received OnHdmiInAVIContentType callback, port: %d, Content Type: %d", port, aviContentType);
+    void AVInput::OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType)
+    {
+        LOGINFO("Received OnHdmiInAVIContentType callback, port: %d, Content Type: %d", port, aviContentType);
 
-    //     if(AVInput::_instance) {
-    //         AVInput::_instance->hdmiInputAviContentTypeChange(port, aviContentType);
-    //     }
-    // }
+        if(AVInputImplementation::_instance) {
+            AVInputImplementation::_instance->hdmiInputAviContentTypeChange(port, aviContentType);
+        }
+    }
 
-    // void AVInput::Notification::OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected)
-    // {
-    //     LOGINFO("Received OnHdmiInEventHotPlug callback, port: %d, isConnected: %s", port, isConnected ? "true" : "false");
+    void AVInput::OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected)
+    {
+        LOGINFO("Received OnHdmiInEventHotPlug callback, port: %d, isConnected: %s", port, isConnected ? "true" : "false");
 
-    //     if(AVInput::_instance) {
-    //         AVInput::_instance->AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, HDMI);
-    //     }
-    // }
+        if(AVInputImplementation::_instance) {
+            AVInputImplementation::_instance->AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, INPUT_TYPE_INT_HDMI);
+        }
+    }
 
-    // void AVInput::Notification::OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus)
-    // {
-    //     LOGINFO("Received OnHdmiInEventSignalStatus callback, port: %d, signalStatus: %d",port, signalStatus);
+    void AVInput::OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus)
+    {
+        LOGINFO("Received OnHdmiInEventSignalStatus callback, port: %d, signalStatus: %d",port, signalStatus);
 
-    //     if(AVInput::_instance) {
-    //         AVInput::_instance->AVInputSignalChange(port, signalStatus, HDMI);
-    //     }
-    // }
+        if(AVInputImplementation::_instance) {
+            AVInputImplementation::_instance->AVInputSignalChange(port, signalStatus, INPUT_TYPE_INT_HDMI);
+        }
+    }
 
-    // void AVInput::Notification::OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented)
-    // {
-    //     LOGINFO("Received OnHdmiInEventStatus callback, port: %d, isPresented: %s",activePort, isPresented ? "true" : "false");
+    void AVInput::OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented)
+    {
+        LOGINFO("Received OnHdmiInEventStatus callback, port: %d, isPresented: %s",activePort, isPresented ? "true" : "false");
 
-    //     if (AVInput::_instance) {
-    //         AVInput::_instance->AVInputStatusChange(activePort, isPresented, HDMI);
-    //     }
-    // }
+        if (AVInputImplementation::_instance) {
+            AVInputImplementation::_instance->AVInputStatusChange(activePort, isPresented, INPUT_TYPE_INT_HDMI);
+        }
+    }
 
-    // void AVInput::Notification::OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution)
-    // {
-    //     LOGINFO("Received OnHdmiInVideoModeUpdate callback, port: %d, pixelResolution: %d, interlaced: %d, frameRate: %d",
-    //             port,
-    //             videoPortResolution.pixelResolution,
-    //             videoPortResolution.interlaced,
-    //             videoPortResolution.frameRate);
+    void AVInput::OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution)
+    {
+        LOGINFO("Received OnHdmiInVideoModeUpdate callback, port: %d, pixelResolution: %d, interlaced: %d, frameRate: %d",
+                port,
+                videoPortResolution.pixelResolution,
+                videoPortResolution.interlaced,
+                videoPortResolution.frameRate);
 
-    //     if (AVInput::_instance) {
-    //         AVInput::_instance->AVInputVideoModeUpdate(port, videoPortResolution, HDMI);
-    //     }
-    // }
+        if (AVInputImplementation::_instance) {
+            AVInputImplementation::_instance->AVInputVideoModeUpdate(port, videoPortResolution, INPUT_TYPE_INT_HDMI);
+        }
+    }
 
-    // void AVInput::Notification::OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus)
-    // {
-    //     LOGINFO("Received OnHdmiInAllmStatus callback, port: %d, ALLM Mode: %s",
-    //             port, allmStatus ? "true" : "false");
+    void AVInput::OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus)
+    {
+        LOGINFO("Received OnHdmiInAllmStatus callback, port: %d, ALLM Mode: %s",
+                port, allmStatus ? "true" : "false");
 
-    //     if (AVInput::_instance) {
-    //         AVInput::_instance->AVInputALLMChange(port, allmStatus);
-    //     }
-    // }
+        if (AVInputImplementation::_instance) {
+            AVInputImplementation::_instance->AVInputALLMChange(port, allmStatus);
+        }
+    }
 
-    // void AVInput::Notification::OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType)
-    // {
-    //     LOGINFO("Received OnHdmiInVRRStatus callback, port: %d, VRR Type: %d",
-    //             port, vrrType);
+    void AVInput::OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType)
+    {
+        LOGINFO("Received OnHdmiInVRRStatus callback, port: %d, VRR Type: %d",
+                port, vrrType);
 
-    //     if (!AVInput::_instance)
-    //         return;
+        if (!AVInputImplementation::_instance)
+            return;
 
-    //     // Handle transitions
-    //     if (dsVRR_NONE == vrrType) {
-    //         if (AVInput::_instance->m_currentVrrType != dsVRR_NONE) {
-    //             AVInput::_instance->AVInputVRRChange(port,AVInput::_instance->m_currentVrrType,false);
-    //         }
-    //     } else {
-    //         if (AVInput::_instance->m_currentVrrType != dsVRR_NONE) {
-    //             AVInput::_instance->AVInputVRRChange(port,AVInput::_instance->m_currentVrrType,false);
-    //         }
-    //         AVInput::_instance->AVInputVRRChange(port,vrrType,true);
-    //     }
+        // Handle transitions
+        if (dsVRR_NONE == vrrType) {
+            if (AVInputImplementation::_instance->m_currentVrrType != dsVRR_NONE) {
+                AVInputImplementation::_instance->AVInputVRRChange(port,AVInputImplementation::_instance->m_currentVrrType,false);
+            }
+        } else {
+            if (AVInputImplementation::_instance->m_currentVrrType != dsVRR_NONE) {
+                AVInputImplementation::_instance->AVInputVRRChange(port,AVInputImplementation::_instance->m_currentVrrType,false);
+            }
+            AVInputImplementation::_instance->AVInputVRRChange(port,vrrType,true);
+        }
 
-    //     AVInput::_instance->m_currentVrrType = vrrType;
-    // }
+        AVInputImplementation::_instance->m_currentVrrType = vrrType;
+    }
 
 
-    // /*CompositeInEventsNotification*/
+    /*CompositeInEventsNotification*/
 
-    // void AVInput::Notification::OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected)
-    // {
-    //     LOGINFO("Received OnCompositeInHotPlug callback, port: %d, isConnected: %s",port, isConnected ? "true" : "false");
+    void AVInput::OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected)
+    {
+        LOGINFO("Received OnCompositeInHotPlug callback, port: %d, isConnected: %s",port, isConnected ? "true" : "false");
 
-    //     if(AVInput::_instance) {
-    //         AVInput::_instance->AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED,COMPOSITE);
-    //     }
-    // }
+        if(AVInputImplementation::_instance) {
+            AVInputImplementation::_instance->AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, INPUT_TYPE_INT_COMPOSITE);
+        }
+    }
 
-    // void AVInput::Notification::OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus)
-    // {
-    //     LOGINFO("Received OnCompositeInSignalStatus callback, port: %d, signalStatus: %d",port, signalStatus);
+    void AVInput::OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus)
+    {
+        LOGINFO("Received OnCompositeInSignalStatus callback, port: %d, signalStatus: %d",port, signalStatus);
 
-    //     if(AVInput::_instance) {
-    //         AVInput::_instance->AVInputSignalChange(port, signalStatus, COMPOSITE);
-    //     }
-    // }
+        if(AVInputImplementation::_instance) {
+            AVInputImplementation::_instance->AVInputSignalChange(port, signalStatus, INPUT_TYPE_INT_COMPOSITE);
+        }
+    }
 
-    // void AVInput::Notification::OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented)
-    // {
-    //     LOGINFO("Received OnCompositeInStatus callback, port: %d, isPresented: %s",
-    //             activePort, isPresented ? "true" : "false");
+    void AVInput::OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented)
+    {
+        LOGINFO("Received OnCompositeInStatus callback, port: %d, isPresented: %s",
+                activePort, isPresented ? "true" : "false");
 
-    //     if (AVInput::_instance) {
-    //         AVInput::_instance->AVInputStatusChange(activePort, isPresented, COMPOSITE);
-    //     }
-    // }
+        if (AVInputImplementation::_instance) {
+            AVInputImplementation::_instance->AVInputStatusChange(activePort, isPresented, INPUT_TYPE_INT_COMPOSITE);
+        }
+    }
 
-    // void AVInput::Notification::OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution)
-    // {
-    //     LOGINFO("Received OnCompositeInVideoModeUpdate callback, port: %d, pixelResolution: %d, interlaced: %d, frameRate: %d",
-    //             activePort,
-    //             videoResolution.pixelResolution,
-    //             videoResolution.interlaced,
-    //             videoResolution.frameRate);
+    void AVInput::OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution)
+    {
+        LOGINFO("Received OnCompositeInVideoModeUpdate callback, port: %d, pixelResolution: %d, interlaced: %d, frameRate: %d",
+                activePort,
+                videoResolution.pixelResolution,
+                videoResolution.interlaced,
+                videoResolution.frameRate);
 
-    //     if (AVInput::_instance) {
-    //         AVInput::_instance->AVInputVideoModeUpdate(activePort, videoResolution, COMPOSITE);
-    //     }
-    // }
+        if (AVInputImplementation::_instance) {
+            AVInputImplementation::_instance->AVInputVideoModeUpdate(activePort, videoResolution, INPUT_TYPE_INT_COMPOSITE);
+        }
+    }
     // </pca>
 } // namespace Plugin
 } // namespace WPEFramework

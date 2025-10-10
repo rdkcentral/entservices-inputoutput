@@ -64,11 +64,11 @@ namespace WPEFramework {
 namespace Plugin {
 
     // <pca>
-    //class AVInputImplementation : public Exchange::IAVInput {
-    class AVInputImplementation :
-        public Exchange::IAVInput,
-        public device::Host::IHdmiInEvents, 
-        public device::Host::ICompositeInEvents {
+    class AVInputImplementation : public Exchange::IAVInput {
+    // class AVInputImplementation :
+    //     public Exchange::IAVInput,
+    //     public device::Host::IHdmiInEvents, 
+    //     public device::Host::ICompositeInEvents {
     // </pca>
 
     public:
@@ -98,12 +98,14 @@ namespace Plugin {
             ON_AVINPUT_AVI_CONTENT_TYPE_UPDATE
         };
 
-        template <typename T>
-        T* baseInterface()
-        {
-            static_assert(std::is_base_of<T, AVInputImplementation>(), "base type mismatch");
-            return static_cast<T*>(this);
-        }
+        // <pca>
+        // template <typename T>
+        // T* baseInterface()
+        // {
+        //     static_assert(std::is_base_of<T, AVInputImplementation>(), "base type mismatch");
+        //     return static_cast<T*>(this);
+        // }
+        // </pca>
 
         class EXTERNAL Job : public Core::IDispatch {
 
@@ -189,24 +191,23 @@ namespace Plugin {
         Core::hresult GetVRRFrameRate(const string& portId, double& currentVRRVideoFrameRate, bool& success) override;
         Core::hresult getInputDevices(const string& typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice>& inputDeviceList);
 
-        /* HdmiInEventNotification*/
+        // <pca>
+        // /* HdmiInEventNotification*/
 
-        void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
-        void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;   
-        void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented) override;
-        void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
-        void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
-        void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
-        void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
+        // void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
+        // void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;   
+        // void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented) override;
+        // void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
+        // void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
+        // void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
+        // void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
 
-        /* CompositeInEventNotification */
+        // /* CompositeInEventNotification */
 
-        void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
-        void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
-        void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
-        void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
-
-    protected:
+        // void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
+        // void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
+        // void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
+        // void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
 
         void AVInputHotplug(int input, int connect, int type);
         void AVInputSignalChange(int port, int signalStatus, int type);
@@ -215,6 +216,7 @@ namespace Plugin {
         void hdmiInputAviContentTypeChange(int port, int content_type);
         void AVInputALLMChange(int port, bool allm_mode);
         void AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode);    
+        // </pca>
 
     private:
 
@@ -236,7 +238,9 @@ namespace Plugin {
         int m_primVolume;
         int m_inputVolume; // Player Volume
 
-        bool _registeredDsEventHandlers;
+        // <pca>
+        //bool _registeredDsEventHandlers;
+        // </pca>
 
         void dispatchEvent(Event, const ParamsType params);
         void Dispatch(Event event, const ParamsType params);

@@ -25,6 +25,7 @@
 #include <interfaces/IAVInput.h>
 #include <interfaces/json/JAVInput.h>
 #include <interfaces/json/JsonData_AVInput.h>
+#include "AVInputImplementation.h"
 #include "AVInputJsonData.h"
 #include "AVInputUtils.h"
 
@@ -38,10 +39,10 @@ namespace Plugin {
     
     class AVInput: public PluginHost::IPlugin, 
                 // <pca>
-                // public PluginHost::JSONRPC,
-                // public device::Host::IHdmiInEvents, 
-                // public device::Host::ICompositeInEvents {
-                public PluginHost::JSONRPC {
+                public PluginHost::JSONRPC,
+                public device::Host::IHdmiInEvents, 
+                public device::Host::ICompositeInEvents {
+                //public PluginHost::JSONRPC {
                 // </pca>
     public:
 
@@ -63,12 +64,40 @@ namespace Plugin {
         void Deinitialize(PluginHost::IShell* service) override;
         string Information() const override;
 
+        // <pca>
+        /* HdmiInEventNotification*/
+
+        void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
+        void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;   
+        void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented) override;
+        void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
+        void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
+        void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
+        void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
+
+        /* CompositeInEventNotification */
+
+        void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
+        void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
+        void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
+        void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
+        // </pca>
+
     protected:
 
         void RegisterAll();
         void UnregisterAll();
 
     private:
+
+        // <pca>
+        template <typename T>
+        T* baseInterface()
+        {
+            static_assert(std::is_base_of<T, AVInput>(), "base type mismatch");
+            return static_cast<T*>(this);
+        }
+        // </pca>
 
         PluginHost::IShell* _service {};
         uint32_t _connectionId {};
@@ -154,20 +183,6 @@ namespace Plugin {
                 Exchange::JAVInput::Event::AviContentTypeUpdate(_parent, id, aviContentType);
             }
 
-            // <pca>
-            // void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
-            // void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
-            // void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;
-            // void OnHdmiInStatus(dsHdmiInPort_t activePort, bool isPresented) override;
-            // void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
-            // void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
-            // void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
-            // void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
-            // void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
-            // void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
-            // void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;            
-            // </pca>
-
         private:
             AVInput& _parent;
 
@@ -177,6 +192,9 @@ namespace Plugin {
         };
 
         Core::Sink<Notification> _avInputNotification;
+        // <pca>
+        bool _registeredDsEventHandlers;
+        // </pca>
 
         void Deactivated(RPC::IRemoteConnection* connection);
 

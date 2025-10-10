@@ -30,9 +30,6 @@
 #define VRR_TYPE_FREESYNC_PREMIUM "VRR-FREESYNC-PREMIUM"
 #define VRR_TYPE_FREESYNC_PREMIUM_PRO "VRR-FREESYNC-PREMIUM-PRO"
 
-#define AV_HOT_PLUG_EVENT_CONNECTED 0
-#define AV_HOT_PLUG_EVENT_DISCONNECTED 1
-
 static bool isAudioBalanceSet = false;
 static int planeType = 0;
 
@@ -43,7 +40,10 @@ namespace Plugin {
     SERVICE_REGISTRATION(AVInputImplementation, 1, 0);
     AVInputImplementation* AVInputImplementation::_instance = nullptr;
 
-    AVInputImplementation::AVInputImplementation() : _adminLock(), _registeredDsEventHandlers(false)
+    // <pca>
+    //AVInputImplementation::AVInputImplementation() : _adminLock(), _registeredDsEventHandlers(false)
+    AVInputImplementation::AVInputImplementation() : _adminLock()
+    // </pca>
     {
         LOGINFO("Create AVInputImplementation Instance");
 
@@ -53,34 +53,38 @@ namespace Plugin {
         
         AVInputImplementation::_instance = this;
         
-        try {
-            device::Manager::Initialize();
-            LOGINFO("device::Manager::Initialize success");
-            if (!_registeredDsEventHandlers) {
-                _registeredDsEventHandlers = true;
-                device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
-                device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
-            }
-        }
-        catch(const device::Exception& err) {
-            LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
-            LOG_DEVICE_EXCEPTION0();
-        }
+        // <pca>
+        // try {
+        //     device::Manager::Initialize();
+        //     LOGINFO("device::Manager::Initialize success");
+        //     if (!_registeredDsEventHandlers) {
+        //         _registeredDsEventHandlers = true;
+        //         device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
+        //         device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
+        //     }
+        // }
+        // catch(const device::Exception& err) {
+        //     LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
+        //     LOG_DEVICE_EXCEPTION0();
+        // }
+        // </pca>
     }
 
     AVInputImplementation::~AVInputImplementation()
     {
-        device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
-        device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
-        _registeredDsEventHandlers = false;
-        try {
-            device::Manager::DeInitialize();
-            LOGINFO("device::Manager::DeInitialize success");
-        }
-        catch(const device::Exception& err) {
-            LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
-            LOG_DEVICE_EXCEPTION0();
-        }
+        // <pca>
+        // device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+        // device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
+        // _registeredDsEventHandlers = false;
+        // try {
+        //     device::Manager::DeInitialize();
+        //     LOGINFO("device::Manager::DeInitialize success");
+        // }
+        // catch(const device::Exception& err) {
+        //     LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
+        //     LOG_DEVICE_EXCEPTION0();
+        // }
+        // </pca>
 
         AVInputImplementation::_instance = nullptr;
     }
@@ -324,6 +328,8 @@ namespace Plugin {
         _adminLock.Unlock();
     }
 
+    // <pca>
+    #if 0
     /* HDMIInEventsNotification*/
 
     void AVInputImplementation::OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType)
@@ -451,6 +457,8 @@ namespace Plugin {
             AVInputImplementation::_instance->AVInputVideoModeUpdate(activePort, videoResolution, INPUT_TYPE_INT_COMPOSITE);
         }
     }
+    #endif
+    // </pca>
 
     // ==================================
     // Implementation of IAVInput methods
