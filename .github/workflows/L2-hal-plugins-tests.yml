@@ -129,7 +129,8 @@ jobs:
           #cp -r peru.yaml __w/rdkservices/rdkservices/rdkservices/L2HalMock
           cd ..
           chmod -Rf 777 install_dependencies.sh
-          ./install_dependencies.sh
+          python3 dependencies_auto.py
+          #./install_dependencies.sh
           sed -i 's/USERNAME_PLACEHOLDER/${{ secrets.RDK_E_MANIFEST_USERNAME }}/g' peru.yaml
           sed -i 's/PASSWORD_PLACEHOLDER/${{ secrets.RDK_E_MANIFEST_PASSWORD }}/g' peru.yaml
           sed -i 's/CENTRAL_USERNAME_PLACEHOLDER/${{ secrets.HAL_EMULATOR_MANIFEST_USERNAME }}/g' peru.yaml
