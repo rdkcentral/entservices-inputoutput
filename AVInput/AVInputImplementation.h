@@ -176,6 +176,14 @@ namespace Plugin {
         Core::hresult GetVRRFrameRate(const string& portId, double& currentVRRVideoFrameRate, bool& success) override;
         Core::hresult getInputDevices(const string& typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice>& inputDeviceList);
 
+        void AVInputHotplug(int input, int connect, int type);
+        void AVInputSignalChange(int port, int signalStatus, int type);
+        void AVInputStatusChange(int port, bool isPresented, int type);
+        void AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type);
+        void hdmiInputAviContentTypeChange(int port, int content_type);
+        void AVInputALLMChange(int port, bool allm_mode);
+        void AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode);
+
     private:
 
         mutable Core::CriticalSection _adminLock;
@@ -212,6 +220,6 @@ namespace Plugin {
         static void dsAVGameFeatureStatusEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len);
         static void dsAviContentTypeEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len);
     };
-    
+
 } // namespace Plugin
 } // namespace WPEFramework
