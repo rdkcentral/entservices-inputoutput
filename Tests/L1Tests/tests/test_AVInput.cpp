@@ -146,7 +146,7 @@ TEST_F(AVInputTest, contentProtected)
 }
 
 // <pca> debug
-#if 1
+#if 0
 
 class AVInputDsTest : public AVInputTest {
 protected:
