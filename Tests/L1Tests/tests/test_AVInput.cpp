@@ -54,6 +54,8 @@ protected:
     AVInputMock* p_avInputMock = nullptr;
     DECL_CORE_JSONRPC_CONX connection;
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
+    ManagerImplMock* p_managerImplMock = nullptr;
+
     PLUGINHOST_DISPATCHER* dispatcher;
 
     AVInputTest()
@@ -63,6 +65,13 @@ protected:
         , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
           2, Core::Thread::DefaultStackSize(), 16))
     {
+        p_managerImplMock  = new NiceMock <ManagerImplMock>;
+        device::Manager::setImpl(p_managerImplMock);
+
+        EXPECT_CALL(*p_managerImplMock, Initialize())
+            .Times(::testing::AnyNumber())
+            .WillRepeatedly(::testing::Return());
+
         p_avInputMock  = new NiceMock<AVInputMock>;
 
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
@@ -110,6 +119,13 @@ protected:
             delete p_avInputMock;
             p_avInputMock = nullptr;
         }
+
+        device::Manager::setImpl(nullptr);
+        if (p_managerImplMock != nullptr)
+        {
+            delete p_managerImplMock;
+            p_managerImplMock = nullptr;
+        }
     }
 };
 
@@ -153,7 +169,6 @@ protected:
     HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
     CompositeInputImplMock* p_compositeInputImplMock = nullptr;
     HostImplMock* p_HostImplMock = nullptr;
-    ManagerImplMock* p_managerImplMock = nullptr;
 
     AVInputDsTest()
         : AVInputTest()
@@ -166,14 +181,8 @@ protected:
 
         p_HostImplMock = new NiceMock<HostImplMock>;
         device::Host::setImpl(p_HostImplMock);
-
-        p_managerImplMock  = new NiceMock <ManagerImplMock>;
-        device::Manager::setImpl(p_managerImplMock);
-
-        EXPECT_CALL(*p_managerImplMock, Initialize())
-            .Times(::testing::AnyNumber())
-            .WillRepeatedly(::testing::Return());
     }
+
     virtual ~AVInputDsTest() override
     {
         device::HdmiInput::setImpl(nullptr);
@@ -193,13 +202,6 @@ protected:
         if (p_HostImplMock != nullptr) {
             delete p_HostImplMock;
             p_HostImplMock = nullptr;
-        }
-
-        device::Manager::setImpl(nullptr);
-        if (p_managerImplMock != nullptr)
-        {
-            delete p_managerImplMock;
-            p_managerImplMock = nullptr;
         }
     }
 };
