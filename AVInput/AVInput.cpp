@@ -114,7 +114,7 @@ namespace Plugin {
                 LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
                 LOG_DEVICE_EXCEPTION0();
             }
-        // </pca>
+            // </pca>
 
             // Invoking Plugin API register to wpeframework
             Exchange::JAVInput::Register(*this, _avInput);
