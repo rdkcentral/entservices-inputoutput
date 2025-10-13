@@ -104,13 +104,11 @@ namespace Plugin {
             try {
                 device::Manager::Initialize();
                 LOGINFO("device::Manager::Initialize success");
-                // <pca> debug
-                // if (!_registeredDsEventHandlers) {
-                //     _registeredDsEventHandlers = true;
-                //     device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
-                //     device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
-                // }
-                // </pca>
+                if (!_registeredDsEventHandlers) {
+                    _registeredDsEventHandlers = true;
+                    device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
+                    device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
+                }
             }
             catch(const device::Exception& err) {
                 LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
@@ -134,19 +132,17 @@ namespace Plugin {
 
         SYSLOG(Logging::Shutdown, (string(_T("AVInput::Deinitialize"))));
 
-        // <pca> debug
-        // device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
-        // device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
-        // _registeredDsEventHandlers = false;
-        // try {
-        //     device::Manager::DeInitialize();
-        //     LOGINFO("device::Manager::DeInitialize success");
-        // }
-        // catch(const device::Exception& err) {
-        //     LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
-        //     LOG_DEVICE_EXCEPTION0();
-        // }
-        // </pca>
+        device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+        device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
+        _registeredDsEventHandlers = false;
+        try {
+            device::Manager::DeInitialize();
+            LOGINFO("device::Manager::DeInitialize success");
+        }
+        catch(const device::Exception& err) {
+            LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
+            LOG_DEVICE_EXCEPTION0();
+        }
 
         // Make sure the Activated and Deactivated are no longer called before we start cleaning up.
         _service->Unregister(&_avInputNotification);
