@@ -42,24 +42,26 @@ using ::testing::NiceMock;
 
 
 class AVInputTest : public ::testing::Test {
-protected:
+
+    protected:
+
     Core::ProxyType<Plugin::AVInput> plugin;
     Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
 
     NiceMock<ServiceMock> service;
     NiceMock<COMLinkMock> comLinkMock;
+
     Core::JSONRPC::Handler& handler;
     Core::ProxyType<WorkerPoolImplementation> workerPool;
     string response;
-    AVInputMock* p_avInputMock = nullptr;
     DECL_CORE_JSONRPC_CONX connection;
-    // <pca> 2
-    HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
-    CompositeInputImplMock* p_compositeInputImplMock = nullptr;
-    HostImplMock* p_HostImplMock = nullptr;
-    // </pca>
-    IarmBusImplMock* p_iarmBusImplMock = nullptr;
-    ManagerImplMock* p_managerImplMock = nullptr;
+
+    AVInputMock* p_avInputMock                          = nullptr;
+    HdmiInputImplMock* p_hdmiInputImplMock              = nullptr;
+    CompositeInputImplMock* p_compositeInputImplMock    = nullptr;
+    HostImplMock* p_HostImplMock                        = nullptr;
+    IarmBusImplMock* p_iarmBusImplMock                  = nullptr;
+    ManagerImplMock* p_managerImplMock                  = nullptr;
 
     PLUGINHOST_DISPATCHER* dispatcher;
 
@@ -70,7 +72,6 @@ protected:
         , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
           2, Core::Thread::DefaultStackSize(), 16))
     {
-        // <pca> 2
         p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
         device::HdmiInput::setImpl(p_hdmiInputImplMock);
 
@@ -79,7 +80,6 @@ protected:
 
         p_HostImplMock = new NiceMock<HostImplMock>;
         device::Host::setImpl(p_HostImplMock);
-        // </pca>
 
         p_managerImplMock  = new NiceMock <ManagerImplMock>;
         device::Manager::setImpl(p_managerImplMock);
@@ -143,7 +143,6 @@ protected:
             p_managerImplMock = nullptr;
         }
 
-        // <pca> 2
         device::HdmiInput::setImpl(nullptr);
         if (p_hdmiInputImplMock != nullptr)
         {
@@ -162,7 +161,6 @@ protected:
             delete p_HostImplMock;
             p_HostImplMock = nullptr;
         }
-        // </pca>
     }
 };
 
@@ -198,55 +196,12 @@ TEST_F(AVInputTest, contentProtected)
     EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
 }
 
-// <pca> debug
-#if 1
-
 class AVInputDsTest : public AVInputTest {
-protected:
-    // <pca>
-    // HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
-    // CompositeInputImplMock* p_compositeInputImplMock = nullptr;
-    // HostImplMock* p_HostImplMock = nullptr;
-    // </pca>
 
-    AVInputDsTest()
-        : AVInputTest()
-    {
-        // <pca> 2
-        // p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
-        // device::HdmiInput::setImpl(p_hdmiInputImplMock);
+    protected:
 
-        // p_compositeInputImplMock = new NiceMock<CompositeInputImplMock>;
-        // device::CompositeInput::setImpl(p_compositeInputImplMock);
-
-        // p_HostImplMock = new NiceMock<HostImplMock>;
-        // device::Host::setImpl(p_HostImplMock);
-        // </pca>
-    }
-
-    virtual ~AVInputDsTest() override
-    {
-        // <pca> 2
-        // device::HdmiInput::setImpl(nullptr);
-        // if (p_hdmiInputImplMock != nullptr)
-        // {
-        //     delete p_hdmiInputImplMock;
-        //     p_hdmiInputImplMock = nullptr;
-        // }
-
-        // device::CompositeInput::setImpl(nullptr);
-        // if (p_compositeInputImplMock != nullptr) {
-        //     delete p_compositeInputImplMock;
-        //     p_compositeInputImplMock = nullptr;
-        // }
-
-        // device::Host::setImpl(nullptr);
-        // if (p_HostImplMock != nullptr) {
-        //     delete p_HostImplMock;
-        //     p_HostImplMock = nullptr;
-        // }
-        // </pca>
-    }
+    AVInputDsTest() : AVInputTest() {}
+    virtual ~AVInputDsTest() override {}
 };
 
 TEST_F(AVInputDsTest, numberOfInputs)
@@ -1977,7 +1932,3 @@ TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
 
     EVENT_UNSUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);
 }
-
-#endif
-// </pca>
-

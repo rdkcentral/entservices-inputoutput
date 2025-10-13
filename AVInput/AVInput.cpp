@@ -59,9 +59,7 @@ namespace Plugin {
         , _connectionId(0)
         , _avInput(nullptr)
         , _avInputNotification(this)
-        // <pca>
         , _registeredDsEventHandlers(false)
-        // </pca>
     {
         Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_INPUT_DEVICES), &AVInput::getInputDevicesWrapper, this);
         SYSLOG(Logging::Startup, (_T("AVInput Constructor")));
@@ -100,7 +98,6 @@ namespace Plugin {
             _avInput->RegisterGameFeatureStatusUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
             _avInput->RegisterAviContentTypeUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IAviContentTypeUpdateNotification>());
 
-            // <pca>
             try {
                 device::Manager::Initialize();
                 LOGINFO("device::Manager::Initialize success");
@@ -114,7 +111,6 @@ namespace Plugin {
                 LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
                 LOG_DEVICE_EXCEPTION0();
             }
-            // </pca>
 
             // Invoking Plugin API register to wpeframework
             Exchange::JAVInput::Register(*this, _avInput);
@@ -295,7 +291,6 @@ namespace Plugin {
         }
     }
 
-    // <pca>
     /* HDMIInEventsNotification*/
 
     void AVInput::OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType)
@@ -423,6 +418,6 @@ namespace Plugin {
             AVInputImplementation::_instance->AVInputVideoModeUpdate(activePort, videoResolution, INPUT_TYPE_INT_COMPOSITE);
         }
     }
-    // </pca>
+    
 } // namespace Plugin
 } // namespace WPEFramework

@@ -38,12 +38,9 @@ namespace WPEFramework {
 namespace Plugin {
     
     class AVInput: public PluginHost::IPlugin, 
-                // <pca>
                 public PluginHost::JSONRPC,
                 public device::Host::IHdmiInEvents, 
                 public device::Host::ICompositeInEvents {
-                //public PluginHost::JSONRPC {
-                // </pca>
     public:
 
         AVInput(const AVInput&) = delete;
@@ -64,7 +61,6 @@ namespace Plugin {
         void Deinitialize(PluginHost::IShell* service) override;
         string Information() const override;
 
-        // <pca>
         /* HdmiInEventNotification*/
 
         void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
@@ -81,7 +77,6 @@ namespace Plugin {
         void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
         void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
         void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
-        // </pca>
 
     protected:
 
@@ -90,14 +85,12 @@ namespace Plugin {
 
     private:
 
-        // <pca>
         template <typename T>
         T* baseInterface()
         {
             static_assert(std::is_base_of<T, AVInput>(), "base type mismatch");
             return static_cast<T*>(this);
         }
-        // </pca>
 
         PluginHost::IShell* _service {};
         uint32_t _connectionId {};
@@ -192,9 +185,7 @@ namespace Plugin {
         };
 
         Core::Sink<Notification> _avInputNotification;
-        // <pca>
         bool _registeredDsEventHandlers;
-        // </pca>
 
         void Deactivated(RPC::IRemoteConnection* connection);
 
