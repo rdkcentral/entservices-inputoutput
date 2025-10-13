@@ -53,6 +53,11 @@ protected:
     string response;
     AVInputMock* p_avInputMock = nullptr;
     DECL_CORE_JSONRPC_CONX connection;
+    // <pca> 2
+    HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
+    CompositeInputImplMock* p_compositeInputImplMock = nullptr;
+    HostImplMock* p_HostImplMock = nullptr;
+    // </pca>
     IarmBusImplMock* p_iarmBusImplMock = nullptr;
     ManagerImplMock* p_managerImplMock = nullptr;
 
@@ -65,6 +70,17 @@ protected:
         , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
           2, Core::Thread::DefaultStackSize(), 16))
     {
+        // <pca> 2
+        p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
+        device::HdmiInput::setImpl(p_hdmiInputImplMock);
+
+        p_compositeInputImplMock = new NiceMock<CompositeInputImplMock>;
+        device::CompositeInput::setImpl(p_compositeInputImplMock);
+
+        p_HostImplMock = new NiceMock<HostImplMock>;
+        device::Host::setImpl(p_HostImplMock);
+        // </pca>
+
         p_managerImplMock  = new NiceMock <ManagerImplMock>;
         device::Manager::setImpl(p_managerImplMock);
 
@@ -126,6 +142,27 @@ protected:
             delete p_managerImplMock;
             p_managerImplMock = nullptr;
         }
+
+        // <pca> 2
+        device::HdmiInput::setImpl(nullptr);
+        if (p_hdmiInputImplMock != nullptr)
+        {
+            delete p_hdmiInputImplMock;
+            p_hdmiInputImplMock = nullptr;
+        }
+
+        device::CompositeInput::setImpl(nullptr);
+        if (p_compositeInputImplMock != nullptr) {
+            delete p_compositeInputImplMock;
+            p_compositeInputImplMock = nullptr;
+        }
+
+        device::Host::setImpl(nullptr);
+        if (p_HostImplMock != nullptr) {
+            delete p_HostImplMock;
+            p_HostImplMock = nullptr;
+        }
+        // </pca>
     }
 };
 
@@ -162,47 +199,53 @@ TEST_F(AVInputTest, contentProtected)
 }
 
 // <pca> debug
-#if 0
+#if 1
 
 class AVInputDsTest : public AVInputTest {
 protected:
-    HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
-    CompositeInputImplMock* p_compositeInputImplMock = nullptr;
-    HostImplMock* p_HostImplMock = nullptr;
+    // <pca>
+    // HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
+    // CompositeInputImplMock* p_compositeInputImplMock = nullptr;
+    // HostImplMock* p_HostImplMock = nullptr;
+    // </pca>
 
     AVInputDsTest()
         : AVInputTest()
     {
-        p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
-        device::HdmiInput::setImpl(p_hdmiInputImplMock);
+        // <pca> 2
+        // p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
+        // device::HdmiInput::setImpl(p_hdmiInputImplMock);
 
-        p_compositeInputImplMock = new NiceMock<CompositeInputImplMock>;
-        device::CompositeInput::setImpl(p_compositeInputImplMock);
+        // p_compositeInputImplMock = new NiceMock<CompositeInputImplMock>;
+        // device::CompositeInput::setImpl(p_compositeInputImplMock);
 
-        p_HostImplMock = new NiceMock<HostImplMock>;
-        device::Host::setImpl(p_HostImplMock);
+        // p_HostImplMock = new NiceMock<HostImplMock>;
+        // device::Host::setImpl(p_HostImplMock);
+        // </pca>
     }
 
     virtual ~AVInputDsTest() override
     {
-        device::HdmiInput::setImpl(nullptr);
-        if (p_hdmiInputImplMock != nullptr)
-        {
-            delete p_hdmiInputImplMock;
-            p_hdmiInputImplMock = nullptr;
-        }
+        // <pca> 2
+        // device::HdmiInput::setImpl(nullptr);
+        // if (p_hdmiInputImplMock != nullptr)
+        // {
+        //     delete p_hdmiInputImplMock;
+        //     p_hdmiInputImplMock = nullptr;
+        // }
 
-        device::CompositeInput::setImpl(nullptr);
-        if (p_compositeInputImplMock != nullptr) {
-            delete p_compositeInputImplMock;
-            p_compositeInputImplMock = nullptr;
-        }
+        // device::CompositeInput::setImpl(nullptr);
+        // if (p_compositeInputImplMock != nullptr) {
+        //     delete p_compositeInputImplMock;
+        //     p_compositeInputImplMock = nullptr;
+        // }
 
-        device::Host::setImpl(nullptr);
-        if (p_HostImplMock != nullptr) {
-            delete p_HostImplMock;
-            p_HostImplMock = nullptr;
-        }
+        // device::Host::setImpl(nullptr);
+        // if (p_HostImplMock != nullptr) {
+        //     delete p_HostImplMock;
+        //     p_HostImplMock = nullptr;
+        // }
+        // </pca>
     }
 };
 
