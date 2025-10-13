@@ -1,0 +1,13 @@
+diff --git a/rpc/include/dsserverlogger.h b/rpc/include/dsserverlogger.h
+index b2df394..e79d02b 100644
+--- a/rpc/include/dsserverlogger.h
++++ b/rpc/include/dsserverlogger.h
+@@ -33,7 +33,7 @@
+ #include "dsserverregisterlog.h"
+ 
+ int ds_server_log(int priority,const char *format, ...);
+-
++void dsServer_Rdklogger_Init();
+ #if (defined(DSMGR_LOGGER_ENABLED))
+ #include "rdk_debug.h"
+ 
