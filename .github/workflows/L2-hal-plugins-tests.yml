@@ -123,12 +123,12 @@ jobs:
           git clone -b dummy_branch https://${{secrets.RDK_E_MANIFEST_USERNAME}}:${{ secrets.RDK_E_MANIFEST_PASSWORD}}@github.com/rdk-e/FLASK-for-Hal-Mock.git
           cd FLASK-for-Hal-Mock
           ls
-          mv install_dependencies.sh ..
+          mv dependencies_auto.py ..
           mv build.sh ..
           mv peru.yaml ..
           #cp -r peru.yaml __w/rdkservices/rdkservices/rdkservices/L2HalMock
           cd ..
-          chmod -Rf 777 install_dependencies.sh
+          chmod -Rf 777 dependencies_auto.py
           python3 dependencies_auto.py
           #./install_dependencies.sh
           sed -i 's/USERNAME_PLACEHOLDER/${{ secrets.RDK_E_MANIFEST_USERNAME }}/g' peru.yaml
