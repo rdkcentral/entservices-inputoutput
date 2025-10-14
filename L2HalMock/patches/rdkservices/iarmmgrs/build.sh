@@ -32,9 +32,9 @@ export CXX=g++
 export LDFLAGS="-L$DS_LIB_PATH -lds -ldshalsrv -lds-hal"
 # export LD_LIBRARY_PATH=$LIB_PATH:$LD_LIBRARY_PATH
 
-LIB_PATH="/__w/entservices-inputoutput/entservices-inputoutput/entservices-inputoutput/L2HalMock/install/lib"
+# LIB_PATH="/__w/entservices-inputoutput/entservices-inputoutput/entservices-inputoutput/L2HalMock/install/lib"
 # Export LDFLAGS with the path and the library
-export LDFLAGS="-L$LIB_PATH -lWPEFrameworkPowerController -lWPEFrameworkCore -lWPEFrameworkCOM -lWPEFrameworkMessaging"
+export LDFLAGS="-L$WPEFRAMEWORK_LIB -lWPEFrameworkPowerController -lWPEFrameworkCore -lWPEFrameworkCOM -lWPEFrameworkMessaging"
 make 
 if [ $? -ne 0 ] ; then
   echo iarmmgr Build Failed
