@@ -26,6 +26,15 @@ export LDFLAGS="`pkg-config --libs libsafec`"
 export USE_DBUS=y
 export CXX=g++
 # export CXX=g++
+
+# Set the path to the library
+# LIB_PATH=$DS_LIB_PATH
+export LDFLAGS="-L$DS_LIB_PATH -lds -ldshalsrv -lds-hal"
+# export LD_LIBRARY_PATH=$LIB_PATH:$LD_LIBRARY_PATH
+
+LIB_PATH="/__w/entservices-inputoutput/entservices-inputoutput/entservices-inputoutput/L2HalMock/install/lib"
+# Export LDFLAGS with the path and the library
+export LDFLAGS="-L$LIB_PATH -lWPEFrameworkPowerController -lWPEFrameworkCore -lWPEFrameworkCOM -lWPEFrameworkMessaging"
 make 
 if [ $? -ne 0 ] ; then
   echo iarmmgr Build Failed
