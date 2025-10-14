@@ -1,0 +1,30 @@
+diff --git a/rpc/srv/dsDisplay.c b/rpc/srv/dsDisplay.c
+index f7d5395..3592886 100644
+--- a/rpc/srv/dsDisplay.c
++++ b/rpc/srv/dsDisplay.c
+@@ -72,7 +72,7 @@ IARM_Result_t _dsSetAllmEnabled(void *arg);
+ IARM_Result_t _dsSetAVIContentType(void *arg);
+ IARM_Result_t _dsSetAVIScanInformation(void *arg);
+ IARM_Result_t _dsDisplayTerm(void *arg);
+-void _dsDisplayEventCallback(intptr_t handle, dsDisplayEvent_t event, void *eventData);
++void _dsDisplayEventCallback(int handle, dsDisplayEvent_t event, void *eventData);
+ static void  filterEDIDResolution(intptr_t Shandle, dsDisplayEDID_t *edid);
+ static void  dumpEDIDInformation( dsDisplayEDID_t *edid);
+ static dsVideoPortType_t _GetDisplayPortType(intptr_t handle);
+diff --git a/rpc/srv/dsserverlogger.c b/rpc/srv/dsserverlogger.c
+index 58b0607..82ee183 100644
+--- a/rpc/srv/dsserverlogger.c
++++ b/rpc/srv/dsserverlogger.c
+@@ -60,9 +60,9 @@ void dsServer_Rdklogger_Init()
+         PdebugConfigFile = DSMGR_DEBUG_ACTUAL_PATH;
+     }
+ 
+-    if (rdk_logger_init(PdebugConfigFile) == 0) {
+-       b_rdk_logger_enabled = 1;
+-    }
++    // if (rdk_logger_init(PdebugConfigFile) == 0) {
++    //    b_rdk_logger_enabled = 1;
++    // }
+ }
+ #endif
+ 
