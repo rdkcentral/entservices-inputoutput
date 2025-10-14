@@ -20,9 +20,11 @@
 #
 set -x
 
-source $PWD/../env.sh
+source $PWD/../../../../env.sh
 
+export LDFLAGS="`pkg-config --libs libsafec`"
 export USE_DBUS=y
+export CXX=g++
 # export CXX=g++
 make 
 if [ $? -ne 0 ] ; then
