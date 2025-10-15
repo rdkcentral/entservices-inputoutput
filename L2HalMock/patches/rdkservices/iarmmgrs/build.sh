@@ -37,9 +37,6 @@ export LDFLAGS="-L$DS_LIB_PATH -lds -ldshalsrv -lds-hal"
 export LDFLAGS="-L$WPEFRAMEWORK_LIB -lWPEFrameworkPowerController -lWPEFrameworkCore -lWPEFrameworkCOM -lWPEFrameworkMessaging"
 make 
 if [ $? -ne 0 ] ; then
-  echo $WPEFRAMEWORK_LIB
-  cd $WPEFRAMEWORK_LIB
-  ls
   echo iarmmgr Build Failed
   exit 1
 else
