@@ -38,6 +38,8 @@ export LDFLAGS="-L$WPEFRAMEWORK_LIB -lWPEFrameworkPowerController -lWPEFramework
 make 
 if [ $? -ne 0 ] ; then
   echo $WPEFRAMEWORK_LIB
+  cd $WPEFRAMEWORK_LIB
+  ls
   echo iarmmgr Build Failed
   exit 1
 else
