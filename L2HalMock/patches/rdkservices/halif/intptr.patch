@@ -1,5 +1,5 @@
 diff --git a/include/dsAudio.h b/include/dsAudio.h
-index f02cbf2..aa4a97e 100644
+index f02cbf2..8279f99 100644
 --- a/include/dsAudio.h
 +++ b/include/dsAudio.h
 @@ -901,7 +901,7 @@ dsError_t dsAudioEnableARC(intptr_t handle, dsAudioARCStatus_t arcStatus);
@@ -11,6 +11,15 @@ index f02cbf2..aa4a97e 100644
  
  /**
   * @brief Sets the digital audio output mode of digital interfaces.
+@@ -925,7 +925,7 @@ dsError_t  dsGetStereoMode(intptr_t handle, dsAudioStereoMode_t *stereoMode);
+  * 
+  * @see dsGetStereoMode()
+  */
+-dsError_t  dsSetStereoMode(intptr_t handle, dsAudioStereoMode_t mode);
++dsError_t  dsSetStereoMode(int handle, dsAudioStereoMode_t mode);
+ 
+ /**
+  * @brief Checks if auto mode is enabled or not for the digital interfaces.
 @@ -1210,7 +1210,7 @@ dsError_t  dsIsAudioMute(intptr_t handle, bool *muted);
   * 
   * @see dsEnableAudioPort()
@@ -20,6 +29,15 @@ index f02cbf2..aa4a97e 100644
  
  /**
   * @brief Enables or Disables the Audio port corresponding to the specified port handle.
+@@ -1232,7 +1232,7 @@ dsError_t  dsIsAudioPortEnabled(intptr_t handle, bool *enabled);
+  * 
+  * @see dsIsAudioPortEnabled()
+  */
+-dsError_t  dsEnableAudioPort(intptr_t handle, bool enabled);
++dsError_t  dsEnableAudioPort(int handle, bool enabled);
+ 
+ /**
+  * @note This API is deprecated.
 diff --git a/include/dsVideoPort.h b/include/dsVideoPort.h
 index 3b84074..67d1a2f 100644
 --- a/include/dsVideoPort.h
