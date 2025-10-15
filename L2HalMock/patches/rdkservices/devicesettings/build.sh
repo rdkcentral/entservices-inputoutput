@@ -44,6 +44,9 @@ export CFLAGS="${CFLAGS} -DDS_AUDIO_SETTINGS_PERSISTENCE"
 # Link rdkloggers library
 # export LDFLAGS="${LDFLAGS} -lrdkloggers"
 
+export CFLAGS="-m32"
+export LDFLAGS="-m32"
+
 make
 if [ $? -ne 0 ] ; then
   echo Build Failed
