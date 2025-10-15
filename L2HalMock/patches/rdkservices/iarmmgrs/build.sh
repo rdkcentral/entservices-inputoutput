@@ -29,9 +29,11 @@ export CXX=g++
 
 # Set the path to the library
 # LIB_PATH=$DS_LIB_PATH
-# export LDFLAGS="-L$DS_LIB_PATH -lds -ldshalsrv -lds-hal"
+export LDFLAGS="-L$DS_LIB_PATH -lds -ldshalsrv -lds-hal"
 # export LD_LIBRARY_PATH=$LIB_PATH:$LD_LIBRARY_PATH
-
+echo "Kishore print"
+cd $DS_LIB_PATH
+ls
 # LIB_PATH="/__w/entservices-inputoutput/entservices-inputoutput/entservices-inputoutput/L2HalMock/install/lib"
 # Export LDFLAGS with the path and the library
 export LDFLAGS="-L$WPEFRAMEWORK_LIB -lWPEFrameworkPowerController -lWPEFrameworkCore -lWPEFrameworkCOM -lWPEFrameworkMessaging"
