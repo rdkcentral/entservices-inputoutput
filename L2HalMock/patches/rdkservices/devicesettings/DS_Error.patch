@@ -1,0 +1,44 @@
+diff --git a/rpc/srv/dsDisplay.c b/rpc/srv/dsDisplay.c
+index f7d5395..7f3b4e6 100644
+--- a/rpc/srv/dsDisplay.c
++++ b/rpc/srv/dsDisplay.c
+@@ -62,7 +62,7 @@ static pthread_mutex_t dsLock = PTHREAD_MUTEX_INITIALIZER;
+ #define NULL_HANDLE 0
+ #define IARM_BUS_Lock(lock) pthread_mutex_lock(&dsLock)
+ #define IARM_BUS_Unlock(lock) pthread_mutex_unlock(&dsLock)
+-
++typedef int intptr_t;
+ IARM_Result_t _dsDisplayInit(void *arg);
+ IARM_Result_t _dsGetDisplay(void *arg);
+ IARM_Result_t _dsGetDisplayAspectRatio(void *arg);
+diff --git a/rpc/srv/dsHdmiIn.c b/rpc/srv/dsHdmiIn.c
+index e4b66ca..ca5fe80 100755
+--- a/rpc/srv/dsHdmiIn.c
++++ b/rpc/srv/dsHdmiIn.c
+@@ -141,7 +141,8 @@ using namespace std;
+ void getDynamicAutoLatencyConfig()
+ {
+      RFC_ParamData_t param = {0};
+-     WDMP_STATUS status = getRFCParameter((char*)"dssrv", TVSETTINGS_DALS_RFC_PARAM, &param);
++    //  WDMP_STATUS status = getRFCParameter((char*)"dssrv", TVSETTINGS_DALS_RFC_PARAM, &param);
++    DMP_STATUS status = WDMP_SUCCESS;
+      INT_DEBUG("DALS Feature Enable = [ %s ] \n", param.value);
+      if(WDMP_SUCCESS == status && (strncasecmp(param.value,"true",4) == 0)) {
+          isDalsEnabled = true;
+diff --git a/rpc/srv/dsserverlogger.c b/rpc/srv/dsserverlogger.c
+index 58b0607..82ee183 100644
+--- a/rpc/srv/dsserverlogger.c
++++ b/rpc/srv/dsserverlogger.c
+@@ -60,9 +60,9 @@ void dsServer_Rdklogger_Init()
+         PdebugConfigFile = DSMGR_DEBUG_ACTUAL_PATH;
+     }
+ 
+-    if (rdk_logger_init(PdebugConfigFile) == 0) {
+-       b_rdk_logger_enabled = 1;
+-    }
++    // if (rdk_logger_init(PdebugConfigFile) == 0) {
++    //    b_rdk_logger_enabled = 1;
++    // }
+ }
+ #endif
+ 
