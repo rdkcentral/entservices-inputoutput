@@ -38,6 +38,19 @@ index f02cbf2..8279f99 100644
  
  /**
   * @note This API is deprecated.
+diff --git a/include/dsDisplay.h b/include/dsDisplay.h
+index 4a088ef..257f779 100644
+--- a/include/dsDisplay.h
++++ b/include/dsDisplay.h
+@@ -452,7 +452,7 @@ dsError_t dsDisplayTerm();
+  * @see dsDisplayEventCallback_t()
+  * 
+  */
+-dsError_t dsRegisterDisplayEventCallback(intptr_t handle, dsDisplayEventCallback_t cb);
++dsError_t dsRegisterDisplayEventCallback(int handle, dsDisplayEventCallback_t cb);
+ 
+ #ifdef __cplusplus
+ }
 diff --git a/include/dsVideoPort.h b/include/dsVideoPort.h
 index 3b84074..67d1a2f 100644
 --- a/include/dsVideoPort.h
