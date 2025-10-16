@@ -1224,6 +1224,11 @@ namespace WPEFramework
         Core::hresult HdmiCecSourceImplementation::SetVendorId(const string &vendorid, HdmiCecSourceSuccess &success)
         {
             LOGINFO("SetVendorId :%s ",vendorid.c_str());
+            if (vendorid.empty()) {
+                LOGERR("SetVendorId failed: vendorid is not given");
+                success.success = false;
+                return Core::ERROR_GENERAL;
+            }
             unsigned int vendorIdInt = 0;
             try
             {
