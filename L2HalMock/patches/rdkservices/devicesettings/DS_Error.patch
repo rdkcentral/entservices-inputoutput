@@ -1,18 +1,27 @@
 diff --git a/rpc/srv/dsDisplay.c b/rpc/srv/dsDisplay.c
-index f7d5395..7f3b4e6 100644
+index f7d5395..41f0477 100644
 --- a/rpc/srv/dsDisplay.c
 +++ b/rpc/srv/dsDisplay.c
-@@ -62,7 +62,7 @@ static pthread_mutex_t dsLock = PTHREAD_MUTEX_INITIALIZER;
- #define NULL_HANDLE 0
- #define IARM_BUS_Lock(lock) pthread_mutex_lock(&dsLock)
- #define IARM_BUS_Unlock(lock) pthread_mutex_unlock(&dsLock)
--
-+typedef int intptr_t;
- IARM_Result_t _dsDisplayInit(void *arg);
- IARM_Result_t _dsGetDisplay(void *arg);
- IARM_Result_t _dsGetDisplayAspectRatio(void *arg);
+@@ -72,7 +72,7 @@ IARM_Result_t _dsSetAllmEnabled(void *arg);
+ IARM_Result_t _dsSetAVIContentType(void *arg);
+ IARM_Result_t _dsSetAVIScanInformation(void *arg);
+ IARM_Result_t _dsDisplayTerm(void *arg);
+-void _dsDisplayEventCallback(intptr_t handle, dsDisplayEvent_t event, void *eventData);
++void _dsDisplayEventCallback(int handle, dsDisplayEvent_t event, void *eventData);
+ static void  filterEDIDResolution(intptr_t Shandle, dsDisplayEDID_t *edid);
+ static void  dumpEDIDInformation( dsDisplayEDID_t *edid);
+ static dsVideoPortType_t _GetDisplayPortType(intptr_t handle);
+@@ -506,7 +506,7 @@ IARM_Result_t _dsDisplayTerm(void *arg)
+ 
+ 
+ /*HDMI Call back */
+-void _dsDisplayEventCallback(intptr_t handle, dsDisplayEvent_t event, void *eventData)
++void _dsDisplayEventCallback(int handle, dsDisplayEvent_t event, void *eventData)
+ {
+ 	IARM_Bus_DSMgr_EventData_t _eventData;
+     IARM_Bus_DSMgr_EventId_t _eventId;
 diff --git a/rpc/srv/dsHdmiIn.c b/rpc/srv/dsHdmiIn.c
-index e4b66ca..ca5fe80 100755
+index e4b66ca..9913627 100755
 --- a/rpc/srv/dsHdmiIn.c
 +++ b/rpc/srv/dsHdmiIn.c
 @@ -141,7 +141,8 @@ using namespace std;
@@ -21,7 +30,7 @@ index e4b66ca..ca5fe80 100755
       RFC_ParamData_t param = {0};
 -     WDMP_STATUS status = getRFCParameter((char*)"dssrv", TVSETTINGS_DALS_RFC_PARAM, &param);
 +    //  WDMP_STATUS status = getRFCParameter((char*)"dssrv", TVSETTINGS_DALS_RFC_PARAM, &param);
-+    DMP_STATUS status = WDMP_SUCCESS;
++    WDMP_STATUS status = WDMP_SUCCESS;
       INT_DEBUG("DALS Feature Enable = [ %s ] \n", param.value);
       if(WDMP_SUCCESS == status && (strncasecmp(param.value,"true",4) == 0)) {
           isDalsEnabled = true;
