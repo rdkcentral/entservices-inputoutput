@@ -22,14 +22,17 @@ set -x
 
 source $PWD/../../../../env.sh
 
-export CXX=g++
-CXXFLAGS="-std=c++11 -Wall -Wextra"
 
-make 
-if [ $? -ne 0 ] ; then
-  echo IarmBus Build Failed
+export CXX=g++
+export CXXFLAGS="-std=c++11 -Wall -Wextra"
+
+make CXX="$CXX" CXXFLAGS="$CXXFLAGS"
+
+if [ $? -ne 0 ]; then
+  echo "IarmBus Build Failed"
   exit 1
 else
-  echo IarmBus Build Success
+  echo "IarmBus Build Success"
   exit 0
 fi
+
