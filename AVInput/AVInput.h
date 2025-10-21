@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE
  * file the following copyright and licenses apply:
  *
- * Copyright 2025 RDK Management
+ * Copyright 2020 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,178 +20,151 @@
 #pragma once
 
 #include "Module.h"
+#include "libIBus.h"
 
-#include <core/JSON.h>
-#include <interfaces/IAVInput.h>
-#include <interfaces/json/JAVInput.h>
-#include <interfaces/json/JsonData_AVInput.h>
-#include "AVInputImplementation.h"
-#include "AVInputJsonData.h"
-#include "AVInputUtils.h"
-
-#include "UtilsLogging.h"
-#include "tracing/Logging.h"
-
+#include "dsTypes.h"
 #include "host.hpp"
+#include "manager.hpp"
+
+#define DEFAULT_PRIM_VOL_LEVEL 25
+#define MAX_PRIM_VOL_LEVEL 100
+#define DEFAULT_INPUT_VOL_LEVEL 100
 
 namespace WPEFramework {
 namespace Plugin {
+
+class AVInput: public PluginHost::IPlugin, 
+               public PluginHost::JSONRPC,
+               public device::Host::IHdmiInEvents, 
+               public device::Host::ICompositeInEvents{
+
+private:
+
+    AVInput(const AVInput &) = delete;
+    AVInput &operator=(const AVInput &) = delete;
+
+public:
+    AVInput();
+    virtual ~AVInput();
+
+    BEGIN_INTERFACE_MAP(AVInput)
+    INTERFACE_ENTRY(PluginHost::IPlugin)
+    INTERFACE_ENTRY(PluginHost::IDispatcher)
+    END_INTERFACE_MAP
+
+private:
+
+    template <typename T>
+    T* baseInterface()
+    {
+        static_assert(std::is_base_of<T, AVInput>(), "base type mismatch");
+        return static_cast<T*>(this);
+    }
+
+    int m_primVolume;
+    int m_inputVolume; //Player Volume
+
+    dsVRRType_t m_currentVrrType;
+public:
+    //   IPlugin methods
+    // -------------------------------------------------------------------------------------------------------
+    virtual const string Initialize(PluginHost::IShell *service) override;
+    virtual void Deinitialize(PluginHost::IShell *service) override;
+    virtual string Information() const override;
+
+protected:
     
-    class AVInput: public PluginHost::IPlugin, 
-                public PluginHost::JSONRPC,
-                public device::Host::IHdmiInEvents, 
-                public device::Host::ICompositeInEvents {
-    public:
+    void RegisterAll();
+    void UnregisterAll();
 
-        AVInput(const AVInput&) = delete;
-        AVInput& operator=(const AVInput&) = delete;
+    uint32_t endpoint_numberOfInputs(const JsonObject &parameters, JsonObject &response);
+    uint32_t endpoint_currentVideoMode(const JsonObject &parameters, JsonObject &response);
+    uint32_t endpoint_contentProtected(const JsonObject &parameters, JsonObject &response);
 
-        AVInput();
-        virtual ~AVInput();
+private:
+    static int numberOfInputs(bool &success);
+    static string currentVideoMode(bool &success);
 
-        BEGIN_INTERFACE_MAP(AVInput)
-            INTERFACE_ENTRY(PluginHost::IPlugin)
-            INTERFACE_ENTRY(PluginHost::IDispatcher)
-            INTERFACE_AGGREGATE(Exchange::IAVInput, _avInput)
-        END_INTERFACE_MAP
+    //Begin methods
+    uint32_t getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t writeEDIDWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t readEDIDWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t getRawSPDWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t getSPDWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t setEdidVersionWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t getEdidVersionWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t setEdid2AllmSupportWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t getEdid2AllmSupportWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t setVRRSupportWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t getVRRSupportWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t getVRRFrameRateWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t startInput(const JsonObject& parameters, JsonObject& response);
+    uint32_t stopInput(const JsonObject& parameters, JsonObject& response);
+    uint32_t setVideoRectangleWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t getSupportedGameFeatures(const JsonObject& parameters, JsonObject& response);
+    uint32_t getGameFeatureStatusWrapper(const JsonObject& parameters, JsonObject& response);
+    uint32_t setMixerLevels(const JsonObject& parameters, JsonObject& response);
+    uint32_t getHdmiVersionWrapper(const JsonObject& parameters, JsonObject& response);
+    //End methods
 
-        //  IPlugin methods
-        // -------------------------------------------------------------------------------------------------------
-        const string Initialize(PluginHost::IShell* service) override;
-        void Deinitialize(PluginHost::IShell* service) override;
-        string Information() const override;
+    JsonArray getInputDevices(int iType);
+    void writeEDID(int deviceId, std::string message);
+    std::string readEDID(int iPort);
+    std::string getRawSPD(int iPort);
+    std::string getSPD(int iPort);
+    int setEdidVersion(int iPort, int iEdidVer);
+    int getEdidVersion(int iPort);
+    bool setVRRSupport(int portId, bool vrrSupport);
+    bool getVRRSupport(int portId, bool *vrrSupportValue);
+    bool setVideoRectangle(int x, int y, int width, int height, int type);
+    bool getALLMStatus(int iPort);
+    bool getVRRStatus(int iPort, dsHdmiInVrrStatus_t *vrrStatus);
 
-        /* HdmiInEventNotification*/
+    void AVInputHotplug(int input , int connect, int type);
+    void AVInputVRRChange( int port , dsVRRType_t vrr_type, bool vrr_mode);
+    static void dsAVEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
-        void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
-        void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;   
-        void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented) override;
-        void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
-        void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
-        void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
-        void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
+    void AVInputSignalChange( int port , int signalStatus, int type);
+    static void dsAVSignalStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
-        /* CompositeInEventNotification */
+    void AVInputStatusChange( int port , bool isPresented, int type);
+    static void dsAVStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
-        void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
-        void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
-        void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
-        void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
+    void AVInputVideoModeUpdate( int port , dsVideoPortResolution_t resolution,int type);
+    static void dsAVVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
-    protected:
+    void AVInputALLMChange( int port , bool allmMode);
+    static void dsAVGameFeatureStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
-        void RegisterAll();
-        void UnregisterAll();
+    void hdmiInputAviContentTypeChange(int port, int content_type);
+    static void dsAviContentTypeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
-    private:
+private:
 
-        template <typename T>
-        T* baseInterface()
-        {
-            static_assert(std::is_base_of<T, AVInput>(), "base type mismatch");
-            return static_cast<T*>(this);
-        }
+    bool _registeredDsEventHandlers;
 
-        PluginHost::IShell* _service {};
-        uint32_t _connectionId {};
-        Exchange::IAVInput* _avInput {};
+public:
 
-        class Notification : public RPC::IRemoteConnection::INotification,
-                             public Exchange::IAVInput::IDevicesChangedNotification,
-                             public Exchange::IAVInput::ISignalChangedNotification,
-                             public Exchange::IAVInput::IInputStatusChangedNotification,
-                             public Exchange::IAVInput::IVideoStreamInfoUpdateNotification,
-                             public Exchange::IAVInput::IGameFeatureStatusUpdateNotification,
-                             public Exchange::IAVInput::IAviContentTypeUpdateNotification {
+    /* HdmiInEventNotification*/
 
-        public:
-        
-            explicit Notification(AVInput* parent)
-                : _parent(*parent)
-            {
-                ASSERT(parent != nullptr);
-            }
+    void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
+    void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;   
+    void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented) override;
+    void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
+    void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
+    void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
+    void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
 
-            virtual ~Notification()
-            {
-            }
+    /* CompositeInEventNotification */
 
-            template <typename T>
-            T* baseInterface()
-            {
-                static_assert(std::is_base_of<T, Notification>(), "base type mismatch");
-                return static_cast<T*>(this);
-            }
+    void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
+    void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
+    void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
+    void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
+    
+public:
+    static AVInput* _instance;
+};
 
-            BEGIN_INTERFACE_MAP(Notification)
-                INTERFACE_ENTRY(Exchange::IAVInput::IDevicesChangedNotification)
-                INTERFACE_ENTRY(Exchange::IAVInput::ISignalChangedNotification)
-                INTERFACE_ENTRY(Exchange::IAVInput::IInputStatusChangedNotification)
-                INTERFACE_ENTRY(Exchange::IAVInput::IVideoStreamInfoUpdateNotification)
-                INTERFACE_ENTRY(Exchange::IAVInput::IGameFeatureStatusUpdateNotification)
-                INTERFACE_ENTRY(Exchange::IAVInput::IAviContentTypeUpdateNotification)
-                INTERFACE_ENTRY(RPC::IRemoteConnection::INotification)
-            END_INTERFACE_MAP
-
-            void Activated(RPC::IRemoteConnection*) override
-            {
-            }
-
-            void Deactivated(RPC::IRemoteConnection* connection) override
-            {
-                _parent.Deactivated(connection);
-            }
-
-            void OnDevicesChanged(Exchange::IAVInput::IInputDeviceIterator* const devices) override;
-
-            void OnSignalChanged(const int id, const string& locator, const string& signalStatus) override
-            {
-                LOGINFO("OnSignalChanged: id %d, locator %s, status %s\n", id, locator.c_str(), signalStatus.c_str());
-                Exchange::JAVInput::Event::OnSignalChanged(_parent, id, locator, signalStatus);
-            }
-
-            void OnInputStatusChanged(const int id, const string& locator, const string& status, const int plane) override
-            {
-                LOGINFO("OnInputStatusChanged: id %d, locator %s, status %s, plane %d\n", id, locator.c_str(), status.c_str(), plane);
-                Exchange::JAVInput::Event::OnInputStatusChanged(_parent, id, locator, status, plane);
-            }
-
-            void VideoStreamInfoUpdate(const int id, const string& locator, const int width, const int height, const bool progressive, const int frameRateN, const int frameRateD) override
-            {
-                LOGINFO("VideoStreamInfoUpdate: id %d, width %d, height %d, frameRateN %d, frameRateD %d, progressive %d, locator %s\n",
-                    id, width, height, frameRateN, frameRateD, progressive, locator.c_str());
-                Exchange::JAVInput::Event::VideoStreamInfoUpdate(_parent, id, locator, width, height, progressive, frameRateN, frameRateD);
-            }
-
-            void GameFeatureStatusUpdate(const int id, const string& gameFeature, const bool mode) override
-            {
-                LOGINFO("GameFeatureStatusUpdate: id %d, gameFeature %s, mode %d\n",
-                    id, gameFeature.c_str(), static_cast<int>(mode));
-                Exchange::JAVInput::Event::GameFeatureStatusUpdate(_parent, id, gameFeature, mode);
-            }
-
-            void AviContentTypeUpdate(const int id, const int aviContentType) override
-            {
-                LOGINFO("AviContentTypeUpdate: id %d, contentType %d\n", id, aviContentType);
-                Exchange::JAVInput::Event::AviContentTypeUpdate(_parent, id, aviContentType);
-            }
-
-        private:
-            AVInput& _parent;
-
-            Notification() = delete;
-            Notification(const Notification&) = delete;
-            Notification& operator=(const Notification&) = delete;
-        };
-
-        Core::Sink<Notification> _avInputNotification;
-        bool _registeredDsEventHandlers;
-
-        void Deactivated(RPC::IRemoteConnection* connection);
-
-        JsonArray getInputDevices(int iType);
-        uint32_t getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response);
-
-    }; // AVInput
 } // namespace Plugin
 } // namespace WPEFramework
