@@ -23,8 +23,9 @@ set -x
 source $PWD/../../../../env.sh
 
 
+
 export CXX=g++
-export CXXFLAGS="-std=c++14 -Wall -Wextra"
+export CXXFLAGS="-std=c++14 -Wall -Wextra -fPIC"
 
 make CXX="$CXX" CXXFLAGS="$CXXFLAGS"
 
