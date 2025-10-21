@@ -27,6 +27,7 @@ source $PWD/../../../../env.sh
 export CXX=g++
 export CXXFLAGS="-std=c++14 -Wall -Wextra -fPIC"
 
+export LDFLAGS="-L$IARM_PATH/install -lIARMBus"
 make CXX="$CXX" CXXFLAGS="$CXXFLAGS"
 
 if [ $? -ne 0 ]; then
