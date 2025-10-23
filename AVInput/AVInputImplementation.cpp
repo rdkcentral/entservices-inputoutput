@@ -990,23 +990,6 @@ namespace Plugin {
         return ret;
     }
 
-    // <pca> debug
-    void AVInputImplementation::getHdmiArcPortID()
-    {
-        int portId = -1;
-        dsError_t error = device::HdmiInput::getInstance().getHDMIARCPortId(portId);
-        if (dsERR_NONE == error)
-        {
-            LOGINFO("HDMI ARC port ID HdmiArcPortID[%d]", portId);
-            HdmiArcPortID = portId;
-        }
-        else
-        {
-            LOGWARN("getHDMIARCPortId failed");
-        }
-    }
-    // </pca>
-
     Core::hresult AVInputImplementation::GetVRRFrameRate(const string& portId, double& currentVRRVideoFrameRate, bool& success)
     {
         int id;

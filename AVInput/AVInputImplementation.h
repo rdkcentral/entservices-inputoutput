@@ -212,9 +212,6 @@ namespace Plugin {
         bool getALLMStatus(int iPort);
         bool getVRRStatus(int iPort, dsHdmiInVrrStatus_t* vrrStatus);
         std::string GetRawSPD(int iPort);
-        // <pca> debug
-        void getHdmiArcPortID();
-        // </pca>
 
         static void dsAVEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len);
         static void dsAVSignalStatusEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len);
