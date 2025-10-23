@@ -739,13 +739,15 @@ jobs:
           &&
           lcov -c
           -o coverage.info
-          -d build/
+          -d build/entservices-inputoutput
           &&
           lcov
           -r coverage.info
           '/usr/include/*'
           '*/build/entservices-inputoutput/_deps/*'
+          '*/build/entservices-deviceanddisplay/_deps/*'
           '*/build/entservices-entservices-testframework/_deps/*'
+          '*/build/mocks/*'
           '*/install/usr/include/*'
           '*/Tests/headers/*'
           '*/Tests/mocks/*'
