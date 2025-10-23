@@ -3574,8 +3574,8 @@ namespace WPEFramework
       {
          int portId = -1;
          // <pca> debug
-         //dsError_t error = device::HdmiInput::getInstance().getHDMIARCPortId(portId);
-         dsError_t error = dsERR_GENERAL;
+         dsError_t error = device::HdmiInput::getInstance().getHDMIARCPortId(portId);
+         //dsError_t error = dsERR_GENERAL;
          // </pca>
          if (dsERR_NONE == error)
          {
