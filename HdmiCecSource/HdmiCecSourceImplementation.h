@@ -346,6 +346,7 @@ namespace WPEFramework {
             Core::hresult Register(Exchange::IHdmiCecSource::INotification *notification) override;
             Core::hresult Unregister(Exchange::IHdmiCecSource::INotification *notification) override;
 
+            Core::hresult setEnabledPersist(const bool &enabled, const bool &isPersist);
 
         };
 	} // namespace Plugin
