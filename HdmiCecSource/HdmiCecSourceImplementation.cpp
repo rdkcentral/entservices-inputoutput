@@ -933,7 +933,7 @@ namespace WPEFramework
         {
            LOGINFO("Entered SetEnabled ");
 
-           Core:: hresult ret = setEnabledPersist(enabled, true);
+           Core:: hresult ret = setEnabledInternal(enabled, true);
 
            if(ret == Core::ERROR_NONE)
            {
@@ -946,9 +946,9 @@ namespace WPEFramework
            return ret;
         }
 
-        Core::hresult HdmiCecSourceImplementation::setEnabledPersist(const bool enabled, const bool isPersist)
+        Core::hresult HdmiCecSourceImplementation::setEnabledInternal(const bool enabled, const bool isPersist)
         {
-            LOGINFO("Entered setEnabledPersist enabled:%d isPersist:%d ",enabled,isPersist);
+            LOGINFO("Entered setEnabledInternal enabled:%d isPersist:%d ",enabled,isPersist);
            if (cecSettingEnabled != enabled && isPersist)
            {
                Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_ENABLED, JsonValue(enabled));

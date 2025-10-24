@@ -122,7 +122,7 @@ namespace WPEFramework
            {
                auto* impl = dynamic_cast<HdmiCecSourceImplementation*>(_hdmiCecSource);
                 if (impl != nullptr) {
-                    impl->setEnabledPersist(false, false);
+                    impl->setEnabledInternal(false, false);
                 }
            }
            HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
