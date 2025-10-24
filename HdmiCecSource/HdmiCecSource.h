@@ -25,6 +25,8 @@
 
 #include <thread>
 
+#include "HdmiCecSourceImplementation.h"
+
 #undef Assert // this define from Connection.hpp conflicts with WPEFramework
 
 #include "Module.h"

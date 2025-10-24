@@ -120,8 +120,10 @@ namespace WPEFramework
 
            if(ret && enabled)
            {
-                Exchange::IHdmiCecSource::HdmiCecSourceSuccess success;
-                HdmiCecSource::_hdmiCecSource->SetEnabled(false,success);
+               auto* impl = dynamic_cast<HdmiCecSourceImplementation*>(_hdmiCecSource);
+                if (impl != nullptr) {
+                    impl->setEnabledInternal(false, false);
+                }
            }
            HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
 
