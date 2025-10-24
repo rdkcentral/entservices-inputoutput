@@ -54,7 +54,7 @@ service dbus restart
 echo -e "${GREEN}========================================debug===============================================${NC}"
 systemctl status dbus
 ls -l /usr/local/var/run/dbus/system_bus_socket
-cho -e "${GREEN}========================================FinfDbus===============================================${NC}"
+echo -e "${GREEN}========================================FinfDbus===============================================${NC}"
 find / -type s -name system_bus_socket 2>/dev/null
 
 echo -e "${GREEN}========================================Stop all existing services===============================================${NC}"
