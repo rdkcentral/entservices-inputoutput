@@ -51,9 +51,11 @@ DBUS_CONF_DIR=$SCRIPTS_DIR/dbus
 cp $DBUS_CONF_DIR/system.conf /usr/share/dbus-1/system.conf
 cp $DBUS_CONF_DIR/session.conf /usr/share/dbus-1/session.conf
 service dbus restart
+mkdir -p /usr/local/var/run/dbus
+ln -s /run/dbus/system_bus_socket /usr/local/var/run/dbus/system_bus_socket
 echo -e "${GREEN}========================================debug===============================================${NC}"
-systemctl status dbus
-ls -l /usr/local/var/run/dbus/system_bus_socket
+ps aux | grep dbus-daemonls -l /run/dbus/system_bus_socket
+#ls -l /usr/local/var/run/dbus/system_bus_socket
 echo -e "${GREEN}========================================FinfDbus===============================================${NC}"
 find / -type s -name system_bus_socket 2>/dev/null
 
