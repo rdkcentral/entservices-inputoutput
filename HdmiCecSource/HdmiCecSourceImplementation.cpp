@@ -931,9 +931,9 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::SetEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
         {
-           LOGINFO("Entered SetEnabled ");
+           LOGINFO("Entered SetEnabled success :%d  ",success);
 
-           if (cecSettingEnabled != enabled)
+           if (success && (cecSettingEnabled != enabled))
            {
                Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_ENABLED, JsonValue(enabled));
                cecSettingEnabled = enabled;
