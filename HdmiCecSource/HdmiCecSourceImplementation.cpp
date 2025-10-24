@@ -946,7 +946,7 @@ namespace WPEFramework
            return ret;
         }
 
-        Core::hresult HdmiCecSourceImplementation::setEnabledPersist(const bool enabled, const bool isPersist)
+        uint32_t HdmiCecSourceImplementation::setEnabledPersist(const bool enabled, const bool isPersist)
         {
             LOGINFO("Entered setEnabledPersist enabled:%d isPersist:%d ",enabled,isPersist);
            if (cecSettingEnabled != enabled && isPersist)

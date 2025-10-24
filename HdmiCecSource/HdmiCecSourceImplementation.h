@@ -218,6 +218,7 @@ namespace WPEFramework {
             void sendUnencryptMsg(unsigned char* msg, int size);
             void sendDeviceUpdateInfo(const int logicalAddress);
 			void sendKeyReleaseEvent(const int logicalAddress);
+            uint32_t setEnabledPersist(const bool &enabled, const bool &isPersist);
 		    typedef struct sendKeyInfo
                 {
                    int logicalAddr;
@@ -345,8 +346,6 @@ namespace WPEFramework {
             Core::hresult Configure(PluginHost::IShell* service) override;
             Core::hresult Register(Exchange::IHdmiCecSource::INotification *notification) override;
             Core::hresult Unregister(Exchange::IHdmiCecSource::INotification *notification) override;
-
-            Core::hresult setEnabledPersist(const bool &enabled, const bool &isPersist);
 
         };
 	} // namespace Plugin
