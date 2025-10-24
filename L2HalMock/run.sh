@@ -54,7 +54,7 @@ service dbus restart
 mkdir -p /usr/local/var/run/dbus
 ln -s /run/dbus/system_bus_socket /usr/local/var/run/dbus/system_bus_socket
 echo -e "${GREEN}========================================debug===============================================${NC}"
-ps aux | grep dbus-daemonls -l /run/dbus/system_bus_socket
+#ps aux | grep dbus-daemonls -l /run/dbus/system_bus_socket
 #ls -l /usr/local/var/run/dbus/system_bus_socket
 echo -e "${GREEN}========================================FinfDbus===============================================${NC}"
 find / -type s -name system_bus_socket 2>/dev/null
