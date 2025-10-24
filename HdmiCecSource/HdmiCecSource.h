@@ -31,6 +31,7 @@
 
 #include "UtilsBIT.h"
 #include "UtilsThreadRAII.h"
+#include "HdmiCecSourceImplementation.h"
 
 #include <interfaces/IHdmiCecSource.h>
 #include <interfaces/json/JHdmiCecSource.h>
