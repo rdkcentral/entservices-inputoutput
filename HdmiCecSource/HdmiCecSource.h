@@ -25,13 +25,14 @@
 
 #include <thread>
 
+#include "HdmiCecSourceImplementation.h"
+
 #undef Assert // this define from Connection.hpp conflicts with WPEFramework
 
 #include "Module.h"
 
 #include "UtilsBIT.h"
 #include "UtilsThreadRAII.h"
-#include "HdmiCecSourceImplementation.h"
 
 #include <interfaces/IHdmiCecSource.h>
 #include <interfaces/json/JHdmiCecSource.h>
