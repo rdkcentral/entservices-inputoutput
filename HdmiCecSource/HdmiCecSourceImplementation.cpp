@@ -380,6 +380,12 @@ namespace WPEFramework
     HdmiCecSourceImplementation::~HdmiCecSourceImplementation()
     {
          LOGWARN("dtor");
+
+         if(cecEnableStatus)
+         {
+            setEnabledInternal(false, false);
+         }
+
          HdmiCecSourceImplementation::_instance = nullptr;
 
            if(_powerManagerPlugin)
