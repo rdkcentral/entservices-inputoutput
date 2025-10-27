@@ -1356,6 +1356,7 @@ namespace WPEFramework
 		catch(IOException &e)
 		{
 			LOGINFO("Device is not reachable: %d. Ping caught %s\r\n",idev, e.what());
+			removeDevice (idev);
 			isConnected = false;
 			return isConnected;;
 		}
