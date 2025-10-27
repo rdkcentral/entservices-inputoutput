@@ -3573,11 +3573,7 @@ namespace WPEFramework
       void HdmiCecSinkImplementation::getHdmiArcPortID()
       {
          int portId = -1;
-         // <pca> debug
-         //dsError_t error = device::HdmiInput::getInstance().getHDMIARCPortId(portId);
-         dsError_t error = dsERR_NONE;
-         device::HdmiInput::getInstance().getNumberOfInputs();
-         // </pca>
+         dsError_t error = device::HdmiInput::getInstance().getHDMIARCPortId(portId);
          if (dsERR_NONE == error)
          {
              LOGINFO("HDMI ARC port ID HdmiArcPortID[%d]", portId);
