@@ -73,6 +73,7 @@ static PhysicalAddress physical_addr = {0x0F,0x0F,0x0F,0x0F};
 static LogicalAddress logicalAddress = 0xF;
 static OSDName osdName = "TV Box";
 static int32_t powerState = 1;
+static PowerStatus tvPowerState;
 static bool isDeviceActiveSource = false;
 static bool isLGTvConnected = false;
 
