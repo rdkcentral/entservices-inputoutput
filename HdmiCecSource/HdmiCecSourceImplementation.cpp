@@ -73,7 +73,6 @@ static PhysicalAddress physical_addr = {0x0F,0x0F,0x0F,0x0F};
 static LogicalAddress logicalAddress = 0xF;
 static OSDName osdName = "TV Box";
 static int32_t powerState = 1;
-static PowerStatus tvPowerState = 1;
 static bool isDeviceActiveSource = false;
 static bool isLGTvConnected = false;
 
@@ -320,8 +319,6 @@ namespace WPEFramework
        void HdmiCecSourceProcessor::process (const ReportPowerStatus &msg, const Header &header)
        {
              printHeader(header);
-             if ((header.from == LogicalAddress(LogicalAddress::TV)))
-                 tvPowerState = msg.status; 
              LOGINFO("Command: ReportPowerStatus TV Power Status from:%s status : %s \n",header.from.toString().c_str(),msg.status.toString().c_str());
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
