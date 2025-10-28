@@ -90,6 +90,8 @@ protected:
         : plugin(Core::ProxyType<Plugin::HdmiCecSink>::Create())
         , handler(*(plugin))
         , INIT_CONX(1, 0)
+		, dsHdmiEventHandler(nullptr)
+		, pluginImpl(nullptr)
         , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(
               2, Core::Thread::DefaultStackSize(), 16))
 		, dispatcher(nullptr)
