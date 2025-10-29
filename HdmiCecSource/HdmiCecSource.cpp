@@ -77,20 +77,20 @@ printf("[%d] Kishore print \n",__LINE__);
             printf("[%d] Kishore print \n",__LINE__);
            _service->Register(&_notification);
             printf("[%d] Kishore print \n",__LINE__);
-           _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
-printf("[%d] Kishore print \n",__LINE__);
-           if(nullptr != _hdmiCecSource)
-            {
-                _hdmiCecSource->Configure(service);
-                _hdmiCecSource->Register(&_notification);
-                Exchange::JHdmiCecSource::Register(*this, _hdmiCecSource);
-                LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
-            }
-            else
-            {
-                msg = "HdmiCecSource plugin is not available";
-                LOGINFO("HdmiCecSource plugin is not available. Failed to activate HdmiCecSource Plugin");
-            }
+//            _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
+// printf("[%d] Kishore print \n",__LINE__);
+//            if(nullptr != _hdmiCecSource)
+//             {
+//                 _hdmiCecSource->Configure(service);
+//                 _hdmiCecSource->Register(&_notification);
+//                 Exchange::JHdmiCecSource::Register(*this, _hdmiCecSource);
+//                 LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
+//             }
+//             else
+//             {
+//                 msg = "HdmiCecSource plugin is not available";
+//                 LOGINFO("HdmiCecSource plugin is not available. Failed to activate HdmiCecSource Plugin");
+//             }
 
             if (0 != msg.length())
             {
