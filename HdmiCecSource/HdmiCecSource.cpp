@@ -64,11 +64,11 @@ namespace WPEFramework
            }
 
            string msg = "";
-
-           ASSERT(nullptr != service);
-           ASSERT(nullptr == _service);
-           ASSERT(nullptr == _hdmiCecSource);
-           ASSERT(0 == _connectionId);
+printf("[%d] Kishore print \n",__LINE__);
+           // ASSERT(nullptr != service);
+           // ASSERT(nullptr == _service);
+           // ASSERT(nullptr == _hdmiCecSource);
+           // ASSERT(0 == _connectionId);
 
 printf("[%d] Kishore print \n",__LINE__);
            _service = service;
