@@ -70,12 +70,15 @@ namespace WPEFramework
            ASSERT(nullptr == _hdmiCecSource);
            ASSERT(0 == _connectionId);
 
-
+printf("[%d] Kishore print \n",__LINE__);
            _service = service;
+            printf("[%d] Kishore print \n",__LINE__);
            _service->AddRef();
+            printf("[%d] Kishore print \n",__LINE__);
            _service->Register(&_notification);
+            printf("[%d] Kishore print \n",__LINE__);
            _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
-
+printf("[%d] Kishore print \n",__LINE__);
            if(nullptr != _hdmiCecSource)
             {
                 _hdmiCecSource->Configure(service);
@@ -91,6 +94,7 @@ namespace WPEFramework
 
             if (0 != msg.length())
             {
+                printf("[%d] Kishore print \n",__LINE__);
                 Deinitialize(service);
             }
 
@@ -102,29 +106,31 @@ namespace WPEFramework
         void HdmiCecSource::Deinitialize(PluginHost::IShell* service)
         {
            LOGWARN("Deinitialize HdmiCecSource plugin \n");
-
+            printf("[%d] Kishore print \n",__LINE__);
            ASSERT(nullptr != service);
-           
+           printf("[%d] Kishore print \n",__LINE__);
 
            profileType = searchRdkProfile();
 
            if (profileType == TV || profileType == NOT_FOUND)
            {
                 LOGINFO("Invalid profile type for STB \n");
+               printf("[%d] Kishore print \n",__LINE__);
                 return ;
            }
-
+printf("[%d] Kishore print \n",__LINE__);
            bool enabled = false;
            bool ret = false;
            HdmiCecSource::_hdmiCecSource->GetEnabled(enabled,ret);
 
            if(ret && enabled)
            {
+               printf("[%d] Kishore print \n",__LINE__);
                 Exchange::IHdmiCecSource::HdmiCecSourceSuccess success;
                 HdmiCecSource::_hdmiCecSource->SetEnabled(false,success);
            }
            HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
-
+printf("[%d] Kishore print \n",__LINE__);
            if(nullptr != _hdmiCecSource)
            {
              _hdmiCecSource->Unregister(&_notification);
