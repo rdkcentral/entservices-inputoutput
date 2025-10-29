@@ -1,7 +1,6 @@
 # If not stated otherwise in this file or this component's license file the
 # following copyright and licenses apply:
 #
-
 # Copyright 2020 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
