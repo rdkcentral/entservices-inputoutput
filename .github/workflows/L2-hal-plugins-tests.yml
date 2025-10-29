@@ -146,7 +146,7 @@ jobs:
             echo "$$$$$$$$$$$ make all services up $$$$$$$$$$$$$$$$"
             chmod -Rf 777 run.sh
             #./run.sh $PLUGIN_NAME
-            gdb ./run.sh $PLUGIN_NAME
+            bash -x ./run.sh $PLUGIN_NAME
             echo "Execute TEST SUITE"
             #Start-Sleep -s 60
             #cd Tests/L2HALMockTests/Test_Framework
