@@ -1,0 +1,9 @@
+{
+ "locator":"libHdmiCecSourceImplementation.so",
+ "classname":"HdmiCecSourceImplementation",
+ "precondition":[
+  "Platform"
+ ],
+ "callsign":"org.rdk.HdmiCecSourceImplementation",
+ "autostart":true
+}
