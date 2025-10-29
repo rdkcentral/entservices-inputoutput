@@ -373,12 +373,14 @@ namespace WPEFramework
     , _pwrMgrNotification(*this)
     , _registeredEventHandlers(false)
     {
+		printf("[%d] Kishore Print Debug\n",__LINE__);
         LOGWARN("ctor");
         HdmiCecSourceImplementation::_instance = this;
     }
 
     HdmiCecSourceImplementation::~HdmiCecSourceImplementation()
     {
+		printf("[%d] Kishore Print Debug\n",__LINE__);
          LOGWARN("dtor");
          HdmiCecSourceImplementation::_instance = nullptr;
 
@@ -393,6 +395,7 @@ namespace WPEFramework
 
     Core::hresult HdmiCecSourceImplementation::Configure(PluginHost::IShell* service)
     {
+		printf("[%d] Kishore Print Debug\n",__LINE__);
         LOGINFO("Configure");
         ASSERT(service != nullptr);
         PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
@@ -469,6 +472,7 @@ namespace WPEFramework
 
     void HdmiCecSourceImplementation::registerEventHandlers()
     {
+		printf("[%d] Kishore Print Debug\n",__LINE__);
         ASSERT (_powerManagerPlugin);
     
         if(!_registeredEventHandlers && _powerManagerPlugin) {
@@ -481,7 +485,7 @@ namespace WPEFramework
 
     Core::hresult HdmiCecSourceImplementation::Register(Exchange::IHdmiCecSource::INotification* notification)
     {
-
+		printf("[%d] Kishore Print Debug\n",__LINE__);
         LOGINFO("Register");
         if(notification != nullptr){
             _adminLock.Lock();
@@ -503,6 +507,7 @@ namespace WPEFramework
 
     Core::hresult HdmiCecSourceImplementation::Unregister(Exchange::IHdmiCecSource::INotification* notification)
     {
+		printf("[%d] Kishore Print Debug\n",__LINE__);
         LOGINFO("Unregister");
         if(notification != nullptr){
             _adminLock.Lock();
@@ -523,7 +528,7 @@ namespace WPEFramework
     }
 
     void HdmiCecSourceImplementation::addDevice(const int logicalAddress) {
-
+		printf("[%d] Kishore Print Debug\n",__LINE__);
 		if(!HdmiCecSourceImplementation::_instance)
 			return;
 
