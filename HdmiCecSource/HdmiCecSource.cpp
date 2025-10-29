@@ -92,11 +92,11 @@ printf("[%d] Kishore print \n",__LINE__);
 //                 LOGINFO("HdmiCecSource plugin is not available. Failed to activate HdmiCecSource Plugin");
 //             }
 
-            if (0 != msg.length())
-            {
-                printf("[%d] Kishore print \n",__LINE__);
-                Deinitialize(service);
-            }
+            // if (0 != msg.length())
+            // {
+            //     printf("[%d] Kishore print \n",__LINE__);
+            //     Deinitialize(service);
+            // }
 
            // On success return empty, to indicate there is no error text.
            return msg;
