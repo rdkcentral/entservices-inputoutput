@@ -42,6 +42,7 @@ namespace Plugin {
 
     AVInputImplementation::AVInputImplementation() : _adminLock()
     {
+        printf("*** _DEBUG: AVInputImplementation: ctor: entry");
         LOGINFO("Create AVInputImplementation Instance");
 
         m_primVolume = DEFAULT_PRIM_VOL_LEVEL;
@@ -59,6 +60,7 @@ namespace Plugin {
     template <typename T>
     Core::hresult AVInputImplementation::Register(std::list<T*>& list, T* notification)
     {
+        printf("*** _DEBUG: AVInputImplementation: Register: entry");
         uint32_t status = Core::ERROR_GENERAL;
 
         ASSERT(nullptr != notification);
@@ -72,6 +74,7 @@ namespace Plugin {
         }
 
         _adminLock.Unlock();
+        printf("*** _DEBUG: AVInputImplementation: Register: exit");
         return status;
     }
 

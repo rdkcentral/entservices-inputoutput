@@ -63,16 +63,19 @@ namespace Plugin {
     {
         Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_INPUT_DEVICES), &AVInput::getInputDevicesWrapper, this);
         SYSLOG(Logging::Startup, (_T("AVInput Constructor")));
+        printf("*** _DEBUG: AVInput: ctor: entry");
     }
 
     AVInput::~AVInput()
     {
+        printf("*** _DEBUG: AVInput: xtor: entry");
         Unregister(_T(AVINPUT_METHOD_GET_INPUT_DEVICES));
         SYSLOG(Logging::Shutdown, (string(_T("AVInput Destructor"))));
     }
 
     const string AVInput::Initialize(PluginHost::IShell* service)
     {
+        printf("*** _DEBUG: AVInput: Initialize: entry");
         string message = "";
 
         ASSERT(nullptr != service);
@@ -89,6 +92,7 @@ namespace Plugin {
         _avInput = service->Root<Exchange::IAVInput>(_connectionId, 5000, _T("AVInputImplementation"));
 
         if (nullptr != _avInput) {
+            printf("*** _DEBUG: AVInput: Initialize: Mark 1");
 
             // Register for notifications
             _avInput->RegisterDevicesChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
@@ -108,16 +112,22 @@ namespace Plugin {
                 }
             }
             catch(const device::Exception& err) {
+                printf("*** _DEBUG: AVInput: Initialize: Mark 2");
                 LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
                 LOG_DEVICE_EXCEPTION0();
             }
 
+            printf("*** _DEBUG: AVInput: Initialize: Mark 3");
+
             // Invoking Plugin API register to wpeframework
             Exchange::JAVInput::Register(*this, _avInput);
         } else {
+            printf("*** _DEBUG: AVInput: Initialize: Mark 4");
             SYSLOG(Logging::Startup, (_T("AVInput::Initialize: Failed to initialize AVInput plugin")));
             message = _T("AVInput plugin could not be initialized");
         }
+
+        printf("*** _DEBUG: AVInput: Initialize: exit");
 
         return message;
     }
