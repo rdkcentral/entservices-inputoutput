@@ -17,7 +17,6 @@
 * limitations under the License.
 **/
 
-
 #include "HdmiCecSinkImplementation.h"
 
 #include "ccec/CCEC.hpp"
@@ -2961,6 +2960,7 @@ namespace WPEFramework
                 break;
                 }
 
+                /* coverity[BAD_CHECK_OF_WAIT_COND : FALSE] */
                 std::unique_lock<std::mutex> lk(_instance->m_pollExitMutex);
                 if ( _instance->m_ThreadExitCV.wait_for(lk, std::chrono::milliseconds(_instance->m_sleepTime)) == std::cv_status::timeout )
                     continue;
@@ -3108,7 +3108,10 @@ namespace WPEFramework
             if(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)
             {
                 stopArc();
+                int arcTerminationTries = 0;
                 while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED) {
+                    arcTerminationTries++;
+                    LOGINFO("ARC termination attempt #%d, current state: %d", arcTerminationTries, m_currentArcRoutingState);
                     usleep(500000);
                 }
             }
