@@ -4422,7 +4422,7 @@ namespace Plugin {
             }
             else {
                 LOGINFO("setLocalParam for %s Successful, Value: %s\n", AVOUTPUT_SOURCE_PICTUREMODE_STRING_RFC_PARAM, mode.c_str());
-                int pqmodeindex = (int)getPictureModeIndex(mode);
+                int pqmodeindex = (int)convertPictureStringToIndexV2(std::string(mode));
                 SaveSourcePictureMode(ctx.videoSrcType, ctx.videoFormatType, pqmodeindex);
             }
 
@@ -4623,7 +4623,7 @@ namespace Plugin {
             }
 
             // Save to internal config
-            int pqmodeIndex = static_cast<int>(getPictureModeIndex(param.value));
+            int pqmodeIndex = static_cast<int>(convertPictureStringToIndexV2(std::string(param.value)));
             SaveSourcePictureMode(ctx.videoSrcType, ctx.videoFormatType, pqmodeIndex);
             contextHandled = true;
         }
