@@ -380,6 +380,12 @@ namespace WPEFramework
     HdmiCecSourceImplementation::~HdmiCecSourceImplementation()
     {
          LOGWARN("dtor");
+
+         if(cecEnableStatus)
+         {
+            setEnabledInternal(false, false);
+         }
+
          HdmiCecSourceImplementation::_instance = nullptr;
 
            if(_powerManagerPlugin)
@@ -933,7 +939,23 @@ namespace WPEFramework
         {
            LOGINFO("Entered SetEnabled ");
 
-           if (cecSettingEnabled != enabled)
+           Core:: hresult ret = setEnabledInternal(enabled, true);
+
+           if(ret == Core::ERROR_NONE)
+           {
+               success.success = true;
+           }
+           else
+           {
+               success.success = false;
+           }
+           return ret;
+        }
+
+        Core::hresult HdmiCecSourceImplementation::setEnabledInternal(const bool enabled, const bool isPersist)
+        {
+            LOGINFO("Entered setEnabledInternal enabled:%d isPersist:%d ",enabled,isPersist);
+           if (cecSettingEnabled != enabled && isPersist)
            {
                Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_ENABLED, JsonValue(enabled));
                cecSettingEnabled = enabled;
@@ -946,8 +968,8 @@ namespace WPEFramework
            {
                CECDisable();
            }
-           success.success = true;
            return Core::ERROR_NONE;
+
         }
 
         Core::hresult HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
