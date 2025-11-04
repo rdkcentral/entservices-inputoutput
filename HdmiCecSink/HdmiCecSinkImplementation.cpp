@@ -3109,18 +3109,15 @@ namespace WPEFramework
             {
                 stopArc();
                 int arcTerminationTries = 0;
-                if (arcTerminationTries < 4)
+                const int maxRetries = 4;
+                while(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED && arcTerminationTries < maxRetries)
                 {
                     arcTerminationTries++;
                     usleep(500000);
                 }
-                else
+                if(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)
                 {
-                    while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)
-                    {
-                        arcTerminationTries++;
-                        usleep(500000);
-                    }
+                    LOGWARN("ARC Termination failed!");
                 }
             }
 
