@@ -51,6 +51,7 @@ using CCECRequestShortAudioDescriptor = ::RequestShortAudioDescriptor;
 #define HDMICECSINK_UPDATE_POWER_STATUS_INTERVA_MS    (60 * 1000)
 #define HDMISINK_ARC_START_STOP_MAX_WAIT_MS           4000
 #define HDMICECSINK_UPDATE_AUDIO_STATUS_INTERVAL_MS    500
+#define HDMICECSINK_ARC_TERMINATION_MAX_RETRIES        4
 
 
 #define SAD_FMT_CODE_AC3 2
@@ -3109,8 +3110,7 @@ namespace WPEFramework
             {
                 stopArc();
                 int arcTerminationTries = 0;
-                const int maxRetries = 4;
-                while(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED && arcTerminationTries < maxRetries)
+                while(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED && arcTerminationTries < HDMICECSINK_ARC_TERMINATION_MAX_RETRIES)
                 {
                     arcTerminationTries++;
                     usleep(500000);
