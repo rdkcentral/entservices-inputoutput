@@ -643,7 +643,7 @@ TEST_F(HdmiCecSinkDsTest, requestShortAudioDescriptor)
 TEST_F(HdmiCecSinkDsTest, sendStandbyMessage)
 {
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
-        .WillOnce(::testing::Return());
+        .WillRepeatedly(::testing::Return());
     
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
