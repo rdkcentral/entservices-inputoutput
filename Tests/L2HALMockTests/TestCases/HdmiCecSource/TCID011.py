@@ -31,13 +31,13 @@ from HdmiCecSource import HdmiCecSourceApis
 expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"success":true}}'
 Utils.initiliaze_flask_for_HdmiCecSource()
 
-keypress = [HdmiCecSourceApis.send_keypress_VOLUME_UP, HdmiCecSourceApis.send_keypress_VOLUME_DOWN, HdmiCecSourceApis.send_keypress_MUTE,
-            HdmiCecSourceApis.send_keypress_UP, HdmiCecSourceApis.send_keypress_DOWN, HdmiCecSourceApis.send_keypress_LEFT,
-            HdmiCecSourceApis.send_keypress_RIGHT, HdmiCecSourceApis.send_keypress_SELECT, HdmiCecSourceApis.send_keypress_HOME,
-            HdmiCecSourceApis.send_keypress_BACK, HdmiCecSourceApis.send_keypress_NUMBER_0, HdmiCecSourceApis.send_keypress_NUMBER_1,
-            HdmiCecSourceApis.send_keypress_NUMBER_2, HdmiCecSourceApis.send_keypress_NUMBER_3, HdmiCecSourceApis.send_keypress_NUMBER_4,
-            HdmiCecSourceApis.send_keypress_NUMBER_5, HdmiCecSourceApis.send_keypress_NUMBER_6, HdmiCecSourceApis.send_keypress_NUMBER_7,
-            HdmiCecSourceApis.send_keypress_NUMBER_8, HdmiCecSourceApis.send_keypress_NUMBER_9]
+keypress = ["HdmiCecSourceApis.send_keypress_VOLUME_UP", "HdmiCecSourceApis.send_keypress_VOLUME_DOWN", "HdmiCecSourceApis.send_keypress_MUTE",
+            "HdmiCecSourceApis.send_keypress_UP", "HdmiCecSourceApis.send_keypress_DOWN", "HdmiCecSourceApis.send_keypress_LEFT",
+            "HdmiCecSourceApis.send_keypress_RIGHT", "HdmiCecSourceApis.send_keypress_SELECT", "HdmiCecSourceApis.send_keypress_HOME",
+            "HdmiCecSourceApis.send_keypress_BACK", "HdmiCecSourceApis.send_keypress_NUMBER_0", "HdmiCecSourceApis.send_keypress_NUMBER_1",
+            "HdmiCecSourceApis.send_keypress_NUMBER_2", "HdmiCecSourceApis.send_keypress_NUMBER_3", "HdmiCecSourceApis.send_keypress_NUMBER_4",
+            "HdmiCecSourceApis.send_keypress_NUMBER_5", "HdmiCecSourceApis.send_keypress_NUMBER_6", "HdmiCecSourceApis.send_keypress_NUMBER_7",
+            "HdmiCecSourceApis.send_keypress_NUMBER_8", "HdmiCecSourceApis.send_keypress_NUMBER_9"]
 print("TC Description - Hit the curl command for sendKeyPressEvent and verify that output response is correct")
 print("---------------------------------------------------------------------------------------------------------------------------")
 # send the curl command and fetch the output json response
@@ -73,3 +73,4 @@ else:
 Utils.initiliaze_flask_for_HdmiCecSource()
 # push the testcase execution details to report file
 ReportGenerator.append_test_results_to_csv(tc_id, curl_response, status, message)
+
