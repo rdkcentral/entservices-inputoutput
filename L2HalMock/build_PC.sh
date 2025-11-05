@@ -12,8 +12,8 @@ SCRIPTS_DIR=$(dirname "$SCRIPT")
 RDK_DIR="$SCRIPTS_DIR/../"
 WORKSPACE="$SCRIPTS_DIR/workspace"
 INCLUDE_DIR="/usr/include"
-# rm -rf "$WORKSPACE"
-# mkdir "$WORKSPACE"
+sudo rm -rf "$WORKSPACE"
+mkdir "$WORKSPACE"
 
 cd "$SCRIPTS_DIR"
 rm -rf meta-rdk-video
@@ -82,9 +82,9 @@ mv FindProxyStubGenerator.cmake.in. FindProxyStubGenerator.cmake.in
 
 echo -e "${YELLOW}========================================Build Thunder tools===============================================${NC}"
 cd $SCRIPTS_DIR
-cmake -G Ninja -S ThunderTools -B build -DCMAKE_INSTALL_PREFIX="${WORKSPACE}/install/usr"
+cmake -G Ninja -S ThunderTools -B ThunderTools/build -DCMAKE_INSTALL_PREFIX="${WORKSPACE}/install/usr"
 # cmake --build build --target install
-sudo ninja -C build install
+sudo ninja -C ThunderTools/build install
 
 echo -e "${GREEN}======================================== Clone Thunder ===============================================${NC}"
 
@@ -146,13 +146,13 @@ echo "$patches" | while read -r patch_uri; do
     fi
 done
 
-# echo -e "${YELLOW}========================================Build Thunder===============================================${NC}"
+echo -e "${YELLOW}========================================Build Thunder===============================================${NC}"
 cd $SCRIPTS_DIR
 
 # Set your module name
 MODULE_NAME="L2HalMock"
 
-sudo cmake -G Ninja -S Thunder -B Thunder/build \
+cmake -G Ninja -S Thunder -B Thunder/build \
             -DMODULE_NAME=ON \
             -DCMAKE_CXX_FLAGS="-DMODULE_NAME=\"${MODULE_NAME}\"" \
             -DBINDING="127.0.0.1" \
@@ -163,7 +163,9 @@ sudo cmake -G Ninja -S Thunder -B Thunder/build \
             -DTOOLS_SYSROOT="${PWD}" \
             -DCMAKE_CURRENT_SOURCE_DIR="${SCRIPTS_DIR}" \
             -DINITV_SCRIPT=OFF
-sudo cmake --build Thunder/build --target install
+# cmake --build Thunder/build --target install
+sudo ninja -C Thunder/build install
+sudo chown -R $USER:$USER $WORKSPACE/install
 
 cd $SCRIPTS_DIR
 echo -e "${GREEN}========================================Clone ThunderClientLibrary===============================================${NC}"
@@ -273,7 +275,7 @@ echo -e "${YELLOW}========================================Build entservices-apis
 
 cd "$SCRIPTS_DIR"
 
-sudo cmake -G Ninja -S entservices-apis -B entservices-apis/build \
+cmake -G Ninja -S entservices-apis -B entservices-apis/build \
     -DCMAKE_INSTALL_PREFIX="${WORKSPACE}/install/usr" \
     -DCMAKE_BUILD_TYPE="Debug" \
     -DTOOLS_SYSROOT="${PWD}"
@@ -343,6 +345,9 @@ cd $WORKSPACE/deps/
 mkdir rdk
 cd rdk
 
+echo -e "${GREEN}========================================Create flask===============================================${NC}"
+git clone git@github.com:rdk-e/FLASK-for-Hal-Mock.git flask && git checkout rdk_service_flash && git checkout "01844e3a54445245d953ff7ba3094ea0aa250aaa"
+
 echo -e "${GREEN}========================================Clone meta-rdk-oss-reference===============================================${NC}"
 cd $SCRIPTS_DIR
 git clone git@github.com:rdkcentral/meta-rdk-oss-reference.git
@@ -399,7 +404,7 @@ echo -e "${GREEN}========================================Clone rdk-halif-device_
 cd $WORKSPACE/deps/rdk/
 git clone git@github.com:rdkcentral/rdk-halif-device_settings.git
 cd $WORKSPACE/deps/rdk/rdk-halif-device_settings
-git apply $SCRIPTS_DIR/patches/rdkservices/rdk-halif/intError.patch
+git apply $SCRIPTS_DIR/patches/rdkservices/halif/intErr.patch
 sudo cp $WORKSPACE/deps/rdk/rdk-halif-device_settings/include/*.h $INCLUDE_DIR
 
 echo -e "${GREEN}========================================Clone DeviceSettings===============================================${NC}"
@@ -419,7 +424,7 @@ mv devicesettings-emulator src
 cd $WORKSPACE/deps/rdk/devicesettings/hal/src
 git apply $SCRIPTS_DIR/patches/rdkservices/devicesettings/dsVideoHal.patch
 ( cd $WORKSPACE/deps/rdk/devicesettings/hal/src && sudo make )
-exit 1
+
 echo -e "${GREEN}========================================Build rfc===============================================${NC}"
 INC_FILE="$SCRIPTS_DIR/meta-middleware-generic-support/conf/include/generic-srcrev.inc"
 
@@ -452,8 +457,8 @@ sudo cp $WORKSPACE/deps/rdk/devicesettings/stubs/*.h $INCLUDE_DIR
 sudo cp $WORKSPACE/deps/rdk/rfc/rfcapi/rfcapi.h $INCLUDE_DIR
 
 cd $WORKSPACE/deps/rdk/devicesettings/
-git apply $SCRIPTS_DIR/patches/rdkservices/devicesettings/dsDisplayError.patch
-git apply $SCRIPTS_DIR/patches/rdkservices/devicesettings/LoggerInitError.patch
+git apply $SCRIPTS_DIR/patches/rdkservices/devicesettings/NewDS_Err.patch
+# git apply $SCRIPTS_DIR/patches/rdkservices/devicesettings/LoggerInitError.patch
 
 cp $SCRIPTS_DIR/patches/rdkservices/devicesettings/build.sh $WORKSPACE/deps/rdk/devicesettings/
 chmod -Rf 777 $WORKSPACE/deps/rdk/devicesettings/build.sh
@@ -487,6 +492,7 @@ sudo cp $WORKSPACE/deps/rdk/iarmmgrs/mfr/include/*.h $INCLUDE_DIR
 cp $WORKSPACE/deps/rdk/devicesettings/hal/src/libds-hal.so $WORKSPACE/deps/rdk/devicesettings/install/lib
 # Build iarmmgr
 cd $WORKSPACE/deps/rdk/iarmmgrs
+git apply $SCRIPTS_DIR/patches/rdkservices/iarmmgrs/Newiarm.patch
 cp $SCRIPTS_DIR/patches/rdkservices/iarmmgrs/build.sh $WORKSPACE/deps/rdk/iarmmgrs
 (cd $WORKSPACE/deps/rdk/iarmmgrs && ./build.sh)
 
@@ -506,9 +512,21 @@ git clone git@github.com:rdk-e/hdmicec-hal-emulator.git && cd hdmicec-hal-emulat
 mv $WORKSPACE/deps/rdk/hdmicec/soc/L2HalMock/common $WORKSPACE/deps/rdk/hdmicec/soc/L2HalMock/common_bkp; 
 mv $WORKSPACE/deps/rdk/hdmicec/soc/L2HalMock/hdmicec-hal-emulator $WORKSPACE/deps/rdk/hdmicec/soc/L2HalMock/common
 sudo cp $WORKSPACE/deps/rdk/power-manager/source/include/pwrMgr.h $INCLUDE_DIR
+sudo cp $WORKSPACE/deps/rdk/hdmicec/ccec/include/ccec/driver/hdmi_cec_driver.h $INCLUDE_DIR
+sudo cp $WORKSPACE/deps/rdk/hdmicec/soc/L2HalMock/common/*.hpp $INCLUDE_DIR
+
+cd $INCLUDE_DIR
+sudo mkdir json
+sudo cp $INCLUDE_DIR/jsoncpp/json/*.h $INCLUDE_DIR/json/
+
+cp $SCRIPTS_DIR/patches/rdkservices/hdmicec/build.sh $WORKSPACE/deps/rdk/hdmicec
 (cd $WORKSPACE/deps/rdk/hdmicec && ./build.sh)
 
 echo -e "${GREEN}========================================Build HdmiCecSource===============================================${NC}"
+
+if grep -q "HdmiCecSource" <<< "$SelectedPlugins"; then
+sudo cp $SCRIPTS_DIR/patches/rdkservices/properties/HdmiCecSource/device.properties /etc/
+fi
 
 cd $WORKSPACE/
 #Run time dependency 
@@ -528,8 +546,8 @@ sudo cp $SCRIPTS_DIR/entservices-apis/apis/HdmiCecSource/IHdmiCecSource.h $INCLU
 
 cd $RDK_DIR;
 cmake -S . -B build \
--DCMAKE_INSTALL_PREFIX="install/usr" \
--DCMAKE_MODULE_PATH="$SCRIPTS_DIR/install/lib/cmake" \
+-DCMAKE_INSTALL_PREFIX="$WORKSPACE/install/usr" \
+-DCMAKE_MODULE_PATH="${WORKSPACE}/install/usr/include/WPEFramework/Modules" \
 -DWPEFrameworkDefinitions_DIR="$SCRIPTS_DIR/install/lib/cmake/WPEFrameworkDefinitions" \
 -DCompileSettingsDebug_DIR="$SCRIPTS_DIR/install/lib/cmake/CompileSettingsDebug" \
 -DCEC_INCLUDE_DIRS="$SCRIPTS_DIR/workspace/deps/rdk/hdmicec/ccec/include" \
