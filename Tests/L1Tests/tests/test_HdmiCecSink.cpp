@@ -21,6 +21,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <thread>
+#include <chrono>
 
 
 #include "HdmiCecSink.h"
@@ -117,6 +119,7 @@ protected:
     NiceMock<RfcApiImplMock> rfcApiImplMock;
     NiceMock<WrapsImplMock> wrapsImplMock;
     string response;
+    std::vector<FrameListener*> listeners;
 
     HdmiCecSinkDsTest(): HdmiCecSinkInitializeTest()
     {
@@ -188,6 +191,12 @@ protected:
                     portId = 1;
                     return dsERR_NONE;
                 }));
+
+        ON_CALL(*p_connectionImplMock, addFrameListener(::testing::_))
+        .WillByDefault([this](FrameListener* listener) {
+            printf("[TEST] addFrameListener called with address: %p\n", static_cast<void*>(listener));
+            this->listeners.push_back(listener);
+        });
 
         ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
             .WillByDefault(::testing::Invoke(
@@ -336,6 +345,7 @@ TEST_F(HdmiCecSinkDsTest, RegisteredMethods)
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendUserControlPressed")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendUserControlReleased")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setLatencyInfo")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("printDeviceList")));
 
 }
 
@@ -1506,4 +1516,271 @@ TEST_F(HdmiCecSinkDsTest, setLatencyInfo_DuplicateParameters)
 {
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"20\",\"videoLatency\":\"30\",\"lowLatencyMode\":\"1\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"10\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, printDeviceList_ValidCall)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("printDeviceList"), _T("{}"), response));
+    EXPECT_THAT(response, ::testing::ContainsRegex("\"printed\":(true|false)"));
+    EXPECT_THAT(response, ::testing::ContainsRegex("\"success\":true"));
+}
+
+//=============================================================================
+// CEC Frame Processing Tests (L1 Level)
+// These tests verify CEC frame injection and processing without full L2 event subscription
+//=============================================================================
+
+class HdmiCecSinkFrameProcessingTest : public HdmiCecSinkDsTest {
+protected:
+
+    void InjectCECFrame(const uint8_t* frameData, size_t frameSize) 
+    {
+        CECFrame frame(frameData, frameSize);
+        for (auto* listener : listeners) {
+            if (listener) {
+                listener->notify(frame);
+            }
+        }
+    }
+};
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectImageViewOnFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Image View On frame: From TV (LA=0) to Playback Device 1 (LA=4)  
+    // Header: 0x40, Opcode: 0x04 (Image View On)
+    uint8_t imageViewOnFrame[] = { 0x40, 0x04 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(imageViewOnFrame, sizeof(imageViewOnFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectReportAudioStatusFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Report Audio Status frame: From Audio System (LA=5) to TV (LA=0)
+    // Header: 0x50, Opcode: 0x7A (Report Audio Status), Operands: 0x50 (Volume Level, Mute Status)
+    uint8_t reportAudioStatusFrame[] = { 0x50, 0x7A, 0x50 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(reportAudioStatusFrame, sizeof(reportAudioStatusFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectRequestActiveSourceFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Request Active Source frame (Broadcast): From TV (LA=0) to Broadcast (LA=15)
+    // Header: 0x0F, Opcode: 0x85 (Request Active Source)
+    uint8_t requestActiveSourceFrame[] = { 0x0F, 0x85 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(requestActiveSourceFrame, sizeof(requestActiveSourceFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectRoutingChangeFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Routing Change frame: From Playback Device 1 (LA=4) to TV (LA=0)
+    // Header: 0x40, Opcode: 0x80 (Routing Change), Operands: Old PA 1.0.0.0, New PA 2.0.0.0  
+    uint8_t routingChangeFrame[] = { 0x40, 0x80, 0x10, 0x00, 0x20, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(routingChangeFrame, sizeof(routingChangeFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectSetStreamPathFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Set Stream Path frame: From Playback Device 1 (LA=4) to Broadcast (LA=15)
+    // Header: 0x4F, Opcode: 0x86 (Set Stream Path), Operands: PA 2.0.0.0
+    uint8_t setStreamPathFrame[] = { 0x4F, 0x86, 0x20, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(setStreamPathFrame, sizeof(setStreamPathFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectRequestCurrentLatencyFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Request Current Latency frame: From Playback Device 1 (LA=4) to TV (LA=0)
+    // Header: 0x40, Opcode: 0xA7 (Request Current Latency), Operands: PA 1.0.0.0
+    uint8_t requestCurrentLatencyFrame[] = { 0x40, 0xA7, 0x10, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(requestCurrentLatencyFrame, sizeof(requestCurrentLatencyFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectUserControlPressedFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create User Control Pressed frame: From Remote Control (LA=14) to TV (LA=0)
+    // Header: 0xE0, Opcode: 0x44 (User Control Pressed), Operands: Key Code 0x41 (Volume Up)
+    uint8_t userControlPressedFrame[] = { 0xE0, 0x44, 0x41 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(userControlPressedFrame, sizeof(userControlPressedFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectUserControlReleasedFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create User Control Released frame: From Remote Control (LA=14) to TV (LA=0)
+    // Header: 0xE0, Opcode: 0x45 (User Control Released)
+    uint8_t userControlReleasedFrame[] = { 0xE0, 0x45 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(userControlReleasedFrame, sizeof(userControlReleasedFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectGiveSystemAudioModeStatusFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Give System Audio Mode Status frame: From TV (LA=0) to Audio System (LA=5) 
+    // Header: 0x05, Opcode: 0x7D (Give System Audio Mode Status)
+    uint8_t giveSystemAudioModeStatusFrame[] = { 0x05, 0x7D };
+    
+    EXPECT_NO_THROW(InjectCECFrame(giveSystemAudioModeStatusFrame, sizeof(giveSystemAudioModeStatusFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectSystemAudioModeRequestFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create System Audio Mode Request frame: From TV (LA=0) to Audio System (LA=5)
+    // Header: 0x05, Opcode: 0x70 (System Audio Mode Request), Operands: PA 1.0.0.0 
+    uint8_t systemAudioModeRequestFrame[] = { 0x05, 0x70, 0x10, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(systemAudioModeRequestFrame, sizeof(systemAudioModeRequestFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectSetAudioRateFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Set Audio Rate frame: From TV (LA=0) to Audio System (LA=5)
+    // Header: 0x05, Opcode: 0x9A (Set Audio Rate), Operands: Rate 0x06 
+    uint8_t setAudioRateFrame[] = { 0x05, 0x9A, 0x06 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(setAudioRateFrame, sizeof(setAudioRateFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectReportCurrentLatencyFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Report Current Latency frame: From TV (LA=0) to Playback Device 1 (LA=4) 
+    // Header: 0x40, Opcode: 0xA8 (Report Current Latency), Operands: PA, Video Latency, Audio Latency
+    uint8_t reportCurrentLatencyFrame[] = { 0x40, 0xA8, 0x10, 0x00, 0x01, 0x00, 0x01, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(reportCurrentLatencyFrame, sizeof(reportCurrentLatencyFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectDeviceAddedFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Device Added frame (Report Physical Address): From Playback Device 1 (LA=4) to Broadcast (LA=15)
+    // Header: 0x4F, Opcode: 0x84 (Report Physical Address), Operands: PA 2.0.0.0, Device Type 0x04
+    uint8_t deviceAddedFrame[] = { 0x4F, 0x84, 0x20, 0x00, 0x04 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(deviceAddedFrame, sizeof(deviceAddedFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectAudioDeviceAddedFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Audio Device Added frame: From Audio System (LA=5) to Broadcast (LA=15)
+    // Header: 0x5F, Opcode: 0x84 (Report Physical Address), Operands: PA 2.0.0.0, Device Type 0x05 (Audio System)
+    uint8_t audioDeviceAddedFrame[] = { 0x5F, 0x84, 0x20, 0x00, 0x05 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(audioDeviceAddedFrame, sizeof(audioDeviceAddedFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectExceptionHandlingFrames)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Test frames that trigger exception handling in sendToAsync/sendTo methods
+    // These test error resilience when CEC communication fails
+
+    // Mock sendToAsync to throw exceptions for certain frames
+    ON_CALL(*p_connectionImplMock, sendToAsync(::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](const LogicalAddress& to, const CECFrame& frame) {
+                throw Exception();
+            }));
+
+    // Mock both sendTo methods to throw exceptions 
+    ON_CALL(*p_connectionImplMock, sendTo(::testing::Matcher<const LogicalAddress&>(::testing::_), ::testing::Matcher<const CECFrame&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [&](const LogicalAddress&, const CECFrame&) {
+                throw std::runtime_error("Simulated sendTo failure");
+            }));
+
+    ON_CALL(*p_connectionImplMock, sendTo(::testing::Matcher<const LogicalAddress&>(::testing::_), ::testing::Matcher<const CECFrame&>(::testing::_), ::testing::Matcher<int>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [&](const LogicalAddress&, const CECFrame&, int) {
+                throw std::runtime_error("Simulated sendTo failure");
+            }));
+
+    // Get CEC Version frame with sendToAsync exception
+    uint8_t getCECVersionFrame[] = { 0x40, 0x9F };
+    EXPECT_NO_THROW(InjectCECFrame(getCECVersionFrame, sizeof(getCECVersionFrame)));
+
+    // Give OSD Name frame with sendToAsync exception  
+    uint8_t giveOSDNameFrame[] = { 0x40, 0x46 };
+    EXPECT_NO_THROW(InjectCECFrame(giveOSDNameFrame, sizeof(giveOSDNameFrame)));
+
+    // Give Physical Address frame with sendTo exception
+    uint8_t givePhysicalAddressFrame[] = { 0x40, 0x83 };
+    EXPECT_NO_THROW(InjectCECFrame(givePhysicalAddressFrame, sizeof(givePhysicalAddressFrame)));
+
+    // Give Device Vendor ID frame with sendToAsync exception
+    uint8_t giveDeviceVendorIDFrame[] = { 0x40, 0x8C };
+    EXPECT_NO_THROW(InjectCECFrame(giveDeviceVendorIDFrame, sizeof(giveDeviceVendorIDFrame)));
+
+    // Give Device Power Status frame with sendTo exception
+    uint8_t giveDevicePowerStatusFrame[] = { 0x40, 0x8F };
+    EXPECT_NO_THROW(InjectCECFrame(giveDevicePowerStatusFrame, sizeof(giveDevicePowerStatusFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectWakeupFromStandbyFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Test Active Source frame that should trigger wakeup from standby  
+    // This simulates the scenario where the system is in standby and receives an Active Source command
+    uint8_t wakeupActiveSourceFrame[] = { 0x4F, 0x82, 0x10, 0x00 }; // From Playback Device 1 to Broadcast
+
+    EXPECT_NO_THROW(InjectCECFrame(wakeupActiveSourceFrame, sizeof(wakeupActiveSourceFrame)));
+}
+
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectDisabledImageViewOnFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Test Image View On frame (this was disabled in L2 due to implementation issues)
+    // Including it here for completeness but without event verification
+    uint8_t imageViewOnFrame[] = { 0x40, 0x04 }; // From Playbook Device 1 to TV
+
+    EXPECT_NO_THROW(InjectCECFrame(imageViewOnFrame, sizeof(imageViewOnFrame)));
 }
