@@ -30,7 +30,7 @@ from Utilities import Utils, ReportGenerator
 
 # Utils.restart_services()
 # store the expected output response
-expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"numberofdevices":3,"deviceList":[{"logicalAddress":0,"osdName":"TV Box","vendorID":"04567"},{"logicalAddress":5,"osdName":"","vendorID":"4567"},{"logicalAddress":9,"osdName":"Streaming One","vendorID":"4567"}],"success":true}}'
+expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"numberofdevices":4,"deviceList":[{"logicalAddress":0,"vendorID":"04567","osdName":"TV Box"},{"logicalAddress":3,"vendorID":"4567","osdName":"@GStreaming Tw"},{"logicalAddress":5,"vendorID":"4567","osdName":""},{"logicalAddress":9,"vendorID":"4567","osdName":"Streaming One"}],"success":true}}'
 
 # send the curl command and fetch the output json response
 # Utils.send_curl_command(HdmiCecSourceApis.get_device_list)
