@@ -31,7 +31,7 @@ from Utilities import Utils, ReportGenerator
 from HdmiCecSource import HdmiCecSourceApis
 
 # store the expected output response
-expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"vendorid":"04455","success":true}}'
+expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"vendorid":"019fb","success":true}}'
 
 print("Invalid curl command - getVendorId")
 Utils.initiliaze_flask_for_HdmiCecSource()
