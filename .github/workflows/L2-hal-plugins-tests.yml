@@ -162,7 +162,7 @@ jobs:
             apt-get -y update
             apt-get install -y lcov
             ${pwd}
-            cd rdkservices/build/HdmiCecSource/CMakeFiles/WPEFrameworkHdmiCecSource.dir
+            #cd rdkservices/build/HdmiCecSource/CMakeFiles/WPEFrameworkHdmiCecSource.dir
             ls
             killall -QUIT WPEFramework 
             ${pwd}
@@ -201,7 +201,7 @@ jobs:
             apt-get -y update
             apt-get install -y lcov
             ${pwd}
-            cd rdkservices/build/HdmiCecSource/CMakeFiles/WPEFrameworkHdmiCecSource.dir
+            #cd ent/build/HdmiCecSource/CMakeFiles/WPEFrameworkHdmiCecSource.dir
             ls
             killall -QUIT WPEFramework 
             ${pwd}
