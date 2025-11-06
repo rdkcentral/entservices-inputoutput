@@ -35,29 +35,26 @@ Utils.initiliaze_flask_for_HdmiCecSource()
 # send the curl command and fetch the output json response
 curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_VOLUME_UP)
 curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_VOLUME_DOWN)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_MUTE)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_UP)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_DOWN)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_LEFT)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_RIGHT)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_SELECT)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_HOME)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_BACK)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_NUMBER_0)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_NUMBER_1)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_NUMBER_2)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_NUMBER_3)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_NUMBER_4)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_NUMBER_5)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_NUMBER_6)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_NUMBER_7)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_NUMBER_8)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_NUMBER_9)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_MUTE)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_UP)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_DOWN)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_LEFT)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_RIGHT)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_SELECT)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_HOME)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_BACK)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_NUMBER_0)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_NUMBER_1)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_NUMBER_2)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_NUMBER_3)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_NUMBER_4)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_NUMBER_5)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_NUMBER_6)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_NUMBER_7)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_NUMBER_8)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_NUMBER_9)
 
 
-HdmiCecSourceApis.send_keypress_NUMBER_6
-
-HdmiCecSourceApis.send_keypress_VOLUME_DOWN
 if curl_response:
     Utils.info_log("curl command send for get_enabled")
 else:
@@ -87,5 +84,6 @@ else:
 Utils.initiliaze_flask_for_HdmiCecSource()
 # push the testcase execution details to report file
 ReportGenerator.append_test_results_to_csv(tc_id, curl_response, status, message)
+
 
 
