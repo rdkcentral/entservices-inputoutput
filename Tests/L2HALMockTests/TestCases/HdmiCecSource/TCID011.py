@@ -23,7 +23,7 @@
 # Testcase ID : TCID011
 # Testcase Description : Hit the curl command for sendKeyPressEvent and
 # verify that output response is correct
-
+import time
 from Utilities import Utils, ReportGenerator
 from HdmiCecSource import HdmiCecSourceApis
 
@@ -42,8 +42,9 @@ print("TC Description - Hit the curl command for sendKeyPressEvent and verify th
 print("---------------------------------------------------------------------------------------------------------------------------")
 # send the curl command and fetch the output json response
 for command in keypress:
-    curl_response = Utils.send_curl_command(command)
-    
+            curl_response = Utils.send_curl_command(command)    
+            time.sleep(2)
+            
 if curl_response:
     Utils.info_log("curl command send for send_keypress_event")
 else:
@@ -73,4 +74,5 @@ else:
 Utils.initiliaze_flask_for_HdmiCecSource()
 # push the testcase execution details to report file
 ReportGenerator.append_test_results_to_csv(tc_id, curl_response, status, message)
+
 
