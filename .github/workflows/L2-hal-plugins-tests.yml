@@ -170,13 +170,13 @@ jobs:
             nvim rdkservices/HdmiCecSink/HdmiCecSink.cpp
             chmod 777 generate_coveragereport.sh
             ./generate_coveragereport.sh
-        #continue-on-error: false       
+        continue-on-error: false       
 
-      #- name: copying code coverage report
-        #run: |
-             #cd entservices-inputoutput/L2HalMock
-             #cp -r coverage /tmp/coverage
-        #continue-on-error: false
+      - name: copying code coverage report
+        run: |
+             cd entservices-inputoutput/L2HalMock
+             cp -r coverage /tmp/coverage
+        continue-on-error: false
          
       - name: Generating Test report
         run: |
@@ -195,28 +195,29 @@ jobs:
         continue-on-error: false
         
 
-      #- name: Generating code coverage report
-        #run: |
-            #apt-get install -y neovim
-            #apt-get -y update
-            #apt-get install -y lcov
-            #${pwd}
-            #cd rdkservices/build/HdmiCecSource/CMakeFiles/WPEFrameworkHdmiCecSource.dir
-            #ls
-            # killall -QUIT WPEFramework 
-            #${pwd}
-            #cd entservices-inputoutput/L2HalMock
-            # nvim rdkservices/HdmiCecSink/HdmiCecSink.cpp
-            #./generate_coveragereport.sh
-        #continue-on-error: false     
+      - name: Generating code coverage report
+        run: |
+            apt-get install -y neovim
+            apt-get -y update
+            apt-get install -y lcov
+            ${pwd}
+            cd rdkservices/build/HdmiCecSource/CMakeFiles/WPEFrameworkHdmiCecSource.dir
+            ls
+            killall -QUIT WPEFramework 
+            ${pwd}
+            cd entservices-inputoutput/L2HalMock
+            nvim rdkservices/HdmiCecSink/HdmiCecSink.cpp
+            chmod 777 generate_coveragereport.sh
+            ./generate_coveragereport.sh
+        continue-on-error: false     
 
 
-      #- name: copying code coverage report
-        #if: contains(steps.getfile.outputs.files, 'HdmiCecSource')
-        #run: |
-             #cd entservices-inputoutput/L2HalMock
-             #cp -r coverage /tmp/coverage
-        #continue-on-error: false
+      - name: copying code coverage report
+        if: contains(steps.getfile.outputs.files, 'HdmiCecSource')
+        run: |
+             cd entservices-inputoutput/L2HalMock
+             cp -r coverage /tmp/coverage
+        continue-on-error: false
 
 
       - name: Stop all services
@@ -237,14 +238,14 @@ jobs:
           echo "latest_report = $latest_report" >> $GITHUB_ENV
         continue-on-error: false
 
-      #- name: Upload artifacts code coverage
-        #uses: actions/upload-artifact@v4
-        #with:
-          #name: artifacts_code_coverage
-          #path: /tmp/coverage
-          #if-no-files-found: error
-          #retention-days: 5
-        #continue-on-error: false
+      - name: Upload artifacts code coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts_code_coverage
+          path: /tmp/coverage
+          if-no-files-found: error
+          retention-days: 5
+        continue-on-error: false
 
       - name: Upload artifacts test report
         uses: actions/upload-artifact@v4
