@@ -335,6 +335,7 @@ TEST_F(HdmiCecSinkDsTest, RegisteredMethods)
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("requestAudioDevicePowerStatus")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendUserControlPressed")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendUserControlReleased")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("setLatencyInfo")));
 
 }
 
@@ -1397,4 +1398,112 @@ TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_StringValues)
 TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_MalformedJSON)
 {
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":"), response));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_ValidParameters)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"20\",\"lowLatencyMode\":\"1\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"10\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_MinValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"0\",\"lowLatencyMode\":\"0\",\"audioOutputCompensated\":\"0\",\"audioOutputDelay\":\"0\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_MaxValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"255\",\"lowLatencyMode\":\"1\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"255\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_LowLatencyModeEnabled)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"15\",\"lowLatencyMode\":\"1\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"5\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_LowLatencyModeDisabled)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"50\",\"lowLatencyMode\":\"0\",\"audioOutputCompensated\":\"0\",\"audioOutputDelay\":\"25\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_AudioOutputCompensatedEnabled)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"30\",\"lowLatencyMode\":\"0\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"15\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_AudioOutputCompensatedDisabled)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"40\",\"lowLatencyMode\":\"1\",\"audioOutputCompensated\":\"0\",\"audioOutputDelay\":\"20\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_HighVideoLatency)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"100\",\"lowLatencyMode\":\"0\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"50\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_HighAudioDelay)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"25\",\"lowLatencyMode\":\"1\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"200\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_AllParametersEnabled)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"35\",\"lowLatencyMode\":\"1\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"30\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_AllParametersDisabled)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"45\",\"lowLatencyMode\":\"0\",\"audioOutputCompensated\":\"0\",\"audioOutputDelay\":\"35\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_NegativeValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"-10\",\"lowLatencyMode\":\"-1\",\"audioOutputCompensated\":\"-1\",\"audioOutputDelay\":\"-5\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_LargeValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"1000\",\"lowLatencyMode\":\"5\",\"audioOutputCompensated\":\"10\",\"audioOutputDelay\":\"2000\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_FloatValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"20.5\",\"lowLatencyMode\":\"1.2\",\"audioOutputCompensated\":\"0.8\",\"audioOutputDelay\":\"10.7\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_ZeroStringValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"0\",\"lowLatencyMode\":\"0\",\"audioOutputCompensated\":\"0\",\"audioOutputDelay\":\"0\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_OneStringValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"1\",\"lowLatencyMode\":\"1\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"1\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_ExtraParameters)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"20\",\"lowLatencyMode\":\"1\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"10\",\"extraParam\":\"ignored\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, setLatencyInfo_DuplicateParameters)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setLatencyInfo"), _T("{\"videoLatency\":\"20\",\"videoLatency\":\"30\",\"lowLatencyMode\":\"1\",\"audioOutputCompensated\":\"1\",\"audioOutputDelay\":\"10\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
 }
