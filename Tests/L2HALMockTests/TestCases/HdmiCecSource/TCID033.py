@@ -36,7 +36,7 @@ Utils.initiliaze_flask_for_HdmiCecSource()
 curl_response = Utils.send_curl_command(HdmiCecSourceApis.VOLUME_UP)
 curl_response = Utils.send_curl_command(HdmiCecSourceApis.send_keypress_VOLUME_DOWN)
 curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_MUTE)
-curl_response = Utils.send_curl_command(HdmiCecSourceApis."HdmiCecSourceApis.send_keypress_UP)
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_UP)
 curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_DOWN)
 curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_LEFT)
 curl_response = Utils.send_curl_command(HdmiCecSourceApis.HdmiCecSourceApis.send_keypress_RIGHT)
@@ -87,3 +87,4 @@ else:
 Utils.initiliaze_flask_for_HdmiCecSource()
 # push the testcase execution details to report file
 ReportGenerator.append_test_results_to_csv(tc_id, curl_response, status, message)
+
