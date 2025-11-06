@@ -333,6 +333,8 @@ TEST_F(HdmiCecSinkDsTest, RegisteredMethods)
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendGetAudioStatusMessage")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getAudioDeviceConnectedStatus")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("requestAudioDevicePowerStatus")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendUserControlPressed")));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("sendUserControlReleased")));
 
 }
 
@@ -935,4 +937,464 @@ TEST_F(HdmiCecSinkDsTest, sendKeyPressEvent_NullConnection)
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\":1,\"keyCode\":65}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_VolumeUp)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":65}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Select)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":0}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Up)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":1}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Down)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":2}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Left)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":3}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Right)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":4}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Home)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":9}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Back)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":13}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Number0)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":32}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Number1)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":33}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Number2)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":34}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Number3)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":35}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Number4)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":36}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Number5)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":37}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Number6)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":38}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Number7)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":39}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Number8)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":40}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Number9)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":41}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_VolumeDown)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":66}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_Mute)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":67}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_InvalidLogicalAddress)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":16,\"keyCode\":1}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_InvalidKeyCode)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":4,\"keyCode\":256}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_MissingParams)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_BoundaryKeyCode)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":0,\"keyCode\":255}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_MinKeyCode)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":0,\"keyCode\":0}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_NegativeValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":-1,\"keyCode\":-1}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_StringValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":\"invalid\",\"keyCode\":\"test\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlPressed_MalformedJSON)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlPressed"), _T("{\"logicalAddress\":"), response));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_VolumeUp)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":65}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Select)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":0}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Up)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":1}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Down)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":2}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Left)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":3}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Right)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":4}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Home)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":9}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Back)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":13}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Number0)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":32}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Number1)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":33}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Number2)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":34}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Number3)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":35}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Number4)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":36}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Number5)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":37}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Number6)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":38}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Number7)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":39}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Number8)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":40}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Number9)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":41}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_VolumeDown)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":66}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_Mute)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":67}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_InvalidLogicalAddress)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":16,\"keyCode\":1}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_InvalidKeyCode)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":4,\"keyCode\":256}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_MissingParams)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_BoundaryKeyCode)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":0,\"keyCode\":255}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_MinKeyCode)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":0,\"keyCode\":0}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_NegativeValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":-1,\"keyCode\":-1}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_StringValues)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":\"invalid\",\"keyCode\":\"test\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(HdmiCecSinkDsTest, sendUserControlReleased_MalformedJSON)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendUserControlReleased"), _T("{\"logicalAddress\":"), response));
 }
