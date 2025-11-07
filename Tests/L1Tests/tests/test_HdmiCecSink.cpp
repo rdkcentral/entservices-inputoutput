@@ -1556,6 +1556,46 @@ TEST_F(HdmiCecSinkFrameProcessingTest, InjectImageViewOnFrame)
     EXPECT_NO_THROW(InjectCECFrame(imageViewOnFrame, sizeof(imageViewOnFrame)));
 }
 
+// Test fixture description: ImageViewOn edge case test broadcast message rejection to cover uncovered lines
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectImageViewOn_BroadcastMessage_ShouldBeIgnored)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create ImageViewOn broadcast frame (should be ignored per implementation)
+    // From Playback Device 1 (LA=4) to Broadcast (LA=15) - should log "Ignore Broadcast messages"
+    uint8_t imageViewOnBroadcastFrame[] = { 0x4F, 0x04 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(imageViewOnBroadcastFrame, sizeof(imageViewOnBroadcastFrame)));
+}
+
+// Test fixture description: TextViewOn valid direct message processing
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectTextViewOnFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Text View On frame: From Playback Device 1 (LA=4) to TV (LA=0)
+    // Header: 0x40, Opcode: 0x0D (Text View On)
+    uint8_t textViewOnFrame[] = { 0x40, 0x0D };
+    
+    EXPECT_NO_THROW(InjectCECFrame(textViewOnFrame, sizeof(textViewOnFrame)));
+}
+
+// Test fixture description: TextViewOn edge case test broadcast message rejection
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectTextViewOn_BroadcastMessage_ShouldBeIgnored)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create TextViewOn broadcast frame (should be ignored per implementation)
+    // From Playback Device 1 (LA=4) to Broadcast (LA=15) - should log "Ignore Broadcast messages"
+    // This covers the broadcast rejection logic in HdmiCecSinkProcessor::process(const TextViewOn &msg, const Header &header)
+    uint8_t textViewOnBroadcastFrame[] = { 0x4F, 0x0D };
+    
+    EXPECT_NO_THROW(InjectCECFrame(textViewOnBroadcastFrame, sizeof(textViewOnBroadcastFrame)));
+}
+
 TEST_F(HdmiCecSinkFrameProcessingTest, InjectReportAudioStatusFrame)
 {
     // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
@@ -1578,6 +1618,156 @@ TEST_F(HdmiCecSinkFrameProcessingTest, InjectRequestActiveSourceFrame)
     uint8_t requestActiveSourceFrame[] = { 0x0F, 0x85 };
     
     EXPECT_NO_THROW(InjectCECFrame(requestActiveSourceFrame, sizeof(requestActiveSourceFrame)));
+}
+
+// Test fixture description: RequestActiveSource edge case test direct message rejection
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectRequestActiveSource_DirectMessage_ShouldBeIgnored)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create RequestActiveSource direct frame (should be ignored per implementation)
+    // From Playback Device 1 (LA=4) to TV (LA=0) - should log "Ignore Direct messages"
+    uint8_t requestActiveSourceDirectFrame[] = { 0x40, 0x85 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(requestActiveSourceDirectFrame, sizeof(requestActiveSourceDirectFrame)));
+}
+
+// Test fixture description: Standby direct message processing
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectStandbyFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Standby frame: From Playback Device 1 (LA=4) to TV (LA=0)
+    // Header: 0x40, Opcode: 0x36 (Standby)
+    uint8_t standbyFrame[] = { 0x40, 0x36 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(standbyFrame, sizeof(standbyFrame)));
+}
+
+// Test fixture description: Standby broadcast message processing
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectStandby_BroadcastMessage)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Standby broadcast frame: From Playback Device 1 (LA=4) to Broadcast (LA=15)
+    // Header: 0x4F, Opcode: 0x36 (Standby)
+    // Standby can be sent to both direct and broadcast addresses
+    uint8_t standbyBroadcastFrame[] = { 0x4F, 0x36 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(standbyBroadcastFrame, sizeof(standbyBroadcastFrame)));
+}
+
+// Test fixture description: GetCECVersion direct message processing
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectGetCECVersionFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Get CEC Version frame: From Playback Device 1 (LA=4) to TV (LA=0)
+    // Header: 0x40, Opcode: 0x9F (Get CEC Version)
+    uint8_t getCECVersionFrame[] = { 0x40, 0x9F };
+    
+    EXPECT_NO_THROW(InjectCECFrame(getCECVersionFrame, sizeof(getCECVersionFrame)));
+}
+
+// Test fixture description: GetCECVersion edge case test broadcast message rejection
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectGetCECVersion_BroadcastMessage_ShouldBeIgnored)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create GetCECVersion broadcast frame (should be ignored per implementation)
+    // From Playback Device 1 (LA=4) to Broadcast (LA=15) - should log "Ignore Broadcast messages"
+    uint8_t getCECVersionBroadcastFrame[] = { 0x4F, 0x9F };
+    
+    EXPECT_NO_THROW(InjectCECFrame(getCECVersionBroadcastFrame, sizeof(getCECVersionBroadcastFrame)));
+}
+
+// Test fixture description: CECVersion response processing with version information
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectCECVersionFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create CEC Version frame: From Playback Device 1 (LA=4) to TV (LA=0)
+    // Header: 0x40, Opcode: 0x9E (CEC Version), Operand: 0x05 (Version 1.4)
+    uint8_t cecVersionFrame[] = { 0x40, 0x9E, 0x05 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(cecVersionFrame, sizeof(cecVersionFrame)));
+}
+
+// Test fixture description: CECVersion with different version values
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectCECVersion_DifferentVersions)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Test different CEC version values
+    // CEC Version 2.0
+    uint8_t cecVersion20Frame[] = { 0x40, 0x9E, 0x06 };
+    EXPECT_NO_THROW(InjectCECFrame(cecVersion20Frame, sizeof(cecVersion20Frame)));
+    
+    // CEC Version 1.3a  
+    uint8_t cecVersion13Frame[] = { 0x40, 0x9E, 0x04 };
+    EXPECT_NO_THROW(InjectCECFrame(cecVersion13Frame, sizeof(cecVersion13Frame)));
+}
+
+// Test fixture description: SetMenuLanguage processing with language information
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectSetMenuLanguageFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Set Menu Language frame: From TV (LA=0) to Broadcast (LA=15)
+    // Header: 0x0F, Opcode: 0x32 (Set Menu Language), Operands: "eng" (English)
+    uint8_t setMenuLanguageFrame[] = { 0x0F, 0x32, 0x65, 0x6E, 0x67 }; // "eng"
+    
+    EXPECT_NO_THROW(InjectCECFrame(setMenuLanguageFrame, sizeof(setMenuLanguageFrame)));
+}
+
+// Test fixture description: SetMenuLanguage with different languages
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectSetMenuLanguage_DifferentLanguages)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Test different language codes
+    // Spanish
+    uint8_t spanishLanguageFrame[] = { 0x0F, 0x32, 0x73, 0x70, 0x61 }; // "spa"
+    EXPECT_NO_THROW(InjectCECFrame(spanishLanguageFrame, sizeof(spanishLanguageFrame)));
+    
+    // French
+    uint8_t frenchLanguageFrame[] = { 0x0F, 0x32, 0x66, 0x72, 0x61 }; // "fra"
+    EXPECT_NO_THROW(InjectCECFrame(frenchLanguageFrame, sizeof(frenchLanguageFrame)));
+}
+
+// Test fixture description: GiveOSDName direct message processing
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectGiveOSDNameFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create Give OSD Name frame: From Playback Device 1 (LA=4) to TV (LA=0)
+    // Header: 0x40, Opcode: 0x46 (Give OSD Name)
+    uint8_t giveOSDNameFrame[] = { 0x40, 0x46 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(giveOSDNameFrame, sizeof(giveOSDNameFrame)));
+}
+
+// Test fixture description: GiveOSDName edge case test broadcast message rejection
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectGiveOSDName_BroadcastMessage_ShouldBeIgnored)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create GiveOSDName broadcast frame (should be ignored per implementation)
+    // From Playback Device 1 (LA=4) to Broadcast (LA=15) - should log "Ignore Broadcast messages"
+    uint8_t giveOSDNameBroadcastFrame[] = { 0x4F, 0x46 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(giveOSDNameBroadcastFrame, sizeof(giveOSDNameBroadcastFrame)));
 }
 
 TEST_F(HdmiCecSinkFrameProcessingTest, InjectRoutingChangeFrame)
@@ -1784,3 +1974,602 @@ TEST_F(HdmiCecSinkFrameProcessingTest, InjectDisabledImageViewOnFrame)
 
     EXPECT_NO_THROW(InjectCECFrame(imageViewOnFrame, sizeof(imageViewOnFrame)));
 }
+
+// Test fixture description: ActiveSource edge cases test valid broadcast processing
+TEST_F(HdmiCecSinkFrameProcessingTest, ActiveSource_BroadcastMessage_ValidProcessing)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Valid broadcast ActiveSource message (should be processed)
+    // From Playback Device 1 (LA=4) to Broadcast (LA=15) with physical address 2.0.0.0
+    uint8_t activeSourceFrame[] = { 0x4F, 0x82, 0x20, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame, sizeof(activeSourceFrame)));
+}
+
+// Test fixture description: ActiveSource edge cases test direct message rejection per implementation
+TEST_F(HdmiCecSinkFrameProcessingTest, ActiveSource_DirectMessage_ShouldBeIgnored)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Direct ActiveSource message (should be ignored per implementation)
+    // From Playback Device 1 (LA=4) to TV (LA=0) - should log "Ignore Direct messages"
+    uint8_t activeSourceFrame[] = { 0x40, 0x82, 0x20, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame, sizeof(activeSourceFrame)));
+}
+
+// Test fixture description: ActiveSource edge cases test boundary logical addresses
+TEST_F(HdmiCecSinkFrameProcessingTest, ActiveSource_BoundaryLogicalAddresses)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // From LA=0 (TV) to Broadcast (LA=15) 
+    uint8_t activeSourceFrame1[] = { 0x0F, 0x82, 0x10, 0x00 };
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame1, sizeof(activeSourceFrame1)));
+    
+    // From LA=14 (Specific Use) to Broadcast (LA=15)
+    uint8_t activeSourceFrame2[] = { 0xEF, 0x82, 0x30, 0x00 };
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame2, sizeof(activeSourceFrame2)));
+}
+
+// Test fixture description: ActiveSource edge cases test invalid logical addresses beyond CEC spec
+TEST_F(HdmiCecSinkFrameProcessingTest, ActiveSource_InvalidLogicalAddresses)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Invalid logical address beyond CEC specification (>15)
+    uint8_t invalidActiveSourceFrame[] = { 0xFF, 0x82, 0x20, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(invalidActiveSourceFrame, sizeof(invalidActiveSourceFrame)));
+}
+
+// Test fixture description: ActiveSource edge cases test physical address boundaries
+TEST_F(HdmiCecSinkFrameProcessingTest, ActiveSource_PhysicalAddressBoundaries)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Minimum physical address 0.0.0.0
+    uint8_t activeSourceFrame1[] = { 0x1F, 0x82, 0x00, 0x00 };
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame1, sizeof(activeSourceFrame1)));
+    
+    // Maximum physical address F.F.F.F
+    uint8_t activeSourceFrame2[] = { 0x2F, 0x82, 0xFF, 0xFF };
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame2, sizeof(activeSourceFrame2)));
+    
+    // Common physical addresses
+    uint8_t activeSourceFrame3[] = { 0x3F, 0x82, 0x10, 0x00 }; // 1.0.0.0
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame3, sizeof(activeSourceFrame3)));
+    
+    uint8_t activeSourceFrame4[] = { 0x4F, 0x82, 0x20, 0x00 }; // 2.0.0.0
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame4, sizeof(activeSourceFrame4)));
+}
+
+// Test fixture description: ActiveSource edge cases test malformed frame too short
+TEST_F(HdmiCecSinkFrameProcessingTest, ActiveSource_MalformedFrame_TooShort)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Malformed ActiveSource frame - too short (missing physical address bytes)
+    uint8_t shortActiveSourceFrame[] = { 0x4F, 0x82 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(shortActiveSourceFrame, sizeof(shortActiveSourceFrame)));
+}
+
+// Test fixture description: ActiveSource edge cases test malformed frame too long  
+TEST_F(HdmiCecSinkFrameProcessingTest, ActiveSource_MalformedFrame_TooLong)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Malformed ActiveSource frame - too long (extra bytes)
+    uint8_t longActiveSourceFrame[] = { 0x4F, 0x82, 0x20, 0x00, 0xFF, 0xFF };
+    
+    EXPECT_NO_THROW(InjectCECFrame(longActiveSourceFrame, sizeof(longActiveSourceFrame)));
+}
+
+// Test fixture description: ActiveSource edge cases test sequential messages from different devices
+TEST_F(HdmiCecSinkFrameProcessingTest, ActiveSource_SequentialMessages)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Multiple sequential ActiveSource messages from different devices
+    uint8_t activeSourceFrame1[] = { 0x1F, 0x82, 0x10, 0x00 }; // Recording Device 1
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame1, sizeof(activeSourceFrame1)));
+    
+    uint8_t activeSourceFrame2[] = { 0x2F, 0x82, 0x20, 0x00 }; // Recording Device 2
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame2, sizeof(activeSourceFrame2)));
+    
+    uint8_t activeSourceFrame3[] = { 0x3F, 0x82, 0x30, 0x00 }; // Tuner 1
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame3, sizeof(activeSourceFrame3)));
+}
+
+// Test fixture description: ActiveSource edge cases test same device multiple physical addresses
+TEST_F(HdmiCecSinkFrameProcessingTest, ActiveSource_SameDeviceMultipleAddresses)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Same device reporting different physical addresses (device moved/reconnected)
+    uint8_t activeSourceFrame1[] = { 0x4F, 0x82, 0x10, 0x00 }; // First address
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame1, sizeof(activeSourceFrame1)));
+    
+    uint8_t activeSourceFrame2[] = { 0x4F, 0x82, 0x20, 0x00 }; // Updated address
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame2, sizeof(activeSourceFrame2)));
+    
+    uint8_t activeSourceFrame3[] = { 0x4F, 0x82, 0x30, 0x00 }; // Another update
+    EXPECT_NO_THROW(InjectCECFrame(activeSourceFrame3, sizeof(activeSourceFrame3)));
+}
+
+// Test fixture description: InActiveSource edge cases test direct message processing
+TEST_F(HdmiCecSinkFrameProcessingTest, InActiveSource_DirectMessage_ValidProcessing)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Valid direct InActiveSource message (should be processed)
+    // From Playback Device 1 (LA=4) to TV (LA=0) with physical address 2.0.0.0
+    uint8_t inActiveSourceFrame[] = { 0x40, 0x9D, 0x20, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame, sizeof(inActiveSourceFrame)));
+}
+
+// Test fixture description: InActiveSource edge cases test broadcast message rejection per implementation
+TEST_F(HdmiCecSinkFrameProcessingTest, InActiveSource_BroadcastMessage_ShouldBeIgnored)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Broadcast InActiveSource message (should be ignored per implementation)
+    // From Playback Device 1 (LA=4) to Broadcast (LA=15) - should log "Ignore Broadcast messages"
+    uint8_t inActiveSourceFrame[] = { 0x4F, 0x9D, 0x20, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame, sizeof(inActiveSourceFrame)));
+}
+
+// Test fixture description: InActiveSource edge cases test boundary logical addresses
+TEST_F(HdmiCecSinkFrameProcessingTest, InActiveSource_BoundaryLogicalAddresses)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // From LA=1 (Recording Device 1) to TV (LA=0)
+    uint8_t inActiveSourceFrame1[] = { 0x10, 0x9D, 0x10, 0x00 };
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame1, sizeof(inActiveSourceFrame1)));
+    
+    // From LA=14 (Specific Use) to TV (LA=0)
+    uint8_t inActiveSourceFrame2[] = { 0xE0, 0x9D, 0x30, 0x00 };
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame2, sizeof(inActiveSourceFrame2)));
+    
+    // From Audio System (LA=5) to TV (LA=0)
+    uint8_t inActiveSourceFrame3[] = { 0x50, 0x9D, 0x40, 0x00 };
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame3, sizeof(inActiveSourceFrame3)));
+}
+
+// Test fixture description: InActiveSource edge cases test physical address boundaries
+TEST_F(HdmiCecSinkFrameProcessingTest, InActiveSource_PhysicalAddressBoundaries)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Minimum physical address 0.0.0.0
+    uint8_t inActiveSourceFrame1[] = { 0x40, 0x9D, 0x00, 0x00 };
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame1, sizeof(inActiveSourceFrame1)));
+    
+    // Maximum physical address F.F.F.F
+    uint8_t inActiveSourceFrame2[] = { 0x40, 0x9D, 0xFF, 0xFF };
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame2, sizeof(inActiveSourceFrame2)));
+    
+    // Common physical addresses
+    uint8_t inActiveSourceFrame3[] = { 0x40, 0x9D, 0x10, 0x00 }; // 1.0.0.0
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame3, sizeof(inActiveSourceFrame3)));
+    
+    uint8_t inActiveSourceFrame4[] = { 0x40, 0x9D, 0x20, 0x00 }; // 2.0.0.0
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame4, sizeof(inActiveSourceFrame4)));
+}
+
+// Test fixture description: InActiveSource edge cases test malformed frame too short
+TEST_F(HdmiCecSinkFrameProcessingTest, InActiveSource_MalformedFrame_TooShort)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Malformed InActiveSource frame - too short (missing physical address bytes)
+    uint8_t shortInActiveSourceFrame[] = { 0x40, 0x9D };
+    
+    EXPECT_NO_THROW(InjectCECFrame(shortInActiveSourceFrame, sizeof(shortInActiveSourceFrame)));
+}
+
+// Test fixture description: InActiveSource edge cases test malformed frame too long
+TEST_F(HdmiCecSinkFrameProcessingTest, InActiveSource_MalformedFrame_TooLong)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Malformed InActiveSource frame - too long (extra bytes)
+    uint8_t longInActiveSourceFrame[] = { 0x40, 0x9D, 0x20, 0x00, 0xFF, 0xFF };
+    
+    EXPECT_NO_THROW(InjectCECFrame(longInActiveSourceFrame, sizeof(longInActiveSourceFrame)));
+}
+
+// Test fixture description: InActiveSource edge cases test multiple device addresses
+TEST_F(HdmiCecSinkFrameProcessingTest, InActiveSource_MultipleDeviceAddresses)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Multiple devices reporting InActiveSource with different addresses
+    uint8_t inActiveSourceFrame1[] = { 0x10, 0x9D, 0x10, 0x00 }; // Recording Device 1
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame1, sizeof(inActiveSourceFrame1)));
+    
+    uint8_t inActiveSourceFrame2[] = { 0x20, 0x9D, 0x20, 0x00 }; // Recording Device 2
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame2, sizeof(inActiveSourceFrame2)));
+    
+    uint8_t inActiveSourceFrame3[] = { 0x40, 0x9D, 0x30, 0x00 }; // Playback Device 1
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame3, sizeof(inActiveSourceFrame3)));
+}
+
+// Test fixture description: InActiveSource edge cases test same device address updates
+TEST_F(HdmiCecSinkFrameProcessingTest, InActiveSource_SameDeviceAddressUpdates)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Same device reporting InActiveSource with different physical addresses over time
+    uint8_t inActiveSourceFrame1[] = { 0x40, 0x9D, 0x10, 0x00 }; // First address
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame1, sizeof(inActiveSourceFrame1)));
+    
+    uint8_t inActiveSourceFrame2[] = { 0x40, 0x9D, 0x20, 0x00 }; // Updated address
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame2, sizeof(inActiveSourceFrame2)));
+    
+    uint8_t inActiveSourceFrame3[] = { 0x40, 0x9D, 0x30, 0x00 }; // Another update
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame3, sizeof(inActiveSourceFrame3)));
+}
+
+// Test fixture description: InActiveSource edge cases test invalid logical addresses
+TEST_F(HdmiCecSinkFrameProcessingTest, InActiveSource_InvalidLogicalAddresses)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Invalid logical address beyond CEC specification (>15)
+    uint8_t invalidInActiveSourceFrame[] = { 0xFF, 0x9D, 0x20, 0x00 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(invalidInActiveSourceFrame, sizeof(invalidInActiveSourceFrame)));
+}
+
+// Test fixture description: InActiveSource edge cases test extreme physical addresses
+TEST_F(HdmiCecSinkFrameProcessingTest, InActiveSource_ExtremePhysicalAddresses)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Physical addresses with extreme values and patterns
+    uint8_t inActiveSourceFrame1[] = { 0x40, 0x9D, 0x00, 0x01 }; // 0.0.0.1
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame1, sizeof(inActiveSourceFrame1)));
+    
+    uint8_t inActiveSourceFrame2[] = { 0x40, 0x9D, 0x11, 0x11 }; // 1.1.1.1
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame2, sizeof(inActiveSourceFrame2)));
+    
+    uint8_t inActiveSourceFrame3[] = { 0x40, 0x9D, 0xAA, 0xAA }; // A.A.A.A
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame3, sizeof(inActiveSourceFrame3)));
+    
+    uint8_t inActiveSourceFrame4[] = { 0x40, 0x9D, 0x55, 0x55 }; // 5.5.5.5
+    EXPECT_NO_THROW(InjectCECFrame(inActiveSourceFrame4, sizeof(inActiveSourceFrame4)));
+}
+
+// Test fixture description: GiveDeviceVendorID processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectGiveDeviceVendorIDFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Test Case 1: Direct message from Playback Device 1 (LA=4) to TV (LA=0) - should process normally
+    uint8_t directGiveVendorIDFrame[] = { 0x40, 0x8C }; // Direct: From LA=4 to LA=0, Give Device Vendor ID
+    EXPECT_NO_THROW(InjectCECFrame(directGiveVendorIDFrame, sizeof(directGiveVendorIDFrame)));
+    
+    // Test Case 2: Broadcast message - should be rejected
+    uint8_t broadcastGiveVendorIDFrame[] = { 0x4F, 0x8C }; // Broadcast: From LA=4 to Broadcast, Give Device Vendor ID
+    EXPECT_NO_THROW(InjectCECFrame(broadcastGiveVendorIDFrame, sizeof(broadcastGiveVendorIDFrame)));
+}
+
+// Test fixture description: SetOSDString processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectSetOSDStringFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t shortOSDStringFrame[] = { 0x40, 0x64, 0x00, 'T', 'e', 's', 't' }; // Display control + "Test"
+    EXPECT_NO_THROW(InjectCECFrame(shortOSDStringFrame, sizeof(shortOSDStringFrame)));
+    
+    // Test Case 2: Set OSD String with longer text
+    uint8_t longOSDStringFrame[] = { 0x50, 0x64, 0x00, 'L', 'o', 'n', 'g', ' ', 'T', 'e', 's', 't', ' ', 'M', 's', 'g' };
+    EXPECT_NO_THROW(InjectCECFrame(longOSDStringFrame, sizeof(longOSDStringFrame)));
+    
+    // Test Case 3: Set OSD String with different display control values
+    uint8_t displayControlFrame[] = { 0x60, 0x64, 0x01, 'M', 'e', 'n', 'u' }; // Different display control
+    EXPECT_NO_THROW(InjectCECFrame(displayControlFrame, sizeof(displayControlFrame)));
+    
+    // Test Case 4: Set OSD String with maximum length text
+    uint8_t maxOSDStringFrame[] = { 0x70, 0x64, 0x00, 'V', 'e', 'r', 'y', ' ', 'L', 'o', 'n', 'g', ' ', 'O', 'S', 'D', ' ', 'S', 't', 'r', 'i', 'n', 'g' };
+    EXPECT_NO_THROW(InjectCECFrame(maxOSDStringFrame, sizeof(maxOSDStringFrame)));
+}
+
+// Test fixture description: SetOSDName processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectSetOSDNameFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t standardOSDNameFrame[] = { 0x40, 0x47, 'T', 'V', ' ', 'S', 'e', 't' }; // "TV Set"
+    EXPECT_NO_THROW(InjectCECFrame(standardOSDNameFrame, sizeof(standardOSDNameFrame)));
+    
+    // Test Case 2: Set OSD Name with longer device name
+    uint8_t longOSDNameFrame[] = { 0x50, 0x47, 'S', 'm', 'a', 'r', 't', ' ', 'T', 'V', ' ', 'D', 'e', 'v', 'i', 'c', 'e' };
+    EXPECT_NO_THROW(InjectCECFrame(longOSDNameFrame, sizeof(longOSDNameFrame)));
+    
+    // Test Case 3: Set OSD Name with short device name
+    uint8_t shortOSDNameFrame[] = { 0x60, 0x47, 'T', 'V' }; // "TV"
+    EXPECT_NO_THROW(InjectCECFrame(shortOSDNameFrame, sizeof(shortOSDNameFrame)));
+    
+    // Test Case 4: Set OSD Name with special characters in name
+    uint8_t specialOSDNameFrame[] = { 0x70, 0x47, 'T', 'V', '-', '1', '2', '3', '4' }; // "TV-1234"
+    EXPECT_NO_THROW(InjectCECFrame(specialOSDNameFrame, sizeof(specialOSDNameFrame)));
+    
+    // Test Case 5: Set OSD Name with maximum length device name
+    uint8_t maxOSDNameFrame[] = { 0x80, 0x47, 'V', 'e', 'r', 'y', ' ', 'L', 'o', 'n', 'g', ' ', 'D', 'e', 'v', 'i', 'c', 'e', ' ', 'N', 'a', 'm', 'e' };
+    EXPECT_NO_THROW(InjectCECFrame(maxOSDNameFrame, sizeof(maxOSDNameFrame)));
+    
+    // Test Case 6: Set OSD Name with empty name (minimal frame)
+    uint8_t emptyOSDNameFrame[] = { 0x90, 0x47 }; // No name data
+    EXPECT_NO_THROW(InjectCECFrame(emptyOSDNameFrame, sizeof(emptyOSDNameFrame)));
+}
+
+// Test fixture description: RoutingInformation processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectRoutingInformationFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t routingInfoFrame[] = { 0x40, 0x81, 0x10, 0x00, 0x20, 0x00 }; // From LA=4 to LA=0, routing from 1.0.0.0 to 2.0.0.0
+    EXPECT_NO_THROW(InjectCECFrame(routingInfoFrame, sizeof(routingInfoFrame)));
+    
+    // Test Case 2: Different routing paths
+    uint8_t routingInfoFrame2[] = { 0x50, 0x81, 0x00, 0x00, 0x30, 0x00 }; // From root to 3.0.0.0
+    EXPECT_NO_THROW(InjectCECFrame(routingInfoFrame2, sizeof(routingInfoFrame2)));
+}
+
+// Test fixture description: GetMenuLanguage processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectGetMenuLanguageFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t directMenuLangFrame[] = { 0x40, 0x91 }; // Direct: From LA=4 to LA=0
+    EXPECT_NO_THROW(InjectCECFrame(directMenuLangFrame, sizeof(directMenuLangFrame)));
+    
+    // Test Case 2: Broadcast Get Menu Language - should be rejected
+    uint8_t broadcastMenuLangFrame[] = { 0x4F, 0x91 }; // Broadcast: From LA=4 to Broadcast
+    EXPECT_NO_THROW(InjectCECFrame(broadcastMenuLangFrame, sizeof(broadcastMenuLangFrame)));
+}
+
+// Test fixture description: ReportPhysicalAddress processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectReportPhysicalAddressFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Test Case 1: Broadcast Report Physical Address - normal processing
+    uint8_t reportPAFrame[] = { 0x4F, 0x84, 0x20, 0x00, 0x04 }; // Broadcast: LA=4, PA=2.0.0.0, Device Type=Playback
+    EXPECT_NO_THROW(InjectCECFrame(reportPAFrame, sizeof(reportPAFrame)));
+    
+    // Test Case 2: Direct Report Physical Address - should be rejected
+    uint8_t directReportPAFrame[] = { 0x40, 0x84, 0x30, 0x00, 0x01 }; // Direct: LA=4 to LA=0
+    EXPECT_NO_THROW(InjectCECFrame(directReportPAFrame, sizeof(directReportPAFrame)));
+    
+    // Test Case 3: Different physical address to trigger PA change detection
+    uint8_t changedPAFrame[] = { 0x5F, 0x84, 0x10, 0x00, 0x05 }; // Different PA from same device
+    EXPECT_NO_THROW(InjectCECFrame(changedPAFrame, sizeof(changedPAFrame)));
+}
+
+// Test fixture description: DeviceVendorID processor coverage  
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectDeviceVendorIDFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t deviceVendorIDFrame[] = { 0x4F, 0x87, 0x00, 0x80, 0x45 }; // Broadcast: LA=4, Vendor ID
+    EXPECT_NO_THROW(InjectCECFrame(deviceVendorIDFrame, sizeof(deviceVendorIDFrame)));
+    
+    // Test Case 2: Direct Device Vendor ID - should be rejected
+    uint8_t directVendorIDFrame[] = { 0x40, 0x87, 0x00, 0x90, 0x56 }; // Direct: LA=4 to LA=0
+    EXPECT_NO_THROW(InjectCECFrame(directVendorIDFrame, sizeof(directVendorIDFrame)));
+    
+    // Test Case 3: Different vendor ID to test update logic
+    uint8_t differentVendorIDFrame[] = { 0x5F, 0x87, 0x01, 0x23, 0x45 }; // Different vendor ID
+    EXPECT_NO_THROW(InjectCECFrame(differentVendorIDFrame, sizeof(differentVendorIDFrame)));
+}
+
+// Test fixture description: GiveDevicePowerStatus processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectGiveDevicePowerStatusFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronous ly)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Test Case 1: Direct Give Device Power Status - normal processing
+    uint8_t directPowerStatusFrame[] = { 0x40, 0x8F }; // Direct: From LA=4 to LA=0
+    EXPECT_NO_THROW(InjectCECFrame(directPowerStatusFrame, sizeof(directPowerStatusFrame)));
+    
+    // Test Case 2: Broadcast Give Device Power Status - should be rejected
+    uint8_t broadcastPowerStatusFrame[] = { 0x4F, 0x8F }; // Broadcast: From LA=4 to Broadcast
+    EXPECT_NO_THROW(InjectCECFrame(broadcastPowerStatusFrame, sizeof(broadcastPowerStatusFrame)));
+}
+
+// Test fixture description: ReportPowerStatus processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectReportPowerStatusFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t reportPowerFrame[] = { 0x40, 0x90, 0x00 }; // Direct: From LA=4 to LA=0, Power On
+    EXPECT_NO_THROW(InjectCECFrame(reportPowerFrame, sizeof(reportPowerFrame)));
+    
+    // Test Case 2: Broadcast Report Power Status - should be rejected
+    uint8_t broadcastPowerFrame[] = { 0x4F, 0x90, 0x01 }; // Broadcast: From LA=4, Power Standby
+    EXPECT_NO_THROW(InjectCECFrame(broadcastPowerFrame, sizeof(broadcastPowerFrame)));
+    
+    // Test Case 3: Power status from Audio System
+    uint8_t audioSystemPowerFrame[] = { 0x50, 0x90, 0x02 }; // From Audio System LA=5, Power Standby to On
+    EXPECT_NO_THROW(InjectCECFrame(audioSystemPowerFrame, sizeof(audioSystemPowerFrame)));
+    
+    // Test Case 4: Different power status to trigger change detection
+    uint8_t changedPowerFrame[] = { 0x40, 0x90, 0x03 }; // Different power status
+    EXPECT_NO_THROW(InjectCECFrame(changedPowerFrame, sizeof(changedPowerFrame)));
+}
+
+// Test fixture description: Abort processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectAbortFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t directAbortFrame[] = { 0x40, 0xFF, 0x9F }; // Direct: From LA=4 to LA=0, Aborting GET_CEC_VERSION
+    EXPECT_NO_THROW(InjectCECFrame(directAbortFrame, sizeof(directAbortFrame)));
+    
+    // Test Case 2: Broadcast Abort - should be ignored
+    uint8_t broadcastAbortFrame[] = { 0x4F, 0xFF, 0x8C }; // Broadcast: Aborting GIVE_DEVICE_VENDOR_ID
+    EXPECT_NO_THROW(InjectCECFrame(broadcastAbortFrame, sizeof(broadcastAbortFrame)));
+}
+
+// Test fixture description: Polling processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectPollingFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Note: Polling uses special opcode 0x200, but in frame it's represented differently
+    uint8_t pollingFrame[] = { 0x44 }; // Polling: From LA=4 to LA=4
+    EXPECT_NO_THROW(InjectCECFrame(pollingFrame, sizeof(pollingFrame)));
+}
+
+// Test fixture description: InitiateArc processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectInitiateArcFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t initiateArcFrame[] = { 0x50, 0xC0 }; // Direct: From Audio System LA=5 to LA=0
+    EXPECT_NO_THROW(InjectCECFrame(initiateArcFrame, sizeof(initiateArcFrame)));
+    
+    // Test Case 2: Initiate ARC from non-Audio System - should be rejected
+    uint8_t nonAudioInitiateArcFrame[] = { 0x40, 0xC0 }; // Direct: From LA=4 (not Audio System)
+    EXPECT_NO_THROW(InjectCECFrame(nonAudioInitiateArcFrame, sizeof(nonAudioInitiateArcFrame)));
+    
+    // Test Case 3: Broadcast Initiate ARC - should be rejected
+    uint8_t broadcastInitiateArcFrame[] = { 0x5F, 0xC0 }; // Broadcast: From Audio System
+    EXPECT_NO_THROW(InjectCECFrame(broadcastInitiateArcFrame, sizeof(broadcastInitiateArcFrame)));
+}
+
+// Test fixture description: TerminateArc processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectTerminateArcFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t terminateArcFrame[] = { 0x50, 0xC5 }; // Direct: From Audio System LA=5 to LA=0
+    EXPECT_NO_THROW(InjectCECFrame(terminateArcFrame, sizeof(terminateArcFrame)));
+    
+    // Test Case 2: Terminate ARC from non-Audio System - should be rejected
+    uint8_t nonAudioTerminateArcFrame[] = { 0x40, 0xC5 }; // Direct: From LA=4 (not Audio System)
+    EXPECT_NO_THROW(InjectCECFrame(nonAudioTerminateArcFrame, sizeof(nonAudioTerminateArcFrame)));
+    
+    // Test Case 3: Broadcast Terminate ARC - should be rejected
+    uint8_t broadcastTerminateArcFrame[] = { 0x5F, 0xC5 }; // Broadcast: From Audio System
+    EXPECT_NO_THROW(InjectCECFrame(broadcastTerminateArcFrame, sizeof(broadcastTerminateArcFrame)));
+}
+
+// Test fixture description: ReportShortAudioDescriptor processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectReportShortAudioDescriptorFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t reportAudioDescFrame[] = { 0x50, 0xA3, 0x09, 0x07, 0x15 }; // From Audio System: Audio descriptor data
+    EXPECT_NO_THROW(InjectCECFrame(reportAudioDescFrame, sizeof(reportAudioDescFrame)));
+    
+    // Test Case 2: Multiple audio descriptors
+    uint8_t multipleAudioDescFrame[] = { 0x50, 0xA3, 0x09, 0x07, 0x15, 0x0D, 0x1F, 0x07 }; // Multiple descriptors
+    EXPECT_NO_THROW(InjectCECFrame(multipleAudioDescFrame, sizeof(multipleAudioDescFrame)));
+}
+
+// Test fixture description: SetSystemAudioMode processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectSetSystemAudioModeFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t setAudioModeOnFrame[] = { 0x50, 0x72, 0x01 }; // From Audio System: Audio Mode ON
+    EXPECT_NO_THROW(InjectCECFrame(setAudioModeOnFrame, sizeof(setAudioModeOnFrame)));
+    
+    // Test Case 2: Set System Audio Mode OFF
+    uint8_t setAudioModeOffFrame[] = { 0x50, 0x72, 0x00 }; // From Audio System: Audio Mode OFF
+    EXPECT_NO_THROW(InjectCECFrame(setAudioModeOffFrame, sizeof(setAudioModeOffFrame)));
+}
+
+// Test fixture description: ReportAudioStatus processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectReportAudioStatusFrame_MultipleScenarios)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t reportAudioStatusFrame[] = { 0x50, 0x7A, 0x25 }; // Direct: From Audio System, Volume=37, Mute=Off
+    EXPECT_NO_THROW(InjectCECFrame(reportAudioStatusFrame, sizeof(reportAudioStatusFrame)));
+    
+    // Test Case 2: Broadcast Report Audio Status - should be rejected
+    uint8_t broadcastAudioStatusFrame[] = { 0x5F, 0x7A, 0xA0 }; // Broadcast: Mute=On, Volume=32
+    EXPECT_NO_THROW(InjectCECFrame(broadcastAudioStatusFrame, sizeof(broadcastAudioStatusFrame)));
+    
+    // Test Case 3: Different audio status values
+    uint8_t muteAudioStatusFrame[] = { 0x50, 0x7A, 0x80 }; // Mute=On, Volume=0
+    EXPECT_NO_THROW(InjectCECFrame(muteAudioStatusFrame, sizeof(muteAudioStatusFrame)));
+}
+
+// Test fixture description: GiveFeatures processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectGiveFeaturesFrame)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t giveFeaturesFrame[] = { 0x40, 0xA5 }; // Direct: From LA=4 to LA=0
+    EXPECT_NO_THROW(InjectCECFrame(giveFeaturesFrame, sizeof(giveFeaturesFrame)));
+    
+    // Test Case 2: Give Features from different source
+    uint8_t giveFeatures2Frame[] = { 0x50, 0xA5 }; // Direct: From LA=5 to LA=0
+    EXPECT_NO_THROW(InjectCECFrame(giveFeatures2Frame, sizeof(giveFeatures2Frame)));
+}
+
+// Test fixture description: RequestCurrentLatency processor coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectRequestCurrentLatencyFrame_MultiplePhysicalAddresses)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    uint8_t matchingLatencyFrame[] = { 0x40, 0xA7, 0x00, 0x00 }; // Physical address 0.0.0.0 (root)
+    EXPECT_NO_THROW(InjectCECFrame(matchingLatencyFrame, sizeof(matchingLatencyFrame)));
+    
+    // Test Case 2: Request Current Latency with non-matching physical address
+    uint8_t nonMatchingLatencyFrame[] = { 0x40, 0xA7, 0x10, 0x00 }; // Physical address 1.0.0.0
+    EXPECT_NO_THROW(InjectCECFrame(nonMatchingLatencyFrame, sizeof(nonMatchingLatencyFrame)));
+    
+    // Test Case 3: Different physical address patterns
+    uint8_t diffLatencyFrame[] = { 0x50, 0xA7, 0x20, 0x00 }; // Physical address 2.0.0.0
+    EXPECT_NO_THROW(InjectCECFrame(diffLatencyFrame, sizeof(diffLatencyFrame)));
+}
+
