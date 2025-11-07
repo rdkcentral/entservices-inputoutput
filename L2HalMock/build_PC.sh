@@ -528,11 +528,11 @@ if grep -q "HdmiCecSource" <<< "$SelectedPlugins"; then
 sudo cp $SCRIPTS_DIR/patches/rdkservices/properties/HdmiCecSource/device.properties /etc/
 fi
 
-cd $WORKSPACE/
-#Run time dependency 
-mkdir -p $WORKSPACE/install/etc/WPEFramework/plugins
-cp $SCRIPTS_DIR/patches/rdkservices/files/HdmiCecSource.json $WORKSPACE/install/etc/WPEFramework/plugins/
-cp $SCRIPTS_DIR/patches/rdkservices/files/HdmiCecSink.json $WORKSPACE/install/etc/WPEFramework/plugins/
+# cd $WORKSPACE/
+# #Run time dependency 
+# mkdir -p $WORKSPACE/install/etc/WPEFramework/plugins
+# cp $SCRIPTS_DIR/patches/rdkservices/files/HdmiCecSource.json $WORKSPACE/install/etc/WPEFramework/plugins/
+# cp $SCRIPTS_DIR/patches/rdkservices/files/HdmiCecSink.json $WORKSPACE/install/etc/WPEFramework/plugins/
 
 #included CmakeHelperFunctions.cmake instead to during in CMakeLists.txt
 sudo cp ${WORKSPACE}/install/usr/lib/cmake/WPEFramework/common/CmakeHelperFunctions.cmake $WORKSPACE/install/usr/include/WPEFramework/Modules
