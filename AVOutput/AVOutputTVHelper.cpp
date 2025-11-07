@@ -2275,8 +2275,9 @@ namespace Plugin {
     {
         RFC_ParamData_t param = {0};
         WDMP_STATUS status = getRFCParameter((char *)AVOUTPUT_RFC_CALLERID, AVOUTPUT_DALS_RFC_PARAM, &param);
-        LOGINFO("RFC value for DALS - %s", param.value);
+        // LOGINFO("RFC value for DALS - %s", param.value); //using uninitialized variables
         if(WDMP_SUCCESS == status && param.type == WDMP_BOOLEAN && (strncasecmp(param.value,"true",4) == 0)) {
+			LOGINFO("RFC value for DALS - %s", param.value);
             m_isDalsEnabled = true;
             LOGINFO("Value of m_isDalsEnabled is %d", m_isDalsEnabled);
         }
