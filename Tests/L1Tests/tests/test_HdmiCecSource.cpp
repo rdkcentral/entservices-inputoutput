@@ -1502,7 +1502,7 @@ TEST_F(HdmiCecSourceInitializedTest, GetVendorId_Failure)
 }
 
 
-/ getOTPEnabled/setOTPEnabled tests
+// getOTPEnabled/setOTPEnabled tests
 TEST_F(HdmiCecSourceInitializedTest, SetOTPEnabled_True)
 {
     EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
