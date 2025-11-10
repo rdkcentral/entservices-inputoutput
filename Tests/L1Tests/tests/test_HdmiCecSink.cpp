@@ -474,7 +474,7 @@ TEST_F(HdmiCecSinkDsTest, setupARCRouting)
 
 }
 
-TEST_F(HdmiCecSinkDsTest, setupARCRouting)
+TEST_F(HdmiCecSinkDsTest, setupARCRouting_False)
 {
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setupARCRouting"), _T("{\"enabled\":false}"), response));
