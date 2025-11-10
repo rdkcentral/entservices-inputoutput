@@ -2573,3 +2573,30 @@ TEST_F(HdmiCecSinkFrameProcessingTest, InjectRequestCurrentLatencyFrame_Multiple
     EXPECT_NO_THROW(InjectCECFrame(diffLatencyFrame, sizeof(diffLatencyFrame)));
 }
 
+// Test fixture description: ReportPowerStatus from Audio System when power status was explicitly requested
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectReportPowerStatus_AudioSystem_AfterRequest)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // First, simulate requesting audio device power status by calling the API
+    // This sets m_audioDevicePowerStatusRequested flag to true
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Return());
+
+    string requestResponse;
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("requestAudioDevicePowerStatus"), _T("{}"), requestResponse));
+
+    // Small delay to ensure the request is processed
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    // Now inject ReportPowerStatus from Audio System (LA=5) to TV (LA=0)
+    // This should trigger line 428: reportAudioDevicePowerStatusInfo()
+    uint8_t audioSystemPowerStatusFrame[] = { 0x50, 0x90, 0x00 }; // From Audio System LA=5, Power On
+
+    EXPECT_NO_THROW(InjectCECFrame(audioSystemPowerStatusFrame, sizeof(audioSystemPowerStatusFrame)));
+
+    // Test different power status values to ensure the logic works for various states
+    uint8_t audioSystemStandbyFrame[] = { 0x50, 0x90, 0x01 }; // Power Standby
+    EXPECT_NO_THROW(InjectCECFrame(audioSystemStandbyFrame, sizeof(audioSystemStandbyFrame)));
+}
