@@ -2568,6 +2568,27 @@ TEST_F(HdmiCecSinkFrameProcessingTest, InjectGiveFeaturesFrame)
     EXPECT_NO_THROW(InjectCECFrame(giveFeatures2Frame, sizeof(giveFeatures2Frame)));
 }
 
+// Test fixture description: GiveFeatures processor exception handling coverage
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectGiveFeaturesFrame_ExceptionHandling)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Mock sendToAsync to throw exception to trigger exception handling path
+    EXPECT_CALL(*p_connectionImplMock, sendToAsync(::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke(
+            [&](const LogicalAddress& to, const CECFrame& frame) {
+                throw Exception();
+            }));
+
+    // Create Give Features frame: From Playback Device 1 (LA=4) to TV (LA=0)
+    // Header: 0x40, Opcode: 0xA5 (Give Features)
+    // This should trigger the exception in sendToAsync and catch block
+    uint8_t giveFeaturesFrame[] = { 0x40, 0xA5 };
+    
+    EXPECT_NO_THROW(InjectCECFrame(giveFeaturesFrame, sizeof(giveFeaturesFrame)));
+}
+
 // Test fixture description: RequestCurrentLatency processor coverage
 TEST_F(HdmiCecSinkFrameProcessingTest, InjectRequestCurrentLatencyFrame_MultiplePhysicalAddresses)
 {
