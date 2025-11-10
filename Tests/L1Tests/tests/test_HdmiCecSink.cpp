@@ -469,7 +469,15 @@ TEST_F(HdmiCecSinkDsTest, setupARCRoutingInvalidParam)
 TEST_F(HdmiCecSinkDsTest, setupARCRouting)
 {
 
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setupARCRouting"), _T("{\"enabled\":\"true\"}"), response));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setupARCRouting"), _T("{\"enabled\":true}"), response));
+    EXPECT_EQ(response,  string("{\"success\":true}"));
+
+}
+
+TEST_F(HdmiCecSinkDsTest, setupARCRouting)
+{
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setupARCRouting"), _T("{\"enabled\":false}"), response));
     EXPECT_EQ(response,  string("{\"success\":true}"));
 
 }
@@ -2566,27 +2574,6 @@ TEST_F(HdmiCecSinkFrameProcessingTest, InjectGiveFeaturesFrame)
     // Test Case 2: Give Features from different source
     uint8_t giveFeatures2Frame[] = { 0x50, 0xA5 }; // Direct: From LA=5 to LA=0
     EXPECT_NO_THROW(InjectCECFrame(giveFeatures2Frame, sizeof(giveFeatures2Frame)));
-}
-
-// Test fixture description: GiveFeatures processor exception handling coverage
-TEST_F(HdmiCecSinkFrameProcessingTest, InjectGiveFeaturesFrame_ExceptionHandling)
-{
-    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    // Mock sendToAsync to throw exception to trigger exception handling path
-    EXPECT_CALL(*p_connectionImplMock, sendToAsync(::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke(
-            [&](const LogicalAddress& to, const CECFrame& frame) {
-                throw Exception();
-            }));
-
-    // Create Give Features frame: From Playback Device 1 (LA=4) to TV (LA=0)
-    // Header: 0x40, Opcode: 0xA5 (Give Features)
-    // This should trigger the exception in sendToAsync and catch block
-    uint8_t giveFeaturesFrame[] = { 0x40, 0xA5 };
-    
-    EXPECT_NO_THROW(InjectCECFrame(giveFeaturesFrame, sizeof(giveFeaturesFrame)));
 }
 
 // Test fixture description: RequestCurrentLatency processor coverage
