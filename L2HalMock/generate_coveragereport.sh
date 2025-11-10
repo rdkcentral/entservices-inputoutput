@@ -15,6 +15,6 @@ echo -e "${GREEN}======================== Generate coverage Report =============
 cp ${RDK_DIR}/Tests/L2HALMockTests/Test_Framework/.lcovrc_halmock ~/.lcovrc
 
 lcov -c -o coverage.info -d ${RDK_DIR}/build/
-lcov -r coverage.info '/usr/include/*' '*/install/usr/include/*' '*/ccec/*' '*/helpers/*' -o filtered_coverage.info
+lcov -r coverage.info '*/L2HalMock/*' '/usr/include/*' '*/install/usr/include/*' '*/ccec/*' '*/helpers/*' -o filtered_coverage.info
 
 genhtml -o coverage -t "HALMock RDKServices Coverage" filtered_coverage.info
