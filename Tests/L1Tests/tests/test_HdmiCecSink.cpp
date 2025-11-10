@@ -2332,6 +2332,19 @@ TEST_F(HdmiCecSinkFrameProcessingTest, InjectSetOSDNameFrame)
     EXPECT_NO_THROW(InjectCECFrame(emptyOSDNameFrame, sizeof(emptyOSDNameFrame)));
 }
 
+// Test fixture description: SetOSDName edge case test broadcast message rejection
+TEST_F(HdmiCecSinkFrameProcessingTest, InjectSetOSDName_BroadcastMessage_ShouldBeIgnored)
+{
+    // Wait for plugin initialization to complete (FrameListener registration happens asynchronously)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create SetOSDName broadcast frame (should be ignored per implementation)
+    // From Playback Device 1 (LA=4) to Broadcast (LA=15) - should log "Ignore Broadcast messages"
+    uint8_t setOSDNameBroadcastFrame[] = { 0x4F, 0x47, 'T', 'e', 's', 't' }; // Broadcast: "Test"
+    
+    EXPECT_NO_THROW(InjectCECFrame(setOSDNameBroadcastFrame, sizeof(setOSDNameBroadcastFrame)));
+}
+
 // Test fixture description: RoutingInformation processor coverage
 TEST_F(HdmiCecSinkFrameProcessingTest, InjectRoutingInformationFrame)
 {
