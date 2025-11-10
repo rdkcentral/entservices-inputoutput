@@ -1436,7 +1436,7 @@ TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Success)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetVendorId)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_SET_VENDOR_ID)));
                 auto param = static_cast<IARM_Bus_CECMgr_VendorId_Param_t*>(arg);
                 EXPECT_EQ(param->vendorId, 0x0019FB);
                 return IARM_RESULT_SUCCESS;
@@ -1471,7 +1471,7 @@ TEST_F(HdmiCecSourceInitializedTest, GetVendorId_Success)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetVendorId)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_SET_VENDOR_ID)));
                 auto param = static_cast<IARM_Bus_CECMgr_VendorId_Param_t*>(arg);
                 EXPECT_EQ(param->vendorId, 0x0019FB);
                 return IARM_RESULT_SUCCESS;
@@ -1479,7 +1479,7 @@ TEST_F(HdmiCecSourceInitializedTest, GetVendorId_Success)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_GetVendorId)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_GET_VENDOR_ID)));
                 auto param = static_cast<IARM_Bus_CECMgr_VendorId_Param_t*>(arg);
                 param->vendorId = 0x0019FB;
                 return IARM_RESULT_SUCCESS;
@@ -1510,7 +1510,7 @@ TEST_F(HdmiCecSourceInitializedTest, SetOTPEnabled_True)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetOTPEnabled)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_OTP_SET_ENABLED)));
                 auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
                 EXPECT_EQ(param->enabled, true);
                 return IARM_RESULT_SUCCESS;
@@ -1527,7 +1527,7 @@ TEST_F(HdmiCecSourceInitializedTest, SetOTPEnabled_False)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetOTPEnabled)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_OTP_SET_ENABLED)));
                 auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
                 EXPECT_EQ(param->enabled, false);
                 return IARM_RESULT_SUCCESS;
@@ -1554,7 +1554,7 @@ TEST_F(HdmiCecSourceInitializedTest, GetOTPEnabled_True)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetOTPEnabled)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_OTP_SET_ENABLED)));
                 auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
                 EXPECT_EQ(param->enabled, true);
                 return IARM_RESULT_SUCCESS;
@@ -1562,7 +1562,7 @@ TEST_F(HdmiCecSourceInitializedTest, GetOTPEnabled_True)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_GetOTPEnabled)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_OTP_GET_ENABLED)));
                 auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
                 param->enabled = true;
                 return IARM_RESULT_SUCCESS;
@@ -1581,7 +1581,7 @@ TEST_F(HdmiCecSourceInitializedTest, GetOTPEnabled_False)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetOTPEnabled)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_OTP_SET_ENABLED)));
                 auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
                 EXPECT_EQ(param->enabled, false);
                 return IARM_RESULT_SUCCESS;
@@ -1589,7 +1589,7 @@ TEST_F(HdmiCecSourceInitializedTest, GetOTPEnabled_False)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_GetOTPEnabled)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_OTP_GET_ENABLED)));
                 auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
                 param->enabled = false;
                 return IARM_RESULT_SUCCESS;
@@ -1611,10 +1611,6 @@ TEST_F(HdmiCecSourceInitializedTest, GetOTPEnabled_Failure)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getOTPEnabled"), _T("{}"), response));
 }
 
-
-
-
-
 // sendStandbyMessage test
 TEST_F(HdmiCecSourceInitializedTest, SendStandbyMessage_Success)
 {
@@ -1623,7 +1619,7 @@ TEST_F(HdmiCecSourceInitializedTest, SendStandbyMessage_Success)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SendStandbyMessage)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_SEND_STANDBY_MESSAGE)));
                 return IARM_RESULT_SUCCESS;
             });
 
@@ -1648,7 +1644,7 @@ TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_Success)
         .WillOnce(
             [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
                 EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_PerformOTPAction)));
+                EXPECT_EQ(string(methodName), string(_T(HDMICECSOURCE_METHOD_PERFORM_OTP_ACTION)));
                 auto param = static_cast<IARM_Bus_CECMgr_ActiveSource_Param_t*>(arg);
                 EXPECT_EQ(param->result, true);
                 return IARM_RESULT_SUCCESS;
