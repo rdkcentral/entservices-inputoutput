@@ -21,8 +21,6 @@ on:
 jobs:
   L2_HAL_Plugins_using_Mock:
     runs-on: ubuntu-latest
-    #container:
-      #image: partners.artifactory.comcast.com/rdk-docker/mw_hal_emulator_docker_image:latest
     container:
       image: ghcr.io/rdkcentral/docker-rdk-ci:latest
         
@@ -30,24 +28,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
-      #- name: Download .env Config file for authorization of repositories
-      #  run: |
-      #    #echo $SHELL
-      #    curl -v -u ${{ secrets.HAL_EMULATOR_MANIFEST_USERNAME }}:${{ secrets.HAL_EMULATOR_MANIFEST_PASSWORD }} \
-      #    -o .env \
-      #    https://raw.githubusercontent.com/rdk-e/rdkservices/develop/L2HalMock/workflowConfig.env?token=GHSAT0AAAAAACP3CS2MBK2A7SRVN6WJJZ7WZWEMXRA
-      
-      #- name: Source .env Config file for authorization
-        #id: set-env
-      #  shell: sh
-      #  run: |
-      #    set -a
-      #    . $GITHUB_WORKSPACE/.env
-      #    set +a
-      #    echo "USERNAME=$USERNAME" >> $GITHUB_ENV
-      #    echo "PASSWORD=$PASSWORD" >> $GITHUB_ENV
-
 
       - name: Fetch the changed file from given paths
         id: getfile
