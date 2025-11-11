@@ -60,6 +60,7 @@ namespace WPEFramework
     
 	const string HdcpProfile::Initialize(PluginHost::IShell *service)
         {
+            SYSLOG(Logging::Startup, (_T("HdcpProfile::Initialize 111 : PID=%u"), getpid()));
             string message = "";
 
             ASSERT(nullptr != service);
@@ -73,6 +74,7 @@ namespace WPEFramework
             _service->AddRef();
             _service->Register(&_hdcpProfileNotification);
             _hdcpProfile = _service->Root<Exchange::IHdcpProfile>(_connectionId, 5000, _T("HdcpProfileImplementation"));
+            SYSLOG(Logging::Startup, (_T("HdcpProfile::Initialize: 222  PID=%u"), getpid()));
 
             if (nullptr != _hdcpProfile)
             {
