@@ -115,7 +115,7 @@ jobs:
         run: |
           rm -rf rdkservices
           #apt install libjsoncpp-dev
-          git clone -b topic/RDK-57171-New https://github.com/rdkcentral/entservices-inputoutput.git
+          git clone -b topic/RDK-57171-Test https://github.com/rdkcentral/entservices-inputoutput.git
           cd entservices-inputoutput/L2HalMock
           rm -rf build.sh
           #rm -rf peru.yaml
