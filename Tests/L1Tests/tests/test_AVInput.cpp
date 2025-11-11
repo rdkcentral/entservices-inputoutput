@@ -169,6 +169,21 @@ TEST_F(AVInputTest, RegisteredMethods)
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getGameFeatureStatus")));
 }
 
+// Deliberate crash test to demonstrate GDB integration
+TEST_F(AVInputTest, DeliberateCrashForGDBDemo)
+{
+    std::cout << "About to trigger a deliberate crash for GDB demonstration..." << std::endl;
+    std::cout << "This will help test the GDB integration in CI/CD pipeline" << std::endl;
+
+    // Method 1: Null pointer dereference
+    int* null_ptr = nullptr;
+    std::cout << "Attempting null pointer dereference..." << std::endl;
+    *null_ptr = 42;  // This will cause a segmentation fault
+
+    // This code should never be reached
+    FAIL() << "This line should never be executed due to the crash above";
+}
+
 TEST_F(AVInputInit, getInputDevices)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
