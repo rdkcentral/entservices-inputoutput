@@ -54,7 +54,10 @@ namespace WPEFramework
 
        const std::string HdmiCecSink::Initialize(PluginHost::IShell *service)
        {
+
+           LOGINFO("HdmiCecSink Initialize calling search profile \n");
            profileType = searchRdkProfile();
+           LOGINFO("HdmiCecSink Initialize  profile type \n");
 
            if (profileType == STB || profileType == NOT_FOUND)
            {
@@ -69,14 +72,17 @@ namespace WPEFramework
            ASSERT(nullptr == _hdmiCecSink);
            ASSERT(0 == _connectionId);
 
+           LOGINFO("HdmiCecSink Initialize  service register \n");
 
            _service = service;
            _service->AddRef();
            _service->Register(&_notification);
            _hdmiCecSink = _service->Root<Exchange::IHdmiCecSink>(_connectionId, 5000, _T("HdmiCecSinkImplementation"));
+           LOGINFO("HdmiCecSink Initialize  com rpc connected\n");
 
            if(nullptr != _hdmiCecSink)
             {
+           LOGINFO("HdmiCecSink Initialize  calling configure and register \n");
                 _hdmiCecSink->Configure(service);
                 _hdmiCecSink->Register(&_notification);
                 Exchange::JHdmiCecSink::Register(*this, _hdmiCecSink);

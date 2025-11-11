@@ -232,6 +232,7 @@ namespace WPEFramework {
                 , _hdmiCecSink(nullptr)
                 , _connectionId(0)
                 {
+                                    LOGINFO("HdmiCecSink constructor");
 
                 }
                 virtual ~HdmiCecSink()
