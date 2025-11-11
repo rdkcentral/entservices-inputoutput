@@ -370,6 +370,7 @@ if track == 2 or track > 2:
         print(
             "\033[32m------########################################################################################################################---------.\033[0m")
         import TCID_034_HDMICECSINK_active_source
+        import TCID021
     
         print(
             "\033[32m------########################################################################################################################---------.\033[0m")
@@ -598,6 +599,7 @@ if "HdmiCecSink" in argument or "HdmiCecSink" in result:
         print("\033[32m------########################################################################################################################---------.\033[0m")
         import TCID_034_HDMICECSINK_active_source
         print("\033[32m------########################################################################################################################---------.\033[0m")
+        import TCID021
     else:
         print("Executed HdmiCecSink TestCases")
 
@@ -654,4 +656,5 @@ print("***** Test Execution Ends *****")
 
 # Generate a html report file with all testcase execution details
 ReportGenerator.generate_html_report(build_name, now)
+
 
