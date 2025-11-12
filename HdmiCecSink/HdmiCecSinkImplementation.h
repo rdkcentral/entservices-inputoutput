@@ -20,6 +20,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <unordered_map>
 #include "ccec/FrameListener.hpp"
 #include "ccec/Connection.hpp"
 
@@ -526,6 +527,9 @@ private:
             NUMBER_8      = 0x28,
             NUMBER_9      = 0x29
               };
+
+        static const std::unordered_map<int, int> keyMap;
+        
         public:
             HdmiCecSinkImplementation();
             virtual ~HdmiCecSinkImplementation();
