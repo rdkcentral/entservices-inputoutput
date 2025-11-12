@@ -1916,7 +1916,7 @@ namespace WPEFramework
             }
             std::list<Exchange::IHdmiCecSink::INotification*>::const_iterator index(_hdmiCecSinkNotifications.begin());
             while (index != _hdmiCecSinkNotifications.end()) {
-                (*index)->OnInActiveSource(logicalAddress, _instance->deviceList[logicalAddress].m_physicalAddr.toString());
+                (*index)->OnImageViewOnMsg(logicalAddress);
                 index++;
             }
         }
