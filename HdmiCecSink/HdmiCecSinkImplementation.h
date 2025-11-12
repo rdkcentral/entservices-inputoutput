@@ -569,6 +569,7 @@ private:
             void Process_ReportAudioStatus_msg(const ReportAudioStatus msg);
             void sendKeyPressEvent(const int logicalAddress, int keyCode);
             void sendKeyReleaseEvent(const int logicalAddress);
+            int  getUIKeyCode(int keyCode);
         void sendUserControlPressed(const int logicalAddress, int keyCode);
             void sendUserControlReleased(const int logicalAddress);
             void sendGiveAudioStatusMsg();
