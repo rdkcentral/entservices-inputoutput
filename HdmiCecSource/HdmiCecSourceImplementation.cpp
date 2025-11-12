@@ -939,15 +939,19 @@ namespace WPEFramework
         {
            LOGINFO("Entered SetEnabled ");
 
+		   LOGINFO("Parameter - enabled: %s", enabled ? "true" : "false");
+
            Core:: hresult ret = setEnabledInternal(enabled, true);
 
            if(ret == Core::ERROR_NONE)
            {
                success.success = true;
+			   LOGINFO("SetEnabled executed successfully");
            }
            else
            {
                success.success = false;
+			   LOGERR("SetEnabled failed with error: %d", ret);
            }
            return ret;
         }
