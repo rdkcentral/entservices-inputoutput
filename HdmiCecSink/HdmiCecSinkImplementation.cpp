@@ -104,6 +104,8 @@ static AllDeviceTypes allDevicetype = ALL_DEVICE_TYPES;
 static std::vector<RcProfile> rcProfile = {RC_PROFILE_TV};
 static std::vector<DeviceFeatures> deviceFeatures = {DEVICE_FEATURES_TV};
 
+#define KEY_UNSUPPORTED 0xFF
+
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 3
 #define API_VERSION_NUMBER_PATCH 7
@@ -1143,161 +1145,40 @@ namespace WPEFramework
          }
          void HdmiCecSinkImplementation::sendKeyPressEvent(const int logicalAddress, int keyCode)
          {
-                    if(!(_instance->smConnection))
-                        return;
-            LOGINFO(" sendKeyPressEvent logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
-                    switch(keyCode)
-                   {
-                       case VOLUME_UP:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_VOLUME_UP)),100);
-               break;
-               case VOLUME_DOWN:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_VOLUME_DOWN)), 100);
-                          break;
-               case MUTE:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_MUTE)), 100);
-               break;
-               case UP:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_UP)), 100);
-               break;
-               case DOWN:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_DOWN)), 100);
-               break;
-               case LEFT:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_LEFT)), 100);
-               break;
-               case RIGHT:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_RIGHT)), 100);
-               break;
-               case SELECT:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_SELECT)), 100);
-               break;
-               case HOME:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_HOME)), 100);
-               break;
-               case BACK:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_BACK)), 100);
-               break;
-               case NUMBER_0:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_0)), 100);
-               break;
-               case NUMBER_1:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_1)), 100);
-               break;
-               case NUMBER_2:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_2)), 100);
-               break;
-               case NUMBER_3:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_3)), 100);
-               break;
-               case NUMBER_4:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_4)), 100);
-               break;
-               case NUMBER_5:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_5)), 100);
-               break;
-               case NUMBER_6:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_6)), 100);
-               break;
-               case NUMBER_7:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_7)), 100);
-               break;
-               case NUMBER_8:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_8)), 100);
-               break;
-               case NUMBER_9:
-               _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_9)), 100);
-               break;
+            if(!(_instance->smConnection))
+                return;
 
-                   }
+            LOGINFO(" sendKeyPressEvent logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
+            _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(static_cast<UICommand>(keyCode))), 100);
          }
 
          void HdmiCecSinkImplementation::sendUserControlPressed(const int logicalAddress, int keyCode)
-                 {
-                    if(!(_instance->smConnection))
-                        return;
-                   LOGINFO(" sendUserControlPressed logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
-                    switch(keyCode)
-                   {
-                       case VOLUME_UP:
-                          _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_VOLUME_UP)),100);
-                          break;
-                      case VOLUME_DOWN:
-                          _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_VOLUME_DOWN)), 100);
-                          break;
-                      case MUTE:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_MUTE)), 100);
-                           break;
-                       case UP:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_UP)), 100);
-                           break;
-                       case DOWN:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_DOWN)), 100);
-                           break;
-                       case LEFT:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_LEFT)), 100);
-                           break;
-                       case RIGHT:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_RIGHT)), 100);
-                           break;
-                       case SELECT:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_SELECT)), 100);
-                           break;
-                       case HOME:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_HOME)), 100);
-                           break;
-                       case BACK:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_BACK)), 100);
-                           break;
-                       case NUMBER_0:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_0)), 100);
-                           break;
-                       case NUMBER_1:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_1)), 100);
-                           break;
-                       case NUMBER_2:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_2)), 100);
-                           break;
-                       case NUMBER_3:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_3)), 100);
-                           break;
-                       case NUMBER_4:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_4)), 100);
-                           break;
-                       case NUMBER_5:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_5)), 100);
-                           break;
-                       case NUMBER_6:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_6)), 100);
-                           break;
-                       case NUMBER_7:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_7)), 100);
-                           break;
-                       case NUMBER_8:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_8)), 100);
-                           break;
-                       case NUMBER_9:
-                           _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_9)), 100);
-                           break;
+        {
+            if(!(_instance->smConnection))
+                return;
 
-                  }
-                }
+            LOGINFO(" sendUserControlPressed logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
+            _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(static_cast<UICommand>(keyCode))), 100);
+        }
 
          void HdmiCecSinkImplementation::sendKeyReleaseEvent(const int logicalAddress)
          {
-                    if(!(_instance->smConnection))
-                        return;
-         _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlReleased()), 100);
+            if(!(_instance->smConnection))
+                return;
+            
+            LOGINFO(" sendKeyPressEvent logicalAddress 0x%x \n",logicalAddress);
+            _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlReleased()), 100);
 
          }
 
          void HdmiCecSinkImplementation::sendUserControlReleased(const int logicalAddress)
-                 {
-                    if(!(_instance->smConnection))
-                        return;
-                   LOGINFO(" User Control Released \n");
-                 _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlReleased()), 100);
-                 }
+        {
+            if(!(_instance->smConnection))
+                return;
+
+            LOGINFO(" User Control Released \n");
+            _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlReleased()), 100);
+        }
 
          void  HdmiCecSinkImplementation::sendDeviceUpdateInfo(const int logicalAddress)
          {
@@ -1916,7 +1797,7 @@ namespace WPEFramework
             }
             std::list<Exchange::IHdmiCecSink::INotification*>::const_iterator index(_hdmiCecSinkNotifications.begin());
             while (index != _hdmiCecSinkNotifications.end()) {
-                (*index)->OnInActiveSource(logicalAddress, _instance->deviceList[logicalAddress].m_physicalAddr.toString());
+                (*index)->OnImageViewOnMsg(logicalAddress);
                 index++;
             }
         }
@@ -3370,6 +3251,35 @@ namespace WPEFramework
             }
         }
 
+        int HdmiCecSinkImplementation::getUIKeyCode(int keyCode)
+        {
+            switch (keyCode)
+            {
+                case VOLUME_UP:   return UICommand::UI_COMMAND_VOLUME_UP;
+                case VOLUME_DOWN: return UICommand::UI_COMMAND_VOLUME_DOWN;
+                case MUTE:        return UICommand::UI_COMMAND_MUTE;
+                case UP:          return UICommand::UI_COMMAND_UP;
+                case DOWN:        return UICommand::UI_COMMAND_DOWN;
+                case LEFT:        return UICommand::UI_COMMAND_LEFT;
+                case RIGHT:       return UICommand::UI_COMMAND_RIGHT;
+                case SELECT:      return UICommand::UI_COMMAND_SELECT;
+                case HOME:        return UICommand::UI_COMMAND_HOME;
+                case BACK:        return UICommand::UI_COMMAND_BACK;
+                case NUMBER_0:    return UICommand::UI_COMMAND_NUM_0;
+                case NUMBER_1:    return UICommand::UI_COMMAND_NUM_1;
+                case NUMBER_2:    return UICommand::UI_COMMAND_NUM_2;
+                case NUMBER_3:    return UICommand::UI_COMMAND_NUM_3;
+                case NUMBER_4:    return UICommand::UI_COMMAND_NUM_4;
+                case NUMBER_5:    return UICommand::UI_COMMAND_NUM_5;
+                case NUMBER_6:    return UICommand::UI_COMMAND_NUM_6;
+                case NUMBER_7:    return UICommand::UI_COMMAND_NUM_7;
+                case NUMBER_8:    return UICommand::UI_COMMAND_NUM_8;
+                case NUMBER_9:    return UICommand::UI_COMMAND_NUM_9;
+                default:
+                    return KEY_UNSUPPORTED; // Unsupported key
+            }
+        }
+     
         void HdmiCecSinkImplementation::threadSendKeyEvent()
         {
             if(!HdmiCecSinkImplementation::_instance)
@@ -3381,6 +3291,7 @@ namespace WPEFramework
 
             while(!_instance->m_sendKeyEventThreadExit)
             {
+                int uikey = KEY_UNSUPPORTED;
                 keyInfo.logicalAddr = -1;
                 keyInfo.keyCode = -1;
                 {
@@ -3401,24 +3312,33 @@ namespace WPEFramework
                     continue;
                 }
 
-                    keyInfo = _instance->m_SendKeyQueue.front();
-                    _instance->m_SendKeyQueue.pop();
+                keyInfo = _instance->m_SendKeyQueue.front();
+                _instance->m_SendKeyQueue.pop();
 
-                if(keyInfo.UserControl == "sendUserControlPressed" )
+                uikey = _instance->getUIKeyCode(keyInfo.keyCode);
+
+                if (uikey != KEY_UNSUPPORTED)
                 {
-                    LOGINFO("sendUserControlPressed : logical addr:0x%x keyCode: 0x%x  queue size :%zu \n",keyInfo.logicalAddr,keyInfo.keyCode,_instance->m_SendKeyQueue.size());
-                    _instance->sendUserControlPressed(keyInfo.logicalAddr,keyInfo.keyCode);
-                }
-                else if(keyInfo.UserControl == "sendUserControlReleased")
-                {
-                    LOGINFO("sendUserControlReleased : logical addr:0x%x  queue size :%zu \n",keyInfo.logicalAddr,_instance->m_SendKeyQueue.size());
-                    _instance->sendUserControlReleased(keyInfo.logicalAddr);
+                    if(keyInfo.UserControl == "sendUserControlPressed" )
+                    {
+                        LOGINFO("sendUserControlPressed : logical addr:0x%x keyCode: 0x%x  queue size :%zu \n",keyInfo.logicalAddr,keyInfo.keyCode,_instance->m_SendKeyQueue.size());
+                        _instance->sendUserControlPressed(keyInfo.logicalAddr,uikey);                        
+                    }
+                    else if(keyInfo.UserControl == "sendUserControlReleased")
+                    {
+                        LOGINFO("sendUserControlReleased : logical addr:0x%x  queue size :%zu \n",keyInfo.logicalAddr,_instance->m_SendKeyQueue.size());
+                        _instance->sendUserControlReleased(keyInfo.logicalAddr);
+                    }
+                    else
+                    {
+                        LOGINFO("sendKeyPressEvent : logical addr:0x%x keyCode: 0x%x  queue size :%zu \n",keyInfo.logicalAddr,keyInfo.keyCode,_instance->m_SendKeyQueue.size());
+                        _instance->sendKeyPressEvent(keyInfo.logicalAddr,uikey);
+                        _instance->sendKeyReleaseEvent(keyInfo.logicalAddr);
+                    }
                 }
                 else
                 {
-                    LOGINFO("sendKeyPressEvent : logical addr:0x%x keyCode: 0x%x  queue size :%zu \n",keyInfo.logicalAddr,keyInfo.keyCode,_instance->m_SendKeyQueue.size());
-                    _instance->sendKeyPressEvent(keyInfo.logicalAddr,keyInfo.keyCode);
-                    _instance->sendKeyReleaseEvent(keyInfo.logicalAddr);
+                    LOGINFO("Unsupported Key code : 0x%x", keyInfo.keyCode);
                 }
 
                 if((_instance->m_SendKeyQueue.size()<=1 || (_instance->m_SendKeyQueue.size() % 2 == 0)) && ((keyInfo.keyCode == VOLUME_UP) || (keyInfo.keyCode == VOLUME_DOWN) || (keyInfo.keyCode == MUTE)) )
