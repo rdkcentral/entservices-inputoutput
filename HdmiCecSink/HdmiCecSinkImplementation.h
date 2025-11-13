@@ -528,7 +528,7 @@ private:
             NUMBER_9      = 0x29
               };
 
-        static const std::unordered_map<int, int> keyMap;
+        static std::unordered_map<int, int> keyMap;
         
         public:
             HdmiCecSinkImplementation();

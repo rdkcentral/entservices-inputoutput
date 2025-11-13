@@ -643,7 +643,7 @@ namespace WPEFramework
         {
             LOGWARN("Initializing HdmiCecSinkImplementation");
             
-            const std::unordered_map<int, int> keyMap = {
+            std::unordered_map<int, int> keyMap = {
             {VOLUME_UP,   UICommand::UI_COMMAND_VOLUME_UP},
             {VOLUME_DOWN, UICommand::UI_COMMAND_VOLUME_DOWN},
             {MUTE,        UICommand::UI_COMMAND_MUTE},
