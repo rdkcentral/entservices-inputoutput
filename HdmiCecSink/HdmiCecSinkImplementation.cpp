@@ -642,30 +642,6 @@ namespace WPEFramework
         , _registeredEventHandlers(false)
         {
             LOGWARN("Initializing HdmiCecSinkImplementation");
-            
-            std::unordered_map<int, int> keyMap = {
-            {VOLUME_UP,   UICommand::UI_COMMAND_VOLUME_UP},
-            {VOLUME_DOWN, UICommand::UI_COMMAND_VOLUME_DOWN},
-            {MUTE,        UICommand::UI_COMMAND_MUTE},
-            {UP,          UICommand::UI_COMMAND_UP},
-            {DOWN,        UICommand::UI_COMMAND_DOWN},
-            {LEFT,        UICommand::UI_COMMAND_LEFT},
-            {RIGHT,       UICommand::UI_COMMAND_RIGHT},
-            {SELECT,      UICommand::UI_COMMAND_SELECT},
-            {HOME,        UICommand::UI_COMMAND_HOME},
-            {BACK,        UICommand::UI_COMMAND_BACK},
-            {NUMBER_0,    UICommand::UI_COMMAND_NUM_0},
-            {NUMBER_1,    UICommand::UI_COMMAND_NUM_1},
-            {NUMBER_2,    UICommand::UI_COMMAND_NUM_2},
-            {NUMBER_3,    UICommand::UI_COMMAND_NUM_3},
-            {NUMBER_4,    UICommand::UI_COMMAND_NUM_4},
-            {NUMBER_5,    UICommand::UI_COMMAND_NUM_5},
-            {NUMBER_6,    UICommand::UI_COMMAND_NUM_6},
-            {NUMBER_7,    UICommand::UI_COMMAND_NUM_7},
-            {NUMBER_8,    UICommand::UI_COMMAND_NUM_8},
-            {NUMBER_9,    UICommand::UI_COMMAND_NUM_9},
-        };
-
         }
 
        HdmiCecSinkImplementation::~HdmiCecSinkImplementation()
@@ -3277,8 +3253,31 @@ namespace WPEFramework
 
         int HdmiCecSinkImplementation::getUIKeyCode(int keyCode)
         {
-            auto it = keyMap.find(keyCode);
-            return (it != keyMap.end()) ? it->second : KEY_UNSUPPORTED;
+            switch (keyCode)
+            {
+                case VOLUME_UP:   return UICommand::UI_COMMAND_VOLUME_UP;
+                case VOLUME_DOWN: return UICommand::UI_COMMAND_VOLUME_DOWN;
+                case MUTE:        return UICommand::UI_COMMAND_MUTE;
+                case UP:          return UICommand::UI_COMMAND_UP;
+                case DOWN:        return UICommand::UI_COMMAND_DOWN;
+                case LEFT:        return UICommand::UI_COMMAND_LEFT;
+                case RIGHT:       return UICommand::UI_COMMAND_RIGHT;
+                case SELECT:      return UICommand::UI_COMMAND_SELECT;
+                case HOME:        return UICommand::UI_COMMAND_HOME;
+                case BACK:        return UICommand::UI_COMMAND_BACK;
+                case NUMBER_0:    return UICommand::UI_COMMAND_NUM_0;
+                case NUMBER_1:    return UICommand::UI_COMMAND_NUM_1;
+                case NUMBER_2:    return UICommand::UI_COMMAND_NUM_2;
+                case NUMBER_3:    return UICommand::UI_COMMAND_NUM_3;
+                case NUMBER_4:    return UICommand::UI_COMMAND_NUM_4;
+                case NUMBER_5:    return UICommand::UI_COMMAND_NUM_5;
+                case NUMBER_6:    return UICommand::UI_COMMAND_NUM_6;
+                case NUMBER_7:    return UICommand::UI_COMMAND_NUM_7;
+                case NUMBER_8:    return UICommand::UI_COMMAND_NUM_8;
+                case NUMBER_9:    return UICommand::UI_COMMAND_NUM_9;
+                default:
+                    return KEY_UNSUPPORTED; // Unsupported key
+            }
         }
      
         void HdmiCecSinkImplementation::threadSendKeyEvent()
