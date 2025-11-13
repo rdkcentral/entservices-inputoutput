@@ -29,9 +29,9 @@
  #include <core/core.h>
  #include <mutex>
  #include <vector>
- 
- #include "libIBus.h"
- 
+
+#include "host.hpp"
+
  #include "PowerManagerInterface.h"
  
  namespace WPEFramework
@@ -39,14 +39,17 @@
      namespace Plugin
      {
          
-         class HdcpProfileImplementation : public Exchange::IHdcpProfile, public Exchange::IConfiguration
+         class HdcpProfileImplementation : public Exchange::IHdcpProfile, public Exchange::IConfiguration, public device::Host::IVideoOutputPortEvents, public device::Host::IDisplayDeviceEvents
          // , public Exchange::IConfiguration
          {
          public:
              // We do not allow this plugin to be copied !!
              HdcpProfileImplementation();
              ~HdcpProfileImplementation() override;
- 
+
+             virtual void OnDisplayHDMIHotPlug(dsDisplayEvent_t displayEvent) override;
+             virtual void OnHDCPStatusChange(dsHdcpStatus_t hdcpStatus) override;
+
              static HdcpProfileImplementation *instance(HdcpProfileImplementation *HdcpProfileImpl = nullptr);
  
              // We do not allow this plugin to be copied !!
@@ -110,6 +113,13 @@
              
  
          public:
+            template <typename T>
+            T* baseInterface()
+            {
+                static_assert(std::is_base_of<T, HdcpProfileImplementation>(), "base type mismatch");
+                return static_cast<T*>(this);
+            }
+
              Core::hresult Register(Exchange::IHdcpProfile::INotification *notification) override;
              Core::hresult Unregister(Exchange::IHdcpProfile::INotification *notification) override;
  
@@ -117,11 +127,8 @@
              Core::hresult GetSettopHDCPSupport(string& supportedHDCPVersion,bool& isHDCPSupported,bool& success) override;
              bool GetHDCPStatusInternal(HDCPStatus& hdcpstatus);
              void InitializePowerManager(PluginHost::IShell *service);
-             void InitializeIARM();
-             void DeinitializeIARM();
-             static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-             void onHdmiOutputHotPlug(int connectStatus);
-             void onHdmiOutputHDCPStatusEvent(int);
+             void onHdmiOutputHotPlug(dsDisplayEvent_t connectStatus);
+             void onHdmiOutputHDCPStatusEvent(dsHdcpStatus_t);
              void logHdcpStatus (const char *trigger, HDCPStatus& status);   
              void onHdcpProfileDisplayConnectionChanged();  
              static PowerManagerInterfaceRef _powerManagerPlugin;      

@@ -37,7 +37,7 @@ string(TOLOWER ${NAMESPACE} STORAGE_DIRECTORY)
 include(CmakeHelperFunctions)
 
 if(RDK_SERVICE_L2_TEST)
-#    add_subdirectory(Tests/L2Tests)
+   add_subdirectory(Tests/L2Tests)
 endif()
 
 if(RDK_SERVICES_L1_TEST)
@@ -62,10 +62,6 @@ endif()
 
 if(PLUGIN_HDCPPROFILE)
     add_subdirectory(HdcpProfile)
-endif()
-
-if(PLUGIN_HDMIINPUT)
-    add_subdirectory(HdmiInput)
 endif()
 
 

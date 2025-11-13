@@ -342,29 +342,9 @@ protected:
             .WillByDefault(::testing::Return());
         ON_CALL(*p_connectionImplMock, addFrameListener(::testing::_))
             .WillByDefault(::testing::Return());
-        ON_CALL(*p_iarmBusImplMock, IARM_Bus_RegisterEventHandler(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke(
-                [&](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                   if ((string(IARM_BUS_CECMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_CECMGR_EVENT_DAEMON_INITIALIZED)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        cecMgrEventHandler = handler;
-                    }
-                        if ((string(IARM_BUS_CECMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_CECMGR_EVENT_STATUS_UPDATED)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        cecMgrEventHandler = handler;
-                    }
-                if ((string(IARM_BUS_DSMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        dsHdmiEventHandler = handler;
-                    }
-                if ((string(IARM_BUS_PWRMGR_NAME) == string(ownerName)) && (eventId == IARM_BUS_PWRMGR_EVENT_MODECHANGED)) {
-                        EXPECT_TRUE(handler != nullptr);
-                        pwrMgrEventHandler = handler;
-                    }
-
-                    return IARM_RESULT_SUCCESS;
-                }));
-        
+        EXPECT_CALL(*p_managerImplMock, Initialize())
+            .Times(::testing::AnyNumber())
+            .WillRepeatedly(::testing::Return());
     }
     virtual ~HdmiCecSourceTest() override
     {
@@ -1408,18 +1388,13 @@ TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler)
         iCounter ++;
     }
 
-    ASSERT_TRUE(dsHdmiEventHandler != nullptr);
     EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
     .Times(1)
         .WillOnce(::testing::Return("TEST"));
 
-
-    IARM_Bus_DSMgr_EventData_t eventData;
-    eventData.data.hdmi_hpd.event = 0;
-
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
-    dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, &eventData , 0);
+    Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED);
 
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 }
