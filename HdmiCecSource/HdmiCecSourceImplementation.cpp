@@ -937,7 +937,7 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::SetEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
         {
-           LOGINFO("Entered SetEnabled ");
+           LOGINFO("Entered SetEnabled preeja %d", enabled);
 
            Core:: hresult ret = setEnabledInternal(enabled, true);
 
