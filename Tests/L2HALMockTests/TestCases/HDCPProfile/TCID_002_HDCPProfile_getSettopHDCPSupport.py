@@ -20,64 +20,38 @@
 # *
 #* ******************************************************************************
 
-# Testcase ID : TCID028
-# Testcase Description : Invalid curl command - getVendorId
+# Testcase ID : TCID002_DS_HDCPProfile_getSettopHDCP
+# Testcase Description :Returns which version of HDCP is supported by the STB.
+#
 
-import json
-import requests
-import time
-import Config
+
 from Utilities import Utils, ReportGenerator
-from HdmiCecSource import HdmiCecSourceApis
+from HDCPProfile import HDCPProfileApis
 
+print("TC Description - Returns which version of HDCP is supported by the STB..")
+print("---------------------------------------------------------------------------------------------------------------------------")
 # store the expected output response
-expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"vendorid":"019fb","success":true}}'
-
-print("Invalid curl command - getVendorId")
-Utils.initiliaze_flask_for_HdmiCecSource()
-time.sleep(3)
-# send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.set_vendor_id)
-if curl_response:
-     Utils.warning_log("set vendor id  curl command sent from the test runner")
-else:
-     Utils.error_log("set vendor id  curl command failed")
+expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"supportedHDCPVersion":"1.4","isHDCPSupported":true,"success":true}}'
 
 # send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.get_vendor_id)
+curl_response = Utils.send_curl_command(HDCPProfileApis.get_settophdcpsupport)
 if curl_response:
-     Utils.warning_log("get vendor id  curl command sent from the test runner")
+     Utils.info_log("curl command to get hdcp support version status is sent from the test runner")
 else:
-     Utils.error_log("get vendor id  curl command failed")
-
-# send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.set_vendor_id_invalid_2)
-if curl_response:
-     Utils.warning_log("set vendor id invalid curl command sent from the test runner")
-else:
-     Utils.error_log("set vendor id invalid curl command failed")
-
-# send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.get_vendor_id)
-if curl_response:
-     Utils.warning_log("get vendor id curl command sent from the test runner")
-else:
-     Utils.error_log("get vendor id curl command failed")
-
-post_condition = Utils.send_curl_command(HdmiCecSourceApis.set_vendor_id)
+     Utils.error_log("curl command invoke failed for {}" .format(HDCPProfileApis.get_settophdcpsupport))
 
 print("---------------------------------------------------------------------------------------------------------------------------")
-
 # compare both expected and received output responses
 if str(curl_response) == str(expected_output_response):
     status = 'Pass'
-    message = 'Output response is matching with expected one.'
+    message = 'Output response is matching with expected one. The HDCP Support version ' \
+              'is obtained in output response'
 else:
     status = 'Fail'
-    message = 'Output response is different from expected one.'
+    message = 'Output response is different from expected one'
 
 # generate logs in terminal
-tc_id = 'TCID028_getVendorId - Invalid curl command'
+tc_id = 'TCID002_DS_HDCPProfile_getSettopHdcpSupport'
 print("Testcase ID : " + tc_id)
 print("Testcase Output Response : " + curl_response)
 print("Testcase Status : " + status)
@@ -88,6 +62,5 @@ if status == 'Pass':
     ReportGenerator.passed_tc_list.append(tc_id)
 else:
     ReportGenerator.failed_tc_list.append(tc_id)
-Utils.initiliaze_flask_for_HdmiCecSource()
 # push the testcase execution details to report file
 ReportGenerator.append_test_results_to_csv(tc_id, curl_response, status, message)

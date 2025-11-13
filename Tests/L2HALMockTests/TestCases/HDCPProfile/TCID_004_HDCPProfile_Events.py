@@ -20,51 +20,43 @@
 # *
 #* ******************************************************************************
 
-# Testcase ID : TCID028
-# Testcase Description : Invalid curl command - getVendorId
+# Testcase ID : TCID004
+# Testcase Description : To verify the emulation of sending of events
 
-import json
-import requests
-import time
+import subprocess
 import Config
 from Utilities import Utils, ReportGenerator
 from HdmiCecSource import HdmiCecSourceApis
+from HDCPProfile import HDCPProfileApis
+import time
+
 
 # store the expected output response
-expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"vendorid":"019fb","success":true}}'
+expected_output_response = '{"jsonrpc":"2.0","id":3,"result":null}'
 
-print("Invalid curl command - getVendorId")
-Utils.initiliaze_flask_for_HdmiCecSource()
+print("TC Description - To verify the emulation of sending of events.")
 time.sleep(3)
 # send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.set_vendor_id)
+curl_response = Utils.send_curl_command(HDCPProfileApis.activate_command)
+time.sleep(1)
 if curl_response:
-     Utils.warning_log("set vendor id  curl command sent from the test runner")
+     Utils.warning_log("activate curl command sent from the test runner")
 else:
-     Utils.error_log("set vendor id  curl command failed")
+     Utils.error_log("activate curl command failed")
 
-# send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.get_vendor_id)
-if curl_response:
-     Utils.warning_log("get vendor id  curl command sent from the test runner")
-else:
-     Utils.error_log("get vendor id  curl command failed")
+#Define the script to be executed
+execute_script = '../../../../../sendEvents.sh'
 
-# send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.set_vendor_id_invalid_2)
-if curl_response:
-     Utils.warning_log("set vendor id invalid curl command sent from the test runner")
-else:
-     Utils.error_log("set vendor id invalid curl command failed")
 
-# send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.get_vendor_id)
-if curl_response:
-     Utils.warning_log("get vendor id curl command sent from the test runner")
-else:
-     Utils.error_log("get vendor id curl command failed")
-
-post_condition = Utils.send_curl_command(HdmiCecSourceApis.set_vendor_id)
+#Execute the script
+try:
+    result = subprocess.run(['/bin/bash', execute_script], check=True, capture_output=True, text=True)
+    print("sendEvents.sh executed successfully.")
+    print("Output:\n", result.stdout)
+    
+except subprocess.CalledProcessError as e:
+    print("Error occured while executing the shell script.")
+    print("Error message:\n", e.stderr)
 
 print("---------------------------------------------------------------------------------------------------------------------------")
 
@@ -77,7 +69,7 @@ else:
     message = 'Output response is different from expected one.'
 
 # generate logs in terminal
-tc_id = 'TCID028_getVendorId - Invalid curl command'
+tc_id = 'TCID004_sending events'
 print("Testcase ID : " + tc_id)
 print("Testcase Output Response : " + curl_response)
 print("Testcase Status : " + status)
@@ -88,6 +80,6 @@ if status == 'Pass':
     ReportGenerator.passed_tc_list.append(tc_id)
 else:
     ReportGenerator.failed_tc_list.append(tc_id)
-Utils.initiliaze_flask_for_HdmiCecSource()
+
 # push the testcase execution details to report file
 ReportGenerator.append_test_results_to_csv(tc_id, curl_response, status, message)
