@@ -37,6 +37,14 @@ All notable changes to this RDK Service will be documented in this file.
 ### Fixed
 - Fixed dimmingMode failures
 
+## [1.1.2] - 2025-09-03
+### Fixed
+- Sync low latency for AVOutput initialization
+
+## [1.1.1] - 2025-07-08
+### Fixed
+- ODM API removal changes phase 2
+
 ## [1.1.0] - 2025-03-14
 ### Added
 - Add additional features on AVOutput
