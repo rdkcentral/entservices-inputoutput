@@ -661,6 +661,14 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSuccess &success)
 		{
+            //Input params validation
+            if(logicalAddress > LogicalAddress::UNREGISTERED)
+            {
+                LOGERR("Invalid Logical Address 0x%x",logicalAddress);
+                success.success = false;
+                return Core::ERROR_GENERAL;
+            }
+            
 			SendKeyInfo keyInfo;
 			try {
                keyInfo.logicalAddr = logicalAddress;
