@@ -21,6 +21,7 @@ All notable changes to this RDK Service will be documented in this file.
 ### Added
 - Advance PQ Params
 
+<<<<<<< HEAD
 ## [1.1.4] - 2025-09-08
 ### Fixed
 - Sync low latency for AVOutput initialization
