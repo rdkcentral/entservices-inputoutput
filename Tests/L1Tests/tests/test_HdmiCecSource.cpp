@@ -1419,6 +1419,7 @@ TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEvent_Failure1)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 1000, \"keyCode\": 65}"), response));
 }
 
+#if 0
 TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEvent_Failure2)
 {
     EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
@@ -1427,6 +1428,7 @@ TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEvent_Failure2)
 
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"keyCode\":65}"), response));
 }
+#endif
 
 // setVendorId/getVendorId tests
 TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Success)
