@@ -431,7 +431,7 @@ namespace Plugin {
 
     void AVOutputTV::Initialize()
     {
-        LOGINFO("Entry\n");
+        LOGINFO("ASHISH Entry\n");
        
         tvError_t ret = tvERROR_NONE;
 
@@ -502,7 +502,7 @@ namespace Plugin {
         // setting those picture mode
         initializePictureMode();
 
-        LOGINFO("Exit\n" );
+        LOGINFO("ASHISH Exit\n" );
     }
 
     void AVOutputTV::Deinitialize()
