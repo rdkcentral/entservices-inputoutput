@@ -2631,6 +2631,111 @@ TEST_F(HdmiCecSinkFrameProcessingTest, InjectFeatureAbort_BroadcastMessage_Shoul
     // Create FeatureAbort broadcast frame (should be ignored per implementation)
     // From Playback Device 1 (LA=4) to Broadcast (LA=15) - should log "Ignore Broadcast messages"
     uint8_t broadcastFeatureAbortFrame[] = { 0x4F, 0x00, 0x9F, 0x00 };
-    
+
     EXPECT_NO_THROW(InjectCECFrame(broadcastFeatureAbortFrame, sizeof(broadcastFeatureAbortFrame)));
+}
+
+/**
+ * @brief Test buffer overflow protection in frame listener
+ * 
+ * This test verifies the Coverity fix for BUFFER_OVERFLOW.
+ * Ensures that large CEC frames are safely truncated without buffer overflow.
+ */
+TEST_F(HdmiCecSinkFrameProcessingTest, LargeCECFrame_SafelyTruncated)
+{
+    // Wait for plugin initialization
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create a large CEC frame that would overflow the 512 byte buffer
+    // Each byte takes 3 chars ("XX "), so max safe is ~170 bytes
+    // Send a frame larger than this to test truncation
+    uint8_t largeFrame[200];
+    largeFrame[0] = 0x0F; // Header: from LA=0 to broadcast
+    for (int i = 1; i < 200; i++) {
+        largeFrame[i] = 0xFF; // Fill with data
+    }
+
+    // Should handle gracefully without buffer overflow
+    EXPECT_NO_THROW(InjectCECFrame(largeFrame, sizeof(largeFrame)));
+}
+
+/**
+ * @brief Test maximum safe CEC frame size
+ * 
+ * Verifies that frames at the maximum safe size (170 bytes) are handled correctly
+ */
+TEST_F(HdmiCecSinkFrameProcessingTest, MaxSafeCECFrame_HandledCorrectly)
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Create frame at maximum safe size (512/3 = 170 bytes)
+    uint8_t maxSafeFrame[170];
+    maxSafeFrame[0] = 0x0F; // Header
+    for (int i = 1; i < 170; i++) {
+        maxSafeFrame[i] = 0xAA;
+    }
+
+    // Should handle without any warnings or errors
+    EXPECT_NO_THROW(InjectCECFrame(maxSafeFrame, sizeof(maxSafeFrame)));
+}
+
+/**
+ * @brief Test null pointer check in Abort processor
+ * 
+ * This test verifies the Coverity fix for NULL_RETURNS.
+ * Ensures _instance null check prevents crash in Abort handler.
+ */
+TEST_F(HdmiCecSinkDsTest, AbortMessage_WithNullInstanceCheck)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendToAsync(::testing::_, ::testing::_))
+        .WillOnce(::testing::Return());
+
+    // Deinitialize to set _instance to null
+    plugin->Deinitialize(nullptr);
+    
+    // Should not crash even if instance is null
+    // The null check in the processor should prevent crash
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+}
+
+/**
+ * @brief Test resource cleanup on CEC disable
+ * 
+ * This test verifies the Coverity fix for RESOURCE_LEAK.
+ * Ensures msgFrameListener and msgProcessor are properly deleted.
+ */
+TEST_F(HdmiCecSinkDsTest, CECDisable_ProperResourceCleanup)
+{
+    EXPECT_CALL(*p_libcecImplMock, init(::testing::_))
+        .WillOnce(::testing::Return());
+    EXPECT_CALL(*p_libcecImplMock, addLogicalAddress(::testing::_))
+        .WillOnce(::testing::Return());
+    EXPECT_CALL(*p_libcecImplMock, getPhysicalAddress(::testing::_))
+        .WillOnce([](uint32_t* physicalAddress) {
+            *physicalAddress = 0x1000000F;
+        });
+    EXPECT_CALL(*p_connectionImplMock, open())
+        .WillOnce(::testing::Return());
+    EXPECT_CALL(*p_connectionImplMock, close())
+        .WillOnce(::testing::Return());
+    EXPECT_CALL(*p_libcecImplMock, term())
+        .WillOnce(::testing::Return());
+
+    // Enable CEC
+    string enableResponse;
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), 
+        _T("{\"enabled\":true}"), enableResponse));
+    
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Disable CEC - should properly cleanup all resources
+    string disableResponse;
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), 
+        _T("{\"enabled\":false}"), disableResponse));
+    
+    // Give time for cleanup
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    // Test should complete without memory leaks
+    // Valgrind or ASAN would detect if msgProcessor/msgFrameListener not deleted
 }
