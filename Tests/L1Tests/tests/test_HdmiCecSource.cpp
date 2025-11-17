@@ -578,8 +578,17 @@ TEST_F(HdmiCecSourceInitializedTest, setOSDName)
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOSDName"), _T("{}"), response));
         EXPECT_EQ(response, string("{\"name\":\"CUSTOM8 Tv\",\"success\":true}"));
-
 }
+
+TEST_F(HdmiCecSourceInitializedTest, SetOSDName_EmptyString_Success)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOSDName"), _T("{\"name\": \"\"}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOSDName"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"name\":\"\",\"success\":true}"));
+}
+
 TEST_F(HdmiCecSourceInitializedTest, setVendorId)
 {
 
@@ -1361,7 +1370,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, abortProcess){
 
 }
 
-TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler)
+TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler_connect)
 {
     int iCounter = 0;
     while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
@@ -1375,7 +1384,26 @@ TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler)
 
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
-    Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED);
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
+
+    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler_disconnect)
+{
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
+        usleep (100 * 1000); //sleep for 100 milli sec
+        iCounter ++;
+    }
+
+    EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
+    .Times(1)
+        .WillOnce(::testing::Return("TEST"));
+
+    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_DISCONNECTED));
 
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 }
@@ -1391,8 +1419,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged)
         }));
 
         Plugin::HdmiCecSourceImplementation::_instance->onPowerModeChanged(WPEFramework::Exchange::IPowerManager::POWER_STATE_OFF, WPEFramework::Exchange::IPowerManager::POWER_STATE_ON);
-
-
 }
 
 TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEvent_Failure1)
@@ -1471,3 +1497,4 @@ TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_Failure)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":false}"), response));
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\":true}"), response));
 }
+
