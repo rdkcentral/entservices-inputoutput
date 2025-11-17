@@ -77,6 +77,8 @@ static PowerStatus tvPowerState(PowerStatus::POWER_STATUS_NOT_KNOWN);
 static bool isDeviceActiveSource = false;
 static bool isLGTvConnected = false;
 
+#define KEY_UNSUPPORTED 0xFF
+
 using namespace WPEFramework;
 
 
@@ -659,6 +661,36 @@ namespace WPEFramework
             return Core::ERROR_NONE;
 		}
 
+        int HdmiCecSourceImplementation::getUIKeyCode(int keyCode)
+        {
+            switch (keyCode)
+            {
+                case VOLUME_UP:   return UICommand::UI_COMMAND_VOLUME_UP;
+                case VOLUME_DOWN: return UICommand::UI_COMMAND_VOLUME_DOWN;
+                case MUTE:        return UICommand::UI_COMMAND_MUTE;
+                case UP:          return UICommand::UI_COMMAND_UP;
+                case DOWN:        return UICommand::UI_COMMAND_DOWN;
+                case LEFT:        return UICommand::UI_COMMAND_LEFT;
+                case RIGHT:       return UICommand::UI_COMMAND_RIGHT;
+                case SELECT:      return UICommand::UI_COMMAND_SELECT;
+                case HOME:        return UICommand::UI_COMMAND_HOME;
+                case BACK:        return UICommand::UI_COMMAND_BACK;
+                case NUMBER_0:    return UICommand::UI_COMMAND_NUM_0;
+                case NUMBER_1:    return UICommand::UI_COMMAND_NUM_1;
+                case NUMBER_2:    return UICommand::UI_COMMAND_NUM_2;
+                case NUMBER_3:    return UICommand::UI_COMMAND_NUM_3;
+                case NUMBER_4:    return UICommand::UI_COMMAND_NUM_4;
+                case NUMBER_5:    return UICommand::UI_COMMAND_NUM_5;
+                case NUMBER_6:    return UICommand::UI_COMMAND_NUM_6;
+                case NUMBER_7:    return UICommand::UI_COMMAND_NUM_7;
+                case NUMBER_8:    return UICommand::UI_COMMAND_NUM_8;
+                case NUMBER_9:    return UICommand::UI_COMMAND_NUM_9;
+                default:
+                    return KEY_UNSUPPORTED; // Unsupported key
+            }
+        }
+
+
         Core::hresult HdmiCecSourceImplementation::SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSuccess &success)
 		{
             //Input params validation
@@ -668,7 +700,14 @@ namespace WPEFramework
                 success.success = false;
                 return Core::ERROR_GENERAL;
             }
-            
+
+            if(getUIKeyCode(keyCode) == KEY_UNSUPPORTED)
+            {
+                LOGERR("Invalid Key Code 0x%x",keyCode);
+                success.success = false;
+                return Core::ERROR_GENERAL;         //Should it be Core::ERROR_NOT_SUPPORTED instead?
+            }
+
 			SendKeyInfo keyInfo;
 			try {
                keyInfo.logicalAddr = logicalAddress;
@@ -708,7 +747,7 @@ namespace WPEFramework
                    try
                    {
                        smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(Standby()));
-		       ret = true;
+		               ret = true;
                    }
                    catch(...)
                    {

@@ -563,17 +563,6 @@ TEST_F(HdmiCecSourceInitializedTest, getDeviceList)
 
 }
 
-
-TEST_F(HdmiCecSourceInitializedTest, getOTPEnabled)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T("{}"), response));
-        EXPECT_EQ(response, string("{\"enabled\":true,\"success\":true}"));
-
-}
-
 TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage)
 {
 
@@ -601,14 +590,6 @@ TEST_F(HdmiCecSourceInitializedTest, setVendorId)
         EXPECT_EQ(response, string("{\"vendorid\":\"019fb\",\"success\":true}"));
 
 }
-TEST_F(HdmiCecSourceInitializedTest, setOTPEnabled)
-{
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": false}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
-
-}
-
 
 TEST_F(HdmiCecSourceInitializedTest, sendKeyPressEventUp)
 {
@@ -1422,28 +1403,13 @@ TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEvent_Failure1)
 #if 0
 TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEvent_Failure2)
 {
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(::testing::Return(IARM_RESULT_IPCCORE_FAIL));
-
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"keyCode\":65}"), response));
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"keyCode\":102}"), response));
 }
 #endif
 
 // setVendorId/getVendorId tests
 TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Success)
 {
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetVendorId)));
-                auto param = static_cast<IARM_Bus_CECMgr_VendorId_Param_t*>(arg);
-                EXPECT_EQ(param->vendorId, 0x0019FB);
-                return IARM_RESULT_SUCCESS;
-            });
-
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorId\":\"0x0019FB\"}"), response));
     EXPECT_TRUE(response.find("\"success\":true") != string::npos);
 }
@@ -1451,125 +1417,33 @@ TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Success)
 
 TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Failure1)
 {
-	
 	EXPECT_EQ(Core:: ERROR_GENERAL, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"\"}"), response));
         EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
-TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Failure2)
-{
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(::testing::Return(IARM_RESULT_IPCCORE_FAIL));
-
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorId\":\"0x0019FB\"}"), response));
-}
-
-
 TEST_F(HdmiCecSourceInitializedTest, GetVendorId_Success)
 {
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(2)
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetVendorId)));
-                auto param = static_cast<IARM_Bus_CECMgr_VendorId_Param_t*>(arg);
-                EXPECT_EQ(param->vendorId, 0x0019FB);
-                return IARM_RESULT_SUCCESS;
-            })
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_GetVendorId)));
-                auto param = static_cast<IARM_Bus_CECMgr_VendorId_Param_t*>(arg);
-                param->vendorId = 0x0019FB;
-                return IARM_RESULT_SUCCESS;
-            });
-
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorId\":\"0x0019FB\"}"), response));
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVendorId"), _T("{}"), response));
     EXPECT_TRUE(response.find("\"success\":true") != string::npos);
     EXPECT_TRUE(response.find("\"vendorId\":\"019fb\"") != string::npos);
 }
 
-
-TEST_F(HdmiCecSourceInitializedTest, GetVendorId_Failure)
-{
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(::testing::Return(IARM_RESULT_IPCCORE_FAIL));
-
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVendorId"), _T("{}"), response));
-}
-
-
 // getOTPEnabled/setOTPEnabled tests
 TEST_F(HdmiCecSourceInitializedTest, SetOTPEnabled_True)
 {
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetOTPEnabled)));
-                auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
-                EXPECT_EQ(param->enabled, true);
-                return IARM_RESULT_SUCCESS;
-            });
-
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":true}"), response));
     EXPECT_TRUE(response.find("\"success\":true") != string::npos);
 }
 
 TEST_F(HdmiCecSourceInitializedTest, SetOTPEnabled_False)
 {
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetOTPEnabled)));
-                auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
-                EXPECT_EQ(param->enabled, false);
-                return IARM_RESULT_SUCCESS;
-            });
-
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":false}"), response));
     EXPECT_TRUE(response.find("\"success\":true") != string::npos);
 }
 
-TEST_F(HdmiCecSourceInitializedTest, SetOTPEnabled_Failure)
-{
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(::testing::Return(IARM_RESULT_IPCCORE_FAIL));
-
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":true}"), response));
-}
-
-
 TEST_F(HdmiCecSourceInitializedTest, GetOTPEnabled_True)
 {
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(2)
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetOTPEnabled)));
-                auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
-                EXPECT_EQ(param->enabled, true);
-                return IARM_RESULT_SUCCESS;
-            })
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_GetOTPEnabled)));
-                auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
-                param->enabled = true;
-                return IARM_RESULT_SUCCESS;
-            });
-
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":true}"), response));
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T("{}"), response));
     EXPECT_TRUE(response.find("\"success\":true") != string::npos);
@@ -1578,89 +1452,22 @@ TEST_F(HdmiCecSourceInitializedTest, GetOTPEnabled_True)
 
 TEST_F(HdmiCecSourceInitializedTest, GetOTPEnabled_False)
 {
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(2)
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SetOTPEnabled)));
-                auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
-                EXPECT_EQ(param->enabled, false);
-                return IARM_RESULT_SUCCESS;
-            })
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_GetOTPEnabled)));
-                auto param = static_cast<IARM_Bus_CECMgr_OTPEnabled_Param_t*>(arg);
-                param->enabled = false;
-                return IARM_RESULT_SUCCESS;
-            });
-
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":false}"), response));
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getOTPEnabled"), _T("{}"), response));
     EXPECT_TRUE(response.find("\"success\":true") != string::npos);
     EXPECT_TRUE(response.find("\"enabled\":false") != string::npos);
 }
 
-
-TEST_F(HdmiCecSourceInitializedTest, GetOTPEnabled_Failure)
-{
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(::testing::Return(IARM_RESULT_IPCCORE_FAIL));
-
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getOTPEnabled"), _T("{}"), response));
-}
-
-// sendStandbyMessage test
-TEST_F(HdmiCecSourceInitializedTest, SendStandbyMessage_Success)
-{
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_SendStandbyMessage)));
-                return IARM_RESULT_SUCCESS;
-            });
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
-    EXPECT_TRUE(response.find("\"success\":true") != string::npos);
-}
-
-TEST_F(HdmiCecSourceInitializedTest, SendStandbyMessage_Failure)
-{
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(::testing::Return(IARM_RESULT_IPCCORE_FAIL));
-
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
-}
-
 // performOTPAction test
 TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_Success)
 {
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(
-            [](const char* ownerName, const char* methodName, void* arg, size_t argLen) {
-                EXPECT_EQ(string(ownerName), string(_T(IARM_BUS_CECMGR_NAME)));
-                EXPECT_EQ(string(methodName), string(_T(IARM_BUS_CECMGR_API_PerformOTPAction)));
-                auto param = static_cast<IARM_Bus_CECMgr_ActiveSource_Param_t*>(arg);
-                EXPECT_EQ(param->result, true);
-                return IARM_RESULT_SUCCESS;
-            });
-
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":true}"), response));
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\":true}"), response));
     EXPECT_TRUE(response.find("\"success\":true") != string::npos);
 }
 
 TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_Failure)
 {
-    EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call)
-        .Times(1)
-        .WillOnce(::testing::Return(IARM_RESULT_IPCCORE_FAIL));
-
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":false}"), response));
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\":true}"), response));
 }

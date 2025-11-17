@@ -322,6 +322,7 @@ namespace WPEFramework {
             static void threadCecDaemonInitHandler();
             static void threadCecStatusUpdateHandler(int data);
             uint32_t sendKeyPressEvent(const int logicalAddress, int keyCode);
+            int HdmiCecSourceImplementation::getUIKeyCode(int keyCode);
             PowerManagerInterfaceRef _powerManagerPlugin;
             Core::Sink<PowerManagerNotification> _pwrMgrNotification;
             bool _registeredEventHandlers;
