@@ -823,30 +823,54 @@ namespace WPEFramework
 
        void HdmiCecSink::Deinitialize(PluginHost::IShell* /* service */)
        {
+           LOGINFO("Step 1: Deinitialize started");
+           LOGINFO("Step 2: Unregistering PowerManager plugin");
            if(_powerManagerPlugin)
            {
                _powerManagerPlugin->Unregister(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
                _powerManagerPlugin.Reset();
+               LOGINFO("Step 2: PowerManager plugin unregistered and reset");
+           }
+           else
+           {
+               LOGINFO("Step 2: PowerManager plugin is null");
            }
            _registeredEventHandlers = false;
 
+		LOGINFO("Step 3: Checking RDK profile type");
 		profileType = searchRdkProfile();
 
 		if (profileType == STB || profileType == NOT_FOUND)
 		{
 			LOGINFO("Invalid profile type for TV \n");
+			LOGINFO("Step 3: Exiting Deinitialize due to invalid profile type");
 			return ;
 		}
+		LOGINFO("Step 3: RDK profile type is TV, continuing");
 
+	    LOGINFO("Step 4: Disabling CEC");
 	    CECDisable();
+	    LOGINFO("Step 4: CEC disabled");
+	    
+	    LOGINFO("Step 5: Setting ARC routing state to exit");
 	    m_currentArcRoutingState = ARC_STATE_ARC_EXIT;
 
+            LOGINFO("Step 5: Signaling ARC routing thread");
             m_semSignaltoArcRoutingThread.release();
 
+            LOGINFO("Step 6: Joining ARC routing thread");
             try
 	    {
 		if (m_arcRoutingThread.joinable())
+		{
+			LOGINFO("Step 6: ARC routing thread is joinable, joining now");
 			m_arcRoutingThread.join();
+			LOGINFO("Step 6: ARC routing thread joined successfully");
+		}
+		else
+		{
+			LOGINFO("Step 6: ARC routing thread is not joinable");
+		}
 	    }
 	    catch(const std::system_error& e)
 	    {
@@ -857,17 +881,28 @@ namespace WPEFramework
 		LOGERR("exception in thread join %s", e.what());
 	    }
 
+	    LOGINFO("Step 7: Signaling send key event thread to exit");
 	    {
 	        m_sendKeyEventThreadExit = true;
                 std::unique_lock<std::mutex> lk(m_sendKeyEventMutex);
                 m_sendKeyEventThreadRun = true;
                 m_sendKeyCV.notify_one();
+                LOGINFO("Step 7: Send key event thread exit signal sent");
             }
 
+	    LOGINFO("Step 8: Joining send key event thread");
 	    try
 	    {
             if (m_sendKeyEventThread.joinable())
+            {
+                LOGINFO("Step 8: Send key event thread is joinable, joining now");
                 m_sendKeyEventThread.join();
+                LOGINFO("Step 8: Send key event thread joined successfully");
+            }
+            else
+            {
+                LOGINFO("Step 8: Send key event thread is not joinable");
+            }
 	    }
 	    catch(const std::system_error& e)
 	    {
@@ -878,8 +913,13 @@ namespace WPEFramework
 		    LOGERR("exception in thread join %s", e.what());
 	    }
 
+            LOGINFO("Step 9: Resetting instance pointer to nullptr");
             HdmiCecSink::_instance = nullptr;
+            
+            LOGINFO("Step 10: Deinitializing IARM");
             DeinitializeIARM();
+            LOGINFO("Step 10: IARM deinitialized");
+            
 	    LOGWARN(" HdmiCecSink Deinitialize() Done");
        }
 
