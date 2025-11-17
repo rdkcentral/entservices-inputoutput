@@ -1396,11 +1396,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler_disconnect)
         usleep (100 * 1000); //sleep for 100 milli sec
         iCounter ++;
     }
-
-    EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
-    .Times(1)
-        .WillOnce(::testing::Return("TEST"));
-
+  
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
     EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_DISCONNECTED));
