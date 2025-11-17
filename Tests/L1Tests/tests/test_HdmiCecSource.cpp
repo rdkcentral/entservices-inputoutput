@@ -1400,30 +1400,29 @@ TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEvent_Failure1)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"logicalAddress\": 1000, \"keyCode\": 65}"), response));
 }
 
-#if 0
 TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEvent_Failure2)
 {
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendKeyPressEvent"), _T("{\"keyCode\":102}"), response));
 }
-#endif
 
 // setVendorId/getVendorId tests
 TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Success)
 {
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorId\":\"0x0019FB\"}"), response));
-    EXPECT_TRUE(response.find("\"success\":true") != string::npos);
+    EXPECT_EQ(response,  string("{\"success\":true}"));
 }
 
 
 TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Failure1)
 {
 	EXPECT_EQ(Core:: ERROR_GENERAL, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"\"}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, GetVendorId_Success)
 {
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorId\":\"0x0019FB\"}"), response));
+    EXPECT_EQ(response,  string("{\"success\":true}"));
+    
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVendorId"), _T("{}"), response));
     EXPECT_TRUE(response.find("\"success\":true") != string::npos);
     EXPECT_TRUE(response.find("\"vendorId\":\"019fb\"") != string::npos);
