@@ -1426,8 +1426,7 @@ TEST_F(HdmiCecSourceInitializedTest, GetVendorId_Success)
     EXPECT_TRUE(response.find("\"success\":true") != string::npos);
     
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVendorId"), _T("{}"), response));
-    EXPECT_TRUE(response.find("\"success\":true") != string::npos);
-    EXPECT_TRUE(response.find("\"vendorId\":\"019fb\"") != string::npos);
+    EXPECT_TRUE(response.find("{\"vendorid\":\"019fb\",\"success\":true}") != string::npos);
 }
 
 // getOTPEnabled/setOTPEnabled tests
