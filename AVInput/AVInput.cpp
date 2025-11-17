@@ -28,6 +28,7 @@
 #include "exception.hpp"
 #include <vector>
 #include <algorithm>
+#include <stdexcept>
 
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 7
@@ -85,7 +86,7 @@ int getTypeOfInput(string sType)
     else if (0 == strcmp (sType.c_str(), "COMPOSITE"))
         iType = COMPOSITE;
     else
-        throw "Invalide type of INPUT, please specify HDMI/COMPOSITE";
+        throw std::invalid_argument("Invalid type of INPUT, please specify HDMI/COMPOSITE");
     return iType;
 }
 

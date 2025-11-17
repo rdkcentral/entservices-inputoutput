@@ -127,6 +127,15 @@ namespace WPEFramework
                 size_t len = 0;
 
                 in.getBuffer(&buf, &len);
+                
+                // Prevent buffer overflow: ensure we don't exceed buffer size
+                // Each byte needs 3 chars ("XX "), so max safe length is sizeof(strBuffer)/3
+                size_t maxLen = (sizeof(strBuffer) - 1) / 3;
+                if (len > maxLen) {
+                    LOGWARN("CEC Frame too large (%zu bytes), truncating to %zu bytes", len, maxLen);
+                    len = maxLen;
+                }
+                
                 for (unsigned int i = 0; i < len; i++) {
                    snprintf(strBuffer + (i*3) , sizeof(strBuffer) - (i*3), "%02X ",(uint8_t) *(buf + i));
                 }
@@ -492,6 +501,10 @@ namespace WPEFramework
              LOGINFO("Command: Abort\n");
           if (!(header.to == LogicalAddress(LogicalAddress::BROADCAST)))
              {
+                if (!HdmiCecSinkImplementation::_instance) {
+                    LOGWARN("HdmiCecSinkImplementation instance is NULL");
+                    return;
+                }
                 AbortReason reason = AbortReason::UNRECOGNIZED_OPCODE;
                 LogicalAddress logicaladdress =header.from.toInt();
                 OpCode feature = msg.opCode();
@@ -550,6 +563,10 @@ namespace WPEFramework
        {
              printHeader(header);
              LOGINFO("Command: ReportShortAudioDescriptor %s : %d \n",GetOpName(msg.opCode()),numberofdescriptor);
+            if (!HdmiCecSinkImplementation::_instance) {
+                LOGWARN("HdmiCecSinkImplementation instance is NULL");
+                return;
+            }
             HdmiCecSinkImplementation::_instance->Process_ShortAudioDescriptor_msg(msg);
        }
 
@@ -557,6 +574,10 @@ namespace WPEFramework
        {
              printHeader(header);
              LOGINFO("Command: SetSystemAudioMode  %s audio status %d audio status is  %s \n",GetOpName(msg.opCode()),msg.status.toInt(),msg.status.toString().c_str());
+          if (!HdmiCecSinkImplementation::_instance) {
+              LOGWARN("HdmiCecSinkImplementation instance is NULL");
+              return;
+          }
           HdmiCecSinkImplementation::_instance->Process_SetSystemAudioMode_msg(msg);
        }
       void HdmiCecSinkProcessor::process (const ReportAudioStatus &msg, const Header &header)
@@ -567,6 +588,10 @@ namespace WPEFramework
         LOGINFO("Ignore Broadcast messages, accepts only direct messages");
         return;
          }
+             if (!HdmiCecSinkImplementation::_instance) {
+                 LOGWARN("HdmiCecSinkImplementation instance is NULL");
+                 return;
+             }
              HdmiCecSinkImplementation::_instance->Process_ReportAudioStatus_msg(msg);
        }
       void HdmiCecSinkProcessor::process (const GiveFeatures &msg, const Header &header)
@@ -590,6 +615,10 @@ namespace WPEFramework
              LOGINFO("Command: Request Current Latency :%s, physical address: %s",GetOpName(msg.opCode()),msg.physicaladdress.toString().c_str());
 
          if(msg.physicaladdress.toString() == physical_addr.toString()) {
+             if (!HdmiCecSinkImplementation::_instance) {
+                 LOGWARN("HdmiCecSinkImplementation instance is NULL");
+                 return;
+             }
              HdmiCecSinkImplementation::_instance->setLatencyInfo();
          }
          else {
@@ -3060,7 +3089,7 @@ namespace WPEFramework
             smConnection = new Connection(LogicalAddress::UNREGISTERED,false,"ServiceManager::Connection::");
             if(!smConnection)
             {
-                LOGERR("smConnection is NULL");
+                LOGERR("smConnection allocation failed");
                 return;
             }
             smConnection->open();
@@ -3075,7 +3104,24 @@ namespace WPEFramework
             }
 
             msgProcessor = new HdmiCecSinkProcessor(*smConnection);
+            if (!msgProcessor)
+            {
+                LOGERR("msgProcessor allocation failed");
+                delete smConnection;
+                smConnection = NULL;
+                return;
+            }
+
             msgFrameListener = new HdmiCecSinkFrameListener(*msgProcessor);
+            if (!msgFrameListener)
+            {
+                LOGERR("msgFrameListener allocation failed");
+                delete msgProcessor;
+                msgProcessor = NULL;
+                delete smConnection;
+                smConnection = NULL;
+                return;
+            }
             LOGWARN("Start Thread %p", smConnection );
             m_pollThreadState = POLL_THREAD_STATE_POLL;
             m_pollNextState = POLL_THREAD_STATE_NONE;
@@ -3147,6 +3193,18 @@ namespace WPEFramework
                 smConnection->close();
                 delete smConnection;
                 smConnection = NULL;
+            }
+
+            if (msgFrameListener != NULL)
+            {
+                delete msgFrameListener;
+                msgFrameListener = NULL;
+            }
+
+            if (msgProcessor != NULL)
+            {
+                delete msgProcessor;
+                msgProcessor = NULL;
             }
 
             m_logicalAddressAllocated = LogicalAddress::UNREGISTERED;
