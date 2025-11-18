@@ -374,9 +374,9 @@ namespace WPEFramework
     , _registeredEventHandlers(false)
     , _exceptionOccurred(false)
     {
-        LOGWARN("ctor");
-        HdmiCecSourceImplementation::_instance = this;
-    }
+		LOGWARN("ctor");
+		HdmiCecSourceImplementation::_instance = this;
+	}
 
     HdmiCecSourceImplementation::~HdmiCecSourceImplementation()
     {
