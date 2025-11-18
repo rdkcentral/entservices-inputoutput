@@ -1499,24 +1499,6 @@ TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_Failure)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\":true}"), response));
 }
 
-TEST_F(HdmiCecSourceInitializedTest, HdmiCecSourceFrameListener_notify_GetCECVersionMessage)
-{
-    interface->SetEnabled(true, result);
-    EXPECT_TRUE(result.success);
-    
-    // Create a Get CEC Version message frame
-    uint8_t buf[] = {0x04, 0x9F}; // TV to recorder, Get CEC Version
-    
-    // Inject the CEC frame
-    LibCCEC::getInstance().InjectCECFrame(buf, sizeof(buf));
-    
-    // Allow processing time
-    sleep(1);
-    
-    // Verify frame was processed (should trigger CECVersion response)
-    EXPECT_TRUE(true);
-}
-
 TEST_F(HdmiCecSourceInitializedEventTest, HdmiCecSourceFrameListener_notify_GetCECVersionMessage){
 
     int iCounter = 0;
