@@ -1027,8 +1027,7 @@ namespace WPEFramework
                 LOGWARN("CEC Already Enabled");
                 return;
             }
-        
-            if(0 == libcecInitStatus)
+			if(0 == libcecInitStatus)
             {
                 try
                 {
@@ -1040,83 +1039,73 @@ namespace WPEFramework
                 }
             }
             libcecInitStatus++;
-			
-            m_sendKeyEventThreadExit = false;
-        
-            try {
-			   if (m_sendKeyEventThread.get().joinable()) {
-                   m_sendKeyEventThread.get().join();
-	       }                
-               m_sendKeyEventThread = Utils::ThreadRAII(std::thread(threadSendKeyEvent));
-            } catch(const std::system_error& e) {
-                LOGERR("exception in creating threadSendKeyEvent %s", e.what());
-	    }            
-        
-            
+			m_sendKeyEventThreadExit = false;
+			try {
+				if (m_sendKeyEventThread.get().joinable()) {
+					m_sendKeyEventThread.get().join();
+				}
+				m_sendKeyEventThread = Utils::ThreadRAII(std::thread(threadSendKeyEvent));
+			} catch(const std::system_error& e) {
+				LOGERR("exception in creating threadSendKeyEvent %s", e.what());
+			}
 			// Acquire CEC Addresses
-            try {
-                getPhysicalAddress();
-                getLogicalAddress();
-            } catch (...) {
-                LOGWARN("Exception while getting CEC addresses");
-            }
-        
-            smConnection = new Connection(logicalAddress.toInt(), false, "ServiceManager::Connection::");
-            if (!smConnection) {
-            LOGERR("smConnection allocation failed, skipping further setup");
-            return;
-        	}
-            smConnection->open();
-            msgProcessor = new HdmiCecSourceProcessor(*smConnection);
-            msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
-            smConnection->addFrameListener(msgFrameListener);
-			
-            cecEnableStatus = true;
-        
-            if (smConnection) 
+			try {
+				getPhysicalAddress();
+				getLogicalAddress();
+			} catch (...) {
+				LOGWARN("Exception while getting CEC addresses");
+			}
+			smConnection = new Connection(logicalAddress.toInt(), false, "ServiceManager::Connection::");
+			if (!smConnection) {
+				LOGERR("smConnection allocation failed, skipping further setup");
+				return;
+			}
+			smConnection->open();
+			msgProcessor = new HdmiCecSourceProcessor(*smConnection);
+			msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
+			smConnection->addFrameListener(msgFrameListener);
+			cecEnableStatus = true;
+			if (smConnection) 
 			{
-                LOGINFO("Command: sending GiveDevicePowerStatus \r\n");
-                smConnection->sendTo(LogicalAddress::TV, MessageEncoder().encode(GiveDevicePowerStatus()));
-                LOGINFO("Command: sending request active Source isDeviceActiveSource is set to false\r\n");
-                smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(RequestActiveSource()));
-                isDeviceActiveSource = false;
-                LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n", \
+				LOGINFO("Command: sending GiveDevicePowerStatus \r\n");
+				smConnection->sendTo(LogicalAddress::TV, MessageEncoder().encode(GiveDevicePowerStatus()));
+				LOGINFO("Command: sending request active Source isDeviceActiveSource is set to false\r\n");
+				smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(RequestActiveSource()));
+				isDeviceActiveSource = false;
+				LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n", \
                                                  (isLGTvConnected)?lgVendorId.toString().c_str():appVendorId.toString().c_str());
-                if(isLGTvConnected)
-                    smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(lgVendorId)));
-                else
+				if(isLGTvConnected)
+					smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(lgVendorId)));
+				else
 					smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(appVendorId)));
-        
-                LOGWARN("Start Update thread %p", smConnection );
-                m_updateThreadExit = false;
-                _instance->m_lockUpdate = PTHREAD_MUTEX_INITIALIZER;
-                _instance->m_condSigUpdate = PTHREAD_COND_INITIALIZER;
-                try {
-                    if (m_UpdateThread.get().joinable()) {
-                       m_UpdateThread.get().join();
-                }
-                    m_UpdateThread = Utils::ThreadRAII(std::thread(threadUpdateCheck));
-                } catch(const std::system_error& e) {
-                    LOGERR("exception in creating threadUpdateCheck %s", e.what());
-	        }
-        
-                LOGWARN("Start Thread %p", smConnection );
-                m_pollThreadExit = false;
-                _instance->m_numberOfDevices = 0;
-                _instance->m_lock = PTHREAD_MUTEX_INITIALIZER;
-                _instance->m_condSig = PTHREAD_COND_INITIALIZER;
-                try {
-                    if (m_pollThread.get().joinable()) {
-                       m_pollThread.get().join();
-                }
-                    m_pollThread = Utils::ThreadRAII(std::thread(threadRun));
-                } catch(const std::system_error& e) {
-                    LOGERR("exception in creating threadRun %s", e.what());
-            }
-				
-            }
-            return;
-        }
+				LOGWARN("Start Update thread %p", smConnection );
+				m_updateThreadExit = false;
+				_instance->m_lockUpdate = PTHREAD_MUTEX_INITIALIZER;
+				_instance->m_condSigUpdate = PTHREAD_COND_INITIALIZER;
+				try {
+					if (m_UpdateThread.get().joinable()) {
+						m_UpdateThread.get().join();
+					}
+					m_UpdateThread = Utils::ThreadRAII(std::thread(threadUpdateCheck));
+				} catch(const std::system_error& e) {
+					LOGERR("exception in creating threadUpdateCheck %s", e.what());
+				}
+				LOGWARN("Start Thread %p", smConnection );
+				m_pollThreadExit = false;
+				_instance->m_numberOfDevices = 0;
+				_instance->m_lock = PTHREAD_MUTEX_INITIALIZER;
+				_instance->m_condSig = PTHREAD_COND_INITIALIZER;
+				try {
+					if (m_pollThread.get().joinable()) {
+						m_pollThread.get().join();
+					}
+					m_pollThread = Utils::ThreadRAII(std::thread(threadRun));
+				} catch(const std::system_error& e) {
+					LOGERR("exception in creating threadRun %s", e.what());
+				}
+			}
+			return;
+		}
 
         void HdmiCecSourceImplementation::CECDisable(void)
         {
