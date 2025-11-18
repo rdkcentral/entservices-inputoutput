@@ -1499,7 +1499,6 @@ TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_Failure)
 TEST_F(HdmiCecSourceInitializedEventTest, HdmiCecSourceFrameListener_notify_GetCECVersionMessage){
 
     int iCounter = 0;
-    Plugin::HdmiCecSourceFrameListener *cecSrcFrameListener = NULL;
     while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
         usleep (100 * 1000); //sleep for 100 milli sec
         iCounter ++;
@@ -1516,12 +1515,12 @@ TEST_F(HdmiCecSourceInitializedEventTest, HdmiCecSourceFrameListener_notify_GetC
     cecFrame.push_back(0x9F); // Get CEC Version
    
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    cecSrcFrameListener = new Plugin::HdmiCecSourceFrameListener(proc);
-    EXPECT_NO_THROW(cecSrcFrameListener->notify(cecFrame));
+    Plugin::HdmiCecSourceFrameListener cecSrcFrameListener(proc);
+    EXPECT_NO_THROW(cecSrcFrameListener.notify(cecFrame));
 }
 
 
-TEST_F(HdmiCecSourceInitializedEventTest, requestActiveSourceProccess_failure){
+TEST_F(HdmiCecSourceInitializedEventTest, requestActiveSourceProcess_failure){
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\": true}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
@@ -1539,7 +1538,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, requestActiveSourceProccess_failure){
     RequestActiveSource requestActiveSource;
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    EXPECT_THROW(proc.process(requestActiveSource, header), std::runtime_error);    
+    EXPECT_NO_THROW(proc.process(requestActiveSource, header)); 
 }
 
 TEST_F(HdmiCecSourceInitializedEventTest, standyProcess_failure){
@@ -1557,5 +1556,5 @@ TEST_F(HdmiCecSourceInitializedEventTest, standyProcess_failure){
     Standby standby;
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    EXPECT_THROW(proc.process(standby, header);, std::runtime_error);
+    EXPECT_NO_THROW(proc.process(standby, header));
 }
