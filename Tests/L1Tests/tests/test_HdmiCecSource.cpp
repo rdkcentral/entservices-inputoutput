@@ -1503,7 +1503,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, HdmiCecSourceFrameListener_notify_GetC
         iCounter ++;
     }
     Core::Sink<NotificationHandler> notification;
-    uint32_t signalled = false;
     p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
@@ -1515,6 +1514,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, HdmiCecSourceFrameListener_notify_GetC
     cecFrame.push_back(0x9F); // Get CEC Version
    
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    cecSrcFrameListener = new Plugin::HdmiCecSourceFrameListener(&proc);
+    cecSrcFrameListener = new Plugin::HdmiCecSourceFrameListener(proc);
     cecSrcFrameListener->notify(cecFrame);
 }
