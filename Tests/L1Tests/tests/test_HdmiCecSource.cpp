@@ -1497,7 +1497,7 @@ TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_Failure)
 TEST_F(HdmiCecSourceInitializedEventTest, HdmiCecSourceFrameListener_notify_GetCECVersionMessage){
 
     int iCounter = 0;
-    HdmiCecSourceFrameListener *cecSrcFrameListener = NULL;
+    Plugin::HdmiCecSourceFrameListener *cecSrcFrameListener = NULL;
     while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
         usleep (100 * 1000); //sleep for 100 milli sec
         iCounter ++;
@@ -1515,6 +1515,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, HdmiCecSourceFrameListener_notify_GetC
     cecFrame.push_back(0x9F); // Get CEC Version
    
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    cecSrcFrameListener = new HdmiCecSourceFrameListener(&proc);
+    cecSrcFrameListener = new Plugin::HdmiCecSourceFrameListener(&proc);
     cecSrcFrameListener->notify(cecFrame);
 }
