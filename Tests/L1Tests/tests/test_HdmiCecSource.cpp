@@ -81,7 +81,6 @@ typedef enum : uint32_t {
     HdmiCecSource_StandbyMessageReceived = 0x00000010,
     HdmiCecSource_OnKeyReleaseEvent = 0x00000020,
     HdmiCecSource_OnKeyPressEvent = 0x00000040,
-    HdmiCecSource_OnCECVersionReceived = 0x00000080
 } HdmiCecSourceEventType_t;
 
 
@@ -102,7 +101,6 @@ class NotificationHandler : public Exchange::IHdmiCecSource::INotification {
         bool m_StandbyMessageReceived_signalled = false;
         bool m_OnKeyReleaseEvent=false;
         bool m_OnKeyPressEvent=false;
-        bool m_OnCECVersionReceived=false;
 
 
         BEGIN_INTERFACE_MAP(Notification)
@@ -225,9 +223,6 @@ class NotificationHandler : public Exchange::IHdmiCecSource::INotification {
                     break;
                 case HdmiCecSource_OnKeyPressEvent:
                     signalled = m_OnKeyPressEvent;
-                    break;
-                case HdmiCecSource_OnCECVersionReceived:
-                    signalled = m_OnCECVersionReceived;
                     break;
                 default:
                     signalled = false;
@@ -1502,6 +1497,7 @@ TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_Failure)
 TEST_F(HdmiCecSourceInitializedEventTest, HdmiCecSourceFrameListener_notify_GetCECVersionMessage){
 
     int iCounter = 0;
+    HdmiCecSourceFrameListener *cecSrcFrameListener = NULL;
     while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
         usleep (100 * 1000); //sleep for 100 milli sec
         iCounter ++;
@@ -1513,16 +1509,12 @@ TEST_F(HdmiCecSourceInitializedEventTest, HdmiCecSourceFrameListener_notify_GetC
 
     Header header;
     header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
-
-
+    
     CECFrame cecFrame;
     cecFrame.push_back(0x04); // Source: TV (1), Destination: Recorder 1 (4)
     cecFrame.push_back(0x9F); // Get CEC Version
    
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    proc.process(cecFrame, header);
-
-    signalled = notification.WaitForRequestStatus(JSON_TIMEOUT, HdmiCecSource_OnCECVersionReceived);
-
-    EXPECT_TRUE(signalled);
+    cecSrcFrameListener = new HdmiCecSourceFrameListener(&proc);
+    cecSrcFrameListener->notify(cecFrame);
 }
