@@ -1594,8 +1594,12 @@ TEST_F(HdmiCecSourceInitializedEventTest, GiveDevicePowerStatusProcess_sendfailu
 
 TEST_F(HdmiCecSourceInitializedEventTest, FeatureAbortMessage)
 { 
+    FeatureAbort featureAbort;
+    Header header;
+    header.from = LogicalAddress(LogicalAddress::TV);
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    EXPECT_NO_THROW(proc.process(FeatureAbort(), Header()));
+
+    EXPECT_NO_THROW(proc.process(featureAbort, header));
 }
 
 TEST_F(HdmiCecSourceInitializedEventTest, abortProcess_sendfailure)
@@ -1628,5 +1632,5 @@ TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_connectionFailure)
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
     .WillRepeatedly(::testing::Throw(std::runtime_error("sendTo failed")));
 
-    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->sendStandbyMessage());
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
 }
