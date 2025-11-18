@@ -1028,16 +1028,16 @@ namespace WPEFramework
                 return;
             }
         
-            if(0 == libcecInitStatus) 
-			{
-                try 
-				{
-					LibCCEC::getInstance().init("HdmiCecSource");
-				} 
-				catch (const std::exception& e) 
-				{
-					LOGWARN("CEC exception caught from LibCCEC::getInstance().init()");
-				}
+            if(0 == libcecInitStatus)
+            {
+                try
+                {
+                    LibCCEC::getInstance().init("HdmiCecSource");
+                }
+                catch (const std::exception& e)
+                {
+                    LOGWARN("CEC exception caught from LibCCEC::getInstance().init()");
+                }
             }
             libcecInitStatus++;
 			
