@@ -1028,31 +1028,32 @@ namespace WPEFramework
                 return;
             }
         
-            if (0 == libcecInitStatus) 
+            if(0 == libcecInitStatus) 
 			{
                 try 
-					{
-                    LibCCEC::getInstance().init("HdmiCecSource");
-					} 
+				{
+					LibCCEC::getInstance().init("HdmiCecSource");
+				} 
 				catch (const std::exception& e) 
-					{
-						LOGWARN("CEC exception caught from LibCCEC::getInstance().init()");
-					}
+				{
+					LOGWARN("CEC exception caught from LibCCEC::getInstance().init()");
+				}
             }
-        
             libcecInitStatus++;
+			
             m_sendKeyEventThreadExit = false;
         
             try {
 			   if (m_sendKeyEventThread.get().joinable()) {
                    m_sendKeyEventThread.get().join();
-                }
+	       }                
                m_sendKeyEventThread = Utils::ThreadRAII(std::thread(threadSendKeyEvent));
             } catch(const std::system_error& e) {
                 LOGERR("exception in creating threadSendKeyEvent %s", e.what());
-            }
+	    }            
         
-            // Acquire CEC Addresses
+            
+			// Acquire CEC Addresses
             try {
                 getPhysicalAddress();
                 getLogicalAddress();
@@ -1093,11 +1094,11 @@ namespace WPEFramework
                 try {
                     if (m_UpdateThread.get().joinable()) {
                        m_UpdateThread.get().join();
-                    }
+                }
                     m_UpdateThread = Utils::ThreadRAII(std::thread(threadUpdateCheck));
                 } catch(const std::system_error& e) {
                     LOGERR("exception in creating threadUpdateCheck %s", e.what());
-                }
+	        }
         
                 LOGWARN("Start Thread %p", smConnection );
                 m_pollThreadExit = false;
@@ -1107,13 +1108,13 @@ namespace WPEFramework
                 try {
                     if (m_pollThread.get().joinable()) {
                        m_pollThread.get().join();
-                    }
+                }
                     m_pollThread = Utils::ThreadRAII(std::thread(threadRun));
                 } catch(const std::system_error& e) {
                     LOGERR("exception in creating threadRun %s", e.what());
-                }
             }
-        
+				
+            }
             return;
         }
 
