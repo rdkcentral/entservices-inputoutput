@@ -119,11 +119,7 @@ namespace WPEFramework
              HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
-       void HdmiCecSourceProcessor::process (const InActiveSource &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: InActiveSource %s : %s : %s  \n",GetOpName(msg.opCode()),msg.physicalAddress.name().c_str(),msg.physicalAddress.toString().c_str());
-       }
+
        void HdmiCecSourceProcessor::process (const ImageViewOn &msg, const Header &header)
        {
              printHeader(header);
