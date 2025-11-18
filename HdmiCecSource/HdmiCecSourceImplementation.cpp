@@ -163,11 +163,7 @@ namespace WPEFramework
              LOGINFO("Command: CECVersion Version : %s \n",msg.version.toString().c_str());
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
-       void HdmiCecSourceProcessor::process (const SetMenuLanguage &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: SetMenuLanguage Language : %s \n",msg.language.toString().c_str());
-       }
+      
        void HdmiCecSourceProcessor::process (const GiveOSDName &msg, const Header &header)
        {
              printHeader(header);
@@ -214,11 +210,7 @@ namespace WPEFramework
              }
 
        }
-       void HdmiCecSourceProcessor::process (const SetOSDString &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: SetOSDString OSDString : %s\n",msg.osdString.toString().c_str());
-       }
+      
        void HdmiCecSourceProcessor::process (const SetOSDName &msg, const Header &header)
        {
              printHeader(header);
@@ -265,11 +257,7 @@ namespace WPEFramework
              HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
 
        }
-       void HdmiCecSourceProcessor::process (const GetMenuLanguage &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: GetMenuLanguage\n");
-       }
+       
        void HdmiCecSourceProcessor::process (const ReportPhysicalAddress &msg, const Header &header)
        {
              printHeader(header);
@@ -303,14 +291,7 @@ namespace WPEFramework
                  LOGWARN("Exception while sending ReportPowerStatus");
              }
        }
-       void HdmiCecSourceProcessor::process (const ReportPowerStatus &msg, const Header &header)
-       {
-             printHeader(header);
-			 if ((header.from == LogicalAddress(LogicalAddress::TV)))
-				 tvPowerState = msg.status;
-             LOGINFO("Command: ReportPowerStatus TV Power Status from:%s status : %s \n",header.from.toString().c_str(),msg.status.toString().c_str());
-             HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
-       }
+     
        void HdmiCecSourceProcessor::process (const UserControlPressed &msg, const Header &header)
        {
              printHeader(header);

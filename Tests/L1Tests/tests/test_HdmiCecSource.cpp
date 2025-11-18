@@ -1280,31 +1280,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, GiveDevicePowerStatusProcess){
     
 }
 
-TEST_F(HdmiCecSourceInitializedEventTest, reportPowerStatusProcess){
-
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
-        usleep (100 * 1000); //sleep for 100 milli sec
-        iCounter ++;
-    }
-
-
-    Header header;
-    header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
-    PowerStatus powerStatus(0);
-
-    ReportPowerStatus reportPowerStatus(powerStatus);
-
-
-    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
-    proc.process(reportPowerStatus, header); 
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
-
-    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
-
-    
-}
 
 TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess){
     Core::Sink<NotificationHandler> notification;
@@ -1557,4 +1532,62 @@ TEST_F(HdmiCecSourceInitializedEventTest, standyProcess_failure){
 
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     EXPECT_NO_THROW(proc.process(standby, header));
+}
+
+
+TEST_F(HdmiCecSourceInitializedEventTest, giveOSDNameProcess_sendfailure){
+
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+    .WillRepeatedly(::testing::Throw(std::runtime_error("sendTo failed")));
+
+    Header header;
+    header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
+
+    GiveOSDName giveOSDName;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    EXPECT_NO_THROW(proc.process(giveOSDName, header)); 
+    
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, givePhysicalAddressProcess_sendfailure){
+
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+    .WillRepeatedly(::testing::Throw(std::runtime_error("sendTo failed")));
+
+    Header header;
+    header.from = LogicalAddress(15); //specifies with logicalAddress in the deviceList we're using
+
+    GivePhysicalAddress givePhysicalAddress;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    EXPECT_NO_THROW(proc.process(givePhysicalAddress, header));     
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, giveDeviceVendorIdProcess_sendfailure){
+
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+    .WillRepeatedly(::testing::Throw(std::runtime_error("sendTo failed")));
+
+    Header header;
+    header.from = LogicalAddress(15); //specifies with logicalAddress in the deviceList we're using
+
+    GiveDeviceVendorID giveDeviceVendorID;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    EXPECT_NO_THROW(proc.process(giveDeviceVendorID, header));     
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, GiveDevicePowerStatusProcess_sendfailure){
+
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+    .WillRepeatedly(::testing::Throw(std::runtime_error("sendTo failed")));
+
+    Header header;
+    header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
+
+    GiveDevicePowerStatus deviceDevicePowerStatus;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    EXPECT_NO_THROW(proc.process(deviceDevicePowerStatus, header));  
 }
