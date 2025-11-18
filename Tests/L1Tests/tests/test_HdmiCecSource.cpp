@@ -1591,3 +1591,42 @@ TEST_F(HdmiCecSourceInitializedEventTest, GiveDevicePowerStatusProcess_sendfailu
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
     EXPECT_NO_THROW(proc.process(deviceDevicePowerStatus, header));  
 }
+
+TEST_F(HdmiCecSourceInitializedEventTest, FeatureAbortMessage)
+{ 
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    EXPECT_NO_THROW(proc.process(FeatureAbort(), Header()));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, abortProcess_sendfailure)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Throw(std::runtime_error("sendTo failed")));
+
+    Header header;
+    header.from = LogicalAddress(LogicalAddress::TV);
+
+    Abort abort;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    EXPECT_NO_THROW(proc.process(abort, header));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, pollingProcess_success)
+{
+    Header header;
+    header.from = LogicalAddress(1);
+
+    Polling polling;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    EXPECT_NO_THROW(proc.process(polling, header));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_connectionFailure)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+    .WillRepeatedly(::testing::Throw(std::runtime_error("sendTo failed")));
+
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->sendStandbyMessage());
+}
