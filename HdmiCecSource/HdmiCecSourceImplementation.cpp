@@ -120,18 +120,6 @@ namespace WPEFramework
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
 
-       void HdmiCecSourceProcessor::process (const ImageViewOn &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: ImageViewOn \n");
-             HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
-       }
-       void HdmiCecSourceProcessor::process (const TextViewOn &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: TextViewOn\n");
-             HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
-       }
        void HdmiCecSourceProcessor::process (const RequestActiveSource &msg, const Header &header)
        {
              printHeader(header);

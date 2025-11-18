@@ -1544,7 +1544,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, requestActiveSourceProccess_failure){
 
 TEST_F(HdmiCecSourceInitializedEventTest, standyProcess_failure){
     Core::Sink<NotificationHandler> notification;
-    uint32_t signalled = false;
+
     p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
