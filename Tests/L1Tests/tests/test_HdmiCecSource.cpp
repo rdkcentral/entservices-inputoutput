@@ -1676,7 +1676,6 @@ TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_connectionFailure)
 
 TEST_F(HdmiCecSourceInitializedTest, loadSettings_FileExists_AllParametersPresent)
 {
-    bool result = false;
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TestDevice", 0x0019FB);
 
     EXPECT_EQ(string(""), plugin->Initialize(&service));
