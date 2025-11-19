@@ -1632,7 +1632,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, GiveDevicePowerStatusProcess_sendfailu
 TEST_F(HdmiCecSourceInitializedEventTest, FeatureAbortMessage)
 { 
     OpCode feature(GIVE_DEVICE_VENDOR_ID);
-    AbortReason reason = AbortReason::UNRECOGNIZED_OPCODE;
+    AbortReason reason(AbortReason::UNRECOGNIZED_OPCODE);
     FeatureAbort featureAbort(feature, reason);
     Header header;
     header.from = LogicalAddress(LogicalAddress::TV);
