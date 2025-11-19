@@ -1678,7 +1678,8 @@ TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent)
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
 {
     EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke(
+    .Times(::testing::AtLeast(1))    
+    .WillRepeatedly(::testing::Invoke(
             [&](auto const& to, auto const& second, auto const& thirdArg) {
                 EXPECT_EQ(to.toInt(), 1);
             }));
@@ -1699,7 +1700,8 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Failure)
 {
     EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
-        .WillOnce(::testing::Throw(std::runtime_error("sendTo failed")));
+    .Times(::testing::AtLeast(1))
+    .WillRepeatedly(::testing::Throw(std::runtime_error("ping failed")));
 
     int iCounter = 0;
     while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
