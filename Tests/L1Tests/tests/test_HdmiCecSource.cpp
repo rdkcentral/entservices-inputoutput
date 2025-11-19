@@ -76,7 +76,7 @@ namespace
 		fileContentStream << "\n";
 		fileContentStream.close();
 	}
-
+#if 0
     static void CreateCecSettingsFile(const std::string& filePath, bool cecEnabled = true, bool cecOTPEnabled = true, const std::string& osdName = "TV Box", unsigned int vendorId = 0x0019FB)
     {
         Core::File file(filePath);
@@ -108,6 +108,7 @@ namespace
         file.Create();
         file.Close();
     }
+#endif 
 }
 
 typedef enum : uint32_t {
