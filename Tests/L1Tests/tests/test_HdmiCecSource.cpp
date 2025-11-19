@@ -1594,7 +1594,9 @@ TEST_F(HdmiCecSourceInitializedEventTest, GiveDevicePowerStatusProcess_sendfailu
 
 TEST_F(HdmiCecSourceInitializedEventTest, FeatureAbortMessage)
 { 
-    FeatureAbort featureAbort;
+    OpCode feature = OpCode::GIVE_DEVICE_VENDOR_ID;
+    AbortReason reason = AbortReason::UNRECOGNIZED_OPCODE;
+    FeatureAbort featureAbort(feature, reason);
     Header header;
     header.from = LogicalAddress(LogicalAddress::TV);
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
