@@ -43,6 +43,11 @@
 #include "WrapsMock.h"
 
 #define JSON_TIMEOUT   (1000)
+#define CEC_SETTING_ENABLED_FILE "/opt/persistent/ds/cecData_2.json"
+#define CEC_SETTING_OTP_ENABLED "cecOTPEnabled"
+#define CEC_SETTING_ENABLED "cecEnabled"
+#define CEC_SETTING_OSD_NAME "cecOSDName"
+#define CEC_SETTING_VENDOR_ID "cecVendorId"
 
 using namespace WPEFramework;
 using ::testing::NiceMock;
@@ -1672,21 +1677,21 @@ TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_connectionFailure)
 TEST_F(HdmiCecSourceInitializedTest, loadSettings_FileExists_AllParametersPresent)
 {
     bool result = false;
-    CreateCecSettingsFile(testFilePath, true, true, "TestDevice", 0x0019FB);
+    CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TestDevice", 0x0019FB);
 
-    result = interface->loadSettings();
+    result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
     EXPECT_TRUE(result);
 
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, false, "TestDevice", 0x123456);
-    result = interface->loadSettings();
+    result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
     EXPECT_TRUE(result);
 
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, false, false, "TestDevice", 0x123456);
-    result = interface->loadSettings();
+    result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
     EXPECT_TRUE(result);
 
 	CreateCecSettingsFileNoParams(CEC_SETTING_ENABLED_FILE);
-	result = interface->loadSettings();
+	result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
     EXPECT_TRUE(result);
 }
 
