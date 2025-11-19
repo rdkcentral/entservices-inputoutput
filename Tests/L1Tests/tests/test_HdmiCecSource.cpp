@@ -1594,7 +1594,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, GiveDevicePowerStatusProcess_sendfailu
 
 TEST_F(HdmiCecSourceInitializedEventTest, FeatureAbortMessage)
 { 
-    OpCode feature = OpCode::GIVE_DEVICE_VENDOR_ID;
+    OpCode feature(GIVE_DEVICE_VENDOR_ID);
     AbortReason reason = AbortReason::UNRECOGNIZED_OPCODE;
     FeatureAbort featureAbort(feature, reason);
     Header header;
