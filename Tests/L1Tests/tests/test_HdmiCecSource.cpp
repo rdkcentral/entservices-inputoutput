@@ -1679,7 +1679,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
 {
     EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke(
-            [&](const LogicalAddress &to, const CECFrame &frame) {
+            [&](const LogicalAddress &to, const CECFrame &frame,auto const& thirdArg) {
                 EXPECT_EQ(to.toInt(), 1);
             }));
 
