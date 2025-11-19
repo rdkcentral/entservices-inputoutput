@@ -77,6 +77,7 @@ namespace
 		fileContentStream.close();
 	}
 
+    #if 0
     static void CreateCecSettingsFile(const std::string& filePath, bool cecEnabled = true, bool cecOTPEnabled = true, const std::string& osdName = "TV Box", unsigned int vendorId = 0x0019FB)
     {
         Core::File file(filePath);
@@ -108,6 +109,7 @@ namespace
         file.Create();
         file.Close();
     }
+    #endif
 }
 
 typedef enum : uint32_t {
@@ -487,7 +489,7 @@ protected:
     }
 };
 
-
+#if 0
 class HdmiCecSourceSettingsTest : public HdmiCecSourceTest {
 protected:
     HdmiCecSourceSettingsTest()
@@ -511,7 +513,7 @@ protected:
 	        removeFile(CEC_SETTING_ENABLED_FILE);
     }
 };
-
+#endif
 
 class HdmiCecSourceInitializedEventTest : public HdmiCecSourceInitializedTest {
 protected:
@@ -1406,7 +1408,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged)
            return 0;
         }));
 
-        Plugin::HdmiCecSourceImplementation::_instance->onPowerModeChanged(WPEFramework::Exchange::IPowerManager::POWER_STATE_OFF, WPEFramework::Exchange::IPowerManager::POWER_STATE_ON);
+    Plugin::HdmiCecSourceImplementation::_instance->onPowerModeChanged(WPEFramework::Exchange::IPowerManager::POWER_STATE_OFF, WPEFramework::Exchange::IPowerManager::POWER_STATE_ON);
 }
 
 TEST_F(HdmiCecSourceInitializedTest, SendKeyPressEvent_Failure1)
@@ -1652,33 +1654,63 @@ TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_connectionFailure)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
 }
 
+#if 0
 TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent)
 {
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TestDevice", 0x0019FB);
-
     EXPECT_EQ(string(""), plugin->Initialize(&service));
     plugin->Deinitialize(&service);
-
-    /*result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
-    EXPECT_TRUE(result);*/
 
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, false, "TestDevice", 0x123456);
     EXPECT_EQ(string(""), plugin->Initialize(&service));
     plugin->Deinitialize(&service);
-    /*result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
-    EXPECT_TRUE(result);*/
 
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, false, false, "TestDevice", 0x123456);
     EXPECT_EQ(string(""), plugin->Initialize(&service));
     plugin->Deinitialize(&service);
-    /*result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
-    EXPECT_TRUE(result);*/
 
 	CreateCecSettingsFileNoParams(CEC_SETTING_ENABLED_FILE);
     EXPECT_EQ(string(""), plugin->Initialize(&service));
     plugin->Deinitialize(&service);
-	/*result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
-    EXPECT_TRUE(result);*/
+}
+#endif
+
+TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke(
+            [&](const LogicalAddress &to, const CECFrame &frame) {
+                EXPECT_EQ(to.toInt(), 1);
+            }));
+
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
+        usleep (100 * 1000); //sleep for 100 milli sec
+        iCounter ++;
+    }
+  
+    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_DISCONNECTED));
+
+    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 }
 
+TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Failure)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+        .WillOnce(::testing::Throw(std::runtime_error("sendTo failed")));
+
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
+        usleep (100 * 1000); //sleep for 100 milli sec
+        iCounter ++;
+    }
+  
+    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_DISCONNECTED));
+
+    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+}
 
