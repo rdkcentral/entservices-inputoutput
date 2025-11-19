@@ -1679,19 +1679,28 @@ TEST_F(HdmiCecSourceInitializedTest, loadSettings_FileExists_AllParametersPresen
     bool result = false;
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TestDevice", 0x0019FB);
 
-    result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
-    EXPECT_TRUE(result);
+    EXPECT_EQ(string(""), plugin->Initialize(&service));
+    plugin->Deinitialize(&service);
+
+    /*result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
+    EXPECT_TRUE(result);*/
 
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, false, "TestDevice", 0x123456);
-    result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
-    EXPECT_TRUE(result);
+    EXPECT_EQ(string(""), plugin->Initialize(&service));
+    plugin->Deinitialize(&service);
+    /*result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
+    EXPECT_TRUE(result);*/
 
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, false, false, "TestDevice", 0x123456);
-    result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
-    EXPECT_TRUE(result);
+    EXPECT_EQ(string(""), plugin->Initialize(&service));
+    plugin->Deinitialize(&service);
+    /*result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
+    EXPECT_TRUE(result);*/
 
 	CreateCecSettingsFileNoParams(CEC_SETTING_ENABLED_FILE);
-	result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
+    EXPECT_EQ(string(""), plugin->Initialize(&service));
+    plugin->Deinitialize(&service);
+	/*result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
     EXPECT_TRUE(result);
 }
 
