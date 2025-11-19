@@ -71,6 +71,38 @@ namespace
 		fileContentStream << "\n";
 		fileContentStream.close();
 	}
+
+    static void CreateCecSettingsFile(const std::string& filePath, bool cecEnabled = true, bool cecOTPEnabled = true, const std::string& osdName = "TV Box", unsigned int vendorId = 0x0019FB)
+    {
+        Core::File file(filePath);
+        
+        if (file.Exists()) {
+            file.Destroy();
+        }
+        
+        file.Create();
+        
+        JsonObject parameters;
+        parameters[CEC_SETTING_ENABLED] = cecEnabled;
+        parameters[CEC_SETTING_OTP_ENABLED] = cecOTPEnabled;
+        parameters[CEC_SETTING_OSD_NAME] = osdName;
+        parameters[CEC_SETTING_VENDOR_ID] = vendorId;
+        
+        parameters.IElement::ToFile(file);
+        file.Close();
+    }
+
+	static void CreateCecSettingsFileNoParams(const std::string& filePath)
+    {
+        Core::File file(filePath);
+        
+        if (file.Exists()) {
+            file.Destroy();
+        }
+        
+        file.Create();
+        file.Close();
+    }
 }
 
 typedef enum : uint32_t {
@@ -1636,3 +1668,25 @@ TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_connectionFailure)
 
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
 }
+
+TEST_F(HdmiCecSourceInitializedTest, loadSettings_FileExists_AllParametersPresent)
+{
+    bool result = false;
+    CreateCecSettingsFile(testFilePath, true, true, "TestDevice", 0x0019FB);
+
+    result = interface->loadSettings();
+    EXPECT_TRUE(result);
+
+    CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, false, "TestDevice", 0x123456);
+    result = interface->loadSettings();
+    EXPECT_TRUE(result);
+
+    CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, false, false, "TestDevice", 0x123456);
+    result = interface->loadSettings();
+    EXPECT_TRUE(result);
+
+	CreateCecSettingsFileNoParams(CEC_SETTING_ENABLED_FILE);
+	result = interface->loadSettings();
+    EXPECT_TRUE(result);
+}
+
