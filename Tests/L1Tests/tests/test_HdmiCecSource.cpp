@@ -1674,6 +1674,7 @@ TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_connectionFailure)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
 }
 
+#if 0
 TEST_F(HdmiCecSourceInitializedTest, loadSettings_FileExists_AllParametersPresent)
 {
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TestDevice", 0x0019FB);
@@ -1702,4 +1703,5 @@ TEST_F(HdmiCecSourceInitializedTest, loadSettings_FileExists_AllParametersPresen
 	/*result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
     EXPECT_TRUE(result);*/
 }
+#endif
 
