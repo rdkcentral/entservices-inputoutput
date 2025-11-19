@@ -1677,7 +1677,7 @@ TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent)
 
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
 {
-    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+    EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke(
             [&](const LogicalAddress &to, const CECFrame &frame) {
                 EXPECT_EQ(to.toInt(), 1);
@@ -1698,7 +1698,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
 
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Failure)
 {
-    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+    EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
         .WillOnce(::testing::Throw(std::runtime_error("sendTo failed")));
 
     int iCounter = 0;
