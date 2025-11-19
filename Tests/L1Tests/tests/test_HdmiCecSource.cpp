@@ -1701,6 +1701,6 @@ TEST_F(HdmiCecSourceInitializedTest, loadSettings_FileExists_AllParametersPresen
     EXPECT_EQ(string(""), plugin->Initialize(&service));
     plugin->Deinitialize(&service);
 	/*result = Plugin::HdmiCecSourceImplementation::_instance->loadSettings();
-    EXPECT_TRUE(result);
+    EXPECT_TRUE(result);*/
 }
 
