@@ -1681,15 +1681,9 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
     .Times(::testing::AtLeast(1))    
     .WillRepeatedly(::testing::Invoke(
             [&](auto const& to, auto const& second, auto const& thirdArg) {
-                
+                //nothing to be done
             }));
 
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
-        usleep (100 * 1000); //sleep for 100 milli sec
-        iCounter ++;
-    }
-  
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
     EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_DISCONNECTED));
@@ -1702,12 +1696,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Failure)
     EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
     .Times(::testing::AtLeast(1))
     .WillRepeatedly(::testing::Throw(std::runtime_error("ping failed")));
-
-    int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
-        usleep (100 * 1000); //sleep for 100 milli sec
-        iCounter ++;
-    }
   
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
