@@ -138,7 +138,7 @@ jobs:
         with:
           repository: rdkcentral/entservices-inputoutput
           path: entservices-inputoutput
-          ref: develop
+          ref: feature/L1-L2test
 
       - name: Checkout googletest
         if: steps.cache.outputs.cache-hit != 'true'
