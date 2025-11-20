@@ -1709,7 +1709,8 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Failure)
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_IOException)
 {
     EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
-        .WillOnce(::testing::Throw(IOException()));
+    .Times(::testing::AtLeast(1))
+    .WillRepeatedly(::testing::Throw(IOException()));
 
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
