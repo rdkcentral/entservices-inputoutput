@@ -109,6 +109,27 @@ namespace
         file.Close();
     }
 
+    // Helper function to create EDID bytes for LG TV
+    // LG TV is identified by manufacturer bytes: edidVec.at(8) == 0x1E and edidVec.at(9) == 0x6D
+    static std::vector<uint8_t> createLGTVEdidBytes()
+    {
+        std::vector<uint8_t> edidVec(128, 0x00); // Standard EDID is 128 bytes
+        // Set LG manufacturer ID at bytes 8 and 9
+        edidVec[8] = 0x1E;
+        edidVec[9] = 0x6D;
+        return edidVec;
+    }
+
+    // Helper function to create EDID bytes for non-LG TV
+    static std::vector<uint8_t> createNonLGTVEdidBytes()
+    {
+        std::vector<uint8_t> edidVec(128, 0x00);
+        // Set non-LG manufacturer ID
+        edidVec[8] = 0x00;
+        edidVec[9] = 0x00;
+        return edidVec;
+    }
+
 }
 
 typedef enum : uint32_t {
@@ -1677,6 +1698,19 @@ TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_NoParametersPresent)
     plugin->Deinitialize(&service);
 }
 
+TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_TV)
+{
+    system("ls -lh /etc/");
+    removeFile("/etc/device.properties");
+    system("ls -lh /etc/");
+    createFile("/etc/device.properties", "RDK_PROFILE=TV");
+    system("ls -lh /etc/");
+
+    EXPECT_EQ(string(""), plugin->Initialize(&service));
+    usleep (500 * 1000); //sleep for 500 milli sec
+    plugin->Deinitialize(&service);
+}
+
 #if 0
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
 {
@@ -1721,10 +1755,22 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_IOException)
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 }
 
+TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler_connect_ExceptionHandling)
+{
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+    .WillOnce(::testing::Throw(std::runtime_error("sendTo failed")));
+
+    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
+
+    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+}
+
 TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_ExceptionHandling)
 {
-      EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
-        .WillOnce(::testing::Throw(std::runtime_error("sendTo failed")));
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+    .WillOnce(::testing::Throw(std::runtime_error("sendTo failed")));
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":true}"), response));
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\":true}"), response));
@@ -1763,4 +1809,73 @@ TEST_F(HdmiCecSourceInitializedTest, addDevice_unspecifiedDevice)
     EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->addDevice(30));
 }
 
+TEST_F(HdmiCecSourceInitializedTest, SetLgTV){
+
+    ON_CALL(*p_videoOutputPortMock, getDisplay())
+            .WillByDefault(::testing::ReturnRef(device::Display::getInstance()));
+
+    ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
+        .WillByDefault(::testing::Return(true));
+
+    ON_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
+        .WillByDefault(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
+
+    ON_CALL(*p_displayMock, getEDIDBytes(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](std::vector<uint8_t> &edidVec2) {
+                edidVec2 = createLGTVEdidBytes();
+            }));
+    
+    EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
+    .Times(1)
+        .WillOnce(::testing::Return("TEST"));
+
+    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
+
+    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, giveDeviceVendorIdProcess_LGTV){
+
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
+    .WillRepeatedly(::testing::Invoke(
+        [&](const LogicalAddress &to, const CECFrame &frame) {
+           EXPECT_EQ(to.toInt(), 15);
+        }));
+    
+    ON_CALL(*p_videoOutputPortMock, getDisplay())
+            .WillByDefault(::testing::ReturnRef(device::Display::getInstance()));
+
+    ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
+        .WillByDefault(::testing::Return(true));
+
+    ON_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
+        .WillByDefault(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
+
+    ON_CALL(*p_displayMock, getEDIDBytes(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [&](std::vector<uint8_t> &edidVec2) {
+                edidVec2 = createLGTVEdidBytes();
+            }));
+    
+    EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
+    .Times(1)
+        .WillOnce(::testing::Return("TEST"));
+
+    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
+
+    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+
+    Header header;
+    header.from = LogicalAddress(15); //specifies with logicalAddress in the deviceList we're using
+
+    GiveDeviceVendorID giveDeviceVendorID;
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    EXPECT_NO_THROW(proc.process(giveDeviceVendorID, header));     
+}
 
