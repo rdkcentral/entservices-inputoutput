@@ -1726,7 +1726,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_IOException)
 
 TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_ExceptionHandling)
 {
-      EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_))
+      EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
         .WillOnce(::testing::Throw(std::runtime_error("sendTo failed")));
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":true}"), response));
@@ -1736,10 +1736,7 @@ TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_ExceptionHandling)
 TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged_ExceptionHandling)
 {
     EXPECT_CALL(*p_libCCECImplMock, getLogicalAddress(::testing::_))
-    .WillOnce(::testing::Invoke(
-        [&](int devType) {
-           return throw std::runtime_error("Invalid state");
-        }));
+    .WillOnce(::testing::Throw(std::runtime_error("Invalid state")));
 
     Plugin::HdmiCecSourceImplementation::_instance->onPowerModeChanged(WPEFramework::Exchange::IPowerManager::POWER_STATE_OFF, WPEFramework::Exchange::IPowerManager::POWER_STATE_ON);
 }
@@ -1747,10 +1744,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged_ExceptionHandling)
 TEST_F(HdmiCecSourceInitializedEventTest, CECEnable_ExceptionHandling)
 {
     EXPECT_CALL(*p_libCCECImplMock, getPhysicalAddress(::testing::_))
-    .WillOnce(::testing::Invoke(
-        [&](uint32_t *physAddress) {
-            return throw std::runtime_error("Invalid state");
-        }));
+    .WillOnce(::testing::Throw(std::runtime_error("Invalid state")));
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
 }
