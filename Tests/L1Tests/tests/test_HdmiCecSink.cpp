@@ -220,6 +220,9 @@ protected:
 
         plugin->Deinitialize(&service);
 
+		// Clear the listeners vector to avoid dangling pointers
+        listeners.clear();
+
         Core::IWorkerPool::Assign(nullptr);
         workerPool.Release();
         dispatcher->Deactivate();
