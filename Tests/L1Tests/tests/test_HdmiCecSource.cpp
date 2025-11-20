@@ -1648,7 +1648,7 @@ TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_connectionFailure)
 
 TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_NoConnection)
 {
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":false}"), response));
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": false}"), response));
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
 }
 
