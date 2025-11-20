@@ -1433,7 +1433,12 @@ TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Success)
 
 TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Failure1)
 {
-	EXPECT_EQ(Core:: ERROR_GENERAL, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"\"}"), response));
+	EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"\"}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, SetVendorId_Exception)
+{
+	EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVendorId"), _T("{\"vendorid\": \"INVALID\"}"), response));
 }
 
 TEST_F(HdmiCecSourceInitializedTest, GetVendorId_Success)
@@ -1718,4 +1723,36 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_IOException)
 
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 }
+
+TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_ExceptionHandling)
+{
+      EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_))
+        .WillOnce(::testing::Throw(std::runtime_error("sendTo failed")));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":true}"), response));
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\":true}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged_ExceptionHandling)
+{
+    EXPECT_CALL(*p_libCCECImplMock, getLogicalAddress(::testing::_))
+    .WillOnce(::testing::Invoke(
+        [&](int devType) {
+           return throw std::runtime_error("Invalid state");
+        }));
+
+    Plugin::HdmiCecSourceImplementation::_instance->onPowerModeChanged(WPEFramework::Exchange::IPowerManager::POWER_STATE_OFF, WPEFramework::Exchange::IPowerManager::POWER_STATE_ON);
+}
+
+TEST_F(HdmiCecSourceInitializedEventTest, CECEnable_ExceptionHandling)
+{
+    EXPECT_CALL(*p_libCCECImplMock, getPhysicalAddress(::testing::_))
+    .WillOnce(::testing::Invoke(
+        [&](uint32_t *physAddress) {
+            return throw std::runtime_error("Invalid state");
+        }));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
+}
+
 
