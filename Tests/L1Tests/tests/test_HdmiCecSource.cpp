@@ -1828,9 +1828,8 @@ TEST_F(HdmiCecSourceInitializedEventTest, SetLgTV){
                 edidVec2 = createLGTVEdidBytes();
             }));
     
-    EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
-    .Times(1)
-        .WillOnce(::testing::Return("TEST"));
+    ON_CALL(*p_hostImplMock, getDefaultVideoPortName())
+    .WillByDefault(::testing::Return("TEST"));
 
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
@@ -1862,9 +1861,8 @@ TEST_F(HdmiCecSourceInitializedEventTest, giveDeviceVendorIdProcess_LGTV){
                 edidVec2 = createLGTVEdidBytes();
             }));
     
-    EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
-    .Times(1)
-        .WillOnce(::testing::Return("TEST"));
+    ON_CALL(*p_hostImplMock, getDefaultVideoPortName())
+    .WillByDefault(::testing::Return("TEST"));
 
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
