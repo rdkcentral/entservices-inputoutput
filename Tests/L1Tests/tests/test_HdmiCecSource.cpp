@@ -81,9 +81,9 @@ namespace
     {
         Core::File file(filePath);
         
-        if (file.Exists()) {
+        /*if (file.Exists()) {
             file.Destroy();
-        }
+        }*/
         
         file.Create();
         
@@ -96,19 +96,19 @@ namespace
         parameters.IElement::ToFile(file);
         file.Close();
     }
-#if 0
+
 	static void CreateCecSettingsFileNoParams(const std::string& filePath)
     {
         Core::File file(filePath);
         
-        if (file.Exists()) {
+        /*if (file.Exists()) {
             file.Destroy();
-        }
+        }*/
         
         file.Create();
         file.Close();
     }
-#endif
+
 }
 
 typedef enum : uint32_t {
@@ -1656,20 +1656,25 @@ TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent)
 {
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TestDevice", 0x0019FB);
     EXPECT_EQ(string(""), plugin->Initialize(&service));
+    usleep (500 * 1000); //sleep for 500 milli sec
     plugin->Deinitialize(&service);
-    /*
-    CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, false, "TestDevice", 0x123456);
-    EXPECT_EQ(string(""), plugin->Initialize(&service));
-    plugin->Deinitialize(&service);
+}
 
+TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent1)
+{
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, false, false, "TestDevice", 0x123456);
     EXPECT_EQ(string(""), plugin->Initialize(&service));
+    usleep (500 * 1000); //sleep for 500 milli sec
     plugin->Deinitialize(&service);
 
-	CreateCecSettingsFileNoParams(CEC_SETTING_ENABLED_FILE);
+}
+
+TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_NoParametersPresent)
+{
+    CreateCecSettingsFileNoParams(CEC_SETTING_ENABLED_FILE);
     EXPECT_EQ(string(""), plugin->Initialize(&service));
+    usleep (500 * 1000); //sleep for 500 milli sec
     plugin->Deinitialize(&service);
-    */
 }
 
 #if 0
