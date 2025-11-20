@@ -1706,3 +1706,15 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Failure)
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 }
 
+TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_IOException)
+{
+    EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Throw(IOException("ping failed")));
+
+    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
+
+    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+}
+
