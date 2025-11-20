@@ -77,7 +77,6 @@ namespace
 		fileContentStream.close();
 	}
 
-    #if 0
     static void CreateCecSettingsFile(const std::string& filePath, bool cecEnabled = true, bool cecOTPEnabled = true, const std::string& osdName = "TV Box", unsigned int vendorId = 0x0019FB)
     {
         Core::File file(filePath);
@@ -109,7 +108,6 @@ namespace
         file.Create();
         file.Close();
     }
-    #endif
 }
 
 typedef enum : uint32_t {
@@ -489,31 +487,28 @@ protected:
     }
 };
 
-#if 0
+
 class HdmiCecSourceSettingsTest : public HdmiCecSourceTest {
 protected:
     HdmiCecSourceSettingsTest()
         : HdmiCecSourceTest()
     {
-        CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TV Box", 0x0019FB);
-        EXPECT_EQ(string(""), plugin->Initialize(&service));
-        EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
-        EXPECT_EQ(response, string("{\"success\":true}"));
+        int lCounter = 0;
+        while ((Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (lCounter < (2*10))) { //sleep for 2sec.
+                    usleep (100 * 1000); //sleep for 100 milli sec
+                    lCounter ++;
+        }
     }
     virtual ~HdmiCecSourceSettingsTest() override
     {
-            int lCounter = 0;
-            while ((Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (lCounter < (2*10))) { //sleep for 2sec.
-                        usleep (100 * 1000); //sleep for 100 milli sec
-                        lCounter ++;
-                }
-            EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": false}"), response));
-            EXPECT_EQ(response, string("{\"success\":true}"));
-            plugin->Deinitialize(&service);
-	        removeFile(CEC_SETTING_ENABLED_FILE);
+        int lCounter = 0;
+        while ((Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (lCounter < (2*10))) { //sleep for 2sec.
+                    usleep (100 * 1000); //sleep for 100 milli sec
+                    lCounter ++;
+        }
+        removeFile(CEC_SETTING_ENABLED_FILE);
     }
 };
-#endif
 
 class HdmiCecSourceInitializedEventTest : public HdmiCecSourceInitializedTest {
 protected:
@@ -1659,7 +1654,7 @@ TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_connectionFailure)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
 }
 
-#if 0
+
 TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent)
 {
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TestDevice", 0x0019FB);
@@ -1678,7 +1673,6 @@ TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent)
     EXPECT_EQ(string(""), plugin->Initialize(&service));
     plugin->Deinitialize(&service);
 }
-#endif
 
 #if 0
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
@@ -1746,6 +1740,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, CECEnable_ExceptionHandling)
     EXPECT_CALL(*p_libCCECImplMock, getPhysicalAddress(::testing::_))
     .WillOnce(::testing::Throw(std::runtime_error("Invalid state")));
 
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": false}"), response));
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
 }
 
