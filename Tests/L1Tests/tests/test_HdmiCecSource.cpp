@@ -76,7 +76,7 @@ namespace
 		fileContentStream << "\n";
 		fileContentStream.close();
 	}
-#if 0
+
     static void CreateCecSettingsFile(const std::string& filePath, bool cecEnabled = true, bool cecOTPEnabled = true, const std::string& osdName = "TV Box", unsigned int vendorId = 0x0019FB)
     {
         Core::File file(filePath);
@@ -96,7 +96,7 @@ namespace
         parameters.IElement::ToFile(file);
         file.Close();
     }
-
+#if 0
 	static void CreateCecSettingsFileNoParams(const std::string& filePath)
     {
         Core::File file(filePath);
@@ -494,19 +494,10 @@ protected:
     HdmiCecSourceSettingsTest()
         : HdmiCecSourceTest()
     {
-        int lCounter = 0;
-        while ((Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (lCounter < (2*10))) { //sleep for 2sec.
-                    usleep (100 * 1000); //sleep for 100 milli sec
-                    lCounter ++;
-        }
+        
     }
     virtual ~HdmiCecSourceSettingsTest() override
     {
-        int lCounter = 0;
-        while ((Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (lCounter < (2*10))) { //sleep for 2sec.
-                    usleep (100 * 1000); //sleep for 100 milli sec
-                    lCounter ++;
-        }
         removeFile(CEC_SETTING_ENABLED_FILE);
     }
 };
@@ -1655,10 +1646,15 @@ TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_connectionFailure)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
 }
 
+TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_NoConnection)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":false}"), response));
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("sendStandbyMessage"), _T("{}"), response));
+}
 
 TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent)
 {
-    //CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TestDevice", 0x0019FB);
+    CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TestDevice", 0x0019FB);
     EXPECT_EQ(string(""), plugin->Initialize(&service));
     plugin->Deinitialize(&service);
     /*
@@ -1729,6 +1725,12 @@ TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_ExceptionHandling)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("performOTPAction"), _T("{\"enabled\":true}"), response));
 }
 
+TEST_F(HdmiCecSourceInitializedTest, PerformOTPAction_NoConnection)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setOTPEnabled"), _T("{\"enabled\":false}"), response));
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("performOTPAction"), _T("{}"), response));
+}
+
 TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged_ExceptionHandling)
 {
     EXPECT_CALL(*p_libCCECImplMock, getLogicalAddress(::testing::_))
@@ -1744,6 +1746,16 @@ TEST_F(HdmiCecSourceInitializedEventTest, CECEnable_ExceptionHandling)
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": false}"), response));
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEnabled"), _T("{\"enabled\": true}"), response));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, removeDevice_unspecifiedDevice)
+{
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->removeDevice(30));
+}
+
+TEST_F(HdmiCecSourceInitializedTest, addDevice_unspecifiedDevice)
+{
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->addDevice(30));
 }
 
 
