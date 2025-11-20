@@ -259,3 +259,134 @@ def initialize_flask_with_HalApiNegativeValues():
 
     except:
         print("Inside Utils.py : Exception in initialize_flask function")
+
+def capture_wpeframework_logs(num_lines=50):
+    '''This function captures recent WPEFramework logs from various sources'''
+    logs = []
+    try:
+        # Try to capture logs from WPEFramework log file if it exists
+        if hasattr(Config, 'WPEFramework_logs_path') and os.path.exists(Config.WPEFramework_logs_path):
+            try:
+                with open(Config.WPEFramework_logs_path, 'r') as log_file:
+                    all_lines = log_file.readlines()
+                    # Get last N lines
+                    logs.extend(all_lines[-num_lines:])
+            except:
+                pass
+        
+        # Try to capture logs from journalctl (if WPEFramework is running as a service)
+        try:
+            journalctl_output = subprocess.run(
+                ['journalctl', '-u', 'WPEFramework', '-n', str(num_lines), '--no-pager'],
+                capture_output=True, text=True, timeout=5
+            )
+            if journalctl_output.returncode == 0:
+                logs.extend(journalctl_output.stdout.split('\n')[-num_lines:])
+        except:
+            pass
+        
+        # Try to capture logs from dmesg or system logs related to port 55555
+        try:
+            # Check for processes on port 55555 and get their logs
+            lsof_output = subprocess.run(
+                ['lsof', '-ti:55555'],
+                capture_output=True, text=True, timeout=3
+            )
+            if lsof_output.returncode == 0 and lsof_output.stdout.strip():
+                # If WPEFramework process is found, try to get its stderr
+                ps_output = subprocess.run(
+                    ['ps', 'aux'],
+                    capture_output=True, text=True, timeout=3
+                )
+                if 'WPEFramework' in ps_output.stdout:
+                    logs.append("WPEFramework process is running on port 55555")
+        except:
+            pass
+        
+        # Try to get logs from /var/log or common log locations
+        log_locations = [
+            '/var/log/WPEFramework.log',
+            '/tmp/WPEFramework.log',
+            os.path.join(os.path.expanduser('~'), 'WPEFramework.log'),
+            'log_file.txt'
+        ]
+        
+        for log_path in log_locations:
+            if os.path.exists(log_path):
+                try:
+                    with open(log_path, 'r') as log_file:
+                        all_lines = log_file.readlines()
+                        logs.extend(all_lines[-num_lines:])
+                        break
+                except:
+                    continue
+        
+        return logs
+    except Exception as e:
+        error_log(f"Exception in capture_wpeframework_logs: {str(e)}")
+        return logs
+
+def get_wpeframework_error_logs(test_case_id="", num_lines=100):
+    '''This function gets WPEFramework error logs and formats them for display'''
+    try:
+        logs = capture_wpeframework_logs(num_lines)
+        if not logs:
+            return "No WPEFramework logs found. WPEFramework may not be running or logs are not accessible."
+        
+        # Filter for error, warning, and relevant log entries
+        error_logs = []
+        warning_logs = []
+        info_logs = []
+        
+        for line in logs:
+            line_str = str(line).strip()
+            if not line_str:
+                continue
+            
+            # Look for ERROR, WARN, or relevant HdmiCecSource entries
+            if 'ERROR' in line_str.upper() or 'ERR' in line_str.upper():
+                error_logs.append(line_str)
+            elif 'WARN' in line_str.upper() or 'WARNING' in line_str.upper():
+                warning_logs.append(line_str)
+            elif 'HdmiCecSource' in line_str or 'HdmiCec' in line_str:
+                info_logs.append(line_str)
+        
+        # Format the output
+        formatted_logs = []
+        if test_case_id:
+            formatted_logs.append(f"\n{'='*100}")
+            formatted_logs.append(f"WPEFramework Logs for Test Case: {test_case_id}")
+            formatted_logs.append(f"{'='*100}\n")
+        
+        if error_logs:
+            formatted_logs.append("ERROR Logs:")
+            formatted_logs.append("-" * 100)
+            formatted_logs.extend(error_logs[-20:])  # Last 20 error lines
+            formatted_logs.append("")
+        
+        if warning_logs:
+            formatted_logs.append("WARNING Logs:")
+            formatted_logs.append("-" * 100)
+            formatted_logs.extend(warning_logs[-15:])  # Last 15 warning lines
+            formatted_logs.append("")
+        
+        if info_logs and not error_logs and not warning_logs:
+            formatted_logs.append("HdmiCecSource Related Logs:")
+            formatted_logs.append("-" * 100)
+            formatted_logs.extend(info_logs[-20:])  # Last 20 info lines
+            formatted_logs.append("")
+        
+        if not formatted_logs:
+            formatted_logs.append("No ERROR or WARNING logs found in WPEFramework output.")
+            formatted_logs.append("Recent log entries:")
+            formatted_logs.append("-" * 100)
+            formatted_logs.extend([str(line).strip() for line in logs[-10:] if str(line).strip()])
+        
+        formatted_logs.append(f"{'='*100}\n")
+        
+        return '\n'.join(formatted_logs)
+    except Exception as e:
+        return f"Error capturing WPEFramework logs: {str(e)}"
+
+def highlight_log(message):
+    print(Fore.GREEN + f"HIGHLIGHT: {message}" + Style.RESET_ALL)

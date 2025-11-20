@@ -29,10 +29,33 @@ passed_tc_list = []
 failed_tc_list = []
 
 
-def append_test_results_to_csv(tc_id, output, status, message):
+def append_test_results_to_csv(tc_id, output, status, message, wpe_logs=""):
+    # Import Utils here to avoid circular import
+    from Utilities import Utils
 
     # Assign the headers for report file
     headers = ["Curl API/TC Name", "Output Response", " TC Status ", "  Remarks  "]
+
+    # If test failed and wpe_logs is not provided, capture them automatically
+    if status == 'Fail' and not wpe_logs:
+        try:
+            wpe_logs = Utils.get_wpeframework_error_logs(tc_id, num_lines=50)
+            # Print logs to console immediately when test fails
+            if wpe_logs and "No WPEFramework logs found" not in wpe_logs:
+                print("\n" + "="*100)
+                print(f"WPEFramework Error Logs for Failed Test: {tc_id}")
+                print("="*100)
+                print(wpe_logs)
+                print("="*100 + "\n")
+        except Exception as e:
+            wpe_logs = f"Unable to capture WPEFramework logs: {str(e)}"
+            Utils.error_log(wpe_logs)
+
+    # Append WPEFramework logs to message if test failed
+    if status == 'Fail' and wpe_logs:
+        message_with_logs = message + "\n\nWPEFramework Error Logs:\n" + wpe_logs
+    else:
+        message_with_logs = message
 
     # Open the report file in append mode
     with open("TestReport.csv", "a", newline="") as csvfile:
@@ -43,7 +66,10 @@ def append_test_results_to_csv(tc_id, output, status, message):
             writer.writerow(headers)
 
         # Write the testcase details to a new row
-        writer.writerow([tc_id, output, status, message])
+        # Truncate message if too long for CSV (keep first 5000 chars)
+        if len(message_with_logs) > 5000:
+            message_with_logs = message_with_logs[:5000] + "... [truncated]"
+        writer.writerow([tc_id, output, status, message_with_logs])
 
 
 
