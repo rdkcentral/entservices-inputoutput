@@ -120,6 +120,7 @@ namespace
         return edidVec;
     }
 
+    #if 0
     // Helper function to create EDID bytes for non-LG TV
     static std::vector<uint8_t> createNonLGTVEdidBytes()
     {
@@ -129,6 +130,7 @@ namespace
         edidVec[9] = 0x00;
         return edidVec;
     }
+    #endif
 
 }
 
@@ -1809,7 +1811,7 @@ TEST_F(HdmiCecSourceInitializedTest, addDevice_unspecifiedDevice)
     EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->addDevice(30));
 }
 
-TEST_F(HdmiCecSourceInitializedTest, SetLgTV){
+TEST_F(HdmiCecSourceInitializedEventTest, SetLgTV){
 
     ON_CALL(*p_videoOutputPortMock, getDisplay())
             .WillByDefault(::testing::ReturnRef(device::Display::getInstance()));
