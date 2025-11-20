@@ -138,7 +138,7 @@ jobs:
         with:
           repository: rdkcentral/entservices-inputoutput
           path: entservices-inputoutput
-          ref: develop
+          ref: Workflow_Test
 
       - name: Checkout googletest
         if: steps.cache.outputs.cache-hit != 'true'
