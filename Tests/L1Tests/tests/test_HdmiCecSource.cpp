@@ -119,6 +119,8 @@ namespace
         
         parameters.IElement::ToFile(file);
         file.Close();
+        system("ls -lh /tmp/");
+        system("cat /tmp/cecData_l1Tests.json");
         ReadAndPrintJson(filePath);
     }
 
@@ -132,6 +134,8 @@ namespace
         
         file.Create();
         file.Close();
+        system("ls -lh /tmp/");
+        system("cat /tmp/cecData_l1Tests.json");
         ReadAndPrintJson(filePath);
     }
 
