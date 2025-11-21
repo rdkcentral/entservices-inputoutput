@@ -93,7 +93,7 @@ namespace
 
         JsonObject param;
         if (param.IElement::FromFile(file) == Core::ERROR_NONE) {
-            TEST_LOG("%s\n", param.ToString().c_str());
+            TEST_LOG("%s\n", param.String().c_str());
         } else {
             TEST_LOG("Failed to parse JSON from file.\n");
         }
