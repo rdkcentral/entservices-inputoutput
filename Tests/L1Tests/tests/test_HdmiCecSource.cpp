@@ -1613,11 +1613,11 @@ TEST_F(HdmiCecSourceInitializedEventTest, GiveDevicePowerStatusProcess_sendfailu
 
 TEST_F(HdmiCecSourceInitializedEventTest, FeatureAbortMessage)
 { 
-    OpCode feature(0xFF); // Invalid opcode
-    AbortReason reason(AbortReason::INVALID_OPERAND);
+    OpCode feature(GIVE_DEVICE_VENDOR_ID); // Invalid opcode
+    AbortReason reason(AbortReason::UNRECOGNIZED_OPCODE);
     FeatureAbort featureAbort(feature, reason);
     Header header;
-    header.from = LogicalAddress(LogicalAddress::PLAYBACK_1);
+    header.from = LogicalAddress(LogicalAddress::TV);
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
 
     EXPECT_NO_THROW(proc.process(featureAbort, header));
