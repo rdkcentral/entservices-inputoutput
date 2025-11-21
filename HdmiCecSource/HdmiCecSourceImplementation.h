@@ -293,7 +293,7 @@ namespace WPEFramework {
             void DeinitializeIARM();
             static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
             void onHdmiHotPlug(int connectStatus);
-            bool loadSettings();
+            bool loadSettings(const std::string& filePath);
             void persistSettings(bool enableStatus);
             void persistOTPSettings(bool enableStatus);
             void persistOSDName(const char *name);

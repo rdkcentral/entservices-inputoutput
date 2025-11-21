@@ -383,7 +383,7 @@ namespace WPEFramework
             InitializePowerManager(service);
 
             // load persistence setting
-            loadSettings();
+            loadSettings(CEC_SETTING_ENABLED_FILE);
             try
             {
                 //TODO(MROLLINS) this is probably per process so we either need to be running in our own process or be carefull no other plugin is calling it
@@ -791,10 +791,10 @@ namespace WPEFramework
             return;
        }
 
-        bool HdmiCecSourceImplementation::loadSettings()
+        bool HdmiCecSourceImplementation::loadSettings(const std::string& filePath)
         {
             Core::File file;
-            file = CEC_SETTING_ENABLED_FILE;
+            file = filePath;
 
             if( file.Open())
             {

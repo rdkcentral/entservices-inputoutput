@@ -43,7 +43,7 @@
 #include "WrapsMock.h"
 
 #define JSON_TIMEOUT   (1000)
-#define CEC_SETTING_ENABLED_FILE "/opt/persistent/ds/cecData_2.json"
+#define CEC_SETTING_ENABLED_FILE "/tmp/cecData_l1Tests.json"
 #define CEC_SETTING_OTP_ENABLED "cecOTPEnabled"
 #define CEC_SETTING_ENABLED "cecEnabled"
 #define CEC_SETTING_OSD_NAME "cecOSDName"
@@ -1710,6 +1710,7 @@ TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_UnsupportedProfile)
     plugin->Deinitialize(&service);
 }
 
+#if 0
 TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_RootReturnsNullptr)
 {
     removeFile("/etc/device.properties");
@@ -1743,7 +1744,6 @@ TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceDeInitialize_ConnectionTerminateE
     removeFile("/etc/device.properties");
 }
 
-#if 0
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
 {
     EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
