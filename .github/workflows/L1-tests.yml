@@ -252,6 +252,7 @@ jobs:
           ccec/MessageProcessor.hpp
           ccec/CECFrame.hpp
           ccec/MessageEncoder.hpp
+          ccec/CCEC.hpp
           ccec/host/RDK.hpp
           rdk/ds/audioOutputPort.hpp
           rdk/ds/compositeIn.hpp
@@ -462,8 +463,8 @@ jobs:
           -DRDK_SERVICES_L1_TEST=ON
           -DPLUGIN_AVINPUT=ON
           -DPLUGIN_HDCPPROFILE=ON
-          -DPLUGIN_HDMICECSOURCE=OFF
-          -DPLUGIN_HDMICECSINK=OFF
+          -DPLUGIN_HDMICECSOURCE=ON
+          -DPLUGIN_HDMICECSINK=ON
           -DUSE_THUNDER_R4=ON
           -DHIDE_NON_EXTERNAL_SYMBOLS=OFF
           &&
@@ -540,7 +541,7 @@ jobs:
           -DDS_FOUND=ON
           -DPLUGIN_AVINPUT=ON
           -DPLUGIN_HDCPPROFILE=ON
-          -DPLUGIN_HDMICECSOURCE=OFF
+          -DPLUGIN_HDMICECSOURCE=ON
           -DPLUGIN_HDMICECSINK=OFF
           -DRDK_SERVICES_L1_TEST=ON
           -DUSE_THUNDER_R4=ON

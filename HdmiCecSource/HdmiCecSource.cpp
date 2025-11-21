@@ -114,15 +114,7 @@ namespace WPEFramework
                 return ;
            }
 
-           bool enabled = false;
-           bool ret = false;
-           HdmiCecSource::_hdmiCecSource->GetEnabled(enabled,ret);
-
-           if(ret && enabled)
-           {
-                Exchange::IHdmiCecSource::HdmiCecSourceSuccess success;
-                HdmiCecSource::_hdmiCecSource->SetEnabled(false,success);
-           }
+           
            HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
 
            if(nullptr != _hdmiCecSource)
