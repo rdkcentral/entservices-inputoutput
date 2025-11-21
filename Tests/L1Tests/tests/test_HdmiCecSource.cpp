@@ -77,6 +77,30 @@ namespace
 		fileContentStream.close();
 	}
 
+    void ReadAndPrintJson(const std::string& filePath)
+    {
+        Core::File file(filePath);
+
+        if (!file.Exists()) {
+            TEST_LOG("File does not exist: %s\n", filePath.c_str());
+            return;
+        }
+
+        if (!file.Open()) {
+            TEST_LOG("Failed to open file: %s\n", filePath.c_str());
+            return;
+        }
+
+        JsonObject param;
+        if (param.IElement::FromFile(file) == Core::ERROR_NONE) {
+            TEST_LOG("%s\n", param.ToString().c_str());
+        } else {
+            TEST_LOG("Failed to parse JSON from file.\n");
+        }
+
+        file.Close();
+    }
+
     static void CreateCecSettingsFile(const std::string& filePath, bool cecEnabled = true, bool cecOTPEnabled = true, const std::string& osdName = "TV Box", unsigned int vendorId = 0x0019FB)
     {
         Core::File file(filePath);
@@ -95,6 +119,7 @@ namespace
         
         parameters.IElement::ToFile(file);
         file.Close();
+        ReadAndPrintJson(filePath);
     }
 
 	static void CreateCecSettingsFileNoParams(const std::string& filePath)
@@ -107,6 +132,7 @@ namespace
         
         file.Create();
         file.Close();
+        ReadAndPrintJson(filePath);
     }
 
     // Helper function to create EDID bytes for LG TV
