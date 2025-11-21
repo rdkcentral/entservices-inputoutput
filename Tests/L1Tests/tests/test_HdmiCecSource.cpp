@@ -1700,7 +1700,7 @@ TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_NoParametersPresent)
     plugin->Deinitialize(&service);
 }
 
-TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_TV)
+TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_UnsupportedProfile)
 {
     system("ls -lh /etc/");
     removeFile("/etc/device.properties");
@@ -1708,7 +1708,7 @@ TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_TV)
     createFile("/etc/device.properties", "RDK_PROFILE=TV");
     system("ls -lh /etc/");
 
-    EXPECT_EQ(string(""), plugin->Initialize(&service));
+    EXPECT_EQ(string("Not supported"), plugin->Initialize(&service));
     usleep (500 * 1000); //sleep for 500 milli sec
     plugin->Deinitialize(&service);
 }
