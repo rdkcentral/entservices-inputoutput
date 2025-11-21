@@ -796,6 +796,8 @@ namespace WPEFramework
             Core::File file;
             file = filePath;
 
+            LOGINFO("CEC_SETTING_ENABLED_FILE file:  %s \n",filePath.c_str());
+
             if( file.Open())
             {
                 JsonObject parameters;
