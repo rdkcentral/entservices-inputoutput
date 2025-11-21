@@ -559,11 +559,6 @@ namespace WPEFramework
                  return Core::ERROR_GENERAL;
             }
 
-            if(keyCode == KEY_UNSUPPORTED)
-            {
-                LOGERR("Unsupported Key Code 0x%x",keyCode);
-                return Core::ERROR_NOT_SUPPORTED;
-            }
             
 		    LOGINFO(" SendKeyPressEvent logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
             _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(static_cast<UICommand>(keyCode))),100);
