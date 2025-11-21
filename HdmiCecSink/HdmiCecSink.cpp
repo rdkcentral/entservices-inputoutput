@@ -54,6 +54,7 @@ namespace WPEFramework
 
        const std::string HdmiCecSink::Initialize(PluginHost::IShell *service)
        {
+	       Core::hresult res = Core::ERROR_GENERAL;
            profileType = searchRdkProfile();
 
            if (profileType == STB || profileType == NOT_FOUND)
@@ -77,7 +78,14 @@ namespace WPEFramework
 
            if(nullptr != _hdmiCecSink)
             {
-                _hdmiCecSink->Configure(service);
+                res=_hdmiCecSink->Configure(service);
+		  if (res==Core::ERROR_GENERAL)
+                {
+                         LOGERR("HdmiCecSink plugin cannot initialize due to configure error \r\n");
+                         msg = "HdmiCecSink plugin is not available due to configure function failure";
+                         Deinitialize(service);
+                         return msg;
+                }
                 _hdmiCecSink->Register(&_notification);
                 Exchange::JHdmiCecSink::Register(*this, _hdmiCecSink);
                 LOGINFO("HdmiCecSink plugin is available. Successfully activated HdmiCecSink Plugin");
