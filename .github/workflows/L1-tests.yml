@@ -700,6 +700,14 @@ jobs:
           echo "Disk space:" >> $GITHUB_WORKSPACE/debug_info.log
           df -h >> $GITHUB_WORKSPACE/debug_info.log
 
+      - name: Upload build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+         name: BuildL1
+         path: |
+          ./
+
       - name: Upload artifacts
         if: ${{ !env.ACT }}
         uses: actions/upload-artifact@v4
