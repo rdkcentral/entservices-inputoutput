@@ -81,9 +81,9 @@ namespace
     {
         Core::File file(filePath);
         
-        /*if (file.Exists()) {
+        if (file.Exists()) {
             file.Destroy();
-        }*/
+        }
         
         file.Create();
         
@@ -101,9 +101,9 @@ namespace
     {
         Core::File file(filePath);
         
-        /*if (file.Exists()) {
+        if (file.Exists()) {
             file.Destroy();
-        }*/
+        }
         
         file.Create();
         file.Close();
@@ -1678,16 +1678,18 @@ TEST_F(HdmiCecSourceInitializedTest, sendStandbyMessage_NoConnection)
 TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent)
 {
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, true, true, "TestDevice", 0x0019FB);
+    usleep (1000 * 1000); //sleep for 1000 milli sec
     EXPECT_EQ(string(""), plugin->Initialize(&service));
-    usleep (500 * 1000); //sleep for 500 milli sec
+    
     plugin->Deinitialize(&service);
 }
 
 TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent1)
 {
     CreateCecSettingsFile(CEC_SETTING_ENABLED_FILE, false, false, "TestDevice", 0x123456);
+    usleep (1000 * 1000); //sleep for 1000 milli sec
     EXPECT_EQ(string(""), plugin->Initialize(&service));
-    usleep (500 * 1000); //sleep for 500 milli sec
+
     plugin->Deinitialize(&service);
 
 }
@@ -1695,8 +1697,9 @@ TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_AllParametersPresent1)
 TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_NoParametersPresent)
 {
     CreateCecSettingsFileNoParams(CEC_SETTING_ENABLED_FILE);
+    usleep (1000 * 1000); //sleep for 1000 milli sec
     EXPECT_EQ(string(""), plugin->Initialize(&service));
-    usleep (500 * 1000); //sleep for 500 milli sec
+
     plugin->Deinitialize(&service);
 }
 
