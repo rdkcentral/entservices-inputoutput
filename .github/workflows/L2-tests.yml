@@ -107,7 +107,7 @@ jobs:
         with:
           repository: rdkcentral/entservices-inputoutput
           path: entservices-inputoutput
-          ref: develop
+          ref: Workflow_Test
 
       - name: Checkout entservices-testframework
         uses: actions/checkout@v3
