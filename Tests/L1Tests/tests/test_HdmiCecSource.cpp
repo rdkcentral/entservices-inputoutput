@@ -43,7 +43,7 @@
 #include "WrapsMock.h"
 
 #define JSON_TIMEOUT   (1000)
-#define CEC_SETTING_ENABLED_FILE "/tmp/cecData_l1Tests.json"
+#define CEC_SETTING_ENABLED_FILE "/opt/persistent/ds/cecData_2.json"
 #define CEC_SETTING_OTP_ENABLED "cecOTPEnabled"
 #define CEC_SETTING_ENABLED "cecEnabled"
 #define CEC_SETTING_OSD_NAME "cecOSDName"
@@ -119,8 +119,8 @@ namespace
         
         parameters.IElement::ToFile(file);
         file.Close();
-        system("ls -lh /tmp/");
-        system("cat /tmp/cecData_l1Tests.json");
+        system("ls -lh /opt/persistent/ds/");
+        system("cat /opt/persistent/ds/cecData_2.json");
         ReadAndPrintJson(filePath);
     }
 
@@ -134,8 +134,8 @@ namespace
         
         file.Create();
         file.Close();
-        system("ls -lh /tmp/");
-        system("cat /tmp/cecData_l1Tests.json");
+        system("ls -lh /opt/persistent/ds/");
+        system("cat /opt/persistent/ds/cecData_2.json");
         ReadAndPrintJson(filePath);
     }
 
