@@ -1613,9 +1613,13 @@ TEST_F(HdmiCecSourceInitializedEventTest, GiveDevicePowerStatusProcess_sendfailu
 
 TEST_F(HdmiCecSourceInitializedEventTest, FeatureAbortMessage)
 { 
-    OpCode feature(GIVE_DEVICE_VENDOR_ID); // Invalid opcode
-    AbortReason reason(AbortReason::UNRECOGNIZED_OPCODE);
-    FeatureAbort featureAbort(feature, reason);
+    /*OpCode feature(GIVE_DEVICE_VENDOR_ID); // Invalid opcode
+    AbortReason reason(AbortReason::UNRECOGNIZED_OPCODE);*/
+    
+    uint8_t broadcastFeatureAbortFrame[] = { 0x4F, 0x00, 0x9F, 0x00 };
+    CECFrame frame(broadcastFeatureAbortFrame, sizeof(broadcastFeatureAbortFrame)); 
+
+    FeatureAbort featureAbort(broadcastFeatureAbortFrame, 0);
     Header header;
     header.from = LogicalAddress(LogicalAddress::TV);
     Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
