@@ -1702,15 +1702,45 @@ TEST_F(HdmiCecSourceSettingsTest, loadSettings_FileExists_NoParametersPresent)
 
 TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_UnsupportedProfile)
 {
-    system("ls -lh /etc/");
     removeFile("/etc/device.properties");
-    system("ls -lh /etc/");
     createFile("/etc/device.properties", "RDK_PROFILE=TV");
-    system("ls -lh /etc/");
 
     EXPECT_EQ(string("Not supported"), plugin->Initialize(&service));
     usleep (500 * 1000); //sleep for 500 milli sec
     plugin->Deinitialize(&service);
+}
+
+TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_RootReturnsNullptr)
+{
+    removeFile("/etc/device.properties");
+    createFile("/etc/device.properties", "RDK_PROFILE=STB");
+
+    // Mock the Root method to return nullptr
+    EXPECT_CALL(service, Root<Exchange::IHdmiCecSource>(::testing::_, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Return(nullptr));
+
+    EXPECT_EQ(string("HdmiCecSource plugin is not available"), plugin->Initialize(&service));
+    usleep (500 * 1000); //sleep for 500 milli sec
+    
+    removeFile("/etc/device.properties");
+}
+
+TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceDeInitialize_ConnectionTerminateException)
+{
+    removeFile("/etc/device.properties");
+    createFile("/etc/device.properties", "RDK_PROFILE=STB");
+
+    RPC::IRemoteConnection* mockConnection = reinterpret_cast<RPC::IRemoteConnection*>(0x1);
+    
+    EXPECT_CALL(service, RemoteConnection(::testing::_))
+    .WillOnce(::testing::Return(mockConnection));
+
+    EXPECT_CALL(*mockConnection, Terminate())
+    .WillOnce(::testing::Throw(std::runtime_error("Failed to terminate connection")));
+
+    EXPECT_NO_THROW(plugin->Deinitialize(&service));
+
+    removeFile("/etc/device.properties");
 }
 
 #if 0
