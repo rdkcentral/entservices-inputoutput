@@ -714,11 +714,3 @@ jobs:
             rdkL1TestResultsWithoutValgrind.json
             rdkL1TestResultsWithValgrind.json
           if-no-files-found: warn
-
-      - name: Upload build
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-         name: Build results
-         path: |
-          ./
