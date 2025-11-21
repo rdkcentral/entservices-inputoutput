@@ -372,14 +372,15 @@ namespace WPEFramework
     : cecEnableStatus(false),smConnection(nullptr), m_sendKeyEventThreadRun(false)
     , _pwrMgrNotification(*this)
     , _registeredEventHandlers(false)
+    , _exceptionOccurred(false)
     {
-        LOGWARN("ctor");
-        HdmiCecSourceImplementation::_instance = this;
-    }
+		LOGWARN("ctor");
+		HdmiCecSourceImplementation::_instance = this;
+	}
 
     HdmiCecSourceImplementation::~HdmiCecSourceImplementation()
     {
-         LOGWARN("dtor");
+	     LOGWARN("dtor");
 
          if(cecEnableStatus)
          {
@@ -395,11 +396,14 @@ namespace WPEFramework
            }
            _registeredEventHandlers = false;
            device::Host::getInstance().UnRegister(baseInterface<device::Host::IDisplayDeviceEvents>());
-    }
+		//Reset exception flag for next activation
+		_exceptionOccurred = false;
+	}
 
     Core::hresult HdmiCecSourceImplementation::Configure(PluginHost::IShell* service)
     {
         LOGINFO("Configure");
+		_exceptionOccurred = false;
         ASSERT(service != nullptr);
         PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
         PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
@@ -461,17 +465,22 @@ namespace WPEFramework
                 }
                 catch(...)
                 {
-                    LOGWARN("Exception while enabling CEC settings .\r\n");
-                }
-             }
-        } else {
-            msg = "IARM bus is not available";
-            LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
-        }
-        ASSERT(_powerManagerPlugin);
+					LOGWARN("Exception while enabling CEC settings .\r\n");
+					_exceptionOccurred = true;
+				}
+			 }
+		} else {
+			msg = "IARM bus is not available";
+			LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
+			_exceptionOccurred = true;
+		}
+		ASSERT(_powerManagerPlugin);
         registerEventHandlers();
-        return Core::ERROR_NONE;
-    }
+		if (_exceptionOccurred) {
+			LOGERR("HdmiCecSource activated in degraded mode; APIs will return ERROR_ILLEGAL_STATE");
+		}
+		return Core::ERROR_NONE;
+	}
 
     void HdmiCecSourceImplementation::registerEventHandlers()
     {
@@ -529,7 +538,6 @@ namespace WPEFramework
     }
 
     void HdmiCecSourceImplementation::addDevice(const int logicalAddress) {
-
 		if(!HdmiCecSourceImplementation::_instance)
 			return;
 
@@ -580,6 +588,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::GetActiveSourceStatus(bool &isActiveSource, bool &success)
        {
+		   if (_exceptionOccurred) {
+			   LOGERR("Skipping API call because previous exception occurred");
+			   return Core::ERROR_ILLEGAL_STATE;
+		   }
             isActiveSource = isDeviceActiveSource;
             success = true;
             return Core::ERROR_NONE;
@@ -661,6 +673,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSuccess &success)
 		{
+			if (_exceptionOccurred) {
+				LOGERR("Skipping API call because previous exception occurred");
+				return Core::ERROR_ILLEGAL_STATE;
+			}
 			SendKeyInfo keyInfo;
 			try {
                keyInfo.logicalAddr = logicalAddress;
@@ -692,6 +708,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::SendStandbyMessage(HdmiCecSourceSuccess &success)
        {
+		   if (_exceptionOccurred) {
+			   LOGERR("Skipping API call because previous exception occurred");
+			   return Core::ERROR_ILLEGAL_STATE;
+		   }
             bool ret = false;
 
             if(true == cecEnableStatus)
@@ -786,6 +806,10 @@ namespace WPEFramework
 
        void HdmiCecSourceImplementation::onHdmiHotPlug(int connectStatus)
        {
+		   if (_exceptionOccurred) {
+			   LOGERR("Skipping API call because previous exception occurred");
+			   return;
+		   }
             if (HDMI_HOT_PLUG_EVENT_CONNECTED == connectStatus)
             {
                 LOGINFO ("onHdmiHotPlug Status : %d ", connectStatus);
@@ -937,6 +961,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::SetEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
         {
+			if (_exceptionOccurred) {
+				LOGERR("Skipping API call because previous exception occurred");
+				return Core::ERROR_ILLEGAL_STATE;
+			}
            LOGINFO("Entered SetEnabled ");
 
            Core:: hresult ret = setEnabledInternal(enabled, true);
@@ -974,6 +1002,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
         {
+			if (_exceptionOccurred) {
+				LOGERR("Skipping API call because previous exception occurred");
+				return Core::ERROR_ILLEGAL_STATE;
+			}
            if (cecOTPSettingEnabled != enabled)
            {
                LOGINFO("persist SetOTPEnabled ");
@@ -987,14 +1019,12 @@ namespace WPEFramework
         void HdmiCecSourceImplementation::CECEnable(void)
         {
             LOGINFO("Entered CECEnable");
-
             if (cecEnableStatus)
             {
                 LOGWARN("CEC Already Enabled");
                 return;
             }
-
-            if(0 == libcecInitStatus)
+			if(0 == libcecInitStatus)
             {
                 try
                 {
@@ -1006,74 +1036,73 @@ namespace WPEFramework
                 }
             }
             libcecInitStatus++;
-
-            m_sendKeyEventThreadExit = false;
-            try {
-               if (m_sendKeyEventThread.get().joinable()) {
-                   m_sendKeyEventThread.get().join();
-	       }
-               m_sendKeyEventThread = Utils::ThreadRAII(std::thread(threadSendKeyEvent));
-            } catch(const std::system_error& e) {
-                LOGERR("exception in creating threadSendKeyEvent %s", e.what());
-	    }
-
-
-            //Acquire CEC Addresses
-            getPhysicalAddress();
-            getLogicalAddress();
-
-            smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
-            smConnection->open();
-            msgProcessor = new HdmiCecSourceProcessor(*smConnection);
-            msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
-            smConnection->addFrameListener(msgFrameListener);
-
-            cecEnableStatus = true;
-
-            if(smConnection)
-            {
-                LOGINFO("Command: sending GiveDevicePowerStatus \r\n");
-                smConnection->sendTo(LogicalAddress::TV, MessageEncoder().encode(GiveDevicePowerStatus()));
-                LOGINFO("Command: sending request active Source isDeviceActiveSource is set to false\r\n");
-                smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(RequestActiveSource()));
-                isDeviceActiveSource = false;
-                LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n", \
+			m_sendKeyEventThreadExit = false;
+			try {
+				if (m_sendKeyEventThread.get().joinable()) {
+					m_sendKeyEventThread.get().join();
+				}
+				m_sendKeyEventThread = Utils::ThreadRAII(std::thread(threadSendKeyEvent));
+			} catch(const std::system_error& e) {
+				LOGERR("exception in creating threadSendKeyEvent %s", e.what());
+			}
+			// Acquire CEC Addresses
+			try {
+				getPhysicalAddress();
+				getLogicalAddress();
+			} catch (...) {
+				LOGWARN("Exception while getting CEC addresses");
+			}
+			smConnection = new Connection(logicalAddress.toInt(), false, "ServiceManager::Connection::");
+			if (!smConnection) {
+				LOGERR("smConnection allocation failed, skipping further setup");
+				return;
+			}
+			smConnection->open();
+			msgProcessor = new HdmiCecSourceProcessor(*smConnection);
+			msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
+			smConnection->addFrameListener(msgFrameListener);
+			cecEnableStatus = true;
+			if (smConnection) 
+			{
+				LOGINFO("Command: sending GiveDevicePowerStatus \r\n");
+				smConnection->sendTo(LogicalAddress::TV, MessageEncoder().encode(GiveDevicePowerStatus()));
+				LOGINFO("Command: sending request active Source isDeviceActiveSource is set to false\r\n");
+				smConnection->sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(RequestActiveSource()));
+				isDeviceActiveSource = false;
+				LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n", \
                                                  (isLGTvConnected)?lgVendorId.toString().c_str():appVendorId.toString().c_str());
-                if(isLGTvConnected)
-                    smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(lgVendorId)));
-                else 
-                    smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(appVendorId)));
-
-                LOGWARN("Start Update thread %p", smConnection );
-                m_updateThreadExit = false;
-                _instance->m_lockUpdate = PTHREAD_MUTEX_INITIALIZER;
-                _instance->m_condSigUpdate = PTHREAD_COND_INITIALIZER;
-                try {
-                    if (m_UpdateThread.get().joinable()) {
-                       m_UpdateThread.get().join();
-	            }
-                    m_UpdateThread = Utils::ThreadRAII(std::thread(threadUpdateCheck));
-                } catch(const std::system_error& e) {
-                    LOGERR("exception in creating threadUpdateCheck %s", e.what());
-	        }
-
-                LOGWARN("Start Thread %p", smConnection );
-                m_pollThreadExit = false;
-                _instance->m_numberOfDevices = 0;
-                _instance->m_lock = PTHREAD_MUTEX_INITIALIZER;
-                _instance->m_condSig = PTHREAD_COND_INITIALIZER;
-                try {
-                    if (m_pollThread.get().joinable()) {
-                       m_pollThread.get().join();
-	            }
-                    m_pollThread = Utils::ThreadRAII(std::thread(threadRun));
-                } catch(const std::system_error& e) {
-                    LOGERR("exception in creating threadRun %s", e.what());
-	        }
-
-            }
-            return;
-        }
+				if(isLGTvConnected)
+					smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(lgVendorId)));
+				else
+					smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(appVendorId)));
+				LOGWARN("Start Update thread %p", smConnection );
+				m_updateThreadExit = false;
+				_instance->m_lockUpdate = PTHREAD_MUTEX_INITIALIZER;
+				_instance->m_condSigUpdate = PTHREAD_COND_INITIALIZER;
+				try {
+					if (m_UpdateThread.get().joinable()) {
+						m_UpdateThread.get().join();
+					}
+					m_UpdateThread = Utils::ThreadRAII(std::thread(threadUpdateCheck));
+				} catch(const std::system_error& e) {
+					LOGERR("exception in creating threadUpdateCheck %s", e.what());
+				}
+				LOGWARN("Start Thread %p", smConnection );
+				m_pollThreadExit = false;
+				_instance->m_numberOfDevices = 0;
+				_instance->m_lock = PTHREAD_MUTEX_INITIALIZER;
+				_instance->m_condSig = PTHREAD_COND_INITIALIZER;
+				try {
+					if (m_pollThread.get().joinable()) {
+						m_pollThread.get().join();
+					}
+					m_pollThread = Utils::ThreadRAII(std::thread(threadRun));
+				} catch(const std::system_error& e) {
+					LOGERR("exception in creating threadRun %s", e.what());
+				}
+			}
+			return;
+		}
 
         void HdmiCecSourceImplementation::CECDisable(void)
         {
@@ -1204,6 +1233,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::GetEnabled(bool &enabled, bool &success)
         {
+			if (_exceptionOccurred) {
+				LOGERR("Skipping API call because previous exception occurred");
+				return Core::ERROR_ILLEGAL_STATE;
+			}
             LOGINFO("GetEnabled :%d ",cecEnableStatus);
             enabled = cecEnableStatus;
             success = true;
@@ -1212,6 +1245,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::GetOTPEnabled(bool &enabled, bool &success)
         {
+			if (_exceptionOccurred) {
+				LOGERR("Skipping API call because previous exception occurred");
+				return Core::ERROR_ILLEGAL_STATE;
+			}
             enabled = cecOTPSettingEnabled;
             LOGINFO("GetOTPEnabled :%d ",cecOTPSettingEnabled);
             success = true;
@@ -1220,6 +1257,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::GetOSDName(std::string &name, bool &success)
         {
+		if (_exceptionOccurred) {
+                   LOGERR("Skipping API call because previous exception occurred");
+                   return Core::ERROR_ILLEGAL_STATE;
+           }
             name = osdName.toString();
             LOGINFO("GetOSDName :%s ",name.c_str());
             success = true;
@@ -1228,6 +1269,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::SetOSDName(const std::string &name, HdmiCecSourceSuccess &success)
         {
+			if (_exceptionOccurred) {
+				LOGERR("Skipping API call because previous exception occurred");
+				return Core::ERROR_ILLEGAL_STATE;
+			}
             LOGINFO("SetOSDName :%s ",name.c_str());
             osdName = name.c_str();
             Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_OSD_NAME, JsonValue(name.c_str()));
@@ -1237,6 +1282,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::GetVendorId(std::string &vendorid, bool &success)
         {
+			if (_exceptionOccurred) {
+				LOGERR("Skipping API call because previous exception occurred");
+				return Core::ERROR_ILLEGAL_STATE;
+			}
             vendorid = appVendorId.toString();
             LOGINFO("GetVendorId :%s ",vendorid.c_str());
             success = true;
@@ -1245,6 +1294,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::SetVendorId(const string &vendorid, HdmiCecSourceSuccess &success)
         {
+			if (_exceptionOccurred) {
+				LOGERR("Skipping API call because previous exception occurred");
+				return Core::ERROR_ILLEGAL_STATE;
+			}
             LOGINFO("SetVendorId :%s ",vendorid.c_str());
             if (vendorid.empty()) {
                 LOGERR("SetVendorId failed: vendorid is not given");
@@ -1270,6 +1323,10 @@ namespace WPEFramework
 
         Core::hresult HdmiCecSourceImplementation::PerformOTPAction(HdmiCecSourceSuccess &success)
         {
+			if (_exceptionOccurred) {
+				LOGERR("Skipping API call because previous exception occurred");
+				return Core::ERROR_ILLEGAL_STATE;
+			}
             LOGINFO("PerformOTPAction ");
             bool ret = false; 
 
@@ -1311,7 +1368,12 @@ namespace WPEFramework
         }
 
         Core::hresult HdmiCecSourceImplementation::GetDeviceList(uint32_t &numberofdevices, IHdmiCecSourceDeviceListIterator*& deviceList, bool &success)
-        {   //sample servicemanager response:
+        {
+			if (_exceptionOccurred) {
+				LOGERR("Skipping API call because previous exception occurred");
+				return Core::ERROR_ILLEGAL_STATE;
+			}
+	     	//sample servicemanager response:
             std::vector<Exchange::IHdmiCecSource::HdmiCecSourceDevices> localDevices;
             Exchange::IHdmiCecSource::HdmiCecSourceDevices actual_hdmicecdevices = {0};
 

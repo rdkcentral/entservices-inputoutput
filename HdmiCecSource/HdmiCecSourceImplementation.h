@@ -328,6 +328,7 @@ namespace WPEFramework {
             private:
                 mutable Core::CriticalSection _adminLock;
                 std::list<Exchange::IHdmiCecSource::INotification*> _hdmiCecSourceNotifications;
+		bool _exceptionOccurred;
 
         public:
             Core::hresult SetEnabled(const bool &enabled, HdmiCecSourceSuccess &success) override;
