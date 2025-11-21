@@ -77,30 +77,6 @@ namespace
 		fileContentStream.close();
 	}
 
-    void ReadAndPrintJson(const std::string& filePath)
-    {
-        Core::File file(filePath);
-
-        if (!file.Exists()) {
-            TEST_LOG("File does not exist: %s\n", filePath.c_str());
-            return;
-        }
-
-        if (!file.Open()) {
-            TEST_LOG("Failed to open file: %s\n", filePath.c_str());
-            return;
-        }
-
-        /*JsonObject param;
-        if (param.IElement::FromFile(file) == Core::ERROR_NONE) {
-            TEST_LOG("%s\n", param.String().c_str());
-        } else {
-            TEST_LOG("Failed to parse JSON from file.\n");
-        }*/
-
-        file.Close();
-    }
-
     static void CreateCecSettingsFile(const std::string& filePath, bool cecEnabled = true, bool cecOTPEnabled = true, const std::string& osdName = "TV Box", unsigned int vendorId = 0x0019FB)
     {
         Core::File file(filePath);
@@ -119,9 +95,6 @@ namespace
         
         parameters.IElement::ToFile(file);
         file.Close();
-        system("ls -lh /opt/persistent/ds/");
-        system("cat /opt/persistent/ds/cecData_2.json");
-        ReadAndPrintJson(filePath);
     }
 
 	static void CreateCecSettingsFileNoParams(const std::string& filePath)
@@ -134,9 +107,6 @@ namespace
         
         file.Create();
         file.Close();
-        system("ls -lh /opt/persistent/ds/");
-        system("cat /opt/persistent/ds/cecData_2.json");
-        ReadAndPrintJson(filePath);
     }
 
     // Helper function to create EDID bytes for LG TV
@@ -149,19 +119,6 @@ namespace
         edidVec[9] = 0x6D;
         return edidVec;
     }
-
-    #if 0
-    // Helper function to create EDID bytes for non-LG TV
-    static std::vector<uint8_t> createNonLGTVEdidBytes()
-    {
-        std::vector<uint8_t> edidVec(128, 0x00);
-        // Set non-LG manufacturer ID
-        edidVec[8] = 0x00;
-        edidVec[9] = 0x00;
-        return edidVec;
-    }
-    #endif
-
 }
 
 typedef enum : uint32_t {
@@ -1742,57 +1699,6 @@ TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_UnsupportedProfile)
     usleep (500 * 1000); //sleep for 500 milli sec
     plugin->Deinitialize(&service);
 }
-
-#if 0
-TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_RootReturnsNullptr)
-{
-    removeFile("/etc/device.properties");
-    createFile("/etc/device.properties", "RDK_PROFILE=STB");
-
-    // Mock the Root method to return nullptr
-    EXPECT_CALL(service, Root<Exchange::IHdmiCecSource>(::testing::_, ::testing::_, ::testing::_))
-        .WillOnce(::testing::Return(nullptr));
-
-    EXPECT_EQ(string("HdmiCecSource plugin is not available"), plugin->Initialize(&service));
-    usleep (500 * 1000); //sleep for 500 milli sec
-    
-    removeFile("/etc/device.properties");
-}
-
-TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceDeInitialize_ConnectionTerminateException)
-{
-    removeFile("/etc/device.properties");
-    createFile("/etc/device.properties", "RDK_PROFILE=STB");
-
-    RPC::IRemoteConnection* mockConnection = reinterpret_cast<RPC::IRemoteConnection*>(0x1);
-    
-    EXPECT_CALL(service, RemoteConnection(::testing::_))
-    .WillOnce(::testing::Return(mockConnection));
-
-    EXPECT_CALL(*mockConnection, Terminate())
-    .WillOnce(::testing::Throw(std::runtime_error("Failed to terminate connection")));
-
-    EXPECT_NO_THROW(plugin->Deinitialize(&service));
-
-    removeFile("/etc/device.properties");
-}
-
-TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Success)
-{
-    EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
-    .Times(::testing::AtLeast(1))    
-    .WillRepeatedly(::testing::Invoke(
-            [&](auto const& to, auto const& second, auto const& thirdArg) {
-                //nothing to be done
-            }));
-
-    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
-
-    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_DISCONNECTED));
-
-    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
-}
-#endif
 
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Failure)
 {
