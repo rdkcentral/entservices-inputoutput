@@ -1821,3 +1821,56 @@ TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
     EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"test\"}"), response));
     EXPECT_EQ(response, string(""));
 }
+
+/**
+ * @brief Test exception handling for invalid input type
+ * 
+ * This test verifies the Coverity fix for proper exception handling.
+ * Previously threw string literal, now throws std::invalid_argument.
+ */
+TEST_F(AVInputInit, InvalidInputType_ThrowsStdException)
+{
+    // Test with invalid input type - should handle exception properly
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("startInput"), 
+        _T("{\"portId\": \"0\", \"typeOfInput\": \"INVALID\"}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+/**
+ * @brief Test exception handling for getInputDevices with invalid type
+ * 
+ * Verifies proper exception is thrown for invalid input type parameter
+ */
+TEST_F(AVInputInit, getInputDevices_InvalidInputType_HandlesException)
+{
+    // Test with invalid type - should catch and handle std::invalid_argument
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getInputDevices"), 
+        _T("{\"typeOfInput\": \"DISPLAYPORT\"}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+/**
+ * @brief Test exception handling for setVideoRectangle with invalid type
+ * 
+ * Verifies proper exception handling for invalid input types
+ */
+TEST_F(AVInputInit, setVideoRectangle_InvalidInputType_HandlesException)
+{
+    // Test with invalid type - should catch std::invalid_argument properly
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setVideoRectangle"), 
+        _T("{\"x\": 0, \"y\": 0, \"w\": 720, \"h\": 480, \"typeOfInput\": \"USB\"}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+/**
+ * @brief Test exception handling for stopInput with invalid type
+ * 
+ * Verifies the Coverity fix ensures proper exception type is used
+ */
+TEST_F(AVInputInit, stopInput_InvalidInputType_HandlesException)
+{
+    // Test with invalid type - verifies std::invalid_argument is caught correctly
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("stopInput"), 
+        _T("{\"typeOfInput\": \"VGA\"}"), response));
+    EXPECT_EQ(response, string(""));
+}

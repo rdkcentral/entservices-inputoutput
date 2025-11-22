@@ -96,6 +96,15 @@ namespace WPEFramework
                 size_t len = 0;
 
                 in.getBuffer(&buf, &len);
+                
+                // Prevent buffer overflow: ensure we don't exceed buffer size
+                // Each byte needs 3 chars ("XX "), so max safe length is sizeof(strBuffer)/3
+                size_t maxLen = (sizeof(strBuffer) - 1) / 3;
+                if (len > maxLen) {
+                    LOGWARN("CEC Frame too large (%zu bytes), truncating to %zu bytes", len, maxLen);
+                    len = maxLen;
+                }
+                
                 for (unsigned int i = 0; i < len; i++) {
                    snprintf(strBuffer + (i*3) , sizeof(strBuffer) - (i*3), "%02X ",(uint8_t) *(buf + i));
                 }
@@ -114,6 +123,10 @@ namespace WPEFramework
              else
                  isDeviceActiveSource = false;
              LOGINFO("ActiveSource isDeviceActiveSource status :%d \n", isDeviceActiveSource);
+             if (!HdmiCecSourceImplementation::_instance) {
+                 LOGWARN("HdmiCecSourceImplementation instance is NULL");
+                 return;
+             }
              HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
@@ -126,12 +139,20 @@ namespace WPEFramework
        {
              printHeader(header);
              LOGINFO("Command: ImageViewOn \n");
+             if (!HdmiCecSourceImplementation::_instance) {
+                 LOGWARN("HdmiCecSourceImplementation instance is NULL");
+                 return;
+             }
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
        void HdmiCecSourceProcessor::process (const TextViewOn &msg, const Header &header)
        {
              printHeader(header);
              LOGINFO("Command: TextViewOn\n");
+             if (!HdmiCecSourceImplementation::_instance) {
+                 LOGWARN("HdmiCecSourceImplementation instance is NULL");
+                 return;
+             }
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
        void HdmiCecSourceProcessor::process (const RequestActiveSource &msg, const Header &header)
@@ -155,6 +176,10 @@ namespace WPEFramework
        {
              printHeader(header);
              LOGINFO("Command: Standby from %s\n", header.from.toString().c_str());
+             if (!HdmiCecSourceImplementation::_instance) {
+                 LOGWARN("HdmiCecSourceImplementation instance is NULL");
+                 return;
+             }
              HdmiCecSourceImplementation::_instance->SendStandbyMsgEvent(header.from.toInt());
 
        }
@@ -175,6 +200,10 @@ namespace WPEFramework
        {
              printHeader(header);
              LOGINFO("Command: CECVersion Version : %s \n",msg.version.toString().c_str());
+             if (!HdmiCecSourceImplementation::_instance) {
+                 LOGWARN("HdmiCecSourceImplementation instance is NULL");
+                 return;
+             }
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
        void HdmiCecSourceProcessor::process (const SetMenuLanguage &msg, const Header &header)

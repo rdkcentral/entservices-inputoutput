@@ -40,21 +40,26 @@ namespace Plugin {
     {
         LOGINFO("Entry\n");
 
+        if (service == nullptr)
+        {
+            LOGERR("Service is nullptr");
+            return std::string("No service.");
+        }
+
         profileType = searchRdkProfile();
 
         if (profileType == STB || profileType == NOT_FOUND)
         {
             LOGINFO("Invalid profile type for TV \n");
-            return (std::string("Not supported"));
+            return std::string("Not supported");
         }
 
-	ASSERT(service != nullptr);
         _skipURL = static_cast<uint8_t>(service->WebPrefix().length());
 
         DEVICE_TYPE::Initialize();
 
         LOGINFO("Exit\n");
-            return (service != nullptr ? _T("") : _T("No service."));
+        return std::string("");
     }
 
     void AVOutput::Deinitialize(PluginHost::IShell* service)
