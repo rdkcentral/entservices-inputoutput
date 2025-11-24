@@ -1560,7 +1560,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, requestActiveSourceProcess_failure){
     EXPECT_NO_THROW(proc.process(requestActiveSource, header)); 
 }
 
-TEST_F(HdmiCecSourceInitializedEventTest, standyProcess_failure){
+TEST_F(HdmiCecSourceInitializedEventTest, standbyProcess_failure){
     Core::Sink<NotificationHandler> notification;
 
     p_hdmiCecSourceMock->AddRef();
