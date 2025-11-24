@@ -1294,6 +1294,31 @@ TEST_F(HdmiCecSourceInitializedEventTest, GiveDevicePowerStatusProcess){
     
 }
 
+TEST_F(HdmiCecSourceInitializedEventTest, reportPowerStatusProcess){
+
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
+        usleep (100 * 1000); //sleep for 100 milli sec
+        iCounter ++;
+    }
+
+
+    Header header;
+    header.from = LogicalAddress(1); //specifies with logicalAddress in the deviceList we're using
+    PowerStatus powerStatus(0);
+
+    ReportPowerStatus reportPowerStatus(powerStatus);
+
+
+    Plugin::HdmiCecSourceProcessor proc(Connection::getInstance());
+    proc.process(reportPowerStatus, header); 
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T(""), response));
+
+    EXPECT_EQ(response, string(_T("{\"numberofdevices\":14,\"deviceList\":[{\"logicalAddress\":1,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":2,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":3,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":4,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":5,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":6,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":7,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":8,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":9,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":10,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":11,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":12,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":13,\"vendorID\":\"000\",\"osdName\":\"NA\"},{\"logicalAddress\":14,\"vendorID\":\"000\",\"osdName\":\"NA\"}],\"success\":true}")));
+
+    
+}
 
 TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess){
     Core::Sink<NotificationHandler> notification;
