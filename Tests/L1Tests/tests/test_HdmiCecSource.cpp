@@ -77,25 +77,25 @@ namespace
 		fileContentStream.close();
 	}
 
-    static void CreateCecSettingsFile(const std::string& filePath, bool cecEnabled = true, bool cecOTPEnabled = true, const std::string& osdName = "TV Box", unsigned int vendorId = 0x0019FB)
-    {
-        Core::File file(filePath);
-        
-        if (file.Exists()) {
-            file.Destroy();
-        }
-        
-        file.Create();
-        
-        JsonObject parameters;
-        parameters[CEC_SETTING_ENABLED] = cecEnabled;
-        parameters[CEC_SETTING_OTP_ENABLED] = cecOTPEnabled;
-        parameters[CEC_SETTING_OSD_NAME] = osdName;
-        parameters[CEC_SETTING_VENDOR_ID] = vendorId;
-        
-        parameters.IElement::ToFile(file);
-        file.Close();
-    }
+	static void CreateCecSettingsFile(const std::string& filePath, bool cecEnabled = true, bool cecOTPEnabled = true, const std::string& osdName = "TV Box", unsigned int vendorId = 0x0019FB)
+	{
+		Core::File file(filePath);
+		
+		if (file.Exists()) {
+			file.Destroy();
+		}
+		
+		file.Create();
+		
+		JsonObject parameters;
+		parameters[CEC_SETTING_ENABLED] = cecEnabled;
+		parameters[CEC_SETTING_OTP_ENABLED] = cecOTPEnabled;
+		parameters[CEC_SETTING_OSD_NAME] = osdName;
+		parameters[CEC_SETTING_VENDOR_ID] = vendorId;
+		
+		parameters.IElement::ToFile(file);
+		file.Close();
+	}
 
 	static void CreateCecSettingsFileNoParams(const std::string& filePath)
 	{
