@@ -111,14 +111,14 @@ namespace
 
     // Helper function to create EDID bytes for LG TV
     // LG TV is identified by manufacturer bytes: edidVec.at(8) == 0x1E and edidVec.at(9) == 0x6D
-    static std::vector<uint8_t> createLGTVEdidBytes()
-    {
-        std::vector<uint8_t> edidVec(128, 0x00); // Standard EDID is 128 bytes
-        // Set LG manufacturer ID at bytes 8 and 9
-        edidVec[8] = 0x1E;
-        edidVec[9] = 0x6D;
-        return edidVec;
-    }
+	static std::vector<uint8_t> createLGTVEdidBytes()
+	{
+		std::vector<uint8_t> edidVec(128, 0x00); // Standard EDID is 128 bytes
+		// Set LG manufacturer ID at bytes 8 and 9
+		edidVec[8] = 0x1E;
+		edidVec[9] = 0x6D;
+		return edidVec;
+	}
 }
 
 typedef enum : uint32_t {
