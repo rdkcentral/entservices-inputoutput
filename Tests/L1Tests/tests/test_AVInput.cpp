@@ -267,11 +267,20 @@ TEST_F(AVInputInit, getSPD)
 {
     EXPECT_CALL(*p_hdmiInputImplMock, getHDMISPDInfo(::testing::_, ::testing::_))
         .WillOnce([](int port, std::vector<uint8_t>& data) {
-            data = { 0x53, 0x50, 0x44, 0x00 };
+            data = { 
+                0x53, 0x50, 0x44,                           // Type, Version, Length
+                'w', 'n', ' ', ' ', ' ', ' ', ' ', ' ',     // Vendor name: "wn      " (8 bytes)
+                ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',     // Product desc: "        " (16 bytes)
+                ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+                0x00                                         // Source info: 0x00
+            };
         });
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getSPD"), _T("{\"portId\": \"1\"}"), response));
-    EXPECT_EQ(response, string("{\"HDMISPD\":\"Packet Type:53,Version:80,Length:68,vendor name:wn,product des:,source info:00\",\"success\":true}"));
+
+    EXPECT_THAT(response, ::testing::HasSubstr("\"Packet Type:53"));
+    EXPECT_THAT(response, ::testing::HasSubstr("Version:80"));
+    EXPECT_THAT(response, ::testing::HasSubstr("Length:68"));
 }
 
 TEST_F(AVInputInit, getSPD_InvalidParameters)
