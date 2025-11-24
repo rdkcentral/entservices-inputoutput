@@ -98,16 +98,16 @@ namespace
     }
 
 	static void CreateCecSettingsFileNoParams(const std::string& filePath)
-    {
-        Core::File file(filePath);
-        
-        if (file.Exists()) {
-            file.Destroy();
-        }
-        
-        file.Create();
-        file.Close();
-    }
+	{
+		Core::File file(filePath);
+		
+		if (file.Exists()) {
+			file.Destroy();
+		}
+		
+		file.Create();
+		file.Close();
+	}
 
     // Helper function to create EDID bytes for LG TV
     // LG TV is identified by manufacturer bytes: edidVec.at(8) == 0x1E and edidVec.at(9) == 0x6D
