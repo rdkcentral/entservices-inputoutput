@@ -81,6 +81,7 @@ namespace WPEFramework {
 	        void process (const ReportPhysicalAddress &msg, const Header &header);
             void process (const DeviceVendorID &msg, const Header &header);
 	        void process (const GiveDevicePowerStatus &msg, const Header &header);
+	        void process (const ReportPowerStatus &msg, const Header &header);
             void process (const UserControlPressed &msg, const Header &header);
 	        void process (const UserControlReleased &msg, const Header &header);
 	        void process (const FeatureAbort &msg, const Header &header);

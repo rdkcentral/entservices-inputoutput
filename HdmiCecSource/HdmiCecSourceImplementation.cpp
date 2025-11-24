@@ -291,7 +291,14 @@ namespace WPEFramework
                  LOGWARN("Exception while sending ReportPowerStatus");
              }
        }
-     
+       void HdmiCecSourceProcessor::process (const ReportPowerStatus &msg, const Header &header)
+       {
+             printHeader(header);
+			 if ((header.from == LogicalAddress(LogicalAddress::TV)))
+				 tvPowerState = msg.status;
+             LOGINFO("Command: ReportPowerStatus TV Power Status from:%s status : %s \n",header.from.toString().c_str(),msg.status.toString().c_str());
+             HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
+       }
        void HdmiCecSourceProcessor::process (const UserControlPressed &msg, const Header &header)
        {
              printHeader(header);
