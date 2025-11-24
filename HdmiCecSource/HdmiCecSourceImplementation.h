@@ -66,24 +66,18 @@ namespace WPEFramework {
         {
         public:
             HdmiCecSourceProcessor(Connection &conn) : conn(conn) {}
-                void process (const ActiveSource &msg, const Header &header);
-	        void process (const InActiveSource &msg, const Header &header);
-	        void process (const ImageViewOn &msg, const Header &header);
-	        void process (const TextViewOn &msg, const Header &header);
+            void process (const ActiveSource &msg, const Header &header);
 	        void process (const RequestActiveSource &msg, const Header &header);
 	        void process (const Standby &msg, const Header &header);
 	        void process (const GetCECVersion &msg, const Header &header);
 	        void process (const CECVersion &msg, const Header &header);
-	        void process (const SetMenuLanguage &msg, const Header &header);
 	        void process (const GiveOSDName &msg, const Header &header);
 	        void process (const GivePhysicalAddress &msg, const Header &header);
 	        void process (const GiveDeviceVendorID &msg, const Header &header);
-	        void process (const SetOSDString &msg, const Header &header);
 	        void process (const SetOSDName &msg, const Header &header);
 	        void process (const RoutingChange &msg, const Header &header);
 	        void process (const RoutingInformation &msg, const Header &header);
 	        void process (const SetStreamPath &msg, const Header &header);
-	        void process (const GetMenuLanguage &msg, const Header &header);
 	        void process (const ReportPhysicalAddress &msg, const Header &header);
             void process (const DeviceVendorID &msg, const Header &header);
 	        void process (const GiveDevicePowerStatus &msg, const Header &header);
@@ -322,6 +316,7 @@ namespace WPEFramework {
             static void threadCecDaemonInitHandler();
             static void threadCecStatusUpdateHandler(int data);
             uint32_t sendKeyPressEvent(const int logicalAddress, int keyCode);
+            int getUIKeyCode(int keyCode);
             PowerManagerInterfaceRef _powerManagerPlugin;
             Core::Sink<PowerManagerNotification> _pwrMgrNotification;
             bool _registeredEventHandlers;
