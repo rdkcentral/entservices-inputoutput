@@ -28,16 +28,10 @@ endif (USE_THUNDER_R4)
 
 set(PLUGIN_AVINPUT_STARTUPORDER "" CACHE STRING "To configure startup order of AVInput plugin")
 
-# <pca> debug
-# add_library(${MODULE_NAME} SHARED
-#         AVInput.cpp
-#         Module.cpp
-#         )
-add_executable(${MODULE_NAME} 
+add_library(${MODULE_NAME} SHARED
         AVInput.cpp
         Module.cpp
         )
-# </pca>
 
 set_target_properties(${MODULE_NAME} PROPERTIES
         CXX_STANDARD 11
