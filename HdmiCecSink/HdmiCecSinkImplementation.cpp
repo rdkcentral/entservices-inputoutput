@@ -712,10 +712,9 @@ namespace WPEFramework
        {
            InitializePowerManager(service);
 
-           HdmiCecSinkImplementation::_instance = this;
-           smConnection=NULL;
+           smConnection = nullptr;
            cecEnableStatus = false;
-           HdmiCecSinkImplementation::_instance->m_numberOfDevices = 0;
+           m_numberOfDevices = 0;
            m_logicalAddressAllocated = LogicalAddress::UNREGISTERED;
            m_currentActiveSource = -1;
            m_isHdmiInConnected = false;
@@ -742,6 +741,11 @@ namespace WPEFramework
            {
                 LOGERR("HdmiCecSink plugin device::Manager::Initialize failed");
                 LOG_DEVICE_EXCEPTION0();
+                if (_powerManagerPlugin) {
+                    _powerManagerPlugin->Unregister(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
+                    _powerManagerPlugin.Reset();
+                }
+                _registeredEventHandlers = false;
                 return Core::ERROR_GENERAL;
            }
 
@@ -758,6 +762,7 @@ namespace WPEFramework
            try
            {
                device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::CecSink");
+               _registeredEventHandlers = true;
            }
            catch(...)
            {
@@ -765,6 +770,11 @@ namespace WPEFramework
                try {
                    device::Manager::DeInitialize();
                } catch(...) {}
+               if (_powerManagerPlugin) {
+                    _powerManagerPlugin->Unregister(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
+                    _powerManagerPlugin.Reset();
+               }
+               _registeredEventHandlers = false;
                return Core::ERROR_GENERAL;
            }
 
@@ -794,7 +804,7 @@ namespace WPEFramework
             }
             catch(const device::Exception& err)
             {
-               LOGWARN("HdmiCecSink plugin device::HdmiInput::getInstance().getNumberOfInputs failed so defaulting to 3");
+               LOGWARN("HdmiInput getNumberOfInputs failed; defaulting to 3 HDMI inputs and continues.");
                m_numofHdmiInput = 3;
                LOG_DEVICE_EXCEPTION0();
             }
@@ -823,17 +833,25 @@ namespace WPEFramework
             try {
                 m_sendKeyEventThread = std::thread(threadSendKeyEvent);
             } catch (...) {
+                m_sendKeyEventThreadExit = true;
                 LOGERR("Exception while starting threads, cleaning up resources");
+                m_audioStatusDetectionTimer.disconnect();
+                m_arcStartStopTimer.disconnect();
                 device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
                 try {
                     device::Manager::DeInitialize();
                 } catch(...) {}
+                if (_powerManagerPlugin) {
+                    _powerManagerPlugin->Unregister(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
+                    _powerManagerPlugin.Reset();
+                }
+                _registeredEventHandlers = false;
                 return Core::ERROR_GENERAL;
             }
             m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
-            m_semSignaltoArcRoutingThread.acquire();
             try {
                 m_arcRoutingThread = std::thread(threadArcRouting);
+                m_semSignaltoArcRoutingThread.acquire();
             } catch (...) {
                 LOGERR("Exception while starting ARC routing thread, cleaning up resources");
                 // Cleanup send key event thread
@@ -846,10 +864,17 @@ namespace WPEFramework
                 if (m_sendKeyEventThread.joinable()) {
                     m_sendKeyEventThread.join();
                 }
+                m_audioStatusDetectionTimer.disconnect();
+                m_arcStartStopTimer.disconnect();
                 device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
                 try {
                     device::Manager::DeInitialize();
                 } catch(...) {}
+                if (_powerManagerPlugin) {
+                    _powerManagerPlugin->Unregister(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
+                    _powerManagerPlugin.Reset();
+                }
+                _registeredEventHandlers = false;
                 return Core::ERROR_GENERAL;
             }
 
@@ -881,11 +906,17 @@ namespace WPEFramework
                     }
 
                     // Cleanup device manager and event handlers
+                    m_audioStatusDetectionTimer.disconnect();
+                    m_arcStartStopTimer.disconnect();
                     device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
                     try {
                         device::Manager::DeInitialize();
                     } catch(...) {}
-
+                    if (_powerManagerPlugin) {
+                        _powerManagerPlugin->Unregister(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
+                        _powerManagerPlugin.Reset();
+                    }
+                    _registeredEventHandlers = false;
                     return Core::ERROR_GENERAL;
                 }
             }
@@ -899,6 +930,8 @@ namespace WPEFramework
                 LOGWARN("Exception while getting CEC version");
             }
 
+            // Set _instance only after successful initialization
+            HdmiCecSinkImplementation::_instance = this;
             LOGINFO(" HdmiCecSinkImplementation plugin Initialize completed \n");
             return Core::ERROR_NONE;
        }

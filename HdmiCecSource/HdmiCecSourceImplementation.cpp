@@ -1016,8 +1016,17 @@ namespace WPEFramework
                 throw;
             }
 
-            smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
-            smConnection->open();
+            try {
+                smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
+                smConnection->open();
+            } catch (...) {
+                LOGERR("CEC exception caught while creating or opening Connection");
+                if (smConnection != NULL) {
+                    delete smConnection;
+                    smConnection = NULL;
+                }
+                throw;
+            }
             try {
                 msgProcessor = new HdmiCecSourceProcessor(*smConnection);
                 msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
