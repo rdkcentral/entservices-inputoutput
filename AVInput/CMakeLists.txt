@@ -63,8 +63,8 @@ install(TARGETS ${MODULE_NAME}
         DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
 
 # <pca> debug
-add_library(${PLUGIN_IMPLEMENTATION} SHARED AVInputImplementation.cpp AVInputUtils.cpp Module.cpp)
-#add_executable(${PLUGIN_IMPLEMENTATION} AVInputImplementation.cpp AVInputUtils.cpp Module.cpp)
+#add_library(${PLUGIN_IMPLEMENTATION} SHARED AVInputImplementation.cpp AVInputUtils.cpp Module.cpp)
+add_executable(${PLUGIN_IMPLEMENTATION} AVInputImplementation.cpp AVInputUtils.cpp Module.cpp)
 # </pca>
 
 set_target_properties(${PLUGIN_IMPLEMENTATION} PROPERTIES
