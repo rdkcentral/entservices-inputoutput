@@ -164,7 +164,7 @@ namespace WPEFramework
              LOGINFO("Command: CECVersion Version : %s \n",msg.version.toString().c_str());
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
-      
+
        void HdmiCecSourceProcessor::process (const GiveOSDName &msg, const Header &header)
        {
              printHeader(header);
@@ -211,7 +211,7 @@ namespace WPEFramework
              }
 
        }
-      
+
        void HdmiCecSourceProcessor::process (const SetOSDName &msg, const Header &header)
        {
              printHeader(header);
@@ -258,7 +258,7 @@ namespace WPEFramework
              HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
 
        }
-       
+
        void HdmiCecSourceProcessor::process (const ReportPhysicalAddress &msg, const Header &header)
        {
              printHeader(header);
@@ -572,10 +572,10 @@ namespace WPEFramework
                  return Core::ERROR_GENERAL;
             }
 
-            
+
 		    LOGINFO(" SendKeyPressEvent logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
             _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(static_cast<UICommand>(keyCode))),100);
-			
+
             return Core::ERROR_NONE;
 		}
 
@@ -1017,14 +1017,14 @@ namespace WPEFramework
             }
 
             smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
-            if (!smConnection)
-            {
-                LOGERR("smConnection allocation failed");
-                throw std::runtime_error("smConnection allocation failed");
-            }
             smConnection->open();
-            msgProcessor = new HdmiCecSourceProcessor(*smConnection);
-            msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
+            try {
+                msgProcessor = new HdmiCecSourceProcessor(*smConnection);
+                msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
+            } catch (...) {
+                LOGERR("CEC exception caught while creating msgProcessor/msgFrameListener");
+                throw;
+            }
             smConnection->addFrameListener(msgFrameListener);
 
             cecEnableStatus = true;
@@ -1535,7 +1535,7 @@ namespace WPEFramework
 
                 keyInfo = _instance->m_SendKeyQueue.front();
                 _instance->m_SendKeyQueue.pop();
-                
+
                 LOGINFO("sendRemoteKeyThread : logical addr:0x%x keyCode: 0x%x  queue size :%d \n",keyInfo.logicalAddr,keyInfo.keyCode,(int)_instance->m_SendKeyQueue.size());
     	        _instance->sendKeyPressEvent(keyInfo.logicalAddr,_instance->getUIKeyCode(keyInfo.keyCode));
 	            _instance->sendKeyReleaseEvent(keyInfo.logicalAddr);

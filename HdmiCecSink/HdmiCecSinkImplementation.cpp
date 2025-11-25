@@ -820,11 +820,38 @@ namespace WPEFramework
 
             // Start threads after all initialization is complete
             m_sendKeyEventThreadExit = false;
-            m_sendKeyEventThread = std::thread(threadSendKeyEvent);
-
+            try {
+                m_sendKeyEventThread = std::thread(threadSendKeyEvent);
+            } catch (...) {
+                LOGERR("Exception while starting threads, cleaning up resources");
+                device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+                try {
+                    device::Manager::DeInitialize();
+                } catch(...) {}
+                return Core::ERROR_GENERAL;
+            }
             m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
             m_semSignaltoArcRoutingThread.acquire();
-            m_arcRoutingThread = std::thread(threadArcRouting);
+            try {
+                m_arcRoutingThread = std::thread(threadArcRouting);
+            } catch (...) {
+                LOGERR("Exception while starting ARC routing thread, cleaning up resources");
+                // Cleanup send key event thread
+                m_sendKeyEventThreadExit = true;
+                {
+                    std::unique_lock<std::mutex> lk(m_sendKeyEventMutex);
+                    m_sendKeyEventThreadRun = true;
+                    m_sendKeyCV.notify_one();
+                }
+                if (m_sendKeyEventThread.joinable()) {
+                    m_sendKeyEventThread.join();
+                }
+                device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+                try {
+                    device::Manager::DeInitialize();
+                } catch(...) {}
+                return Core::ERROR_GENERAL;
+            }
 
             if (cecSettingEnabled)
             {
@@ -1227,7 +1254,7 @@ namespace WPEFramework
          {
             if(!(_instance->smConnection))
                 return;
-            
+
             LOGINFO(" sendKeyPressEvent logicalAddress 0x%x \n",logicalAddress);
             _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlReleased()), 100);
 
@@ -3341,7 +3368,7 @@ namespace WPEFramework
                     return KEY_UNSUPPORTED; // Unsupported key
             }
         }
-     
+
         void HdmiCecSinkImplementation::threadSendKeyEvent()
         {
             if(!HdmiCecSinkImplementation::_instance)
@@ -3384,7 +3411,7 @@ namespace WPEFramework
                     if(keyInfo.UserControl == "sendUserControlPressed" )
                     {
                         LOGINFO("sendUserControlPressed : logical addr:0x%x keyCode: 0x%x  queue size :%zu \n",keyInfo.logicalAddr,keyInfo.keyCode,_instance->m_SendKeyQueue.size());
-                        _instance->sendUserControlPressed(keyInfo.logicalAddr,uikey);                        
+                        _instance->sendUserControlPressed(keyInfo.logicalAddr,uikey);
                     }
                     else if(keyInfo.UserControl == "sendUserControlReleased")
                     {
