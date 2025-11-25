@@ -850,9 +850,10 @@ namespace WPEFramework
             }
             m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
             try {
-                m_arcRoutingThread = std::thread(threadArcRouting);
                 m_semSignaltoArcRoutingThread.acquire();
+                m_arcRoutingThread = std::thread(threadArcRouting);
             } catch (...) {
+                m_semSignaltoArcRoutingThread.release();
                 LOGERR("Exception while starting ARC routing thread, cleaning up resources");
                 // Cleanup send key event thread
                 m_sendKeyEventThreadExit = true;

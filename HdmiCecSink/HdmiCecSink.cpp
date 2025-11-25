@@ -62,7 +62,7 @@ namespace WPEFramework
                 LOGINFO("Invalid profile type for TV \n");
                 return (std::string("Not supported"));
             }
-
+            // On success return empty, to indicate there is no error text.
             string msg = "";
 
             ASSERT(nullptr != service);
@@ -78,32 +78,32 @@ namespace WPEFramework
             {
                 res = _hdmiCecSink->Configure(service);
                 if (res != Core::ERROR_NONE) {
-                    msg = "HdmiCecSink plugin platform configuration error";
-                    LOGERR("HdmiCecSink plugin platform configuration error. Failed to activate HdmiCecSink Plugin");
+                    msg = "Platform configuration error";
                     _hdmiCecSink->Release();
                     _hdmiCecSink = nullptr;
                     _service->Release();
                     _service = nullptr;
                     _connectionId = 0;
                 } else {
-                    LOGINFO("HdmiCecSink plugin platform configured successfully");
                     _service->Register(&_notification);
                     _hdmiCecSink->Register(&_notification);
                     Exchange::JHdmiCecSink::Register(*this, _hdmiCecSink);
-                    LOGINFO("HdmiCecSink plugin is available. Successfully activated HdmiCecSink Plugin");
                 }
             }
             else
             {
-                msg = "HdmiCecSink plugin is not available";
-                LOGINFO("HdmiCecSink plugin is not available. Failed to activate HdmiCecSink Plugin");
+                msg = "HdmiCecSinkImplementation connection not available";
                 _service->Release();
                 _service = nullptr;
                 _connectionId = 0;
             }
 
-           // On success return empty, to indicate there is no error text.
-           return msg;
+            if (!msg.empty()) {
+                LOGERR("Failed to activate HdmiCecSink Plugin, %s", msg.c_str());
+            } else {
+                LOGINFO("HdmiCecSink plugin activated successfully.");
+            }
+            return msg;
         }
 
 

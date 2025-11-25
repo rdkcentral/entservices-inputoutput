@@ -437,17 +437,31 @@ namespace WPEFramework
                 catch (const std::exception& e)
                 {
                     LOGERR("Configure Exception: %s", e.what());
+                    device::Host::getInstance().UnRegister(baseInterface<device::Host::IDisplayDeviceEvents>());
+                    try {
+                        device::Manager::DeInitialize();
+                    } catch(...) {}
+                    if (_powerManagerPlugin) {
+                        _powerManagerPlugin.Reset();
+                    }
                     return Core::ERROR_GENERAL;
                 }
                 catch(...)
                 {
-                    LOGWARN("Exception while enabling CEC settings .\r\n");
+                    LOGERR("Exception while enabling CEC settings, cleaning up resources");
+                    device::Host::getInstance().UnRegister(baseInterface<device::Host::IDisplayDeviceEvents>());
+                    try {
+                        device::Manager::DeInitialize();
+                    } catch(...) {}
+                    if (_powerManagerPlugin) {
+                        _powerManagerPlugin.Reset();
+                    }
                     return Core::ERROR_GENERAL;
                 }
              }
         } else {
-            msg = "IARM bus is not available";
-            LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
+            msg = "IARM Init error. Quitting HdmiCecSource Plugin initialization.";
+            LOGERR("%s", msg.c_str());
             return Core::ERROR_GENERAL;
         }
         ASSERT(_powerManagerPlugin);
@@ -1032,6 +1046,15 @@ namespace WPEFramework
                 msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
             } catch (...) {
                 LOGERR("CEC exception caught while creating msgProcessor/msgFrameListener");
+                if (NULL != msgProcessor) {
+                    delete msgProcessor;
+                    msgProcessor = NULL;
+                }
+                if (NULL != smConnection) {
+                    smConnection->close();
+                    delete smConnection;
+                    smConnection = NULL;
+                }
                 throw;
             }
             smConnection->addFrameListener(msgFrameListener);
@@ -1107,12 +1130,12 @@ namespace WPEFramework
 	        catch(const std::system_error& e)
 	        {
 		        LOGERR("system_error exception in thread join %s", e.what());
-                throw;
+		        // Do not re-throw since it may affect the clean-up process.
 	        }
 	        catch(const std::exception& e)
 	        {
 		        LOGERR("exception in thread join %s", e.what());
-                throw;
+		        // Do not re-throw since it may affect the clean-up process.
 	        }
 
             if (smConnection != NULL)
@@ -1160,7 +1183,7 @@ namespace WPEFramework
                 catch (const std::exception& e)
                 {
                     LOGWARN("CEC exception caught from LibCCEC::getInstance().term() ");
-                    throw;
+                    // Do not re-throw since it may affect the clean-up process.
                 }
             }
 
