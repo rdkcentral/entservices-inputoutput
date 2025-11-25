@@ -78,6 +78,8 @@ static PowerStatus tvPowerState(PowerStatus::POWER_STATUS_NOT_KNOWN);
 static bool isDeviceActiveSource = false;
 static bool isLGTvConnected = false;
 
+#define KEY_UNSUPPORTED 0xFF
+
 using namespace WPEFramework;
 
 
@@ -118,23 +120,7 @@ namespace WPEFramework
              HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
-       void HdmiCecSourceProcessor::process (const InActiveSource &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: InActiveSource %s : %s : %s  \n",GetOpName(msg.opCode()),msg.physicalAddress.name().c_str(),msg.physicalAddress.toString().c_str());
-       }
-       void HdmiCecSourceProcessor::process (const ImageViewOn &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: ImageViewOn \n");
-             HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
-       }
-       void HdmiCecSourceProcessor::process (const TextViewOn &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: TextViewOn\n");
-             HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
-       }
+
        void HdmiCecSourceProcessor::process (const RequestActiveSource &msg, const Header &header)
        {
              printHeader(header);
@@ -178,11 +164,7 @@ namespace WPEFramework
              LOGINFO("Command: CECVersion Version : %s \n",msg.version.toString().c_str());
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
-       void HdmiCecSourceProcessor::process (const SetMenuLanguage &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: SetMenuLanguage Language : %s \n",msg.language.toString().c_str());
-       }
+      
        void HdmiCecSourceProcessor::process (const GiveOSDName &msg, const Header &header)
        {
              printHeader(header);
@@ -229,11 +211,7 @@ namespace WPEFramework
              }
 
        }
-       void HdmiCecSourceProcessor::process (const SetOSDString &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: SetOSDString OSDString : %s\n",msg.osdString.toString().c_str());
-       }
+      
        void HdmiCecSourceProcessor::process (const SetOSDName &msg, const Header &header)
        {
              printHeader(header);
@@ -280,11 +258,7 @@ namespace WPEFramework
              HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
 
        }
-       void HdmiCecSourceProcessor::process (const GetMenuLanguage &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: GetMenuLanguage\n");
-       }
+       
        void HdmiCecSourceProcessor::process (const ReportPhysicalAddress &msg, const Header &header)
        {
              printHeader(header);
@@ -597,76 +571,61 @@ namespace WPEFramework
             {
                  return Core::ERROR_GENERAL;
             }
-		    LOGINFO(" SendKeyPressEvent logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
-			switch(keyCode)
-                   {
-                case VOLUME_UP:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_VOLUME_UP)),100);
-			   break;
-		       case VOLUME_DOWN:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_VOLUME_DOWN)), 100);
-               break;
-		       case MUTE:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_MUTE)), 100);
-			   break;
-		       case UP:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_UP)), 100);
-			   break;
-		       case DOWN:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_DOWN)), 100);
-			   break;
-		       case LEFT:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_LEFT)), 100);
-			   break;
-		       case RIGHT:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_RIGHT)), 100);
-			   break;
-		       case SELECT:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_SELECT)), 100);
-			   break;
-		       case HOME:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_HOME)), 100);
-			   break;
-		       case BACK:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_BACK)), 100);
-			   break;
-		       case NUMBER_0:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_0)), 100);
-			   break;
-		       case NUMBER_1:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_1)), 100);
-			   break;
-		       case NUMBER_2:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_2)), 100);
-			   break;
-		       case NUMBER_3:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_3)), 100);
-			   break;
-		       case NUMBER_4:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_4)), 100);
-			   break;
-		       case NUMBER_5:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_5)), 100);
-			   break;
-		       case NUMBER_6:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_6)), 100);
-			   break;
-		       case NUMBER_7:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_7)), 100);
-			   break;
-		       case NUMBER_8:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_8)), 100);
-			   break;
-		       case NUMBER_9:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_9)), 100);
-			   break;
 
-                }
+            
+		    LOGINFO(" SendKeyPressEvent logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
+            _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(static_cast<UICommand>(keyCode))),100);
+			
             return Core::ERROR_NONE;
 		}
 
+        int HdmiCecSourceImplementation::getUIKeyCode(int keyCode)
+        {
+            switch (keyCode)
+            {
+                case VOLUME_UP:   return UICommand::UI_COMMAND_VOLUME_UP;
+                case VOLUME_DOWN: return UICommand::UI_COMMAND_VOLUME_DOWN;
+                case MUTE:        return UICommand::UI_COMMAND_MUTE;
+                case UP:          return UICommand::UI_COMMAND_UP;
+                case DOWN:        return UICommand::UI_COMMAND_DOWN;
+                case LEFT:        return UICommand::UI_COMMAND_LEFT;
+                case RIGHT:       return UICommand::UI_COMMAND_RIGHT;
+                case SELECT:      return UICommand::UI_COMMAND_SELECT;
+                case HOME:        return UICommand::UI_COMMAND_HOME;
+                case BACK:        return UICommand::UI_COMMAND_BACK;
+                case NUMBER_0:    return UICommand::UI_COMMAND_NUM_0;
+                case NUMBER_1:    return UICommand::UI_COMMAND_NUM_1;
+                case NUMBER_2:    return UICommand::UI_COMMAND_NUM_2;
+                case NUMBER_3:    return UICommand::UI_COMMAND_NUM_3;
+                case NUMBER_4:    return UICommand::UI_COMMAND_NUM_4;
+                case NUMBER_5:    return UICommand::UI_COMMAND_NUM_5;
+                case NUMBER_6:    return UICommand::UI_COMMAND_NUM_6;
+                case NUMBER_7:    return UICommand::UI_COMMAND_NUM_7;
+                case NUMBER_8:    return UICommand::UI_COMMAND_NUM_8;
+                case NUMBER_9:    return UICommand::UI_COMMAND_NUM_9;
+                default:
+                    return KEY_UNSUPPORTED; // Unsupported key
+            }
+        }
+
+
         Core::hresult HdmiCecSourceImplementation::SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSuccess &success)
 		{
+            //Input params validation
+            if(logicalAddress > LogicalAddress::UNREGISTERED)
+            {
+                LOGERR("Invalid Logical Address 0x%x",logicalAddress);
+                success.success = false;
+                return Core::ERROR_GENERAL;
+            }
+
+            if(getUIKeyCode(keyCode) == KEY_UNSUPPORTED)
+            {
+                LOGERR("Invalid Key Code 0x%x",keyCode);
+                success.success = false;
+                return Core::ERROR_NOT_SUPPORTED;
+            }
+
 			SendKeyInfo keyInfo;
 			try {
                keyInfo.logicalAddr = logicalAddress;
@@ -706,7 +665,7 @@ namespace WPEFramework
                    try
                    {
                        smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(Standby()));
-		       ret = true;
+		               ret = true;
                    }
                    catch(...)
                    {
@@ -1574,12 +1533,13 @@ namespace WPEFramework
                     continue;
                 }
 
-                    keyInfo = _instance->m_SendKeyQueue.front();
-                    _instance->m_SendKeyQueue.pop();
-
+                keyInfo = _instance->m_SendKeyQueue.front();
+                _instance->m_SendKeyQueue.pop();
+                
                 LOGINFO("sendRemoteKeyThread : logical addr:0x%x keyCode: 0x%x  queue size :%d \n",keyInfo.logicalAddr,keyInfo.keyCode,(int)_instance->m_SendKeyQueue.size());
-			    _instance->sendKeyPressEvent(keyInfo.logicalAddr,keyInfo.keyCode);
-			    _instance->sendKeyReleaseEvent(keyInfo.logicalAddr);
+    	        _instance->sendKeyPressEvent(keyInfo.logicalAddr,_instance->getUIKeyCode(keyInfo.keyCode));
+	            _instance->sendKeyReleaseEvent(keyInfo.logicalAddr);
+
             }
 	    LOGINFO("%s: Thread exited", __FUNCTION__);
         }
