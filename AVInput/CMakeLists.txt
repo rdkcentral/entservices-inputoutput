@@ -93,7 +93,9 @@ target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ../helpers)
 
 target_link_libraries(${PLUGIN_IMPLEMENTATION} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${DS_LIBRARIES} )
 
-target_link_libraries(${MODULE_NAME} PUBLIC ${PLUGIN_IMPLEMENTATION} ${IARMBUS_LIBRARIES} ${DS_LIBRARIES} )
+# <pca> debug
+#target_link_libraries(${MODULE_NAME} PUBLIC ${PLUGIN_IMPLEMENTATION} ${IARMBUS_LIBRARIES} ${DS_LIBRARIES} )
+# </pca>
 
 install(TARGETS ${PLUGIN_IMPLEMENTATION}
         DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
