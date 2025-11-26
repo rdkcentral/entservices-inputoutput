@@ -201,6 +201,13 @@ namespace Plugin {
         PluginHost::IShell* _service;
 
         template <typename T>
+        T* baseInterface()
+        {
+            static_assert(std::is_base_of<T, AVInputImplementation>(), "base type mismatch");
+            return static_cast<T*>(this);
+        }
+
+        template <typename T>
         uint32_t Register(std::list<T*>& list, T* notification);
         template <typename T>
         uint32_t Unregister(std::list<T*>& list, T* notification);

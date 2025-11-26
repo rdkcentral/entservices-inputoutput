@@ -66,13 +66,6 @@ namespace Plugin {
 
     private:
 
-        template <typename T>
-        T* baseInterface()
-        {
-            static_assert(std::is_base_of<T, AVInput>(), "base type mismatch");
-            return static_cast<T*>(this);
-        }
-
         PluginHost::IShell* _service {};
         uint32_t _connectionId {};
         Exchange::IAVInput* _avInput {};
