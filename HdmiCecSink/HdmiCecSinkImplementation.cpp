@@ -3063,6 +3063,7 @@ namespace WPEFramework
             libcecInitStatus++;
 
             //Acquire CEC Addresses
+	    try{
             _instance->getPhysicalAddress();
 
             smConnection = new Connection(LogicalAddress::UNREGISTERED,false,"ServiceManager::Connection::");
@@ -3098,9 +3099,24 @@ namespace WPEFramework
                 (*index)->ReportCecEnabledEvent("true");
                 index++;
             }
-
-            return;
-        }
+	    } catch (...) {
+		    LOGERR("Exception during CECEnable initialization, cleaning up resources");
+		    if (msgFrameListener != nullptr) {
+			    delete msgFrameListener;
+			    msgFrameListener = nullptr;
+		    }
+		    if (msgProcessor != nullptr) {
+			    delete msgProcessor;
+			    msgProcessor = nullptr;
+		    }
+		    if (smConnection != nullptr) {
+			    smConnection->close();
+			    delete smConnection;
+			    smConnection = nullptr;
+		    }
+		    throw;
+	    }
+	}
 
         void HdmiCecSinkImplementation::CECDisable(void)
         {

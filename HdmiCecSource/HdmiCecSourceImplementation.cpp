@@ -1079,17 +1079,23 @@ namespace WPEFramework
                 msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
             } catch (...) {
                 LOGERR("CEC exception caught while creating msgProcessor/msgFrameListener");
-                if (NULL != msgProcessor) {
+		if (msgFrameListener != nullptr) {
+			delete msgFrameListener;
+			msgFrameListener = nullptr;
+		}
+
+                if (msgProcessor != nullptr) {
                     delete msgProcessor;
-                    msgProcessor = NULL;
+                    msgProcessor = nullptr;
                 }
-                if (NULL != smConnection) {
+                if (smConnection != nullptr) {
                     smConnection->close();
                     delete smConnection;
-                    smConnection = NULL;
+                    smConnection = nullptr;
                 }
                 throw;
-            }
+	    }
+	}
             smConnection->addFrameListener(msgFrameListener);
 
             cecEnableStatus = true;
