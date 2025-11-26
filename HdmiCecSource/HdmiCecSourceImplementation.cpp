@@ -460,7 +460,7 @@ namespace WPEFramework
                 }
              }
         } else {
-            msg = "IARM Init error. Quitting HdmiCecSource Plugin initialization.";
+            msg = "IARM bus not available. Quitting HdmiCecSource Plugin initialization.";
             LOGERR("%s", msg.c_str());
             return Core::ERROR_GENERAL;
         }
@@ -1027,19 +1027,52 @@ namespace WPEFramework
                 getLogicalAddress();
             } catch (const std::exception& e) {
                 LOGERR("CEC exception caught while getting addresses %s", e.what());
-                throw;
-            }
+		m_sendKeyEventThreadExit = true;
+		if (m_sendKeyEventThread.get().joinable())
+		{
+			m_sendKeyEventThread.get().join();
+		}
+		if (libcecInitStatus > 0) {
+			libcecInitStatus--;
+			try
+			{
+				LibCCEC::getInstance().term();
+			}
+			catch (...)
+			{
+				LOGWARN("Failed to terminate LibCCEC during rollback");
+			}
+		}
+		throw;
+	    }
 
             try {
                 smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
                 smConnection->open();
             } catch (...) {
                 LOGERR("CEC exception caught while creating or opening Connection");
-                if (smConnection != NULL) {
+                if (smConnection != nullptr) {
                     delete smConnection;
-                    smConnection = NULL;
+                    smConnection = nullptr;
                 }
-                throw;
+		m_sendKeyEventThreadExit = true;
+		if (m_sendKeyEventThread.get().joinable())
+		{
+			m_sendKeyEventThread.get().join();
+		}
+		if (libcecInitStatus > 0)
+		{
+			libcecInitStatus--;
+			try
+			{
+				LibCCEC::getInstance().term();
+			}
+			catch (...)
+			{
+				LOGWARN("Failed to terminate LibCCEC during rollback");
+			}
+		}
+		throw;
             }
             try {
                 msgProcessor = new HdmiCecSourceProcessor(*smConnection);

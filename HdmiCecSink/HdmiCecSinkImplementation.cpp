@@ -833,10 +833,9 @@ namespace WPEFramework
             try {
                 m_sendKeyEventThread = std::thread(threadSendKeyEvent);
             } catch (...) {
-                m_sendKeyEventThreadExit = true;
                 LOGERR("Exception while starting threads, cleaning up resources");
-                m_audioStatusDetectionTimer.disconnect();
-                m_arcStartStopTimer.disconnect();
+                m_audioStatusDetectionTimer.stop();
+                m_arcStartStopTimer.stop();
                 device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
                 try {
                     device::Manager::DeInitialize();
@@ -849,11 +848,16 @@ namespace WPEFramework
                 return Core::ERROR_GENERAL;
             }
             m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+	    bool acquired = false;
             try {
                 m_semSignaltoArcRoutingThread.acquire();
+		acquired = true;
                 m_arcRoutingThread = std::thread(threadArcRouting);
             } catch (...) {
-                m_semSignaltoArcRoutingThread.release();
+		    if (acquired)
+		    {
+			    m_semSignaltoArcRoutingThread.release();
+		    }
                 LOGERR("Exception while starting ARC routing thread, cleaning up resources");
                 // Cleanup send key event thread
                 m_sendKeyEventThreadExit = true;
@@ -865,8 +869,8 @@ namespace WPEFramework
                 if (m_sendKeyEventThread.joinable()) {
                     m_sendKeyEventThread.join();
                 }
-                m_audioStatusDetectionTimer.disconnect();
-                m_arcStartStopTimer.disconnect();
+                m_audioStatusDetectionTimer.stop();
+                m_arcStartStopTimer.stop();
                 device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
                 try {
                     device::Manager::DeInitialize();
@@ -907,8 +911,8 @@ namespace WPEFramework
                     }
 
                     // Cleanup device manager and event handlers
-                    m_audioStatusDetectionTimer.disconnect();
-                    m_arcStartStopTimer.disconnect();
+                    m_audioStatusDetectionTimer.stop();
+                    m_arcStartStopTimer.stop();
                     device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
                     try {
                         device::Manager::DeInitialize();
