@@ -71,7 +71,7 @@ namespace Plugin {
         }
     }
 
-    Core::hresult HdmiCecSinkImplementation::Configure(PluginHost::IShell *service)
+    Core::hresult AVInputImplementation::Configure(PluginHost::IShell *service)
     {
         try {
             device::Manager::Initialize();
