@@ -171,6 +171,8 @@ namespace Plugin {
         virtual Core::hresult RegisterAviContentTypeUpdateNotification(Exchange::IAVInput::IAviContentTypeUpdateNotification* notification) override;
         virtual Core::hresult UnregisterAviContentTypeUpdateNotification(Exchange::IAVInput::IAviContentTypeUpdateNotification* notification) override;
 
+        Core::hresult Configure(PluginHost::IShell* service) override;
+
         Core::hresult NumberOfInputs(uint32_t& numberOfInputs, bool& success) override;
         Core::hresult GetInputDevices(const string& typeOfInput, Exchange::IAVInput::IInputDeviceIterator*& devices, bool& success);
         Core::hresult WriteEDID(const string& portId, const string& message, SuccessResult& successResult) override;
@@ -199,6 +201,7 @@ namespace Plugin {
 
         mutable Core::CriticalSection _adminLock;
         PluginHost::IShell* _service;
+        bool _registeredDsEventHandlers;
 
         template <typename T>
         T* baseInterface()

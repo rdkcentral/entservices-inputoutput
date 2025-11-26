@@ -42,7 +42,7 @@ namespace Plugin {
     SERVICE_REGISTRATION(AVInputImplementation, 1, 0);
     AVInputImplementation* AVInputImplementation::_instance = nullptr;
 
-    AVInputImplementation::AVInputImplementation() : _adminLock()
+    AVInputImplementation::AVInputImplementation() : _adminLock(), _registeredDsEventHandlers(false)
     {
         printf("*** _DEBUG: AVInputImplementation: ctor: entry");
         LOGINFO("Create AVInputImplementation Instance");
@@ -57,6 +57,39 @@ namespace Plugin {
     AVInputImplementation::~AVInputImplementation()
     {
         AVInputImplementation::_instance = nullptr;
+
+        device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+        device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
+        _registeredDsEventHandlers = false;
+        try {
+            device::Manager::DeInitialize();
+            LOGINFO("device::Manager::DeInitialize success");
+        }
+        catch(const device::Exception& err) {
+            LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
+            LOG_DEVICE_EXCEPTION0();
+        }
+    }
+
+    Core::hresult HdmiCecSinkImplementation::Configure(PluginHost::IShell *service)
+    {
+        try {
+            device::Manager::Initialize();
+            LOGINFO("device::Manager::Initialize success");
+            if (!_registeredDsEventHandlers) {
+                _registeredDsEventHandlers = true;
+                device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
+                device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
+            }
+        }
+        catch(const device::Exception& err) {
+            printf("*** _DEBUG: AVInput: Initialize: Mark 2");
+            LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
+            LOG_DEVICE_EXCEPTION0();
+            return Core::ERROR_GENERAL;
+        }
+
+        return Core::ERROR_NONE;
     }
 
     template <typename T>

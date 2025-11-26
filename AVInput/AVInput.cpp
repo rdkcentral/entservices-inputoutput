@@ -56,7 +56,6 @@ namespace Plugin {
         , _connectionId(0)
         , _avInput(nullptr)
         , _avInputNotification(this)
-        , _registeredDsEventHandlers(false)
     {
         Register<JsonObject, JsonObject>(_T(AVINPUT_METHOD_GET_INPUT_DEVICES), &AVInput::getInputDevicesWrapper, this);
         SYSLOG(Logging::Startup, (_T("AVInput Constructor")));
@@ -91,7 +90,6 @@ namespace Plugin {
         if (nullptr != _avInput) {
             printf("*** _DEBUG: AVInput: Initialize: Mark 1");
 
-            // Register for notifications
             _avInput->RegisterDevicesChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IDevicesChangedNotification>());
             _avInput->RegisterSignalChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::ISignalChangedNotification>());
             _avInput->RegisterInputStatusChangedNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IInputStatusChangedNotification>());
@@ -99,27 +97,14 @@ namespace Plugin {
             _avInput->RegisterGameFeatureStatusUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IGameFeatureStatusUpdateNotification>());
             _avInput->RegisterAviContentTypeUpdateNotification(_avInputNotification.baseInterface<Exchange::IAVInput::IAviContentTypeUpdateNotification>());
 
-            try {
-                device::Manager::Initialize();
-                LOGINFO("device::Manager::Initialize success");
-                if (!_registeredDsEventHandlers) {
-                    _registeredDsEventHandlers = true;
-                    device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::AVInputHdmi");
-                    device::Host::getInstance().Register(baseInterface<device::Host::ICompositeInEvents>(), "WPE::AVInputComp");
-                }
-            }
-            catch(const device::Exception& err) {
-                printf("*** _DEBUG: AVInput: Initialize: Mark 2");
-                LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
-                LOG_DEVICE_EXCEPTION0();
-            }
+            _avInput->Configure(service);
 
-            printf("*** _DEBUG: AVInput: Initialize: Mark 3");
+            printf("*** _DEBUG: AVInput: Initialize: Mark 2");
 
             // Invoking Plugin API register to wpeframework
             Exchange::JAVInput::Register(*this, _avInput);
         } else {
-            printf("*** _DEBUG: AVInput: Initialize: Mark 4");
+            printf("*** _DEBUG: AVInput: Initialize: Mark 3");
             SYSLOG(Logging::Startup, (_T("AVInput::Initialize: Failed to initialize AVInput plugin")));
             message = _T("AVInput plugin could not be initialized");
         }
@@ -134,18 +119,6 @@ namespace Plugin {
         ASSERT(_service == service);
 
         SYSLOG(Logging::Shutdown, (string(_T("AVInput::Deinitialize"))));
-
-        device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
-        device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
-        _registeredDsEventHandlers = false;
-        try {
-            device::Manager::DeInitialize();
-            LOGINFO("device::Manager::DeInitialize success");
-        }
-        catch(const device::Exception& err) {
-            LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
-            LOG_DEVICE_EXCEPTION0();
-        }
 
         // Make sure the Activated and Deactivated are no longer called before we start cleaning up.
         _service->Unregister(&_avInputNotification);
