@@ -28,9 +28,6 @@
 #define API_VERSION_NUMBER_MINOR 7
 #define API_VERSION_NUMBER_PATCH 1
 
-#define AV_HOT_PLUG_EVENT_CONNECTED     0
-#define AV_HOT_PLUG_EVENT_DISCONNECTED  1
-
 // Explicitly implementing getInputDevices method instead of autogenerating via IAVInput.h
 // because it requires optional parameters which are not supported in Thunder 4.x. This can 
 // be refactored after migrating to 5.x.
