@@ -63,7 +63,9 @@ using ParamsType = boost::variant<
 namespace WPEFramework {
 namespace Plugin {
 
-    class AVInputImplementation : public Exchange::IAVInput {
+    class AVInputImplementation :   public Exchange::IAVInput,
+                                    public device::Host::IHdmiInEvents, 
+                                    public device::Host::ICompositeInEvents {
 
     public:
 
@@ -139,6 +141,23 @@ namespace Plugin {
             ParamsType _params;
         };
 
+        /* HdmiInEventNotification*/
+
+        void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
+        void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;   
+        void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented) override;
+        void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
+        void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
+        void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
+        void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
+
+        /* CompositeInEventNotification */
+
+        void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
+        void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
+        void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
+        void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
+
         virtual Core::hresult RegisterDevicesChangedNotification(Exchange::IAVInput::IDevicesChangedNotification* notification) override;
         virtual Core::hresult UnregisterDevicesChangedNotification(Exchange::IAVInput::IDevicesChangedNotification* notification) override;
         virtual Core::hresult RegisterSignalChangedNotification(Exchange::IAVInput::ISignalChangedNotification* notification) override;
@@ -176,14 +195,6 @@ namespace Plugin {
         Core::hresult GetVRRFrameRate(const string& portId, double& currentVRRVideoFrameRate, bool& success) override;
         Core::hresult getInputDevices(const string& typeOfInput, std::list<WPEFramework::Exchange::IAVInput::InputDevice>& inputDeviceList);
 
-        void AVInputHotplug(int input, int connect, int type);
-        void AVInputSignalChange(int port, int signalStatus, int type);
-        void AVInputStatusChange(int port, bool isPresented, int type);
-        void AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type);
-        void hdmiInputAviContentTypeChange(int port, int content_type);
-        void AVInputALLMChange(int port, bool allm_mode);
-        void AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode);
-
     private:
 
         mutable Core::CriticalSection _adminLock;
@@ -219,6 +230,16 @@ namespace Plugin {
         static void dsAVVideoModeEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len);
         static void dsAVGameFeatureStatusEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len);
         static void dsAviContentTypeEventHandler(const char* owner, IARM_EventId_t eventId, void* data, size_t len);
+
+        /* Notification utility methods */
+        
+        void AVInputHotplug(int input, int connect, int type);
+        void AVInputSignalChange(int port, int signalStatus, int type);
+        void AVInputStatusChange(int port, bool isPresented, int type);
+        void AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type);
+        void hdmiInputAviContentTypeChange(int port, int content_type);
+        void AVInputALLMChange(int port, bool allm_mode);
+        void AVInputVRRChange(int port, dsVRRType_t vrr_type, bool vrr_mode);
     };
 
 } // namespace Plugin

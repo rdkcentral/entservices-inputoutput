@@ -903,6 +903,108 @@ namespace Plugin {
         dispatchEvent(ON_AVINPUT_GAME_FEATURE_STATUS_UPDATE, params);
     }
 
+    /* HDMIInEventsNotification*/
+
+    void AVInputImplementation::OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType)
+    {
+        LOGINFO("Received OnHdmiInAVIContentType callback, port: %d, Content Type: %d", port, aviContentType);
+        hdmiInputAviContentTypeChange(port, aviContentType);
+    }
+
+    void AVInput::OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected)
+    {
+        LOGINFO("Received OnHdmiInEventHotPlug callback, port: %d, isConnected: %s", port, isConnected ? "true" : "false");
+        AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, INPUT_TYPE_INT_HDMI);
+    }
+
+    void AVInput::OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus)
+    {
+        LOGINFO("Received OnHdmiInEventSignalStatus callback, port: %d, signalStatus: %d",port, signalStatus);
+        AVInputSignalChange(port, signalStatus, INPUT_TYPE_INT_HDMI);
+    }
+
+    void AVInput::OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented)
+    {
+        LOGINFO("Received OnHdmiInEventStatus callback, port: %d, isPresented: %s",activePort, isPresented ? "true" : "false");
+        AVInputStatusChange(activePort, isPresented, INPUT_TYPE_INT_HDMI);
+    }
+
+    void AVInput::OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution)
+    {
+        LOGINFO("Received OnHdmiInVideoModeUpdate callback, port: %d, pixelResolution: %d, interlaced: %d, frameRate: %d",
+                port,
+                videoPortResolution.pixelResolution,
+                videoPortResolution.interlaced,
+                videoPortResolution.frameRate);
+
+        AVInputVideoModeUpdate(port, videoPortResolution, INPUT_TYPE_INT_HDMI);
+    }
+
+    void AVInput::OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus)
+    {
+        LOGINFO("Received OnHdmiInAllmStatus callback, port: %d, ALLM Mode: %s",
+                port, allmStatus ? "true" : "false");
+
+        AVInputALLMChange(port, allmStatus);
+    }
+
+    void AVInput::OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType)
+    {
+        LOGINFO("Received OnHdmiInVRRStatus callback, port: %d, VRR Type: %d",
+                port, vrrType);
+
+        if (!AVInputImplementation::_instance)
+            return;
+
+        // Handle transitions
+        if (dsVRR_NONE == vrrType) {
+            if (m_currentVrrType != dsVRR_NONE) {
+                AVInputVRRChange(port, m_currentVrrType, false);
+            }
+        } else {
+            if (m_currentVrrType != dsVRR_NONE) {
+                AVInputVRRChange(port, m_currentVrrType, false);
+            }
+            AVInputVRRChange(port, vrrType, true);
+        }
+
+        m_currentVrrType = vrrType;
+    }
+
+
+    /*CompositeInEventsNotification*/
+
+    void AVInput::OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected)
+    {
+        LOGINFO("Received OnCompositeInHotPlug callback, port: %d, isConnected: %s",port, isConnected ? "true" : "false");
+        AVInputHotplug(port,isConnected ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, INPUT_TYPE_INT_COMPOSITE);
+    }
+
+    void AVInput::OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus)
+    {
+        LOGINFO("Received OnCompositeInSignalStatus callback, port: %d, signalStatus: %d",port, signalStatus);
+        AVInputSignalChange(port, signalStatus, INPUT_TYPE_INT_COMPOSITE);
+    }
+
+    void AVInput::OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented)
+    {
+        LOGINFO("Received OnCompositeInStatus callback, port: %d, isPresented: %s",
+                activePort, isPresented ? "true" : "false");
+                
+        AVInputStatusChange(activePort, isPresented, INPUT_TYPE_INT_COMPOSITE);
+    }
+
+    void AVInput::OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution)
+    {
+        LOGINFO("Received OnCompositeInVideoModeUpdate callback, port: %d, pixelResolution: %d, interlaced: %d, frameRate: %d",
+                activePort,
+                videoResolution.pixelResolution,
+                videoResolution.interlaced,
+                videoResolution.frameRate);
+
+        AVInputVideoModeUpdate(activePort, videoResolution, INPUT_TYPE_INT_COMPOSITE);
+    }
+
     Core::hresult AVInputImplementation::GetSupportedGameFeatures(IStringIterator*& features, bool& success)
     {
         Core::hresult result = Core::ERROR_NONE;

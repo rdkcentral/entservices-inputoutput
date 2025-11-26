@@ -38,9 +38,7 @@ namespace WPEFramework {
 namespace Plugin {
     
     class AVInput: public PluginHost::IPlugin, 
-                public PluginHost::JSONRPC,
-                public device::Host::IHdmiInEvents, 
-                public device::Host::ICompositeInEvents {
+                public PluginHost::JSONRPC {
     public:
 
         AVInput(const AVInput&) = delete;
@@ -60,23 +58,6 @@ namespace Plugin {
         const string Initialize(PluginHost::IShell* service) override;
         void Deinitialize(PluginHost::IShell* service) override;
         string Information() const override;
-
-        /* HdmiInEventNotification*/
-
-        void OnHdmiInEventHotPlug(dsHdmiInPort_t port, bool isConnected) override;
-        void OnHdmiInEventSignalStatus(dsHdmiInPort_t port, dsHdmiInSignalStatus_t signalStatus) override;   
-        void OnHdmiInEventStatus(dsHdmiInPort_t activePort, bool isPresented) override;
-        void OnHdmiInVideoModeUpdate(dsHdmiInPort_t port, const dsVideoPortResolution_t& videoPortResolution) override;
-        void OnHdmiInAllmStatus(dsHdmiInPort_t port, bool allmStatus) override;
-        void OnHdmiInAVIContentType(dsHdmiInPort_t port, dsAviContentType_t aviContentType) override;
-        void OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType) override;
-
-        /* CompositeInEventNotification */
-
-        void OnCompositeInHotPlug(dsCompositeInPort_t port, bool isConnected) override;
-        void OnCompositeInSignalStatus(dsCompositeInPort_t port, dsCompInSignalStatus_t signalStatus) override;
-        void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
-        void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
 
     protected:
 
