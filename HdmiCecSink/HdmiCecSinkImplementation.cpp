@@ -3099,23 +3099,23 @@ namespace WPEFramework
                 (*index)->ReportCecEnabledEvent("true");
                 index++;
             }
-	    } catch (...) {
-		    LOGERR("Exception during CECEnable initialization, cleaning up resources");
-		    if (msgFrameListener != nullptr) {
-			    delete msgFrameListener;
-			    msgFrameListener = nullptr;
-		    }
-		    if (msgProcessor != nullptr) {
-			    delete msgProcessor;
-			    msgProcessor = nullptr;
-		    }
-		    if (smConnection != nullptr) {
-			    smConnection->close();
-			    delete smConnection;
-			    smConnection = nullptr;
-		    }
-		    throw;
-	    }
+            } catch (...) {
+                LOGERR("Exception during CECEnable initialization, cleaning up resources");
+                if (msgFrameListener != nullptr) {
+                    delete msgFrameListener;
+                    msgFrameListener = nullptr;
+                }
+                if (msgProcessor != nullptr) {
+                    delete msgProcessor;
+                    msgProcessor = nullptr;
+                }
+                if (smConnection != nullptr) {
+                    smConnection->close();
+                    delete smConnection;
+                    smConnection = nullptr;
+                }
+                throw;
+            }
 	}
 
         void HdmiCecSinkImplementation::CECDisable(void)
