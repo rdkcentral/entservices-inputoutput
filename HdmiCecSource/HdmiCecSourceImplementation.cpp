@@ -1028,14 +1028,12 @@ namespace WPEFramework
             } catch (const std::exception& e) {
                 LOGERR("CEC exception caught while getting addresses %s", e.what());
 		m_sendKeyEventThreadExit = true;
-		if (m_sendKeyEventThread.get().joinable())
-		{
+		if (m_sendKeyEventThread.get().joinable()) {
 			m_sendKeyEventThread.get().join();
 		}
 		if (libcecInitStatus > 0) {
 			libcecInitStatus--;
-			try
-			{
+			try {
 				LibCCEC::getInstance().term();
 			}
 			catch (...)
@@ -1045,6 +1043,8 @@ namespace WPEFramework
 		}
 		throw;
 	    }
+
+
 
             try {
                 smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
@@ -1056,33 +1056,28 @@ namespace WPEFramework
                     smConnection = nullptr;
                 }
 		m_sendKeyEventThreadExit = true;
-		if (m_sendKeyEventThread.get().joinable())
-		{
+		if (m_sendKeyEventThread.get().joinable()) {
 			m_sendKeyEventThread.get().join();
 		}
-		if (libcecInitStatus > 0)
-		{
+		if (libcecInitStatus > 0) {
 			libcecInitStatus--;
-			try
-			{
+			try {
 				LibCCEC::getInstance().term();
-			}
-			catch (...)
-			{
+			} catch (...) {
 				LOGWARN("Failed to terminate LibCCEC during rollback");
 			}
 		}
 		throw;
-            }
+	    }
             try {
                 msgProcessor = new HdmiCecSourceProcessor(*smConnection);
                 msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
             } catch (...) {
                 LOGERR("CEC exception caught while creating msgProcessor/msgFrameListener");
-		if (msgFrameListener != nullptr) {
-			delete msgFrameListener;
-			msgFrameListener = nullptr;
-		}
+
+if (msgFrameListener != nullptr) {
+        delete msgFrameListener;
+        msgFrameListener = nullptr;
 
                 if (msgProcessor != nullptr) {
                     delete msgProcessor;
@@ -1094,8 +1089,8 @@ namespace WPEFramework
                     smConnection = nullptr;
                 }
                 throw;
-	    }
-	}
+}
+}
             smConnection->addFrameListener(msgFrameListener);
 
             cecEnableStatus = true;
