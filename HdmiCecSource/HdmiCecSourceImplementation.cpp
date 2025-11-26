@@ -1075,22 +1075,22 @@ namespace WPEFramework
             } catch (...) {
                 LOGERR("CEC exception caught while creating msgProcessor/msgFrameListener");
 
-if (msgFrameListener != nullptr) {
-        delete msgFrameListener;
-        msgFrameListener = nullptr;
+                if (msgFrameListener != nullptr) {
+                    delete msgFrameListener;
+                    msgFrameListener = nullptr;
 
-                if (msgProcessor != nullptr) {
-                    delete msgProcessor;
-                    msgProcessor = nullptr;
+                    if (msgProcessor != nullptr) {
+                        delete msgProcessor;
+                        msgProcessor = nullptr;
+                    }
+                    if (smConnection != nullptr) {
+                        smConnection->close();
+                        delete smConnection;
+                        smConnection = nullptr;
+                    }
+                    throw;
                 }
-                if (smConnection != nullptr) {
-                    smConnection->close();
-                    delete smConnection;
-                    smConnection = nullptr;
-                }
-                throw;
-}
-}
+            }
             smConnection->addFrameListener(msgFrameListener);
 
             cecEnableStatus = true;
