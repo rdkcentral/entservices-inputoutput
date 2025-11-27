@@ -271,7 +271,7 @@ TEST_F(AVInputInit, getSPD)
         });
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getSPD"), _T("{\"portId\": \"1\"}"), response));
-    EXPECT_EQ(response, string("{\"HDMISPD\":\"Packet Type:53,Version:80,Length:68,vendor name:wn,product des:,source info:00\",\"success\":true}"));
+    EXPECT_EQ(response, string("{\"HDMISPD\":\"Packet Type:53,Version:80,Length:68,vendor name:wn,product des:,source info:3A\",\"success\":true}"));
 }
 
 TEST_F(AVInputInit, getSPD_InvalidParameters)
