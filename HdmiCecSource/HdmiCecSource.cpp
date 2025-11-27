@@ -54,7 +54,7 @@ namespace WPEFramework
         const string HdmiCecSource::Initialize(PluginHost::IShell *service)
         {
            Core::hresult res = Core::ERROR_GENERAL;
-           LOGWARN("Initlaizing HdmiCecSource plugin \n");
+           LOGWARN("Initializing HdmiCecSource plugin \n");
 
            profileType = searchRdkProfile();
 
