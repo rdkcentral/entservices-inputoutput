@@ -996,10 +996,10 @@ namespace WPEFramework
                 throw;
             }
 
-            smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
-            if (!smConnection)
-            {
-                LOGERR("smConnection allocation failed");
+	    try {
+                smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
+            } catch (const std::bad_alloc& e) {
+                LOGERR("smConnection allocation failed %s", e.what());
                 throw std::runtime_error("smConnection allocation failed");
             }
             smConnection->open();
