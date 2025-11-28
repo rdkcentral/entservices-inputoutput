@@ -1730,33 +1730,31 @@ TEST_F(HdmiCecSourceSettingsTest, HdmiCecSourceInitialize_UnsupportedProfile)
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_Failure)
 {
     EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
-    .Times(::testing::AtLeast(1))
-    .WillRepeatedly(::testing::Throw(CECNoAckException()));
+    .WillOnce(::testing::Throw(CECNoAckException()));
   
-    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
-
-    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_DISCONNECTED));
-
-    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+    // Directly call the ping method to test the failure scenario
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->pingDeviceUpdateList(1));
 }
 
 TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_IOException)
 {
     EXPECT_CALL(*p_connectionImplMock, ping(::testing::_, ::testing::_, ::testing::_))
-    .Times(::testing::AtLeast(1))
-    .WillRepeatedly(::testing::Throw(IOException()));
+    .WillOnce(::testing::Throw(IOException()));
 
-    EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
-
-    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
-
-    EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
+    // Directly call the ping method to test the IOException scenario
+    EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->pingDeviceUpdateList(1));
 }
 
 TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler_connect_ExceptionHandling)
 {
+    // Expect sendTo to be called during connection (ReportPhysicalAddress and DeviceVendorID)
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
-    .WillOnce(::testing::Throw(std::runtime_error("sendTo failed")));
+    .Times(::testing::AtLeast(1))
+    .WillRepeatedly(::testing::Throw(std::runtime_error("sendTo failed")));
+
+    EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
+    .Times(1)
+    .WillOnce(::testing::Return("TEST"));
 
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
