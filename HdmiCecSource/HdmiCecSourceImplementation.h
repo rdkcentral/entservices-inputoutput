@@ -42,6 +42,8 @@
 #include <interfaces/IPowerManager.h>
 #include "PowerManagerInterface.h"
 #include <interfaces/IHdmiCecSource.h>
+#include "host.hpp"
+
 
 using namespace WPEFramework;
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
@@ -64,24 +66,18 @@ namespace WPEFramework {
         {
         public:
             HdmiCecSourceProcessor(Connection &conn) : conn(conn) {}
-                void process (const ActiveSource &msg, const Header &header);
-	        void process (const InActiveSource &msg, const Header &header);
-	        void process (const ImageViewOn &msg, const Header &header);
-	        void process (const TextViewOn &msg, const Header &header);
+            void process (const ActiveSource &msg, const Header &header);
 	        void process (const RequestActiveSource &msg, const Header &header);
 	        void process (const Standby &msg, const Header &header);
 	        void process (const GetCECVersion &msg, const Header &header);
 	        void process (const CECVersion &msg, const Header &header);
-	        void process (const SetMenuLanguage &msg, const Header &header);
 	        void process (const GiveOSDName &msg, const Header &header);
 	        void process (const GivePhysicalAddress &msg, const Header &header);
 	        void process (const GiveDeviceVendorID &msg, const Header &header);
-	        void process (const SetOSDString &msg, const Header &header);
 	        void process (const SetOSDName &msg, const Header &header);
 	        void process (const RoutingChange &msg, const Header &header);
 	        void process (const RoutingInformation &msg, const Header &header);
 	        void process (const SetStreamPath &msg, const Header &header);
-	        void process (const GetMenuLanguage &msg, const Header &header);
 	        void process (const ReportPhysicalAddress &msg, const Header &header);
             void process (const DeviceVendorID &msg, const Header &header);
 	        void process (const GiveDevicePowerStatus &msg, const Header &header);
@@ -118,7 +114,7 @@ namespace WPEFramework {
 		std::unique_lock<std::mutex> lk;
 
 		CECDeviceInfo_2()
-		: m_logicalAddress(0),m_vendorID(0,0,0),m_osdName("NA"), m_isOSDNameUpdated (false), m_isVendorIDUpdated (false)
+		: m_logicalAddress(0),m_vendorID(0,0,0),m_osdName("NA"), m_deviceInfoStatus(0), m_isOSDNameUpdated (false), m_isVendorIDUpdated (false)
 		{
 			BITMASK_CLEAR(m_deviceInfoStatus, 0xFFFF); //Clear all bits
 		}
@@ -170,7 +166,7 @@ namespace WPEFramework {
 		// As the registration/unregistration of notifications is realized by the class PluginHost::JSONRPC,
 		// this class exposes a public method called, Notify(), using this methods, all subscribed clients
 		// will receive a JSONRPC message as a notification, in case this method is called.
-        class HdmiCecSourceImplementation : public Exchange::IHdmiCecSource {
+        class HdmiCecSourceImplementation : public Exchange::IHdmiCecSource, public device::Host::IDisplayDeviceEvents {
 		enum {
 				VOLUME_UP     = 0x41,
 				VOLUME_DOWN   = 0x42,
@@ -196,6 +192,7 @@ namespace WPEFramework {
         public:
             HdmiCecSourceImplementation();
             virtual ~HdmiCecSourceImplementation();
+            virtual void OnDisplayHDMIHotPlug(dsDisplayEvent_t displayEvent) override;
             void onPowerModeChanged(const PowerState currentState, const PowerState newState);
             void registerEventHandlers();
             static HdmiCecSourceImplementation* _instance;
@@ -215,6 +212,7 @@ namespace WPEFramework {
             void sendUnencryptMsg(unsigned char* msg, int size);
             void sendDeviceUpdateInfo(const int logicalAddress);
 			void sendKeyReleaseEvent(const int logicalAddress);
+            Core::hresult setEnabledInternal(const bool enabled, const bool isPersist);
 		    typedef struct sendKeyInfo
                 {
                    int logicalAddr;
@@ -226,6 +224,13 @@ namespace WPEFramework {
 
 
         private:
+            template <typename T>
+            T* baseInterface()
+            {
+                static_assert(std::is_base_of<T, HdmiCecSourceImplementation>(), "base type mismatch");
+                return static_cast<T*>(this);
+            }
+
             class PowerManagerNotification : public Exchange::IPowerManager::IModeChangedNotification {
             private:
                 PowerManagerNotification(const PowerManagerNotification&) = delete;
@@ -311,6 +316,7 @@ namespace WPEFramework {
             static void threadCecDaemonInitHandler();
             static void threadCecStatusUpdateHandler(int data);
             uint32_t sendKeyPressEvent(const int logicalAddress, int keyCode);
+            int getUIKeyCode(int keyCode);
             PowerManagerInterfaceRef _powerManagerPlugin;
             Core::Sink<PowerManagerNotification> _pwrMgrNotification;
             bool _registeredEventHandlers;
@@ -335,7 +341,6 @@ namespace WPEFramework {
             Core::hresult Configure(PluginHost::IShell* service) override;
             Core::hresult Register(Exchange::IHdmiCecSource::INotification *notification) override;
             Core::hresult Unregister(Exchange::IHdmiCecSource::INotification *notification) override;
-
 
         };
 	} // namespace Plugin

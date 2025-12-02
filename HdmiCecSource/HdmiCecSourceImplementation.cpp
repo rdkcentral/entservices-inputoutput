@@ -25,7 +25,6 @@
 #include "ccec/MessageEncoder.hpp"
 #include "host.hpp"
 
-#include "dsMgr.h"
 #include "dsDisplay.h"
 #include "videoOutputPort.hpp"
 #include "manager.hpp"
@@ -74,9 +73,11 @@ static PhysicalAddress physical_addr = {0x0F,0x0F,0x0F,0x0F};
 static LogicalAddress logicalAddress = 0xF;
 static OSDName osdName = "TV Box";
 static int32_t powerState = 1;
-static PowerStatus tvPowerState = 1;
+static PowerStatus tvPowerState(PowerStatus::POWER_STATUS_NOT_KNOWN);
 static bool isDeviceActiveSource = false;
 static bool isLGTvConnected = false;
+
+#define KEY_UNSUPPORTED 0xFF
 
 using namespace WPEFramework;
 
@@ -118,23 +119,7 @@ namespace WPEFramework
              HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
-       void HdmiCecSourceProcessor::process (const InActiveSource &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: InActiveSource %s : %s : %s  \n",GetOpName(msg.opCode()),msg.physicalAddress.name().c_str(),msg.physicalAddress.toString().c_str());
-       }
-       void HdmiCecSourceProcessor::process (const ImageViewOn &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: ImageViewOn \n");
-             HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
-       }
-       void HdmiCecSourceProcessor::process (const TextViewOn &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: TextViewOn\n");
-             HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
-       }
+
        void HdmiCecSourceProcessor::process (const RequestActiveSource &msg, const Header &header)
        {
              printHeader(header);
@@ -178,11 +163,7 @@ namespace WPEFramework
              LOGINFO("Command: CECVersion Version : %s \n",msg.version.toString().c_str());
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
-       void HdmiCecSourceProcessor::process (const SetMenuLanguage &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: SetMenuLanguage Language : %s \n",msg.language.toString().c_str());
-       }
+      
        void HdmiCecSourceProcessor::process (const GiveOSDName &msg, const Header &header)
        {
              printHeader(header);
@@ -229,11 +210,7 @@ namespace WPEFramework
              }
 
        }
-       void HdmiCecSourceProcessor::process (const SetOSDString &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: SetOSDString OSDString : %s\n",msg.osdString.toString().c_str());
-       }
+      
        void HdmiCecSourceProcessor::process (const SetOSDName &msg, const Header &header)
        {
              printHeader(header);
@@ -280,11 +257,7 @@ namespace WPEFramework
              HdmiCecSourceImplementation::_instance->sendActiveSourceEvent();
 
        }
-       void HdmiCecSourceProcessor::process (const GetMenuLanguage &msg, const Header &header)
-       {
-             printHeader(header);
-             LOGINFO("Command: GetMenuLanguage\n");
-       }
+       
        void HdmiCecSourceProcessor::process (const ReportPhysicalAddress &msg, const Header &header)
        {
              printHeader(header);
@@ -321,8 +294,8 @@ namespace WPEFramework
        void HdmiCecSourceProcessor::process (const ReportPowerStatus &msg, const Header &header)
        {
              printHeader(header);
-             if ((header.from == LogicalAddress(LogicalAddress::TV)))
-                 tvPowerState = msg.status; 
+			 if ((header.from == LogicalAddress(LogicalAddress::TV)))
+				 tvPowerState = msg.status;
              LOGINFO("Command: ReportPowerStatus TV Power Status from:%s status : %s \n",header.from.toString().c_str(),msg.status.toString().c_str());
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
@@ -381,6 +354,12 @@ namespace WPEFramework
     HdmiCecSourceImplementation::~HdmiCecSourceImplementation()
     {
          LOGWARN("dtor");
+
+         if(cecEnableStatus)
+         {
+            setEnabledInternal(false, false);
+         }
+
          HdmiCecSourceImplementation::_instance = nullptr;
 
            if(_powerManagerPlugin)
@@ -389,8 +368,7 @@ namespace WPEFramework
                _powerManagerPlugin.Reset();
            }
            _registeredEventHandlers = false;
-
-           DeinitializeIARM();
+           device::Host::getInstance().UnRegister(baseInterface<device::Host::IDisplayDeviceEvents>());
     }
 
     Core::hresult HdmiCecSourceImplementation::Configure(PluginHost::IShell* service)
@@ -409,7 +387,6 @@ namespace WPEFramework
             logicalAddress = 0xFF;
 
             //CEC plugin functionalities will only work if CECmgr is available. If plugin Initialize failure upper layer will call dtor directly.
-            InitializeIARM();
             InitializePowerManager(service);
 
             // load persistence setting
@@ -418,6 +395,8 @@ namespace WPEFramework
             {
                 //TODO(MROLLINS) this is probably per process so we either need to be running in our own process or be carefull no other plugin is calling it
                 device::Manager::Initialize();
+                device::Host::getInstance().Register(baseInterface<device::Host::IDisplayDeviceEvents>(), "WPE::CecSource");
+
                 std::string strVideoPort = device::Host::getInstance().getDefaultVideoPortName();
                 device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(strVideoPort.c_str());
                 if (vPort.isDisplayConnected())
@@ -586,76 +565,61 @@ namespace WPEFramework
             {
                  return Core::ERROR_GENERAL;
             }
-		    LOGINFO(" SendKeyPressEvent logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
-			switch(keyCode)
-                   {
-                case VOLUME_UP:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_VOLUME_UP)),100);
-			   break;
-		       case VOLUME_DOWN:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_VOLUME_DOWN)), 100);
-               break;
-		       case MUTE:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_MUTE)), 100);
-			   break;
-		       case UP:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_UP)), 100);
-			   break;
-		       case DOWN:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_DOWN)), 100);
-			   break;
-		       case LEFT:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_LEFT)), 100);
-			   break;
-		       case RIGHT:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_RIGHT)), 100);
-			   break;
-		       case SELECT:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_SELECT)), 100);
-			   break;
-		       case HOME:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_HOME)), 100);
-			   break;
-		       case BACK:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_BACK)), 100);
-			   break;
-		       case NUMBER_0:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_0)), 100);
-			   break;
-		       case NUMBER_1:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_1)), 100);
-			   break;
-		       case NUMBER_2:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_2)), 100);
-			   break;
-		       case NUMBER_3:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_3)), 100);
-			   break;
-		       case NUMBER_4:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_4)), 100);
-			   break;
-		       case NUMBER_5:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_5)), 100);
-			   break;
-		       case NUMBER_6:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_6)), 100);
-			   break;
-		       case NUMBER_7:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_7)), 100);
-			   break;
-		       case NUMBER_8:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_8)), 100);
-			   break;
-		       case NUMBER_9:
-			   _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(UICommand::UI_COMMAND_NUM_9)), 100);
-			   break;
 
-                }
+            
+		    LOGINFO(" SendKeyPressEvent logicalAddress 0x%x keycode 0x%x\n",logicalAddress,keyCode);
+            _instance->smConnection->sendTo(LogicalAddress(logicalAddress), MessageEncoder().encode(UserControlPressed(static_cast<UICommand>(keyCode))),100);
+			
             return Core::ERROR_NONE;
 		}
 
+        int HdmiCecSourceImplementation::getUIKeyCode(int keyCode)
+        {
+            switch (keyCode)
+            {
+                case VOLUME_UP:   return UICommand::UI_COMMAND_VOLUME_UP;
+                case VOLUME_DOWN: return UICommand::UI_COMMAND_VOLUME_DOWN;
+                case MUTE:        return UICommand::UI_COMMAND_MUTE;
+                case UP:          return UICommand::UI_COMMAND_UP;
+                case DOWN:        return UICommand::UI_COMMAND_DOWN;
+                case LEFT:        return UICommand::UI_COMMAND_LEFT;
+                case RIGHT:       return UICommand::UI_COMMAND_RIGHT;
+                case SELECT:      return UICommand::UI_COMMAND_SELECT;
+                case HOME:        return UICommand::UI_COMMAND_HOME;
+                case BACK:        return UICommand::UI_COMMAND_BACK;
+                case NUMBER_0:    return UICommand::UI_COMMAND_NUM_0;
+                case NUMBER_1:    return UICommand::UI_COMMAND_NUM_1;
+                case NUMBER_2:    return UICommand::UI_COMMAND_NUM_2;
+                case NUMBER_3:    return UICommand::UI_COMMAND_NUM_3;
+                case NUMBER_4:    return UICommand::UI_COMMAND_NUM_4;
+                case NUMBER_5:    return UICommand::UI_COMMAND_NUM_5;
+                case NUMBER_6:    return UICommand::UI_COMMAND_NUM_6;
+                case NUMBER_7:    return UICommand::UI_COMMAND_NUM_7;
+                case NUMBER_8:    return UICommand::UI_COMMAND_NUM_8;
+                case NUMBER_9:    return UICommand::UI_COMMAND_NUM_9;
+                default:
+                    return KEY_UNSUPPORTED; // Unsupported key
+            }
+        }
+
+
         Core::hresult HdmiCecSourceImplementation::SendKeyPressEvent(const uint32_t &logicalAddress,const uint32_t &keyCode, HdmiCecSourceSuccess &success)
 		{
+            //Input params validation
+            if(logicalAddress > LogicalAddress::UNREGISTERED)
+            {
+                LOGERR("Invalid Logical Address 0x%x",logicalAddress);
+                success.success = false;
+                return Core::ERROR_GENERAL;
+            }
+
+            if(getUIKeyCode(keyCode) == KEY_UNSUPPORTED)
+            {
+                LOGERR("Invalid Key Code 0x%x",keyCode);
+                success.success = false;
+                return Core::ERROR_NOT_SUPPORTED;
+            }
+
 			SendKeyInfo keyInfo;
 			try {
                keyInfo.logicalAddr = logicalAddress;
@@ -695,7 +659,7 @@ namespace WPEFramework
                    try
                    {
                        smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(Standby()));
-		       ret = true;
+		               ret = true;
                    }
                    catch(...)
                    {
@@ -731,20 +695,6 @@ namespace WPEFramework
             registerEventHandlers();
         }
 
-       const void HdmiCecSourceImplementation::InitializeIARM()
-       {
-            IARM_Result_t res;
-            IARM_CHECK( IARM_Bus_RegisterEventHandler(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, dsHdmiEventHandler) );
-       }
-
-       void HdmiCecSourceImplementation::DeinitializeIARM()
-       {
-            if (Utils::IARM::isConnected())
-            {
-                IARM_Result_t res;
-                IARM_CHECK( IARM_Bus_RemoveEventHandler(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG,dsHdmiEventHandler) );
-            }
-       }
         void HdmiCecSourceImplementation::threadHotPlugEventHandler(int data)
         {
             LOGINFO("entry threadHotPlugEventHandler \r\n");
@@ -759,25 +709,22 @@ namespace WPEFramework
             LOGINFO("Exit threadHotPlugEventHandler \r\n");
         }
 
-       void HdmiCecSourceImplementation::dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
+       void HdmiCecSourceImplementation::OnDisplayHDMIHotPlug(dsDisplayEvent_t displayEvent)
        {
-            if(!HdmiCecSourceImplementation::_instance  || !_instance->cecEnableStatus)
-            {
-                LOGINFO("Return from dsHdmiEventHandler due HdmiCecSourceImplementation::_instance:%p cecEnableStatus:%d  \r\n", HdmiCecSourceImplementation::_instance, _instance->cecEnableStatus);
-                return;
-            }
+           LOGINFO("HdmiCecSourceImplementation::OnDisplayHDMIHotPlug : displayEvent = %d ", displayEvent);
 
-            if (owner && !strcmp(owner, IARM_BUS_DSMGR_NAME) && (IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG == eventId))
-            {
-                IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                if(eventData)
-                {
-                    int hdmi_hotplug_event = eventData->data.hdmi_hpd.event;
-                    LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG  event data:%d \r\n", hdmi_hotplug_event);
-                    std::thread worker(threadHotPlugEventHandler,hdmi_hotplug_event);
-                    worker.detach();
-                }
-            }
+           if(!HdmiCecSourceImplementation::_instance  || !_instance->cecEnableStatus)
+           {
+			   bool cecEnableStatus = _instance ? _instance->cecEnableStatus : false;
+               LOGINFO("HdmiCecSourceImplementation::OnDisplayHDMIHotPlug failed _instance:%p cecEnableStatus:%d  \r\n", HdmiCecSourceImplementation::_instance, cecEnableStatus);
+               return;
+           }
+
+           int hdmi_hotplug_event = (int) displayEvent;
+           LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG  event data:%d \r\n", hdmi_hotplug_event);
+           std::thread worker(threadHotPlugEventHandler,hdmi_hotplug_event);
+           worker.detach();
+
        }
 
        void HdmiCecSourceImplementation::onPowerModeChanged(const PowerState currentState, const PowerState newState)
@@ -951,7 +898,23 @@ namespace WPEFramework
         {
            LOGINFO("Entered SetEnabled ");
 
-           if (cecSettingEnabled != enabled)
+           Core:: hresult ret = setEnabledInternal(enabled, true);
+
+           if(ret == Core::ERROR_NONE)
+           {
+               success.success = true;
+           }
+           else
+           {
+               success.success = false;
+           }
+           return ret;
+        }
+
+        Core::hresult HdmiCecSourceImplementation::setEnabledInternal(const bool enabled, const bool isPersist)
+        {
+            LOGINFO("Entered setEnabledInternal enabled:%d isPersist:%d ",enabled,isPersist);
+           if (cecSettingEnabled != enabled && isPersist)
            {
                Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_ENABLED, JsonValue(enabled));
                cecSettingEnabled = enabled;
@@ -964,8 +927,8 @@ namespace WPEFramework
            {
                CECDisable();
            }
-           success.success = true;
            return Core::ERROR_NONE;
+
         }
 
         Core::hresult HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
@@ -1242,6 +1205,11 @@ namespace WPEFramework
         Core::hresult HdmiCecSourceImplementation::SetVendorId(const string &vendorid, HdmiCecSourceSuccess &success)
         {
             LOGINFO("SetVendorId :%s ",vendorid.c_str());
+            if (vendorid.empty()) {
+                LOGERR("SetVendorId failed: vendorid is not given");
+                success.success = false;
+                return Core::ERROR_GENERAL;
+            }
             unsigned int vendorIdInt = 0;
             try
             {
@@ -1369,6 +1337,7 @@ namespace WPEFramework
 		catch(IOException &e)
 		{
 			LOGINFO("Device is not reachable: %d. Ping caught %s\r\n",idev, e.what());
+			removeDevice (idev);
 			isConnected = false;
 			return isConnected;;
 		}
@@ -1521,12 +1490,13 @@ namespace WPEFramework
                     continue;
                 }
 
-                    keyInfo = _instance->m_SendKeyQueue.front();
-                    _instance->m_SendKeyQueue.pop();
-
+                keyInfo = _instance->m_SendKeyQueue.front();
+                _instance->m_SendKeyQueue.pop();
+                
                 LOGINFO("sendRemoteKeyThread : logical addr:0x%x keyCode: 0x%x  queue size :%d \n",keyInfo.logicalAddr,keyInfo.keyCode,(int)_instance->m_SendKeyQueue.size());
-			    _instance->sendKeyPressEvent(keyInfo.logicalAddr,keyInfo.keyCode);
-			    _instance->sendKeyReleaseEvent(keyInfo.logicalAddr);
+    	        _instance->sendKeyPressEvent(keyInfo.logicalAddr,_instance->getUIKeyCode(keyInfo.keyCode));
+	            _instance->sendKeyReleaseEvent(keyInfo.logicalAddr);
+
             }
 	    LOGINFO("%s: Thread exited", __FUNCTION__);
         }
