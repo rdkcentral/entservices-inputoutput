@@ -56,6 +56,8 @@
          HdcpProfileImplementation::~HdcpProfileImplementation()
          {
              LOGINFO("Call HdcpProfileImplementation destructor\n");
+             // FIX(Manual Analysis Issue #HdcpProfile-5): Use After Free - Set _instance to nullptr before UnRegister to prevent callbacks accessing freed object
+             HdcpProfileImplementation::_instance = nullptr;
              device::Host::getInstance().UnRegister(baseInterface<device::Host::IVideoOutputPortEvents>());
              device::Host::getInstance().UnRegister(baseInterface<device::Host::IDisplayDeviceEvents>());
              if (_powerManagerPlugin) {
@@ -65,7 +67,6 @@
              {
                 _service->Release();
              }
-             HdcpProfileImplementation::_instance = nullptr;
              mShell = nullptr;
          }
  
@@ -132,15 +133,18 @@
              PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
              PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
 
+             // FIX(Manual Analysis Issue #HdcpProfile-6): Thread Safety - Cache _instance to prevent TOCTOU race condition
+             HdcpProfileImplementation* instance = HdcpProfileImplementation::_instance;
+             
              ASSERT (_powerManagerPlugin);
-             if (_powerManagerPlugin){
+             if (_powerManagerPlugin && instance){
                  res = _powerManagerPlugin->GetPowerState(pwrStateCur, pwrStatePrev);
                  if (Core::ERROR_NONE != res)
                  {
                      LOGWARN("Failed to Invoke RPC method: GetPowerState");
                  }
                  LOGINFO("Received OnHDCPStatusChange  event data:%d  param.curState: %d \r\n", hdcpStatus,pwrStateCur);
-                 HdcpProfileImplementation::_instance->onHdmiOutputHDCPStatusEvent(hdcpStatus);
+                 instance->onHdmiOutputHDCPStatusEvent(hdcpStatus);
              }
          }
 
@@ -151,7 +155,11 @@
          {
              ASSERT(nullptr != notification);
  
-             _adminLock.Lock();
+             // FIX(Manual Analysis Issue #HdcpProfile-7): Exception Safety - Call AddRef before acquiring lock to prevent lock held during exception
+             // AddRef first to ensure we own the reference before modifying the list
+             notification->AddRef();
+             
+             std::lock_guard<Core::CriticalSection> lock(_adminLock);
              printf("HdcpProfileImplementation::Register: notification = %p", notification);
              LOGINFO("Register notification");
  
@@ -159,14 +167,13 @@
              if (std::find(_hdcpProfileNotification.begin(), _hdcpProfileNotification.end(), notification) == _hdcpProfileNotification.end())
              {
                  _hdcpProfileNotification.push_back(notification);
-                 notification->AddRef();
              }
              else
              {
                  LOGERR("same notification is registered already");
+                 // Release the AddRef we did since notification already registered
+                 notification->Release();
              }
- 
-            _adminLock.Unlock();
  
              return Core::ERROR_NONE;
          }
@@ -220,15 +227,21 @@
  
          void HdcpProfileImplementation::Dispatch(Event event,const HDCPStatus& hdcpstatus)
          {
+             // FIX(Manual Analysis Issue #HdcpProfile-11): Thread Safety - Copy notification list to prevent iterator invalidation during callbacks
+             std::list<Exchange::IHdcpProfile::INotification *> notificationsCopy;
+             
              _adminLock.Lock();
- 
-             std::list<Exchange::IHdcpProfile::INotification *>::const_iterator index(_hdcpProfileNotification.begin());
+             notificationsCopy = _hdcpProfileNotification;
+             _adminLock.Unlock();
+             
+             // Iterate over copy without holding lock to prevent deadlock if callbacks call Unregister
+             std::list<Exchange::IHdcpProfile::INotification *>::const_iterator index(notificationsCopy.begin());
  
              switch (event)
              {
                  case HDCPPROFILE_EVENT_DISPLAYCONNECTIONCHANGED:
                  {
-                     while (index != _hdcpProfileNotification.end())
+                     while (index != notificationsCopy.end())
                      {
                          (*index)->OnDisplayConnectionChanged(hdcpstatus);
                          ++index;
@@ -240,7 +253,6 @@
                  LOGWARN("Event[%u] not handled", event);
                  break;
              }
-             _adminLock.Unlock();
          }
  
          bool HdcpProfileImplementation::GetHDCPStatusInternal(HDCPStatus& hdcpstatus)
@@ -276,6 +288,8 @@
              catch (const std::exception& e)
              {
                  LOGWARN("DS exception caught from %s\r\n", __FUNCTION__);
+                 // FIX(Manual Analysis Issue #HdcpProfile-8): Exception Safety - Return false on exception to indicate error
+                 return false;
              }
  
              hdcpstatus.isConnected = isConnected;

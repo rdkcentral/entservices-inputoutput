@@ -102,11 +102,12 @@ namespace WPEFramework {
                 	void Deactivated(RPC::IRemoteConnection* connection);
 			
 				private:
-					PluginHost::IShell *_service{};
-					uint32_t _connectionId{};
-					Exchange::IHdcpProfile *_hdcpProfile{};
-					Core::Sink<Notification> _hdcpProfileNotification;
-					Exchange::IConfiguration* configure;
+			PluginHost::IShell *_service{};
+			uint32_t _connectionId{};
+			Exchange::IHdcpProfile *_hdcpProfile{};
+			Core::Sink<Notification> _hdcpProfileNotification;
+			// FIX(Manual Analysis Issue #HdcpProfile-4): Code Quality - Initialize configure pointer to nullptr
+			Exchange::IConfiguration* configure{};
         };
 
     } // namespace Plugin

@@ -162,7 +162,8 @@ public:
     void OnCompositeInStatus(dsCompositeInPort_t activePort, bool isPresented) override;
     void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
     
-public:
+private:
+    // FIX(Manual Analysis Issue #AVInput-10): Design Issue - Move _instance to private section to prevent external modification
     static AVInput* _instance;
 };
 

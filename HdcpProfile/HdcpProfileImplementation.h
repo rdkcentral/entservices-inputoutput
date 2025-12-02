@@ -141,10 +141,11 @@
              PluginHost::IShell* _service;
              void dispatchEvent(Event, const HDCPStatus &params);
              void Dispatch(Event event, const HDCPStatus &params);
+             // FIX(Manual Analysis Issue #HdcpProfile-10): Design Issue - Move _instance to private section to prevent external modification
+             static HdcpProfileImplementation *_instance;
              
  
          public:
-             static HdcpProfileImplementation *_instance;
 
             //  friend class Job;
          };

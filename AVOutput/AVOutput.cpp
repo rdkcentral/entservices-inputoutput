@@ -40,6 +40,7 @@ namespace Plugin {
     {
         LOGINFO("Entry\n");
 
+        // FIX(Manual Analysis Issue #AVOutput-1): Logic Error - Cache profileType to ensure atomic check and use
         profileType = searchRdkProfile();
 
         if (profileType == STB || profileType == NOT_FOUND)
@@ -49,9 +50,25 @@ namespace Plugin {
         }
 
 	ASSERT(service != nullptr);
-        _skipURL = static_cast<uint8_t>(service->WebPrefix().length());
+        // FIX(Manual Analysis Issue #AVOutput-2): Integer Truncation - Validate WebPrefix length before casting to uint8_t
+        size_t webPrefixLen = service->WebPrefix().length();
+        if (webPrefixLen > 255) {
+            LOGERR("WebPrefix length %zu exceeds uint8_t max, truncating to 255\n", webPrefixLen);
+            _skipURL = 255;
+        } else {
+            _skipURL = static_cast<uint8_t>(webPrefixLen);
+        }
 
-        DEVICE_TYPE::Initialize();
+        // FIX(Manual Analysis Issue #AVOutput-3): Exception Handling - Wrap DEVICE_TYPE::Initialize in try-catch
+        try {
+            DEVICE_TYPE::Initialize();
+        } catch (const std::exception& e) {
+            LOGERR("DEVICE_TYPE::Initialize failed: %s\n", e.what());
+            return std::string("Initialization failed: ") + e.what();
+        } catch (...) {
+            LOGERR("DEVICE_TYPE::Initialize failed with unknown exception\n");
+            return std::string("Initialization failed with unknown error");
+        }
 
         LOGINFO("Exit\n");
             return (service != nullptr ? _T("") : _T("No service."));
@@ -59,15 +76,7 @@ namespace Plugin {
 
     void AVOutput::Deinitialize(PluginHost::IShell* service)
     {
-
-        profileType = searchRdkProfile();
-
-        if (profileType == STB || profileType == NOT_FOUND)
-        {
-            LOGINFO("Invalid profile type for TV\n");
-            return ;
-        }
-
+        // FIX(Manual Analysis Issue #AVOutput-4): Code Quality - Remove redundant profile check, always cleanup resources
         LOGINFO();
 
 	DEVICE_TYPE::Deinitialize();

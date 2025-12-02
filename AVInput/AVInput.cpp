@@ -77,6 +77,7 @@ static bool isAudioBalanceSet = false;
 static int planeType = 0;
 
 using namespace std;
+// FIX(Manual Analysis Issue #AVInput-2): Exception Safety - Use proper exception type instead of string literal
 int getTypeOfInput(string sType)
 {
     int iType = -1;
@@ -85,7 +86,7 @@ int getTypeOfInput(string sType)
     else if (0 == strcmp (sType.c_str(), "COMPOSITE"))
         iType = COMPOSITE;
     else
-        throw "Invalide type of INPUT, please specify HDMI/COMPOSITE";
+        throw std::runtime_error("Invalid type of INPUT, please specify HDMI/COMPOSITE");
     return iType;
 }
 
@@ -146,6 +147,8 @@ const string AVInput::Initialize(PluginHost::IShell * /* service */)
 
 void AVInput::Deinitialize(PluginHost::IShell * /* service */)
 {
+    // FIX(Manual Analysis Issue #AVInput-1): Use After Free - Set _instance to nullptr before UnRegister to prevent callbacks
+    AVInput::_instance = nullptr;
 
     device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
     device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
@@ -160,8 +163,6 @@ void AVInput::Deinitialize(PluginHost::IShell * /* service */)
         LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
         LOG_DEVICE_EXCEPTION0();
     }
-
-    AVInput::_instance = nullptr;
 }
 
 string AVInput::Information() const
@@ -317,6 +318,7 @@ uint32_t AVInput::startInput(const JsonObject& parameters, JsonObject& response)
     LOGINFO("topMost value in thunder: %d\n",topMostPlane); 
     if (parameters.HasLabel("portId") && parameters.HasLabel("typeOfInput"))
     {
+        // FIX(Manual Analysis Issue #AVInput-3): Integer Conversion - Catch specific exceptions and validate input
         try {
             portId = stoi(sPortId);
             iType = getTypeOfInput (sType);
@@ -326,11 +328,25 @@ uint32_t AVInput::startInput(const JsonObject& parameters, JsonObject& response)
 		     if(!(planeType == 0 || planeType == 1))// planeType has to be primary(0) or secondary(1)
 		     {
 			  LOGWARN("planeType is invalid\n");
+			  planeType = 0; // Reset to safe default
 			  returnResponse(false);
 	             }
              }
-   	}catch (...) {
-            LOGWARN("Invalid Arguments");
+   	} catch (const std::invalid_argument& e) {
+            LOGWARN("Invalid argument for integer conversion: %s", e.what());
+            planeType = 0; // Reset to safe default
+            returnResponse(false);
+        } catch (const std::out_of_range& e) {
+            LOGWARN("Integer out of range: %s", e.what());
+            planeType = 0; // Reset to safe default
+            returnResponse(false);
+        } catch (const std::runtime_error& e) {
+            LOGWARN("Runtime error: %s", e.what());
+            planeType = 0; // Reset to safe default
+            returnResponse(false);
+        } catch (...) {
+            LOGWARN("Unknown exception in parameter parsing");
+            planeType = 0; // Reset to safe default
             returnResponse(false);
         }
     }
@@ -349,6 +365,8 @@ uint32_t AVInput::startInput(const JsonObject& parameters, JsonObject& response)
         }
     }
     catch (const device::Exception& err) {
+        // FIX(Manual Analysis Issue #AVInput-4): Resource Leak - Reset planeType on exception to prevent inconsistent state
+        planeType = 0;
         LOG_DEVICE_EXCEPTION1(std::to_string(portId));
         returnResponse(false);
     }
@@ -376,7 +394,7 @@ uint32_t AVInput::stopInput(const JsonObject& parameters, JsonObject& response)
 
     try
     {
-        planeType = -1;
+        // FIX(Manual Analysis Issue #AVInput-5): Global State - Reset planeType only after successful port deselection
 	if (isAudioBalanceSet){
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY,MAX_PRIM_VOL_LEVEL);
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM,DEFAULT_INPUT_VOL_LEVEL);
@@ -388,6 +406,8 @@ uint32_t AVInput::stopInput(const JsonObject& parameters, JsonObject& response)
         else if (COMPOSITE == iType) {
             device::CompositeInput::getInstance().selectPort(-1);
         }
+        // Only reset planeType after successful operations
+        planeType = -1;
     }
     catch (const device::Exception& err) {
         LOGWARN("AVInputService::stopInput Failed");
@@ -603,8 +623,10 @@ std::string AVInput::readEDID(int iPort)
         uint16_t size = min(edidVec.size(), (size_t)numeric_limits<uint16_t>::max());
 
         LOGWARN("AVInput::readEDID size:%d edidVec.size:%zu", size, edidVec.size());
+        // FIX(Manual Analysis Issue #AVInput-6): Buffer Overflow - Check for truncation and return error instead of silent truncation
         if(edidVec.size() > (size_t)numeric_limits<uint16_t>::max()) {
             LOGERR("Size too large to use ToString base64 wpe api");
+            edidbase64 = "error:size_too_large";
             return edidbase64;
         }
         Core::ToString((uint8_t*)&edidVec[0], size, true, edidbase64);
@@ -1166,6 +1188,11 @@ std::string AVInput::getSPD(int iPort)
             struct dsSpd_infoframe_st pre;
             memcpy(&pre,spdVect.data(),sizeof(struct dsSpd_infoframe_st));
 
+            // FIX(Manual Analysis Issue #AVInput-7): Buffer Overflow - Validate string fields before using in snprintf
+            // Ensure vendor_name and product_des are null-terminated
+            pre.vendor_name[sizeof(pre.vendor_name) - 1] = '\0';
+            pre.product_des[sizeof(pre.product_des) - 1] = '\0';
+
             char str[200] = {0};
             snprintf(str, sizeof(str), "Packet Type:%02X,Version:%u,Length:%u,vendor name:%s,product des:%s,source info:%02X",
             pre.pkttype,pre.version,pre.length,pre.vendor_name,pre.product_des,pre.source_info);
@@ -1213,16 +1240,19 @@ uint32_t AVInput::setMixerLevels(const JsonObject& parameters, JsonObject& respo
 
 	LOGINFO("GLOBAL primary Volume=%d input Volume=%d \n",m_primVolume  , m_inputVolume );
 
+	// FIX(Manual Analysis Issue #AVInput-8): Error Handling - Set isAudioBalanceSet only if both setAudioMixerLevels succeed
 	try{
 
     	     device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY,primVol);
        	     device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM,inputVol);
+    	     // Only set flag if both operations succeeded
+    	     isAudioBalanceSet = true;
 	}
 	catch(...){
     	     LOGWARN("Not setting SoC volume !!!\n");
+    	     isAudioBalanceSet = false; // Ensure flag is false on failure
        	     returnResponse(false);
 	}
-        isAudioBalanceSet = true;
 	returnResponse(true);
 }
 
@@ -1656,22 +1686,24 @@ void AVInput::OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType)
     LOGINFO("Received OnHdmiInVRRStatus callback, port: %d, VRR Type: %d",
             port, vrrType);
 
-    if (!AVInput::_instance)
+    // FIX(Manual Analysis Issue #AVInput-9): Thread Safety - Cache _instance pointer and check for nullptr before use
+    AVInput* instance = AVInput::_instance;
+    if (!instance)
         return;
 
     // Handle transitions
     if (dsVRR_NONE == vrrType) {
-        if (AVInput::_instance->m_currentVrrType != dsVRR_NONE) {
-            AVInput::_instance->AVInputVRRChange(port,AVInput::_instance->m_currentVrrType,false);
+        if (instance->m_currentVrrType != dsVRR_NONE) {
+            instance->AVInputVRRChange(port, instance->m_currentVrrType, false);
         }
     } else {
-        if (AVInput::_instance->m_currentVrrType != dsVRR_NONE) {
-            AVInput::_instance->AVInputVRRChange(port,AVInput::_instance->m_currentVrrType,false);
+        if (instance->m_currentVrrType != dsVRR_NONE) {
+            instance->AVInputVRRChange(port, instance->m_currentVrrType, false);
         }
-        AVInput::_instance->AVInputVRRChange(port,vrrType,true);
+        instance->AVInputVRRChange(port, vrrType, true);
     }
 
-    AVInput::_instance->m_currentVrrType = vrrType;
+    instance->m_currentVrrType = vrrType;
 }
 
 

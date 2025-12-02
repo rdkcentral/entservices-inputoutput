@@ -114,9 +114,12 @@ namespace WPEFramework
                 return ;
            }
 
-           
-           HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
-
+           // FIX(Manual Analysis Issue #HdmiCecSource-2): Exception Safety - Validate _hdmiCecSource before calling notification
+           if(nullptr != _hdmiCecSource)
+           {
+             HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
+           }
+           // Unregister and cleanup
            if(nullptr != _hdmiCecSource)
            {
              _hdmiCecSource->Unregister(&_notification);

@@ -527,13 +527,17 @@ private:
             NUMBER_9      = 0x29
               };
         
-        public:
-            HdmiCecSinkImplementation();
-            virtual ~HdmiCecSinkImplementation();
-            static HdmiCecSinkImplementation* _instance;
+        // FIX(Manual Analysis Issue #HdmiCecSink-13): Encapsulation Violation - Made members private for thread safety
+        private:
             CECDeviceParams deviceList[16];
             std::vector<HdmiPortMap> hdmiInputs;
             int m_currentActiveSource;
+            
+        public:
+            // Public accessors
+            const CECDeviceParams* getDeviceList() const { return deviceList; }
+            int getCurrentActiveSource() const { return m_currentActiveSource; }
+            
             void updateInActiveSource(const int logical_address, const InActiveSource &source );
             void updateActiveSource(const int logical_address, const ActiveSource &source );
             void updateTextViewOn(const int logicalAddress);

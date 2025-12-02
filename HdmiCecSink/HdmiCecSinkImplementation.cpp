@@ -359,9 +359,12 @@ namespace WPEFramework
          updateDeviceTypeStatus = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_isDeviceTypeUpdated;
              updatePAStatus   = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_isPAUpdated;
          LOGINFO("updateDeviceTypeStatus %d updatePAStatus %d \n",updateDeviceTypeStatus,updatePAStatus);
-         if(HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_physicalAddr.toString() != msg.physicalAddress.toString() && updatePAStatus){
+         // FIX(Manual Analysis Issue #HdmiCecSink-15): Performance - Cache toString() to avoid redundant conversions
+         std::string currentPA = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_physicalAddr.toString();
+         std::string msgPA = msg.physicalAddress.toString();
+         if(currentPA != msgPA && updatePAStatus){
                 updatePAStatus= false;
-                LOGINFO("There is a change in physical address from current PA %s to newly reported PA %s\n",HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_physicalAddr.toString().c_str(),msg.physicalAddress.toString().c_str());
+                LOGINFO("There is a change in physical address from current PA %s to newly reported PA %s\n",currentPA.c_str(),msgPA.c_str());
              }
          HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].update(msg.physicalAddress);
          HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].update(msg.deviceType);
@@ -693,8 +696,9 @@ namespace WPEFramework
              LOGERR("exception in thread join %s", e.what());
          }
      
-             HdmiCecSinkImplementation::_instance = nullptr;
-             device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+             // FIX(Manual Analysis Issue #HdmiCecSink-5): Use After Free - UnRegister BEFORE DeInitialize to avoid callbacks using deallocated resources
+            device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+            HdmiCecSinkImplementation::_instance = nullptr; // need to discuss 
 
              try
              {
@@ -733,6 +737,7 @@ namespace WPEFramework
            logicalAddressDeviceType = "None";
            logicalAddress = 0xFF;
 
+           // FIX(Manual Analysis Issue #HdmiCecSink-10): Resource Leak - Add cleanup on Initialize failure
            try
            {
                 device::Manager::Initialize();
@@ -742,6 +747,9 @@ namespace WPEFramework
            {
                 LOGINFO("HdmiCecSink plugin device::Manager::Initialize failed");
                 LOG_DEVICE_EXCEPTION0();
+                // Clean up partially initialized state
+                HdmiCecSinkImplementation::_instance = nullptr; //need to discuss if device::Manager::Initialize(); failed do we need to retun or logging is enough
+                return Core::ERROR_GENERAL;
            }
 
            // load persistence setting
@@ -892,6 +900,11 @@ namespace WPEFramework
 
             LOGINFO("Event IARM_BUS_PWRMGR_EVENT_MODECHANGED: State Changed %d -- > %d\r",
                     currentState, newState);
+            // FIX(Manual Analysis Issue #HdmiCecSink-11): Logic Error - Verify cecEnableStatus before accessing _instance members
+            // if (!_instance->cecEnableStatus) {
+            //     LOGWARN("CEC not enabled, skipping power mode change handling");
+            //     return;
+            // } fix not needed false postive
             LOGWARN(" m_logicalAddressAllocated 0x%x CEC enable status %d \n",_instance->m_logicalAddressAllocated,_instance->cecEnableStatus);
             if(newState == WPEFramework::Exchange::IPowerManager::POWER_STATE_ON)
             {
@@ -1446,15 +1459,28 @@ namespace WPEFramework
 
                             paths.emplace_back(std::move(device));
 
-                            snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s", _instance->deviceList[route[i]].m_logicalAddress.toString().c_str());
-                            stringLength += _instance->deviceList[route[i]].m_logicalAddress.toString().length();
-                            snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "(%s", _instance->deviceList[route[i]].m_osdName.toString().c_str());
-                            stringLength += _instance->deviceList[route[i]].m_osdName.toString().length();
-                            snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s", ")-->");
-                            stringLength += strlen(")-->");
+                            // FIX(Manual Analysis Issue #HdmiCecSink-4): Buffer Overflow - Validate buffer space before snprintf
+                            int remaining = sizeof(routeString) - stringLength;
+                            if (remaining > 0) {
+                                int written = snprintf(&routeString[stringLength], remaining, "%s", _instance->deviceList[route[i]].m_logicalAddress.toString().c_str());
+                                stringLength += (written > 0 && written < remaining) ? written : 0;
+                            }
+                            remaining = sizeof(routeString) - stringLength;
+                            if (remaining > 0) {
+                                int written = snprintf(&routeString[stringLength], remaining, "(%s", _instance->deviceList[route[i]].m_osdName.toString().c_str());
+                                stringLength += (written > 0 && written < remaining) ? written : 0;
+                            }
+                            remaining = sizeof(routeString) - stringLength;
+                            if (remaining > 0) {
+                                int written = snprintf(&routeString[stringLength], remaining, "%s", ")-->");
+                                stringLength += (written > 0 && written < remaining) ? written : 0;
+                            }
                             if( i + 1 ==  route.size() )
                             {
-                                snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s%d", "HDMI",(HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_physicalAddr.getByteValue(0) - 1));
+                                remaining = sizeof(routeString) - stringLength;
+                                if (remaining > 0) {
+                                    snprintf(&routeString[stringLength], remaining, "%s%d", "HDMI",(HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_physicalAddr.getByteValue(0) - 1));
+                                }
                             }
                         }
                     }
@@ -2043,6 +2069,9 @@ namespace WPEFramework
 
             if( logical_address != _instance->m_logicalAddressAllocated )
             {
+                // FIX(Manual Analysis Issue #HdmiCecSink-3): Race Condition - Protect m_currentActiveSource with mutex 
+                //have to disuss need to impleamnt local locking only while readin
+                std::lock_guard<std::mutex> lock(_instance->_adminLock);
                 if ( _instance->m_currentActiveSource != -1 )
                 {
                     _instance->deviceList[_instance->m_currentActiveSource].m_isActiveSource = false;
@@ -2176,8 +2205,13 @@ namespace WPEFramework
                     }
                     catch(CECNoAckException &e)
                     {
+                        // FIX(Manual Analysis Issue #HdmiCecSink-8): Error Handling - Add boundary checks for vector operations
                         if ( _instance->deviceList[i].m_isDevicePresent ) {
-                            disconnected.push_back(i);
+                            try {
+                                disconnected.push_back(i);
+                            } catch (const std::bad_alloc& e) {
+                                LOGERR("Memory allocation failed in disconnected vector: %s", e.what());
+                            }
                         }
                                                 //LOGWARN("Ping device: 0x%x caught %s \r\n", i, e.what());
                         usleep(50000);
@@ -2193,7 +2227,11 @@ namespace WPEFramework
                       /* If we get ACK, then the device is present in the network*/
                       if ( !_instance->deviceList[i].m_isDevicePresent )
                       {
-                          connected.push_back(i);
+                          try {
+                              connected.push_back(i);
+                          } catch (const std::bad_alloc& e) {
+                              LOGERR("Memory allocation failed in connected vector: %s", e.what());
+                          }
                                                 //LOGWARN("Ping success, added device: 0x%x \r\n", i);
                       }
                       usleep(50000);      
@@ -2535,11 +2573,12 @@ namespace WPEFramework
                     break;    
             }
 
+            // FIX(Manual Analysis Issue #HdmiCecSink-12): Integer Overflow - Use type-safe duration comparison
             if ( _instance->deviceList[logicalAddress].m_isRequested != CECDeviceParams::REQUEST_NONE )
             {
-                elapsed = std::chrono::system_clock::now() - _instance->deviceList[logicalAddress].m_requestTime;
+                auto elapsed = std::chrono::system_clock::now() - _instance->deviceList[logicalAddress].m_requestTime;
 
-                if ( elapsed.count() > HDMICECSINK_REQUEST_MAX_WAIT_TIME_MS )
+                if ( elapsed > std::chrono::milliseconds(HDMICECSINK_REQUEST_MAX_WAIT_TIME_MS) )
                 {
                     LOGINFO("request elapsed ");
                     isElapsed = true;    
@@ -2635,6 +2674,8 @@ namespace WPEFramework
                     break;
                 }
 
+                // FIX(Manual Analysis Issue #HdmiCecSink-6): Race Condition - Protect thread state with mutex need to discuss
+                std::lock_guard<std::mutex> lk(_instance->m_pollExitMutex);
                 if ( _instance->m_pollNextState != POLL_THREAD_STATE_NONE )
                 {
                     _instance->m_pollThreadState = _instance->m_pollNextState;
@@ -2989,9 +3030,16 @@ namespace WPEFramework
             if(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)
             {
                 stopArc();
-                /* coverity[sleep : FALSE] */
-                while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED) {
-                    usleep(500000);
+                // FIX(Manual Analysis Issue #HdmiCecSink-7): Infinite Wait - Add timeout to prevent deadlock 
+                int timeout_count = 0; 
+                const int MAX_TIMEOUT_ITERATIONS = 10; // 5 seconds total
+                while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED && timeout_count < MAX_TIMEOUT_ITERATIONS) {
+                    usleep(500000); //sleep wanted expected behivour
+                    timeout_count++;
+                }
+                if (timeout_count >= MAX_TIMEOUT_ITERATIONS) {
+                    LOGWARN("Timeout waiting for ARC termination, forcing state change");
+                    m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
                 }
             }
 
@@ -3307,13 +3355,17 @@ namespace WPEFramework
                     break;
                 }
 
-                if (_instance->m_SendKeyQueue.empty()) {
-                    _instance->m_sendKeyEventThreadRun = false;
-                    continue;
-                }
+                // FIX(Manual Analysis Issue #HdmiCecSink-9): Thread Safety - Protect queue access with existing mutex initialization
+                {
+                    std::lock_guard<std::mutex> lk(_instance->m_sendKeyEventMutex);
+                    if (_instance->m_SendKeyQueue.empty()) {
+                        _instance->m_sendKeyEventThreadRun = false;
+                        continue;
+                    }
 
-                keyInfo = _instance->m_SendKeyQueue.front();
-                _instance->m_SendKeyQueue.pop();
+                    keyInfo = _instance->m_SendKeyQueue.front();
+                    _instance->m_SendKeyQueue.pop();
+                }
 
                 uikey = _instance->getUIKeyCode(keyInfo.keyCode);
 
