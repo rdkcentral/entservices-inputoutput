@@ -159,7 +159,7 @@
              // AddRef first to ensure we own the reference before modifying the list
              notification->AddRef();
              
-             std::lock_guard<Core::CriticalSection> lock(_adminLock);
+             _adminLock.Lock();
              printf("HdcpProfileImplementation::Register: notification = %p", notification);
              LOGINFO("Register notification");
  
