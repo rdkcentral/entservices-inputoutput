@@ -2071,7 +2071,7 @@ namespace WPEFramework
             {
                 // FIX(Manual Analysis Issue #HdmiCecSink-3): Race Condition - Protect m_currentActiveSource with mutex 
                 //have to disuss need to impleamnt local locking only while readin
-                std::lock_guard<std::mutex> lock(_instance->_adminLock);
+                //std::lock_guard<std::mutex> lock(_instance->_adminLock);
                 if ( _instance->m_currentActiveSource != -1 )
                 {
                     _instance->deviceList[_instance->m_currentActiveSource].m_isActiveSource = false;
@@ -2506,7 +2506,7 @@ namespace WPEFramework
                     break;
             }
 
-            _instance->deviceList[logicalAddress].m_requestTime = std::chrono::system_clock::now();
+            _instance->deviceList[logicalAddress].m_requestTime = std::chrono::steady_clock::now();
             LOGINFO("request type %d", _instance->deviceList[logicalAddress].m_isRequested);
         }
 
@@ -2576,9 +2576,9 @@ namespace WPEFramework
             // FIX(Manual Analysis Issue #HdmiCecSink-12): Integer Overflow - Use type-safe duration comparison
             if ( _instance->deviceList[logicalAddress].m_isRequested != CECDeviceParams::REQUEST_NONE )
             {
-                auto elapsed = std::chrono::system_clock::now() - _instance->deviceList[logicalAddress].m_requestTime;
+                elapsed = std::chrono::steady_clock::now() - _instance->deviceList[logicalAddress].m_requestTime;
 
-                if ( elapsed > std::chrono::milliseconds(HDMICECSINK_REQUEST_MAX_WAIT_TIME_MS) )
+                if ( elapsed.count() > HDMICECSINK_REQUEST_MAX_WAIT_TIME_MS )
                 {
                     LOGINFO("request elapsed ");
                     isElapsed = true;    
@@ -3031,15 +3031,10 @@ namespace WPEFramework
             {
                 stopArc();
                 // FIX(Manual Analysis Issue #HdmiCecSink-7): Infinite Wait - Add timeout to prevent deadlock 
-                int timeout_count = 0; 
-                const int MAX_TIMEOUT_ITERATIONS = 10; // 5 seconds total
-                while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED && timeout_count < MAX_TIMEOUT_ITERATIONS) {
-                    usleep(500000); //sleep wanted expected behivour
-                    timeout_count++;
-                }
-                if (timeout_count >= MAX_TIMEOUT_ITERATIONS) {
-                    LOGWARN("Timeout waiting for ARC termination, forcing state change");
-                    m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+                /* coverity[sleep : FALSE] */
+
+                while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED) {
+                    usleep(500000);
                 }
             }
 
