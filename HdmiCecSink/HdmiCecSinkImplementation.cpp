@@ -2675,7 +2675,7 @@ namespace WPEFramework
                 }
 
                 // FIX(Manual Analysis Issue #HdmiCecSink-6): Race Condition - Protect thread state with mutex need to discuss
-                std::lock_guard<std::mutex> lk(_instance->m_pollExitMutex);
+                //std::lock_guard<std::mutex> lk(_instance->m_pollExitMutex);
                 if ( _instance->m_pollNextState != POLL_THREAD_STATE_NONE )
                 {
                     _instance->m_pollThreadState = _instance->m_pollNextState;
