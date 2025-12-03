@@ -2072,14 +2072,18 @@ namespace WPEFramework
                 // FIX(Manual Analysis Issue #HdmiCecSink-3): Race Condition - Protect m_currentActiveSource with mutex 
                 //have to disuss need to impleamnt local locking only while readin
                 //std::lock_guard<std::mutex> lock(_instance->_adminLock);
-                if ( _instance->m_currentActiveSource != -1 )
                 {
-                    _instance->deviceList[_instance->m_currentActiveSource].m_isActiveSource = false;
-                }
+                    std::lock_guard<std::mutex> lock(_instance->m_currentActiveSourceMutex);
+                    if ( _instance->m_currentActiveSource != -1 )
+                    {
+                        _instance->deviceList[_instance->m_currentActiveSource].m_isActiveSource = false;
+                    }
 
-                _instance->deviceList[logical_address].m_isActiveSource = true;
-                _instance->deviceList[logical_address].update(source.physicalAddress);
-                _instance->m_currentActiveSource = logical_address;
+                    _instance->deviceList[logical_address].m_isActiveSource = true;
+                    _instance->deviceList[logical_address].update(source.physicalAddress);
+                    _instance->m_currentActiveSource = logical_address;
+                }
+                }
 
                 if (_instance->deviceList[logical_address].m_isDevicePresent &&
                                     _instance->deviceList[_instance->m_logicalAddressAllocated].m_powerStatus.toInt() == PowerStatus::STANDBY)

@@ -642,6 +642,7 @@ private:
         uint32_t m_sleepTime;
         std::mutex m_pollExitMutex;
         std::mutex m_enableMutex;
+        std::mutex m_currentActiveSourceMutex;
         /* Send Key event related */
         bool m_sendKeyEventThreadExit;
         bool m_sendKeyEventThreadRun;
