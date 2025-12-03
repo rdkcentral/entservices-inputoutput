@@ -1390,6 +1390,11 @@ namespace Plugin {
 
         //AspectRatio
         m_aspectRatioStatus = GetAspectRatioCaps(&m_aspectRatio, &m_numAspectRatio, &m_aspectRatioCaps);
+        if (m_aspectRatioStatus == tvERROR_OPERATION_NOT_SUPPORTED) {
+            setDefaultAspectRatio();
+        } else {
+            updateAVoutputTVParamV2("sync", "ZoomMode", paramJson, PQ_PARAM_ASPECT_RATIO, level);
+        }
 
         //LowLatencyState
         m_lowLatencyStateStatus = GetLowLatencyStateCaps(&m_maxlowLatencyState, &m_lowLatencyStateCaps);
