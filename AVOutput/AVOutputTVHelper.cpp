@@ -1435,9 +1435,17 @@ namespace Plugin {
         if (m_MEMCStatus == tvERROR_NONE) {
             updateAVoutputTVParamV2("sync", "MEMC", paramJson, PQ_PARAM_MEMC, level);
         }
+
+        //SDRGamma
         m_sdrGammaModeStatus = GetSdrGammaCaps(&m_sdrGammaModes, &m_numsdrGammaModes, &m_sdrGammaModeCaps);
         if (m_sdrGammaModeStatus == tvERROR_NONE) {
             updateAVoutputTVParamV2("sync", "SDRGamma", paramJson, PQ_PARAM_SDR_GAMMA, level);
+        }
+
+         // dimmingLevel
+        m_dimmingLevelStatus = GetBacklightDimmingLevelCaps(&m_maxDimmingLevel, &m_dimmingLevelCaps);
+        if (m_dimmingLevelStatus == tvERROR_NONE) {
+            updateAVoutputTVParamV2("sync", "DimmingLevel", paramJson, PQ_PARAM_BACKLIGHT_DIMMINGLEVEL, level);
         }
 
         m_cmsStatus = GetCMSCaps(&m_maxCmsHue, &m_maxCmsSaturation, &m_maxCmsLuma,
@@ -3620,6 +3628,12 @@ namespace Plugin {
                                             (tvPQModeIndex_t)paramIndex.pqmodeIndex,
                                             (tvVideoFormatType_t)paramIndex.formatIndex,
                                             static_cast<tvBacklightMode_t>(level));
+                    break;
+                case PQ_PARAM_BACKLIGHT_DIMMINGLEVEL:
+                    ret |= SetBacklightDimmingLevel((tvVideoSrcType_t)paramIndex.sourceIndex,
+                                (tvPQModeIndex_t)paramIndex.pqmodeIndex,
+                                (tvVideoFormatType_t)paramIndex.formatIndex,
+                                level);
                     break;
                 case PQ_PARAM_HDR10_MODE:
                 case PQ_PARAM_HLG_MODE:

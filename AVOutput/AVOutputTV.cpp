@@ -410,6 +410,11 @@ namespace Plugin {
 
         registerMethod("getMultiPointWBCaps", &AVOutputTV::getMultiPointWBCaps, this);
 
+        registerMethod("getBacklightDimmingLevel", &AVOutputTV::getBacklightDimmingLevel, this);
+        registerMethod("setBacklightDimmingLevel", &AVOutputTV::setBacklightDimmingLevel, this);
+        registerMethod("resetBacklightDimmingLevel", &AVOutputTV::resetBacklightDimmingLevel, this);
+        registerMethod("getBacklightDimmingLevelCaps", &AVOutputTV::getBacklightDimmingLevelCaps, this); 
+
         // Start worker thread for non-blocking updates
         workerThread = std::thread(&AVOutputTV::paramUpdateWorker, this);
 
@@ -1013,6 +1018,13 @@ namespace Plugin {
         parameters, response);
     }
 
+    uint32_t AVOutputTV::getBacklightDimmingLevelCaps(const JsonObject& parameters, JsonObject& response) {
+        return getPQCapabilityWithContext([this](tvContextCaps_t** context_caps, int* max_val) {
+            return GetBacklightDimmingLevelCaps(max_val, context_caps);
+        },
+        parameters, response);
+    }
+
     // Forward lookup: string → enum
     const std::unordered_map<std::string, int> colorTempMap = {
         {"Standard",            tvColorTemp_STANDARD},
@@ -1556,6 +1568,13 @@ namespace Plugin {
         returnResponse(success);
     }
 
+    uint32_t AVOutputTV::resetBacklightDimmingLevel(const JsonObject& parameters, JsonObject& response)
+    {
+        bool success= resetPQParamToDefault(parameters,"DimmingLevel",
+                                        PQ_PARAM_BACKLIGHT_DIMMINGLEVEL, SetBacklightDimmingLevel);
+        returnResponse(success);
+    }
+
     uint32_t AVOutputTV::getPrecisionDetail(const JsonObject& parameters, JsonObject& response)
     {
         LOGINFO("Entry");
@@ -1636,6 +1655,20 @@ namespace Plugin {
             aiSuperResolution);
         if (success) {
             response["aiSuperResolution"] = aiSuperResolution;
+        }
+        returnResponse(success);
+    }
+
+    uint32_t AVOutputTV::getBacklightDimmingLevel(const JsonObject& parameters, JsonObject& response)
+    {
+        LOGINFO("Entry");
+        int dimmingLevel = 0;
+        bool success = getPQParamFromContext(parameters,
+            "DimmingLevel",
+            PQ_PARAM_BACKLIGHT_DIMMINGLEVEL,
+            dimmingLevel);
+        if (success) {
+            response["dimmingLevel"] = dimmingLevel;
         }
         returnResponse(success);
     }
@@ -1808,6 +1841,19 @@ namespace Plugin {
             PQ_PARAM_DIGITAL_NOISE_REDUCTION,
             [](tvVideoSrcType_t src, tvPQModeIndex_t mode, tvVideoFormatType_t fmt, int val) {
                 return SetDigitalNoiseReduction(src, mode, fmt, val);
+            }
+        );
+    }
+
+    uint32_t AVOutputTV::setBacklightDimmingLevel(const JsonObject& parameters, JsonObject& response)
+    {
+        return setContextPQParam(
+            parameters, response,
+            "dimmingLevel", "DimmingLevel",
+            m_maxDimmingLevel,
+            PQ_PARAM_BACKLIGHT_DIMMINGLEVEL,
+            [](tvVideoSrcType_t src, tvPQModeIndex_t mode, tvVideoFormatType_t fmt, int val) {
+                return SetBacklightDimmingLevel(src, mode, fmt, val);
             }
         );
     }
