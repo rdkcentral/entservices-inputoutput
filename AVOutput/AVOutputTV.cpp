@@ -1282,6 +1282,7 @@ namespace Plugin {
         LOGINFO("Entry\n");
         if(m_aspectRatioStatus == tvERROR_OPERATION_NOT_SUPPORTED)
         {
+            LOGERR("AspectRatio debug Line : %d ",__LINE__);
             std::string value;
             tvDisplayMode_t mode = tvDisplayMode_16x9;
             capDetails_t inputInfo;
@@ -1304,7 +1305,7 @@ namespace Plugin {
                 LOGERR("%s: CapablityCheck failed for AspectRatio\n", __FUNCTION__);
                 returnResponse(false);
             }
-
+            LOGERR(" %s AspectRatio debug Line : %d mode :%d",__func__,__LINE__,mode);
             if(!value.compare("TV 16X9 STRETCH")) {
                 mode = tvDisplayMode_16x9;
             }
@@ -1327,6 +1328,7 @@ namespace Plugin {
                 returnResponse(false);
             }
             m_videoZoomMode = mode;
+            LOGERR(" %s AspectRatio debug Line : %d mode :%d m_videoZoomMode :%d",__func__,__LINE__,mode,m_videoZoomMode);
             tvError_t ret = setAspectRatioZoomSettings (mode);
 
             if(ret != tvERROR_NONE) {
@@ -1355,6 +1357,7 @@ namespace Plugin {
         }
         else
         {
+            LOGERR("AspectRatio debug Line : %d ",__LINE__);
             return setContextPQParam(
                 parameters, response,
                 "zoomMode",
