@@ -33,6 +33,8 @@
 #include "tracing/Logging.h"
 
 #include "host.hpp"
+#include "compositeIn.hpp"
+#include "hdmiIn.hpp"
 
 namespace WPEFramework {
 namespace Plugin {

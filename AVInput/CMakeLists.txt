@@ -33,10 +33,7 @@ endif (USE_THUNDER_R4)
 
 set(PLUGIN_AVINPUT_STARTUPORDER "" CACHE STRING "To configure startup order of AVInput plugin")
 
-# <pca> debug
 add_library(${MODULE_NAME} SHARED AVInput.cpp AVInputUtils.cpp Module.cpp)
-#add_executable(${MODULE_NAME} AVInput.cpp AVInputUtils.cpp Module.cpp)
-# </pca>
 
 set_target_properties(${MODULE_NAME} PROPERTIES
         CXX_STANDARD 11
@@ -56,16 +53,9 @@ set_source_files_properties(AVInput.cpp PROPERTIES COMPILE_FLAGS "-fexceptions")
 target_link_libraries(${MODULE_NAME}
     PRIVATE
         CompileSettingsDebug::CompileSettingsDebug
-        ${NAMESPACE}Plugins::${NAMESPACE}Plugins
         ${NAMESPACE}Definitions::${NAMESPACE}Definitions)
 
-install(TARGETS ${MODULE_NAME}
-        DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
-
-# <pca> debug
 add_library(${PLUGIN_IMPLEMENTATION} SHARED AVInputImplementation.cpp AVInputUtils.cpp Module.cpp)
-#add_executable(${PLUGIN_IMPLEMENTATION} AVInputImplementation.cpp AVInputUtils.cpp Module.cpp)
-# </pca>
 
 set_target_properties(${PLUGIN_IMPLEMENTATION} PROPERTIES
         CXX_STANDARD 11
@@ -85,20 +75,16 @@ if (RDK_SERVICE_L2_TEST)
    else (TESTMOCKLIB_LIBRARIES)
        message ("Require ${TESTMOCKLIB_LIBRARIES} library")
    endif (TESTMOCKLIB_LIBRARIES)
-endif (RDK_SERVICES_L2_TEST)
+endif (RDK_SERVICE_L2_TEST)
 
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${DS_INCLUDE_DIRS})
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ${IARMBUS_INCLUDE_DIRS})
 target_include_directories(${PLUGIN_IMPLEMENTATION} PRIVATE ../helpers)
 
 target_link_libraries(${PLUGIN_IMPLEMENTATION} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${DS_LIBRARIES} )
-
-# <pca> debug
-#target_link_libraries(${MODULE_NAME} PUBLIC ${PLUGIN_IMPLEMENTATION} ${IARMBUS_LIBRARIES} ${DS_LIBRARIES} )
 target_link_libraries(${MODULE_NAME} PUBLIC ${NAMESPACE}Plugins::${NAMESPACE}Plugins ${IARMBUS_LIBRARIES} ${DS_LIBRARIES} )
-# </pca>
 
-install(TARGETS ${PLUGIN_IMPLEMENTATION}
-        DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
+install(TARGETS ${PLUGIN_IMPLEMENTATION} DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
+install(TARGETS ${MODULE_NAME} DESTINATION lib/${STORAGE_DIRECTORY}/plugins)
 
 write_config(${PLUGIN_NAME})

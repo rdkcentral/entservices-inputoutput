@@ -44,14 +44,13 @@ namespace Plugin {
 
     AVInputImplementation::AVInputImplementation() : _adminLock(), _registeredDsEventHandlers(false)
     {
-        printf("*** _DEBUG: AVInputImplementation: ctor: entry");
         LOGINFO("Create AVInputImplementation Instance");
 
         m_primVolume = DEFAULT_PRIM_VOL_LEVEL;
         m_inputVolume = DEFAULT_INPUT_VOL_LEVEL;
         m_currentVrrType = dsVRR_NONE;
         
-        AVInputImplementation::_instance = this;        
+        AVInputImplementation::_instance = this;
     }
 
     AVInputImplementation::~AVInputImplementation()
@@ -60,7 +59,9 @@ namespace Plugin {
 
         device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
         device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
+        
         _registeredDsEventHandlers = false;
+
         try {
             device::Manager::DeInitialize();
             LOGINFO("device::Manager::DeInitialize success");
@@ -83,7 +84,6 @@ namespace Plugin {
             }
         }
         catch(const device::Exception& err) {
-            printf("*** _DEBUG: AVInput: Initialize: Mark 2");
             LOGINFO("AVInput: Initialization failed due to device::manager::Initialize()");
             LOG_DEVICE_EXCEPTION0();
             return Core::ERROR_GENERAL;
@@ -95,7 +95,6 @@ namespace Plugin {
     template <typename T>
     Core::hresult AVInputImplementation::Register(std::list<T*>& list, T* notification)
     {
-        printf("*** _DEBUG: AVInputImplementation: Register: entry");
         uint32_t status = Core::ERROR_GENERAL;
 
         ASSERT(nullptr != notification);
@@ -109,7 +108,6 @@ namespace Plugin {
         }
 
         _adminLock.Unlock();
-        printf("*** _DEBUG: AVInputImplementation: Register: exit");
         return status;
     }
 
