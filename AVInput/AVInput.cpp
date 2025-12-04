@@ -86,7 +86,7 @@ int getTypeOfInput(string sType)
     else if (0 == strcmp (sType.c_str(), "COMPOSITE"))
         iType = COMPOSITE;
     else
-        throw std::runtime_error("Invalid type of INPUT, please specify HDMI/COMPOSITE");
+        throw std::runtime_error("Invalid type of INPUT, please specify HDMI/COMPOSITE"); //call startInput with invalid input type
     return iType;
 }
 
@@ -147,8 +147,7 @@ const string AVInput::Initialize(PluginHost::IShell * /* service */)
 
 void AVInput::Deinitialize(PluginHost::IShell * /* service */)
 {
-    // FIX(Manual Analysis Issue #AVInput-1): Use After Free - Set _instance to nullptr before UnRegister to prevent callbacks
-    AVInput::_instance = nullptr;
+    // FIX(Manual Analysis Issue #AVInput-1 fix not requried): Use After Free - Set _instance to nullptr before UnRegister to prevent callbacks
 
     device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
     device::Host::getInstance().UnRegister(baseInterface<device::Host::ICompositeInEvents>());
@@ -163,6 +162,7 @@ void AVInput::Deinitialize(PluginHost::IShell * /* service */)
         LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
         LOG_DEVICE_EXCEPTION0();
     }
+    AVInput::_instance = nullptr;
 }
 
 string AVInput::Information() const
@@ -319,6 +319,7 @@ uint32_t AVInput::startInput(const JsonObject& parameters, JsonObject& response)
     if (parameters.HasLabel("portId") && parameters.HasLabel("typeOfInput"))
     {
         // FIX(Manual Analysis Issue #AVInput-3): Integer Conversion - Catch specific exceptions and validate input
+        //test call startInput with different paramaters
         try {
             portId = stoi(sPortId);
             iType = getTypeOfInput (sType);
@@ -623,10 +624,9 @@ std::string AVInput::readEDID(int iPort)
         uint16_t size = min(edidVec.size(), (size_t)numeric_limits<uint16_t>::max());
 
         LOGWARN("AVInput::readEDID size:%d edidVec.size:%zu", size, edidVec.size());
-        // FIX(Manual Analysis Issue #AVInput-6): Buffer Overflow - Check for truncation and return error instead of silent truncation
+        // FIX(Manual Analysis Issue #AVInput-6 fix not requried): Buffer Overflow - Check for truncation and return error instead of silent truncation error is logged using LOGERR edidbase64 is returned empty
         if(edidVec.size() > (size_t)numeric_limits<uint16_t>::max()) {
             LOGERR("Size too large to use ToString base64 wpe api");
-            edidbase64 = "error:size_too_large";
             return edidbase64;
         }
         Core::ToString((uint8_t*)&edidVec[0], size, true, edidbase64);
@@ -1240,7 +1240,7 @@ uint32_t AVInput::setMixerLevels(const JsonObject& parameters, JsonObject& respo
 
 	LOGINFO("GLOBAL primary Volume=%d input Volume=%d \n",m_primVolume  , m_inputVolume );
 
-	// FIX(Manual Analysis Issue #AVInput-8): Error Handling - Set isAudioBalanceSet only if both setAudioMixerLevels succeed
+	// FIX(Manual Analysis Issue #AVInput-8): Error Handling - Set isAudioBalanceSet only if both setAudioMixerLevels succeed //need to discuss
 	try{
 
     	     device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY,primVol);
@@ -1686,7 +1686,7 @@ void AVInput::OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType)
     LOGINFO("Received OnHdmiInVRRStatus callback, port: %d, VRR Type: %d",
             port, vrrType);
 
-    // FIX(Manual Analysis Issue #AVInput-9): Thread Safety - Cache _instance pointer and check for nullptr before use
+    // FIX(Manual Analysis Issue #AVInput-9): Thread Safety - Cache _instance pointer and check for nullptr before use //need to discuss
     AVInput* instance = AVInput::_instance;
     if (!instance)
         return;

@@ -695,10 +695,9 @@ namespace WPEFramework
          {
              LOGERR("exception in thread join %s", e.what());
          }
-     
              // FIX(Manual Analysis Issue #HdmiCecSink-5): Use After Free - UnRegister BEFORE DeInitialize to avoid callbacks using deallocated resources
             device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
-            HdmiCecSinkImplementation::_instance = nullptr; // need to discuss 
+            HdmiCecSinkImplementation::_instance = nullptr;
 
              try
              {
@@ -2676,8 +2675,6 @@ namespace WPEFramework
                     break;
                 }
 
-                // FIX(Manual Analysis Issue #HdmiCecSink-6): Race Condition - Protect thread state with mutex need to discuss
-                //std::lock_guard<std::mutex> lk(_instance->m_pollExitMutex);
                 if ( _instance->m_pollNextState != POLL_THREAD_STATE_NONE )
                 {
                     _instance->m_pollThreadState = _instance->m_pollNextState;

@@ -143,7 +143,7 @@
              void Dispatch(Event event, const HDCPStatus &params);
  
          public:
-            static HdcpProfileImplementation *_instance;
+            static HdcpProfileImplementation *_instance; // only one instance allowed singleton
             //  friend class Job;
          };
  
