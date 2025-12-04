@@ -771,6 +771,7 @@ TEST_F(AVInputEvents, onDevicesChangedHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
@@ -797,6 +798,7 @@ TEST_F(AVInputEvents, onDevicesChangedCOMPOSITE)
 
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInHotPlug(dsCOMPOSITE_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
@@ -824,6 +826,7 @@ TEST_F(AVInputEvents, onSignalChangedStableHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_STABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
@@ -851,6 +854,7 @@ TEST_F(AVInputEvents, onSignalChangedNoSignalHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
@@ -878,6 +882,7 @@ TEST_F(AVInputEvents, onSignalChangedUnstableHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0,dsHDMI_IN_SIGNAL_STATUS_UNSTABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
@@ -904,6 +909,7 @@ TEST_F(AVInputEvents, onSignalChangedNotSupportedHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
@@ -929,6 +935,8 @@ TEST_F(AVInputEvents, onSignalChangedDefaultHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
+    
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_MAX);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
@@ -954,6 +962,8 @@ TEST_F(AVInputEvents, onSignalChangedStableCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
+    
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_STABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
@@ -980,6 +990,7 @@ TEST_F(AVInputEvents, onSignalChangedNoSignalCOMPOSITE)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOSIGNAL);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
@@ -1006,6 +1017,7 @@ TEST_F(AVInputEvents, onSignalChangedUnstableCOMPOSITE)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_UNSTABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
@@ -1031,6 +1043,7 @@ TEST_F(AVInputEvents, onSignalChangedNotSupportedCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOTSUPPORTED);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
@@ -1056,6 +1069,7 @@ TEST_F(AVInputEvents, onSignalChangedDefaultCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_MAX);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
@@ -1085,6 +1099,7 @@ TEST_F(AVInputEvents, onInputStatusChangeOn_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("startInput"), _T("{\"portId\": \"0\" , \"typeOfInput\":\"HDMI\", \"requestAudioMix\": true, \"plane\" : 1, \"topMost\" : true}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInEventStatus(dsHDMI_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
@@ -1114,6 +1129,7 @@ TEST_F(AVInputEvents, onInputStatusChangeOff_HDMI)
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("stopInput"), _T("{\"typeOfInput\":\"HDMI\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInEventStatus(dsHDMI_IN_PORT_0, false);
 
 
@@ -1143,6 +1159,7 @@ TEST_F(AVInputEvents, onInputStatusChangeOn_COMPOSITE)
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("startInput"), _T("{\"portId\": \"0\" , \"typeOfInput\":\"COMPOSITE\", \"requestAudioMix\": true, \"plane\" : 1, \"topMost\" : true}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInStatus(dsCOMPOSITE_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
@@ -1171,6 +1188,7 @@ TEST_F(AVInputEvents, onInputStatusChangeOff_COMPOSITE)
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("stopInput"), _T("{\"typeOfInput\":\"COMPOSITE\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInStatus(dsCOMPOSITE_IN_PORT_0, false);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
@@ -1197,6 +1215,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInAllmStatus(dsHDMI_IN_PORT_0,true);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
@@ -1223,6 +1242,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_HDMI_VRR)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0,dsVRR_HDMI_VRR);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
@@ -1249,6 +1269,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
@@ -1275,6 +1296,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
     
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC_PREMIUM);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
@@ -1301,6 +1323,7 @@ TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC_PREMIUM_PRO);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
@@ -1332,6 +1355,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate1_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_59dot94;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0,videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1363,6 +1387,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate2_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_24;
     
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1394,6 +1419,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate3_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_25;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1426,6 +1452,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate4_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_30;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1458,6 +1485,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate5_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_50;
     
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1489,6 +1517,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate6_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_60;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1521,6 +1550,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate7_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_23dot98;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1553,6 +1583,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate8_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_29dot97;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1585,6 +1616,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate9_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_29dot97;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
     
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1617,6 +1649,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate10_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_100;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1649,6 +1682,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate11_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_119dot88;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1681,6 +1715,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate12_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_120;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1713,6 +1748,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate13_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_200;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1745,6 +1781,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate14_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_239dot76;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1777,6 +1814,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate15_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_240;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1809,6 +1847,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_MAX;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1839,6 +1878,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate1_COMPOSITE)
     videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_720x480;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_24;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1870,6 +1910,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdate2_COMPOSITE)
     videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_720x576;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_25;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1900,6 +1941,7 @@ TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
     videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_MAX;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_MAX;
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
@@ -1926,6 +1968,7 @@ TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
 
     EVENT_SUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);    
 
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
     Plugin::AVInputImplementation::_instance->OnHdmiInAVIContentType(dsHDMI_IN_PORT_0, dsAVICONTENT_TYPE_GRAPHICS);
 
     EXPECT_EQ(Core::ERROR_NONE, aviContentTypeUpdate.Lock());
