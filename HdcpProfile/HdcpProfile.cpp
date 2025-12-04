@@ -127,6 +127,7 @@ namespace WPEFramework
                 
                 _hdcpProfile->Unregister(&_hdcpProfileNotification);
                 Exchange::JHdcpProfile::Unregister(*this);
+                // Stop processing:
                 // FIX(Manual Analysis Issue #HdcpProfile-1): Use After Free - Get connection before Release to prevent accessing freed memory
                 RPC::IRemoteConnection *connection = service->RemoteConnection(_connectionId);
                 VARIABLE_IS_NOT_USED uint32_t result = _hdcpProfile->Release();
@@ -139,6 +140,7 @@ namespace WPEFramework
                 }
 
                 // If this was running in a (container) process...
+                ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
                 if (nullptr != connection)
                 {
                     // Lets trigger the cleanup sequence for

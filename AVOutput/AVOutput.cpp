@@ -93,6 +93,14 @@ namespace Plugin {
 
     void AVOutput::Deinitialize(PluginHost::IShell* service)
     {
+
+        profileType = searchRdkProfile();
+
+        if (profileType == STB || profileType == NOT_FOUND)
+        {
+            LOGINFO("Invalid profile type for TV\n");
+            return ;
+        }
         // FIX(Manual Analysis Issue #AVOutput-4): Code Quality - Remove redundant profile check, always cleanup resources
         LOGINFO();
 
