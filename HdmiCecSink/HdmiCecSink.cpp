@@ -130,7 +130,6 @@ namespace WPEFramework
              if (connection != nullptr)
              {
                 try{
-                    // FIX(Manual Analysis Issue #HdmiCecSink-2): Exception Safety - Wrap Terminate in try-catch to ensure Release executes
                     connection->Terminate();
                 }
                 catch(const std::exception& e)
@@ -166,4 +165,4 @@ namespace WPEFramework
         }
 
     } // namespace Plugin
-} // FIX(Manual Analysis Issue #HdmiCecSink-1): namespace WPEFramework
+} // namespace WPEFramework

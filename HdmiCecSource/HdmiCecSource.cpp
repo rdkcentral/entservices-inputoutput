@@ -114,7 +114,6 @@ namespace WPEFramework
                 return ;
            }
 
-           // FIX(Manual Analysis Issue #HdmiCecSource-2): Exception Safety - Validate _hdmiCecSource before calling notification
            // Unregister and cleanup
            if(nullptr != _hdmiCecSource)
            {

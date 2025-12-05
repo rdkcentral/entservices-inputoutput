@@ -106,7 +106,6 @@ namespace WPEFramework {
 					uint32_t _connectionId{};
 					Exchange::IHdcpProfile *_hdcpProfile{};
 					Core::Sink<Notification> _hdcpProfileNotification;
-					// FIX(Manual Analysis Issue #HdcpProfile-4): Code Quality - Initialize configure pointer to nullptr
 					Exchange::IConfiguration* configure{};
         };
 

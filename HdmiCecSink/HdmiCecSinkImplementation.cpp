@@ -359,7 +359,6 @@ namespace WPEFramework
          updateDeviceTypeStatus = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_isDeviceTypeUpdated;
              updatePAStatus   = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_isPAUpdated;
          LOGINFO("updateDeviceTypeStatus %d updatePAStatus %d \n",updateDeviceTypeStatus,updatePAStatus);
-         // FIX(Manual Analysis Issue #HdmiCecSink-15): Performance - Cache toString() to avoid redundant conversions
          std::string currentPA = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_physicalAddr.toString();
          std::string msgPA = msg.physicalAddress.toString();
          if(currentPA != msgPA && updatePAStatus){
@@ -695,7 +694,6 @@ namespace WPEFramework
          {
              LOGERR("exception in thread join %s", e.what());
          }
-             // FIX(Manual Analysis Issue #HdmiCecSink-5): Use After Free - UnRegister BEFORE DeInitialize to avoid callbacks using deallocated resources
             device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
             HdmiCecSinkImplementation::_instance = nullptr;
 
@@ -736,7 +734,6 @@ namespace WPEFramework
            logicalAddressDeviceType = "None";
            logicalAddress = 0xFF;
 
-           // FIX(Manual Analysis Issue #HdmiCecSink-10): Resource Leak - Add cleanup on Initialize failure
            try
            {
                 device::Manager::Initialize();
@@ -747,7 +744,7 @@ namespace WPEFramework
                 LOGINFO("HdmiCecSink plugin device::Manager::Initialize failed");
                 LOG_DEVICE_EXCEPTION0();
                 // Clean up partially initialized state
-                HdmiCecSinkImplementation::_instance = nullptr; //need to discuss if device::Manager::Initialize(); failed do we need to retun or logging is enough
+                HdmiCecSinkImplementation::_instance = nullptr;
                 return Core::ERROR_GENERAL;
            }
 
@@ -899,11 +896,6 @@ namespace WPEFramework
 
             LOGINFO("Event IARM_BUS_PWRMGR_EVENT_MODECHANGED: State Changed %d -- > %d\r",
                     currentState, newState);
-            // FIX(Manual Analysis Issue #HdmiCecSink-11): Logic Error - Verify cecEnableStatus before accessing _instance members
-            // if (!_instance->cecEnableStatus) {
-            //     LOGWARN("CEC not enabled, skipping power mode change handling");
-            //     return;
-            // } fix not needed false postive
             LOGWARN(" m_logicalAddressAllocated 0x%x CEC enable status %d \n",_instance->m_logicalAddressAllocated,_instance->cecEnableStatus);
             if(newState == WPEFramework::Exchange::IPowerManager::POWER_STATE_ON)
             {
@@ -1458,7 +1450,6 @@ namespace WPEFramework
 
                             paths.emplace_back(std::move(device));
 
-                            // FIX(Manual Analysis Issue #HdmiCecSink-4): Buffer Overflow - Validate buffer space before snprintf
                             snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s", _instance->deviceList[route[i]].m_logicalAddress.toString().c_str());
                             stringLength += _instance->deviceList[route[i]].m_logicalAddress.toString().length();
                             snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "(%s", _instance->deviceList[route[i]].m_osdName.toString().c_str());
@@ -2189,7 +2180,6 @@ namespace WPEFramework
                     }
                     catch(CECNoAckException &e)
                     {
-                        // FIX(Manual Analysis Issue #HdmiCecSink-8): Error Handling - Add boundary checks for vector operations
                         if ( _instance->deviceList[i].m_isDevicePresent ) {
                             try {
                                 disconnected.push_back(i);
@@ -2557,7 +2547,6 @@ namespace WPEFramework
                     break;    
             }
 
-            // FIX(Manual Analysis Issue #HdmiCecSink-12): Integer Overflow - Use type-safe duration comparison
             if ( _instance->deviceList[logicalAddress].m_isRequested != CECDeviceParams::REQUEST_NONE )
             {
                 elapsed = std::chrono::steady_clock::now() - _instance->deviceList[logicalAddress].m_requestTime;
@@ -3012,9 +3001,7 @@ namespace WPEFramework
             if(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)
             {
                 stopArc();
-                // FIX(Manual Analysis Issue #HdmiCecSink-7): Infinite Wait - Add timeout to prevent deadlock 
                 /* coverity[sleep : FALSE] */
-
                 while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED) {
                     usleep(500000);
                 }
@@ -3332,7 +3319,6 @@ namespace WPEFramework
                     break;
                 }
 
-                // FIX(Manual Analysis Issue #HdmiCecSink-9): Thread Safety - Protect queue access with existing mutex initialization
                 {
                     std::lock_guard<std::mutex> lk(_instance->m_sendKeyEventMutex);
                     if (_instance->m_SendKeyQueue.empty()) {

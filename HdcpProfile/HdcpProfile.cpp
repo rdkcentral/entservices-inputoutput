@@ -128,7 +128,6 @@ namespace WPEFramework
                 _hdcpProfile->Unregister(&_hdcpProfileNotification);
                 Exchange::JHdcpProfile::Unregister(*this);
                 // Stop processing:
-                // FIX(Manual Analysis Issue #HdcpProfile-1): Use After Free - Get connection before Release to prevent accessing freed memory
                 RPC::IRemoteConnection *connection = service->RemoteConnection(_connectionId);
                 VARIABLE_IS_NOT_USED uint32_t result = _hdcpProfile->Release();
 
@@ -138,7 +137,6 @@ namespace WPEFramework
                 // so it should endup in a DESTRUCTION_SUCCEEDED, if not we
                 // are leaking...
                 ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
-                // FIX(Manual Analysis Issue #HdcpProfile-3): Error Handling - Use runtime check instead of ASSERT for release builds
                 if (result != Core::ERROR_DESTRUCTION_SUCCEEDED) {
                     LOGWARN("HdcpProfile Release did not return DESTRUCTION_SUCCEEDED, potential leak detected (result=%u)", result);
                 }

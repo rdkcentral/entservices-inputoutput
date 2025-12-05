@@ -517,7 +517,6 @@ namespace WPEFramework
 			BIT_SET(HdmiCecSourceImplementation::_instance->deviceList[logicalAddress].m_deviceInfoStatus, BIT_DEVICE_PRESENT);
 			HdmiCecSourceImplementation::_instance->deviceList[logicalAddress].m_logicalAddress = LogicalAddress(logicalAddress);
 			HdmiCecSourceImplementation::_instance->m_numberOfDevices++;
-			// FIX(Manual Analysis Issue #HdmiCecSource-1): Typo - Corrected spelling error
 			LOGINFO("New cec logical address add notification send:  \r\n");
             std::list<Exchange::IHdmiCecSource::INotification*>::const_iterator index(_hdmiCecSourceNotifications.begin());
             while (index != _hdmiCecSourceNotifications.end()) {
@@ -704,7 +703,6 @@ namespace WPEFramework
 
             LOGINFO("Pocessing IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG  event status:%d \r\n",data);
             HdmiCecSourceImplementation::_instance->onHdmiHotPlug(data);
-            // FIX(Manual Analysis Issue #HdmiCecSource-4): Thread Safety - Protect cond_signal with mutex
             //Trigger CEC device poll here
             pthread_mutex_lock(&(_instance->m_lock));
             pthread_cond_signal(&(_instance->m_condSig));
@@ -1221,7 +1219,6 @@ namespace WPEFramework
             }
             catch (const std::invalid_argument& e)
             {
-                // FIX(Manual Analysis Issue #HdmiCecSource-3): Error Handling - Catch both invalid_argument and out_of_range
                 LOGWARN("Invalid vendorId format: %s, using default\n", e.what());
                 vendorIdInt = 0x0019FB;
             }
@@ -1289,7 +1286,6 @@ namespace WPEFramework
             std::vector<Exchange::IHdmiCecSource::HdmiCecSourceDevices> localDevices;
             Exchange::IHdmiCecSource::HdmiCecSourceDevices actual_hdmicecdevices = {0};
 
-		    // FIX(Manual Analysis Issue #HdmiCecSource-5): Thread Safety - Protect cond_signal with mutex
 		    //Trigger CEC device poll here
 		    pthread_mutex_lock(&(_instance->m_lock));
 		    pthread_cond_signal(&(_instance->m_condSig));

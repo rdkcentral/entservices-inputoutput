@@ -66,7 +66,6 @@ namespace Plugin {
         }
 
 	ASSERT(service != nullptr);
-        // FIX(Manual Analysis Issue #AVOutput-2): Integer Truncation - Validate WebPrefix length before casting to uint8_t
         size_t webPrefixLen = service->WebPrefix().length();
         if (webPrefixLen > 255) {
             LOGERR("WebPrefix length %zu exceeds uint8_t max, truncating to 255\n", webPrefixLen);
@@ -75,7 +74,6 @@ namespace Plugin {
             _skipURL = static_cast<uint8_t>(webPrefixLen);
         }
 
-        // FIX(Manual Analysis Issue #AVOutput-3): Exception Handling - Wrap DEVICE_TYPE::Initialize in try-catch
         try {
             DEVICE_TYPE::Initialize();
         } catch (const std::exception& e) {
@@ -100,7 +98,6 @@ namespace Plugin {
             LOGINFO("Invalid profile type for TV\n");
             return ;
         }
-        // FIX(Manual Analysis Issue #AVOutput-4): Code Quality - Remove redundant profile check, always cleanup resources
         LOGINFO();
 
 	DEVICE_TYPE::Deinitialize();

@@ -56,7 +56,6 @@
          HdcpProfileImplementation::~HdcpProfileImplementation()
          {
              LOGINFO("Call HdcpProfileImplementation destructor\n");
-             // FIX(Manual Analysis Issue #HdcpProfile-5): Use After Free - Set _instance to nullptr before UnRegister to prevent callbacks accessing freed object
              device::Host::getInstance().UnRegister(baseInterface<device::Host::IVideoOutputPortEvents>());
              device::Host::getInstance().UnRegister(baseInterface<device::Host::IDisplayDeviceEvents>());
              if (_powerManagerPlugin) {
@@ -139,7 +138,6 @@
              PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
              PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
 
-             // FIX(Manual Analysis Issue #HdcpProfile-6): Thread Safety - Cache _instance to prevent TOCTOU race condition
              HdcpProfileImplementation* instance = HdcpProfileImplementation::_instance;
              
              ASSERT (_powerManagerPlugin);
@@ -159,11 +157,6 @@
           */
          Core::hresult HdcpProfileImplementation::Register(Exchange::IHdcpProfile::INotification *notification)
          {
-            // FIX(Manual Analysis Issue #HdcpProfile-7) fix not requried: Exception Safety - Call AddRef before acquiring lock to prevent lock held during exception
-            // AddRef first to ensure we own the reference before modifying the list
-            //notification->AddRef(); //add ref will not throw exception
-            //notification->Release(); // relesase should happen from Unregister notification which is called from client side
-
             ASSERT(nullptr != notification);
  
              _adminLock.Lock();
@@ -291,7 +284,6 @@
              catch (const std::exception& e)
              {
                  LOGERR("DS exception [%s] caught\r\n", e.what());
-                 // FIX(Manual Analysis Issue #HdcpProfile-8): Exception Safety - Return false on exception to indicate error
                  return false;
              }
              catch (...) {
