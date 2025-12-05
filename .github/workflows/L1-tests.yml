@@ -467,7 +467,6 @@ jobs:
           -DPLUGIN_HDMICECSINK=ON
           -DUSE_THUNDER_R4=ON
           -DHIDE_NON_EXTERNAL_SYMBOLS=OFF
-          -DCMAKE_FIND_DEBUG_MODE=ON
           &&
           cmake --build build/entservices-inputoutput -j8
           &&
