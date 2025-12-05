@@ -520,9 +520,11 @@ bool AVInput::setVideoRectangle(int x, int y, int width, int height, int type)
 uint32_t AVInput::getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response)
 {
     LOGINFOMETHOD();
+    LOGWARN("%s entry ",__FUNCTION__);
 
     if (parameters.HasLabel("typeOfInput")) {
         string sType = parameters["typeOfInput"].String();
+        LOGWARN("%s entry inputType: %s  ",__FUNCTION__,sType.c_str());
         int iType = 0;
         try {
             iType = getTypeOfInput (sType);
@@ -530,10 +532,14 @@ uint32_t AVInput::getInputDevicesWrapper(const JsonObject& parameters, JsonObjec
             LOGWARN("Invalid Arguments");
             returnResponse(false);
         }
+        LOGWARN("%s entry inputType  iType : %d  ",__FUNCTION__,iType);
+
         response["devices"] = getInputDevices(iType);
     }
     else {
+        LOGWARN("%s else case look for hdmi ",__FUNCTION__);
         JsonArray listHdmi = getInputDevices(HDMI);
+        LOGWARN("%s else case look for composit",__FUNCTION__);
         JsonArray listComposite = getInputDevices(COMPOSITE);
         for (int i = 0; i < listComposite.Length(); i++) {
             listHdmi.Add(listComposite.Get(i));
@@ -590,17 +596,23 @@ uint32_t AVInput::readEDIDWrapper(const JsonObject& parameters, JsonObject& resp
 JsonArray AVInput::getInputDevices(int iType)
 {
     JsonArray list;
+    LOGWARN("%s entry ",__FUNCTION__);
     try
     {
         int num = 0;
         if (iType == HDMI) {
+            LOGWARN("%s : %d  calling getNumberOfInputs ",__FUNCTION__,__LINE__);
             num = device::HdmiInput::getInstance().getNumberOfInputs();
+            LOGWARN("%s : %d  return getNumberOfInputs ",__FUNCTION__,__LINE__);
         }
         else if (iType == COMPOSITE) {
+            LOGWARN("%s : %d  calling getNumberOfInputs ",__FUNCTION__,__LINE__);
             num = device::CompositeInput::getInstance().getNumberOfInputs();
+            LOGWARN("%s : %d  return getNumberOfInputs ",__FUNCTION__,__LINE__);
         }
         if (num > 0) {
             int i = 0;
+            LOGWARN("%s : %d  check if port connected ",__FUNCTION__,__LINE__);
             for (i = 0; i < num; i++) {
                 //Input ID is aleays 0-indexed, continuous number starting 0
                 JsonObject hash;
@@ -608,11 +620,15 @@ JsonArray AVInput::getInputDevices(int iType)
                 std::stringstream locator;
                 if (iType == HDMI) {
                     locator << "hdmiin://localhost/deviceid/" << i;
+                    LOGWARN("%s : %d  check if hdmi  port connected ",__FUNCTION__,__LINE__);
                     hash["connected"] = device::HdmiInput::getInstance().isPortConnected(i);
+                    LOGWARN("%s : %d  return if hdmi  port connected ",__FUNCTION__,__LINE__);
                 }
                 else if (iType == COMPOSITE) {
                     locator << "cvbsin://localhost/deviceid/" << i;
+                    LOGWARN("%s : %d  check if composite  port connected ",__FUNCTION__,__LINE__);
                     hash["connected"] = device::CompositeInput::getInstance().isPortConnected(i);
+                    LOGWARN("%s : %d  return if composit  port connected ",__FUNCTION__,__LINE__);
                 }
                 hash["locator"] = locator.str();
                 LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, hash["locator"].String().c_str(), hash["connected"].Boolean());
@@ -623,6 +639,7 @@ JsonArray AVInput::getInputDevices(int iType)
     catch (const std::exception &e) {
         LOGWARN("AVInputService::getInputDevices Failed");
     }
+    LOGWARN("%s exit",__FUNCTION__);
     return list;
 }
 
