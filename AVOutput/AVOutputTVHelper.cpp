@@ -2315,7 +2315,7 @@ namespace Plugin {
     tvError_t AVOutputTV::setAspectRatioZoomSettings(tvDisplayMode_t mode)
     {
         tvError_t ret = tvERROR_GENERAL;
-        LOGINFO("%s: mode selected is: %d", __FUNCTION__, m_videoZoomMode);
+        LOGINFO("%s: mode selected is: %d incoming mode:%d ", __FUNCTION__, m_videoZoomMode,mode);
 #if !defined (HDMIIN_4K_ZOOM)
         if (AVOutputTV::instance->m_isDisabledHdmiIn4KZoom) {
             if (AVOutputTV::instance->m_currentHdmiInResoluton<dsVIDEO_PIXELRES_3840x2160 ||
@@ -2331,8 +2331,8 @@ namespace Plugin {
             }
         }
         else {
-            LOGWARN("%s: HdmiInput is not started yet. m_isDisabledHdmiIn4KZoom: %d", __FUNCTION__, AVOutputTV::instance->m_isDisabledHdmiIn4KZoom);
-            ret = SetAspectRatio((tvDisplayMode_t)m_videoZoomMode);
+            LOGWARN("%s: User AspectRatio update mode :%d . m_isDisabledHdmiIn4KZoom: %d", __FUNCTION__, mode, AVOutputTV::instance->m_isDisabledHdmiIn4KZoom);
+            ret = SetAspectRatio(mode);
         }
 #endif
         return ret;
