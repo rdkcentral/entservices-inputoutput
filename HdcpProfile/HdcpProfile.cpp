@@ -134,13 +134,16 @@ namespace WPEFramework
 
                 _hdcpProfile = nullptr;
 
+                 // It should have been the last reference we are releasing,
+                // so it should endup in a DESTRUCTION_SUCCEEDED, if not we
+                // are leaking...
+                ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
                 // FIX(Manual Analysis Issue #HdcpProfile-3): Error Handling - Use runtime check instead of ASSERT for release builds
                 if (result != Core::ERROR_DESTRUCTION_SUCCEEDED) {
                     LOGWARN("HdcpProfile Release did not return DESTRUCTION_SUCCEEDED, potential leak detected (result=%u)", result);
                 }
 
                 // If this was running in a (container) process...
-                ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
                 if (nullptr != connection)
                 {
                     // Lets trigger the cleanup sequence for

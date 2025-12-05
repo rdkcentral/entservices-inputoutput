@@ -66,7 +66,7 @@
              {
                 _service->Release();
              }
-             HdcpProfileImplementation::_instance = nullptr; // if unregister used _instance it will read nullptr
+             HdcpProfileImplementation::_instance = nullptr;
              mShell = nullptr;
          }
  
@@ -91,9 +91,15 @@
          void HdcpProfileImplementation::onHdcpProfileDisplayConnectionChanged()
          {
              HDCPStatus hdcpstatus;
-             GetHDCPStatusInternal(hdcpstatus);
-             dispatchEvent(HDCPPROFILE_EVENT_DISPLAYCONNECTIONCHANGED, hdcpstatus);
-             logHdcpStatus("onHdcpProfileDisplayConnectionChanged", hdcpstatus);
+             if (true == GetHDCPStatusInternal(hdcpstatus))
+             {
+                dispatchEvent(HDCPPROFILE_EVENT_DISPLAYCONNECTIONCHANGED, hdcpstatus);
+                logHdcpStatus("onHdcpProfileDisplayConnectionChanged", hdcpstatus);
+             }
+             else
+             {
+                LOGERR("Failed to getHdcpStatus");
+             }
          }
  
          void HdcpProfileImplementation::logHdcpStatus (const char *trigger, HDCPStatus& status)
@@ -174,7 +180,7 @@
              {
                  LOGERR("same notification is registered already");
              }
- 
+
             _adminLock.Unlock();
 
              return Core::ERROR_NONE;
@@ -284,10 +290,14 @@
              }
              catch (const std::exception& e)
              {
-                 LOGWARN("DS exception caught from %s\r\n", __FUNCTION__);
+                 LOGERR("DS exception [%s] caught\r\n", e.what());
                  // FIX(Manual Analysis Issue #HdcpProfile-8): Exception Safety - Return false on exception to indicate error
-                 return false; // need to discuss
+                 return false;
              }
+             catch (...) {
+                LOGERR("Failed to getHdcpStatus with unknown exception\n");
+                return false;
+            }
  
              hdcpstatus.isConnected = isConnected;
              hdcpstatus.isHDCPCompliant = isHDCPCompliant;

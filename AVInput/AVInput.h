@@ -163,8 +163,6 @@ public:
     void OnCompositeInVideoModeUpdate(dsCompositeInPort_t activePort, dsVideoPortResolution_t videoResolution) override;
     
 public:
-    // FIX(Manual Analysis Issue #AVInput-10): Design Issue - Move _instance to private section to prevent external modification
-    // fix not required as _instance AVInput can have single instance at any time because of singleton nature of plugin
     static AVInput* _instance;
 };
 

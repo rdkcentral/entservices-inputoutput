@@ -162,6 +162,7 @@ void AVInput::Deinitialize(PluginHost::IShell * /* service */)
         LOGINFO("device::Manager::DeInitialize failed due to device::Manager::DeInitialize()");
         LOG_DEVICE_EXCEPTION0();
     }
+
     AVInput::_instance = nullptr;
 }
 

@@ -527,9 +527,7 @@ private:
             NUMBER_9      = 0x29
               };
         
-        // FIX(Manual Analysis Issue #HdmiCecSink-13): Encapsulation Violation - Made members private for thread safety
         public:
-
             HdmiCecSinkImplementation();
             virtual ~HdmiCecSinkImplementation();
             static HdmiCecSinkImplementation* _instance;
@@ -642,7 +640,6 @@ private:
         uint32_t m_sleepTime;
         std::mutex m_pollExitMutex;
         std::mutex m_enableMutex;
-        std::mutex m_currentActiveSourceMutex;
         /* Send Key event related */
         bool m_sendKeyEventThreadExit;
         bool m_sendKeyEventThreadRun;

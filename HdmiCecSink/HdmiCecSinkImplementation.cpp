@@ -1459,27 +1459,15 @@ namespace WPEFramework
                             paths.emplace_back(std::move(device));
 
                             // FIX(Manual Analysis Issue #HdmiCecSink-4): Buffer Overflow - Validate buffer space before snprintf
-                            int remaining = sizeof(routeString) - stringLength;
-                            if (remaining > 0) {
-                                int written = snprintf(&routeString[stringLength], remaining, "%s", _instance->deviceList[route[i]].m_logicalAddress.toString().c_str());
-                                stringLength += (written > 0 && written < remaining) ? written : 0;
-                            }
-                            remaining = sizeof(routeString) - stringLength;
-                            if (remaining > 0) {
-                                int written = snprintf(&routeString[stringLength], remaining, "(%s", _instance->deviceList[route[i]].m_osdName.toString().c_str());
-                                stringLength += (written > 0 && written < remaining) ? written : 0;
-                            }
-                            remaining = sizeof(routeString) - stringLength;
-                            if (remaining > 0) {
-                                int written = snprintf(&routeString[stringLength], remaining, "%s", ")-->");
-                                stringLength += (written > 0 && written < remaining) ? written : 0;
-                            }
+                            snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s", _instance->deviceList[route[i]].m_logicalAddress.toString().c_str());
+                            stringLength += _instance->deviceList[route[i]].m_logicalAddress.toString().length();
+                            snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "(%s", _instance->deviceList[route[i]].m_osdName.toString().c_str());
+                            stringLength += _instance->deviceList[route[i]].m_osdName.toString().length();
+                            snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s", ")-->");
+                            stringLength += strlen(")-->");
                             if( i + 1 ==  route.size() )
                             {
-                                remaining = sizeof(routeString) - stringLength;
-                                if (remaining > 0) {
-                                    snprintf(&routeString[stringLength], remaining, "%s%d", "HDMI",(HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_physicalAddr.getByteValue(0) - 1));
-                                }
+                                snprintf(&routeString[stringLength], sizeof(routeString) - stringLength, "%s%d", "HDMI",(HdmiCecSinkImplementation::_instance->deviceList[route[i]].m_physicalAddr.getByteValue(0) - 1));
                             }
                         }
                     }
@@ -2068,20 +2056,15 @@ namespace WPEFramework
 
             if( logical_address != _instance->m_logicalAddressAllocated )
             {
-                // FIX(Manual Analysis Issue #HdmiCecSink-3): Race Condition - Protect m_currentActiveSource with mutex 
-                //have to disuss need to impleamnt local locking only while readin
-                //std::lock_guard<std::mutex> lock(_instance->_adminLock);
+                if ( _instance->m_currentActiveSource != -1 )
                 {
-                std::lock_guard<std::mutex> lock(m_currentActiveSourceMutex);
-                    if ( _instance->m_currentActiveSource != -1 )
-                    {
                     _instance->deviceList[_instance->m_currentActiveSource].m_isActiveSource = false;
-                    }
-
-                    _instance->deviceList[logical_address].m_isActiveSource = true;
-                    _instance->deviceList[logical_address].update(source.physicalAddress);
-                    _instance->m_currentActiveSource = logical_address;
                 }
+
+                _instance->deviceList[logical_address].m_isActiveSource = true;
+                _instance->deviceList[logical_address].update(source.physicalAddress);
+                _instance->m_currentActiveSource = logical_address;
+
                 if (_instance->deviceList[logical_address].m_isDevicePresent &&
                                     _instance->deviceList[_instance->m_logicalAddressAllocated].m_powerStatus.toInt() == PowerStatus::STANDBY)
                 {

@@ -57,7 +57,6 @@ namespace Plugin {
     {
         LOGINFO("Entry\n");
 
-        // FIX(Manual Analysis Issue #AVOutput-1): Logic Error - Cache profileType to ensure atomic check and use
         profileType = searchRdkProfile();
 
         if (profileType == STB || profileType == NOT_FOUND)
