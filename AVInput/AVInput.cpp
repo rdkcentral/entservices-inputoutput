@@ -85,7 +85,7 @@ int getTypeOfInput(string sType)
     else if (0 == strcmp (sType.c_str(), "COMPOSITE"))
         iType = COMPOSITE;
     else
-        throw std::runtime_error("Invalid type of INPUT, please specify HDMI/COMPOSITE"); //call startInput with invalid input type
+        throw std::runtime_error("Invalid type of INPUT, please specify HDMI/COMPOSITE");
     return iType;
 }
 
