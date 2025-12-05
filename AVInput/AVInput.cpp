@@ -326,25 +326,25 @@ uint32_t AVInput::startInput(const JsonObject& parameters, JsonObject& response)
 		     if(!(planeType == 0 || planeType == 1))// planeType has to be primary(0) or secondary(1)
 		     {
 			  LOGWARN("planeType is invalid\n");
-			  planeType = 0; // Reset to safe default
+			  planeType = 0;
 			  returnResponse(false);
 	             }
              }
    	} catch (const std::invalid_argument& e) {
             LOGWARN("Invalid argument for integer conversion: %s", e.what());
-            planeType = 0; // Reset to safe default
+            planeType = 0;
             returnResponse(false);
         } catch (const std::out_of_range& e) {
             LOGWARN("Integer out of range: %s", e.what());
-            planeType = 0; // Reset to safe default
+            planeType = 0;
             returnResponse(false);
         } catch (const std::runtime_error& e) {
             LOGWARN("Runtime error: %s", e.what());
-            planeType = 0; // Reset to safe default
+            planeType = 0;
             returnResponse(false);
         } catch (...) {
             LOGWARN("Unknown exception in parameter parsing");
-            planeType = 0; // Reset to safe default
+            planeType = 0;
             returnResponse(false);
         }
     }
@@ -402,7 +402,6 @@ uint32_t AVInput::stopInput(const JsonObject& parameters, JsonObject& response)
         else if (COMPOSITE == iType) {
             device::CompositeInput::getInstance().selectPort(-1);
         }
-        // Only reset planeType after successful operations
         planeType = -1;
     }
     catch (const device::Exception& err) {
@@ -1236,12 +1235,11 @@ uint32_t AVInput::setMixerLevels(const JsonObject& parameters, JsonObject& respo
 
     	     device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY,primVol);
        	     device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM,inputVol);
-    	     // Only set flag if both operations succeeded
     	     isAudioBalanceSet = true;
 	}
 	catch(...){
     	     LOGWARN("Not setting SoC volume !!!\n");
-    	     isAudioBalanceSet = false; // Ensure flag is false on failure
+             isAudioBalanceSet = false;
        	     returnResponse(false);
 	}
 	returnResponse(true);

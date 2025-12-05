@@ -133,7 +133,7 @@ namespace WPEFramework
 
                 _hdcpProfile = nullptr;
 
-                 // It should have been the last reference we are releasing,
+                // It should have been the last reference we are releasing,
                 // so it should endup in a DESTRUCTION_SUCCEEDED, if not we
                 // are leaking...
                 ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);

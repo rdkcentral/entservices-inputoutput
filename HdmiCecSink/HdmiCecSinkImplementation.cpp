@@ -743,7 +743,6 @@ namespace WPEFramework
            {
                 LOGINFO("HdmiCecSink plugin device::Manager::Initialize failed");
                 LOG_DEVICE_EXCEPTION0();
-                // Clean up partially initialized state
                 HdmiCecSinkImplementation::_instance = nullptr;
                 return Core::ERROR_GENERAL;
            }
