@@ -119,6 +119,8 @@ protected:
         dispatcher->Deactivate();
         dispatcher->Release();
 
+        workerpool->Stop();
+
         Core::IWorkerPool::Assign(nullptr);
         workerPool.Release();
     
