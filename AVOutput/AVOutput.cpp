@@ -49,9 +49,23 @@ namespace Plugin {
         }
 
 	ASSERT(service != nullptr);
-        _skipURL = static_cast<uint8_t>(service->WebPrefix().length());
+        size_t webPrefixLen = service->WebPrefix().length();
+        if (webPrefixLen > 255) {
+            LOGERR("WebPrefix length %zu exceeds uint8_t max, truncating to 255\n", webPrefixLen);
+            _skipURL = 255;
+			} else {
+            _skipURL = static_cast<uint8_t>(webPrefixLen);
+        }
 
-        DEVICE_TYPE::Initialize();
+        try {
+            DEVICE_TYPE::Initialize();
+        } catch (const std::exception& e) {
+            LOGERR("DEVICE_TYPE::Initialize failed: %s\n", e.what());
+            return std::string("Initialization failed: ") + e.what();
+        } catch (...) {
+            LOGERR("DEVICE_TYPE::Initialize failed with unknown exception\n");
+            return std::string("Initialization failed with unknown error");
+        }
 
         LOGINFO("Exit\n");
             return (service != nullptr ? _T("") : _T("No service."));
