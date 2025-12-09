@@ -3118,6 +3118,7 @@ namespace Plugin {
         else if (paramName == "BacklightMode") caps = m_backlightModeCaps;
         else if (paramName == "CMS") caps = m_cmsCaps;
         else if (paramName == "SDRGamma") caps = m_sdrGammaModeCaps;
+        else if (paramName == "DimmingLevel") caps = m_dimmingLevelCaps;
         else {
             LOGERR("Unknown ParamName: %s", paramName.c_str());
             return nullptr;
