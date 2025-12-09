@@ -218,6 +218,7 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(getDigitalNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(getMEMC)
 		DECLARE_JSON_RPC_METHOD(getSDRGamma)
+		DECLARE_JSON_RPC_METHOD(getBacklightDimmingLevel)
 
 
 		/*Get Capability API's*/
@@ -264,6 +265,7 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(getAISuperResolutionCaps)
 		DECLARE_JSON_RPC_METHOD(getMEMCCaps)
 		DECLARE_JSON_RPC_METHOD(getMultiPointWBCaps)
+		DECLARE_JSON_RPC_METHOD(getBacklightDimmingLevelCaps)
 
 		/*Set API's*/
 		DECLARE_JSON_RPC_METHOD(setBacklight)
@@ -291,6 +293,8 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(setDigitalNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(setMEMC)
 		DECLARE_JSON_RPC_METHOD(setSDRGamma)
+		DECLARE_JSON_RPC_METHOD(setBacklightDimmingLevel )
+
 		/*Reset API's*/
 		DECLARE_JSON_RPC_METHOD(resetBacklight)
 		DECLARE_JSON_RPC_METHOD(resetBrightness )
@@ -315,6 +319,7 @@ class AVOutputTV : public AVOutputBase {
 		DECLARE_JSON_RPC_METHOD(resetDigitalNoiseReduction)
 		DECLARE_JSON_RPC_METHOD(resetMEMC)
 		DECLARE_JSON_RPC_METHOD(resetSDRGamma)
+		DECLARE_JSON_RPC_METHOD(resetBacklightDimmingLevel )
 
 
     private:
@@ -621,6 +626,10 @@ class AVOutputTV : public AVOutputBase {
 		tvContextCaps_t* m_sdrGammaModeCaps = nullptr;
 		tvError_t m_sdrGammaModeStatus = tvERROR_NONE;
 		void getSdrGammaStringFromEnum(tvSdrGamma_t value, std::string& str);
+
+		int m_maxDimmingLevel = 0;
+		tvContextCaps_t* m_dimmingLevelCaps = nullptr;
+		tvError_t m_dimmingLevelStatus = tvERROR_NONE;
 
 		int m_numHalMatrixPoints = 0;
 		int m_rgbMin = 0;
