@@ -1752,22 +1752,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler_connect_ExceptionHand
     .Times(::testing::AtLeast(1))
     .WillRepeatedly(::testing::Throw(std::runtime_error("sendTo failed")));
 
-	// Setup mocks for video port and display to prevent segfault
-    ON_CALL(*p_videoOutputPortMock, getDisplay())
-        .WillByDefault(::testing::ReturnRef(device::Display::getInstance()));
-
-    ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
-        .WillByDefault(::testing::Return(true));
-
-    ON_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
-        .WillByDefault(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
-
-    ON_CALL(*p_displayMock, getEDIDBytes(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [&](std::vector<uint8_t> &edidVec2) {
-                edidVec2 = std::vector<uint8_t>(128, 0x00);
-            }));
-
     EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
     .Times(1)
     .WillOnce(::testing::Return("TEST"));
