@@ -1747,6 +1747,12 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_IOException)
 
 TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler_connect_ExceptionHandling)
 {
+    int iCounter = 0;
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+        usleep (100 * 1000); 
+        iCounter ++;
+    }
+
     // Expect sendTo to be called during connection (ReportPhysicalAddress and DeviceVendorID)
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_))
     .Times(::testing::AtLeast(1))
