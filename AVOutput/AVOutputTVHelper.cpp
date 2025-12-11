@@ -697,6 +697,7 @@ namespace Plugin {
             PQFileName = std::string(AVOUTPUT_RFC_CALLERID_OVERRIDE);
         }
         else {
+			 LOGINFO("get panel id in\n");
             int val=GetPanelID(panelId);
             if(val==0) {
                 LOGINFO("%s : panel id read is : %s\n",__FUNCTION__,panelId);
@@ -716,8 +717,9 @@ namespace Plugin {
                 LOGINFO("%s : GetPanelID failed : %d\n",__FUNCTION__,val);
             }
         }
-        strncpy(rfc_caller_id,PQFileName.c_str(),PQFileName.size());
-        rfc_caller_id[sizeof(rfc_caller_id) - 1] = '\0';
+		 LOGINFO("copying in\n");
+        strncpy(rfc_caller_id,PQFileName.c_str(),RFC_BUFF_MAX-1);
+        rfc_caller_id[RFC_BUFF_MAX-1] = '\0';
         LOGINFO("%s : Default tvsettings file : %s\n",__FUNCTION__,rfc_caller_id);
     }
 
