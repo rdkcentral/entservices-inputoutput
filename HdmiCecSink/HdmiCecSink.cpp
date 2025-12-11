@@ -783,14 +783,17 @@ namespace WPEFramework
                             (void *)&hdmiInput,
                             sizeof(hdmiInput));
 
-           if (err == IARM_RESULT_SUCCESS && hdmiInput.result == dsERR_NONE)
-           {
-				LOGINFO("Number of Inputs [%d] \n", hdmiInput.numHdmiInputs );
-            	m_numofHdmiInput = hdmiInput.numHdmiInputs;
-           }else{
-				LOGINFO("Not able to get Numebr of inputs so defaulting to 3 \n");
-				m_numofHdmiInput = 3;
-			}
+           try
+            {
+               m_numofHdmiInput = device::HdmiInput::getInstance().getNumberOfInputs();
+               LOGINFO("HdmiCecSink plugin m_numofHdmiInput %d", m_numofHdmiInput);
+            }
+            catch(const device::Exception& err)
+            {
+               LOGINFO("HdmiCecSink plugin device::HdmiInput::getInstance().getNumberOfInputs failed so defaulting to 3");
+               m_numofHdmiInput = 3;
+               LOG_DEVICE_EXCEPTION0();
+            }
 
 			LOGINFO("initalize inputs \n");
 
