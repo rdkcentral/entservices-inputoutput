@@ -411,7 +411,6 @@ namespace WPEFramework
        {
        uint32_t  oldPowerStatus,newPowerStatus;
        printHeader(header);
-       LOGINFO("Command: ReportPowerStatus Power Status from:%s status : %s \n",header.from.toString().c_str(),msg.status.toString().c_str());
        if(header.to.toInt() == LogicalAddress::BROADCAST){
         LOGINFO("Ignore Broadcast messages, accepts only direct messages");
         return;
@@ -420,7 +419,6 @@ namespace WPEFramework
        HdmiCecSinkImplementation::_instance->addDevice(header.from.toInt());
        HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].update(msg.status);
        newPowerStatus = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_powerStatus.toInt();
-       LOGINFO(" oldPowerStatus %d newpower status %d \n",oldPowerStatus,newPowerStatus);
            if ((oldPowerStatus != newPowerStatus) )
        {
            HdmiCecSinkImplementation::_instance->sendDeviceUpdateInfo(header.from.toInt());
@@ -2469,7 +2467,6 @@ namespace WPEFramework
             }
 
             _instance->deviceList[logicalAddress].m_requestTime = std::chrono::system_clock::now();
-            LOGINFO("request type %d", _instance->deviceList[logicalAddress].m_isRequested);
         }
 
         int HdmiCecSinkImplementation::requestStatus(const int logicalAddress) {
@@ -2604,7 +2601,6 @@ namespace WPEFramework
 
             if( _instance->deviceList[logicalAddress].m_isRequested == CECDeviceParams::REQUEST_NONE)
             {
-                LOGINFO("Request Done");
                 return CECDeviceParams::REQUEST_DONE;
             }
 

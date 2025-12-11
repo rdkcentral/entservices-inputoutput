@@ -91,8 +91,9 @@ namespace WPEFramework {
             Connection conn;
             void printHeader(const Header &header)
             {
-                printf("Header : From : %s \n", header.from.toString().c_str());
-                printf("Header : to   : %s \n", header.to.toString().c_str());
+		// Removed this logs as we are laready printing the CEC message
+                //printf("Header : From : %s \n", header.from.toString().c_str());
+                //printf("Header : to   : %s \n", header.to.toString().c_str());
             }
         
         };
