@@ -281,7 +281,6 @@ namespace WPEFramework
        void HdmiCecSourceProcessor::process (const GiveDevicePowerStatus &msg, const Header &header)
        {
              printHeader(header);
-             LOGINFO("Command: GiveDevicePowerStatus sending powerState :%d \n",powerState);
              try
              { 
                  conn.sendTo(header.from, MessageEncoder().encode(ReportPowerStatus(PowerStatus(powerState))));
@@ -296,7 +295,6 @@ namespace WPEFramework
              printHeader(header);
 			 if ((header.from == LogicalAddress(LogicalAddress::TV)))
 				 tvPowerState = msg.status;
-             LOGINFO("Command: ReportPowerStatus TV Power Status from:%s status : %s \n",header.from.toString().c_str(),msg.status.toString().c_str());
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
        void HdmiCecSourceProcessor::process (const UserControlPressed &msg, const Header &header)
