@@ -100,13 +100,6 @@ namespace WPEFramework {
         void process (const RequestCurrentLatency &msg, const Header &header);
         private:
             Connection conn;
-            void printHeader(const Header &header)
-            {
-                // Removed these logs as we are already printing the CEC message
-                // printf("Header : From : %s \n", header.from.toString().c_str());
-                // printf("Header : to   : %s \n", header.to.toString().c_str());
-            }
-        
         };
 
         class CECDeviceParams {
