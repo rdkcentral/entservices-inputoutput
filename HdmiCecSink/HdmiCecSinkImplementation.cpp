@@ -265,7 +265,6 @@ namespace WPEFramework
        }
        void HdmiCecSinkProcessor::process (const GiveDeviceVendorID &msg, const Header &header)
        {
-             LOGINFO("Command: GiveDeviceVendorID");
          if(header.to == LogicalAddress(LogicalAddress::BROADCAST)){
         LOGINFO("Ignore Broadcast messages, accepts only direct messages");
         return;
