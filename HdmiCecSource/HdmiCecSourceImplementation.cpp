@@ -279,7 +279,7 @@ namespace WPEFramework
        void HdmiCecSourceProcessor::process (const ReportPowerStatus &msg, const Header &header)
        {
              if ((header.from == LogicalAddress(LogicalAddress::TV)))
-				 tvPowerState = msg.status;
+                 tvPowerState = msg.status;
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
        void HdmiCecSourceProcessor::process (const UserControlPressed &msg, const Header &header)

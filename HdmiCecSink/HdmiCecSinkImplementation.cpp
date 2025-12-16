@@ -487,7 +487,7 @@ namespace WPEFramework
        void HdmiCecSinkProcessor::process (const InitiateArc &msg, const Header &header)
        {
         if((!(header.from.toInt() == 0x5)) || (header.to.toInt() == LogicalAddress::BROADCAST)){
-                LOGINFO("Ignoring the message coming from addresses other than 0X5 or a braodcast message");
+                LOGINFO("Ignoring the message coming from addresses other than 0X5 or a broadcast message");
                 return;
             }
             PhysicalAddress physical_addr_invalid = {0x0F,0x0F,0x0F,0x0F};
@@ -514,7 +514,7 @@ namespace WPEFramework
        void HdmiCecSinkProcessor::process (const TerminateArc &msg, const Header &header)
        {
        if((!(header.from.toInt() == 0x5)) || (header.to.toInt() == LogicalAddress::BROADCAST)){
-            LOGINFO("Ignoring the message coming from addresses other than 0X5 or a braodcast message");
+            LOGINFO("Ignoring the message coming from addresses other than 0X5 or a broadcast message");
                 return;
            }
            if(!HdmiCecSinkImplementation::_instance)
