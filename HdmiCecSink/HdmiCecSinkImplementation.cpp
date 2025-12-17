@@ -2170,13 +2170,15 @@ namespace WPEFramework
             for(i=0; i< LogicalAddress::UNREGISTERED; i++ ) {
                 if ( i != _instance->m_logicalAddressAllocated )
                 {
-                    //LOGWARN("PING for  0x%x \r\n",i);
+                    LOGWARN("PING for  0x%x \r\n",i);
                     try {
                         _instance->smConnection->ping(LogicalAddress(_instance->m_logicalAddressAllocated), LogicalAddress(i), Throw_e());
                     }
                     catch(CECNoAckException &e)
                     {
+			LOGWARN("Caught no ACK exception\n");
                         if ( _instance->deviceList[i].m_isDevicePresent ) {
+			    LOGWARN("Disconnected device 0x%x\n", i);
                             disconnected.push_back(i);
                         }
                                                 //LOGWARN("Ping device: 0x%x caught %s \r\n", i, e.what());
@@ -2193,12 +2195,14 @@ namespace WPEFramework
                       /* If we get ACK, then the device is present in the network*/
                       if ( !_instance->deviceList[i].m_isDevicePresent )
                       {
+			    LOGWARN("Connected device 0x%x\n", i);
                           connected.push_back(i);
                                                 //LOGWARN("Ping success, added device: 0x%x \r\n", i);
                       }
                       usleep(50000);      
                 }
                }
+		LOGINFO("Exiting %s\n", "pingDevices");
         }
 
         int HdmiCecSinkImplementation::requestType( const int logicalAddress ) {
@@ -2488,6 +2492,7 @@ namespace WPEFramework
             switch ( _instance->deviceList[logicalAddress].m_isRequested ) {
                 case CECDeviceParams::REQUEST_PHISICAL_ADDRESS :
                 {
+		    LOGINFO("HdmiCecSinkImplementation::requestStatus Request Physical address %d\n", logicalAddress);
                     if( _instance->deviceList[logicalAddress].m_isPAUpdated &&
                             _instance->deviceList[logicalAddress].m_isDeviceTypeUpdated )
                     {
@@ -2498,6 +2503,7 @@ namespace WPEFramework
 
                 case CECDeviceParams::REQUEST_CEC_VERSION :
                 {
+		    LOGINFO("HdmiCecSinkImplementation::requestStatus Request CEC Version %d\n", logicalAddress);
                     if( _instance->deviceList[logicalAddress].m_isVersionUpdated )
                     {
                         _instance->deviceList[logicalAddress].m_isRequested = CECDeviceParams::REQUEST_NONE;
@@ -2507,6 +2513,7 @@ namespace WPEFramework
 
                 case CECDeviceParams::REQUEST_DEVICE_VENDOR_ID :
                 {
+		    LOGINFO("HdmiCecSinkImplementation::requestStatus Request Vendor ID %d\n", logicalAddress);
                     if( _instance->deviceList[logicalAddress].m_isVendorIDUpdated )
                     {
                         _instance->deviceList[logicalAddress].m_isRequested = CECDeviceParams::REQUEST_NONE;
@@ -2516,6 +2523,7 @@ namespace WPEFramework
 
                 case CECDeviceParams::REQUEST_OSD_NAME :    
                 {
+		    LOGINFO("HdmiCecSinkImplementation::requestStatus Request OSD Name %d\n", logicalAddress);
                     if( _instance->deviceList[logicalAddress].m_isOSDNameUpdated )
                     {
                         _instance->deviceList[logicalAddress].m_isRequested = CECDeviceParams::REQUEST_NONE;
@@ -2525,6 +2533,7 @@ namespace WPEFramework
 
                 case CECDeviceParams::REQUEST_POWER_STATUS :    
                 {
+		    LOGINFO("HdmiCecSinkImplementation::requestStatus Request Power Status%d\n", logicalAddress);
                     if( _instance->deviceList[logicalAddress].m_isPowerStatusUpdated )
                     {
                         _instance->deviceList[logicalAddress].m_isRequested = CECDeviceParams::REQUEST_NONE;
@@ -2641,11 +2650,12 @@ namespace WPEFramework
                     _instance->m_pollNextState = POLL_THREAD_STATE_NONE;
                 }
 
+                LOGWARN("_instance->m_pollThreadExit %d isExit %d _instance->m_pollThreadState %d  _instance->m_pollNextState %d",_instance->m_pollThreadExit,isExit,_instance->m_pollThreadState,_instance->m_pollNextState );
                 switch (_instance->m_pollThreadState)  {
 
                 case POLL_THREAD_STATE_POLL :
                 {
-                    //LOGINFO("POLL_THREAD_STATE_POLL");
+                    LOGINFO("POLL_THREAD_STATE_POLL");
                     _instance->allocateLogicalAddress(DeviceType::TV);
                     if ( _instance->m_logicalAddressAllocated != LogicalAddress::UNREGISTERED)
                     {
@@ -2698,22 +2708,22 @@ namespace WPEFramework
 
                 case POLL_THREAD_STATE_PING :
                 {
-                    //LOGINFO("POLL_THREAD_STATE_PING");
+                    LOGINFO("POLL_THREAD_STATE_PING\n");
                     _instance->m_pollThreadState = POLL_THREAD_STATE_INFO;
                     connected.clear();
                     disconnected.clear();
                     _instance->pingDevices(connected, disconnected);
 
                     if ( disconnected.size() ){
+                            LOGWARN("Disconnected Devices [%zu]\n", disconnected.size());
                         for( unsigned int i=0; i< disconnected.size(); i++ )
                         {
-                            LOGWARN("Disconnected Devices [%zu]", disconnected.size());
                             _instance->removeDevice(disconnected[i]);
                         }
                     }
 
                     if (connected.size()) {
-                        LOGWARN("Connected Devices [%zu]", connected.size());
+                        LOGWARN("Connected Devices [%zu]\n", connected.size());
                         for( unsigned int i=0; i< connected.size(); i++ )
                         {
                             _instance->addDevice(connected[i]);
@@ -2743,7 +2753,7 @@ namespace WPEFramework
 
                 case POLL_THREAD_STATE_INFO :
                 {
-                    //LOGINFO("POLL_THREAD_STATE_INFO");
+                    LOGINFO("POLL_THREAD_STATE_INFO\n");
 
                     if ( logicalAddressRequested == LogicalAddress::UNREGISTERED + TEST_ADD )
                     {
@@ -2788,7 +2798,7 @@ namespace WPEFramework
                 /* updating the power status and if required we can add other information later*/
                 case POLL_THREAD_STATE_UPDATE :
                 {
-                    //LOGINFO("POLL_THREAD_STATE_UPDATE");
+                    LOGINFO("POLL_THREAD_STATE_UPDATE\n");
 
                     for(int i=0;i<LogicalAddress::UNREGISTERED + TEST_ADD;i++)
                     {
@@ -2814,7 +2824,7 @@ namespace WPEFramework
 
                 case POLL_THREAD_STATE_IDLE :
                 {
-                    //LOGINFO("POLL_THREAD_STATE_IDLE");
+                    LOGINFO("POLL_THREAD_STATE_IDLE");
                     _instance->m_sleepTime = HDMICECSINK_PING_INTERVAL_MS;
                     _instance->m_pollThreadState = POLL_THREAD_STATE_PING;
                 }
@@ -2843,10 +2853,12 @@ namespace WPEFramework
 
                 /* coverity[BAD_CHECK_OF_WAIT_COND : FALSE] */
                 std::unique_lock<std::mutex> lk(_instance->m_pollExitMutex);
-                if ( _instance->m_ThreadExitCV.wait_for(lk, std::chrono::milliseconds(_instance->m_sleepTime)) == std::cv_status::timeout )
+                if ( _instance->m_ThreadExitCV.wait_for(lk, std::chrono::milliseconds(_instance->m_sleepTime)) == std::cv_status::timeout ) {
+		    LOGINFO("Exiting condition timed wait instance->m_pollThreadState %d  _instance->m_pollNextState %d\n",_instance->m_pollThreadState,_instance->m_pollNextState);
                     continue;
+		}
                 else
-                    LOGINFO("Thread is going to Exit m_pollThreadExit %d\n", _instance->m_pollThreadExit );
+                    LOGINFO("Thread is going to Exit m_pollThreadExit %d instance->m_pollThreadState %d  _instance->m_pollNextState %d\n", _instance->m_pollThreadExit, _instance->m_pollThreadState,_instance->m_pollNextState );
 
             }
         }
