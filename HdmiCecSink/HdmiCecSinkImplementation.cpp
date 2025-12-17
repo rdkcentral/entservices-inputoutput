@@ -92,7 +92,6 @@ static VendorID appVendorId = {defaultVendorId.at(0),defaultVendorId.at(1),defau
 static VendorID lgVendorId = {0x00,0xE0,0x91};
 static PhysicalAddress physical_addr = {0x0F,0x0F,0x0F,0x0F};
 static LogicalAddress logicalAddress = 0xF;
-static Language defaultLanguage = "eng";
 static OSDName osdName = "TV Box";
 static int32_t powerState = DEVICE_POWER_STATE_OFF;
 static std::vector<uint8_t> formatid = {0,0};
@@ -111,6 +110,7 @@ static std::vector<DeviceFeatures> deviceFeatures = {DEVICE_FEATURES_TV};
 #define API_VERSION_NUMBER_PATCH 7
 
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
+Exchange::IUserSettings* _userSettingsPlugin = nullptr;
 
 namespace WPEFramework
 {
@@ -604,6 +604,7 @@ namespace WPEFramework
         , m_connectedDevices()
         , msgProcessor(nullptr)
         , msgFrameListener(nullptr)
+	, _userSettingsNotification(*this)
         , _powerManagerPlugin()
         , _pwrMgrNotification(*this)
         , _registeredEventHandlers(false)
@@ -619,6 +620,13 @@ namespace WPEFramework
                _powerManagerPlugin.Reset();
             }
             _registeredEventHandlers = false;
+
+	   if(_userSettingsPlugin)
+           {
+                   _userSettingsPlugin->Unregister(&_userSettingsNotification);
+                   _userSettingsPlugin->Release();
+                   _userSettingsPlugin = nullptr;
+           }
      
          CECDisable();
          m_currentArcRoutingState = ARC_STATE_ARC_EXIT;
@@ -776,6 +784,28 @@ namespace WPEFramework
                }
             }
             getCecVersion();
+
+	    _userSettingsPlugin = service->QueryInterfaceByCallsign<Exchange::IUserSettings>("org.rdk.UserSettings");
+            if (nullptr == _userSettingsPlugin) {
+                LOGERR("Failed to get UserSettings interface");
+            }
+           else
+           {
+                   string presentationLanguage;
+                   uint32_t status = _userSettingsPlugin->GetPresentationLanguage(presentationLanguage);
+                   if (status == Core::ERROR_NONE) {
+                           LOGINFO("successfully retrived the Presentation language from the userSettings plugin\n");
+                           setCurrentLanguage(Language(presentationLanguage.data()));
+                           sendMenuLanguage();
+                   }
+                   else {
+                           LOGERR("Failed to get presentation language: %u", status);
+                   }
+
+                   _userSettingsPlugin->Register(&_userSettingsNotification);
+                   LOGINFO("Successfully registered for UserSettings notifications");
+           }
+
             LOGINFO(" HdmiCecSinkImplementation plugin Initialize completed \n");
             return Core::ERROR_NONE;
 
@@ -848,6 +878,18 @@ namespace WPEFramework
 
            LOGINFO("Received HdmiCecSink::OnHdmiInEventHotPlug event port: %d isConnected: %d \r\n", port, isConnected);
            HdmiCecSinkImplementation::_instance->onHdmiHotPlug((int) port, isConnected);
+       }
+
+       void HdmiCecSinkImplementation::onPresentationLanguageChanged(const string& presentationLanguage)
+       {
+           if(!HdmiCecSinkImplementation::_instance)
+               return;
+
+           LOGINFO("OnPresentationLanguageChanged");
+           LOGINFO("language: %s", presentationLanguage.c_str());
+
+           setCurrentLanguage(Language(presentationLanguage.data()));
+           sendMenuLanguage();
        }
 
        void HdmiCecSinkImplementation::onPowerModeChanged(const PowerState &currentState, const PowerState &newState)
@@ -1481,6 +1523,7 @@ namespace WPEFramework
 			lang = language;
 
 			setCurrentLanguage(Language(lang.data()));
+			sendMenuLanguage();
             successResult.success = true;
 
             return Core::ERROR_NONE;
@@ -2626,7 +2669,6 @@ namespace WPEFramework
                             _instance->deviceList[_instance->m_logicalAddressAllocated].m_cecVersion = Version::V_1_4;
                             _instance->deviceList[_instance->m_logicalAddressAllocated].m_vendorID = appVendorId;
                             _instance->deviceList[_instance->m_logicalAddressAllocated].m_powerStatus = PowerStatus(powerState);
-                            _instance->deviceList[_instance->m_logicalAddressAllocated].m_currentLanguage = defaultLanguage;
                             _instance->deviceList[_instance->m_logicalAddressAllocated].m_osdName = osdName.toString().c_str();
                             if(cecVersion == 2.0) {
                                 _instance->deviceList[_instance->m_logicalAddressAllocated].m_cecVersion = Version::V_2_0;
