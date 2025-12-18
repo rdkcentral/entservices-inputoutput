@@ -67,6 +67,7 @@ namespace Plugin {
             LOGINFO("Invalid profile type for TV\n");
             return ;
         }
+
         LOGINFO();
 
 	DEVICE_TYPE::Deinitialize();
