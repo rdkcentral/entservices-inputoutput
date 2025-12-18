@@ -1748,7 +1748,7 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_IOException)
 TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler_connect_ExceptionHandling)
 {
     int iCounter = 0;
-    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) {
+    while ((!Plugin::HdmiCecSourceImplementation::_instance->deviceList[0].m_isOSDNameUpdated) && (iCounter < (2*10))) { //sleep for 2sec.
         usleep (100 * 1000); 
         iCounter ++;
     }
