@@ -3318,16 +3318,13 @@ namespace WPEFramework
                     break;
                 }
 
-                {
-                    std::lock_guard<std::mutex> lk(_instance->m_sendKeyEventMutex);
-                    if (_instance->m_SendKeyQueue.empty()) {
-                        _instance->m_sendKeyEventThreadRun = false;
-                        continue;
-                    }
-
-                    keyInfo = _instance->m_SendKeyQueue.front();
-                    _instance->m_SendKeyQueue.pop();
+                if (_instance->m_SendKeyQueue.empty()) {
+                    _instance->m_sendKeyEventThreadRun = false;
+                    continue;
                 }
+
+                keyInfo = _instance->m_SendKeyQueue.front();
+                _instance->m_SendKeyQueue.pop();
 
                 uikey = _instance->getUIKeyCode(keyInfo.keyCode);
 

@@ -157,7 +157,7 @@
           */
          Core::hresult HdcpProfileImplementation::Register(Exchange::IHdcpProfile::INotification *notification)
          {
-            ASSERT(nullptr != notification);
+             ASSERT(nullptr != notification);
  
              _adminLock.Lock();
              printf("HdcpProfileImplementation::Register: notification = %p", notification);
