@@ -141,11 +141,9 @@
              PluginHost::IShell* _service;
              void dispatchEvent(Event, const HDCPStatus &params);
              void Dispatch(Event event, const HDCPStatus &params);
-             
  
          public:
-             static HdcpProfileImplementation *_instance;
-
+            static HdcpProfileImplementation *_instance;
             //  friend class Job;
          };
  

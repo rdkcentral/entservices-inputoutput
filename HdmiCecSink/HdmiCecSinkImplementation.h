@@ -139,7 +139,7 @@ namespace WPEFramework {
             bool m_isPowerStatusUpdated;
             int  m_isRequested;
             int  m_isRequestRetry;
-            std::chrono::system_clock::time_point m_requestTime;
+            std::chrono::steady_clock::time_point m_requestTime;
             std::vector<FeatureAbort> m_featureAborts;
             std::chrono::system_clock::time_point m_lastPowerUpdateTime;
             
