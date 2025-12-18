@@ -85,7 +85,7 @@ int getTypeOfInput(string sType)
     else if (0 == strcmp (sType.c_str(), "COMPOSITE"))
         iType = COMPOSITE;
     else
-        throw "Invalide type of INPUT, please specify HDMI/COMPOSITE";
+        throw std::runtime_error("Invalid type of INPUT, please specify HDMI/COMPOSITE");
     return iType;
 }
 
@@ -326,11 +326,25 @@ uint32_t AVInput::startInput(const JsonObject& parameters, JsonObject& response)
 		     if(!(planeType == 0 || planeType == 1))// planeType has to be primary(0) or secondary(1)
 		     {
 			  LOGWARN("planeType is invalid\n");
+			  planeType = 0;
 			  returnResponse(false);
 	             }
              }
-   	}catch (...) {
-            LOGWARN("Invalid Arguments");
+   	} catch (const std::invalid_argument& e) {
+            LOGWARN("Invalid argument for integer conversion: %s", e.what());
+            planeType = 0;
+            returnResponse(false);
+        } catch (const std::out_of_range& e) {
+            LOGWARN("Integer out of range: %s", e.what());
+            planeType = 0;
+            returnResponse(false);
+        } catch (const std::runtime_error& e) {
+            LOGWARN("Runtime error: %s", e.what());
+            planeType = 0;
+            returnResponse(false);
+        } catch (...) {
+            LOGWARN("Unknown exception in parameter parsing");
+            planeType = 0;
             returnResponse(false);
         }
     }
@@ -349,6 +363,7 @@ uint32_t AVInput::startInput(const JsonObject& parameters, JsonObject& response)
         }
     }
     catch (const device::Exception& err) {
+        planeType = 0;
         LOG_DEVICE_EXCEPTION1(std::to_string(portId));
         returnResponse(false);
     }
@@ -376,7 +391,6 @@ uint32_t AVInput::stopInput(const JsonObject& parameters, JsonObject& response)
 
     try
     {
-        planeType = -1;
 	if (isAudioBalanceSet){
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY,MAX_PRIM_VOL_LEVEL);
             device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM,DEFAULT_INPUT_VOL_LEVEL);
@@ -388,6 +402,7 @@ uint32_t AVInput::stopInput(const JsonObject& parameters, JsonObject& response)
         else if (COMPOSITE == iType) {
             device::CompositeInput::getInstance().selectPort(-1);
         }
+        planeType = -1;
     }
     catch (const device::Exception& err) {
         LOGWARN("AVInputService::stopInput Failed");
@@ -1166,6 +1181,9 @@ std::string AVInput::getSPD(int iPort)
             struct dsSpd_infoframe_st pre;
             memcpy(&pre,spdVect.data(),sizeof(struct dsSpd_infoframe_st));
 
+            pre.vendor_name[sizeof(pre.vendor_name) - 1] = '\0';
+            pre.product_des[sizeof(pre.product_des) - 1] = '\0';
+
             char str[200] = {0};
             snprintf(str, sizeof(str), "Packet Type:%02X,Version:%u,Length:%u,vendor name:%s,product des:%s,source info:%02X",
             pre.pkttype,pre.version,pre.length,pre.vendor_name,pre.product_des,pre.source_info);
@@ -1217,12 +1235,13 @@ uint32_t AVInput::setMixerLevels(const JsonObject& parameters, JsonObject& respo
 
     	     device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_PRIMARY,primVol);
        	     device::Host::getInstance().setAudioMixerLevels(dsAUDIO_INPUT_SYSTEM,inputVol);
+    	     isAudioBalanceSet = true;
 	}
 	catch(...){
     	     LOGWARN("Not setting SoC volume !!!\n");
+             isAudioBalanceSet = false;
        	     returnResponse(false);
 	}
-        isAudioBalanceSet = true;
 	returnResponse(true);
 }
 
@@ -1656,22 +1675,23 @@ void AVInput::OnHdmiInVRRStatus(dsHdmiInPort_t port, dsVRRType_t vrrType)
     LOGINFO("Received OnHdmiInVRRStatus callback, port: %d, VRR Type: %d",
             port, vrrType);
 
-    if (!AVInput::_instance)
+    AVInput* instance = AVInput::_instance;
+    if (!instance)
         return;
 
     // Handle transitions
     if (dsVRR_NONE == vrrType) {
-        if (AVInput::_instance->m_currentVrrType != dsVRR_NONE) {
-            AVInput::_instance->AVInputVRRChange(port,AVInput::_instance->m_currentVrrType,false);
+        if (instance->m_currentVrrType != dsVRR_NONE) {
+            instance->AVInputVRRChange(port, instance->m_currentVrrType, false);
         }
     } else {
-        if (AVInput::_instance->m_currentVrrType != dsVRR_NONE) {
-            AVInput::_instance->AVInputVRRChange(port,AVInput::_instance->m_currentVrrType,false);
+        if (instance->m_currentVrrType != dsVRR_NONE) {
+            instance->AVInputVRRChange(port, instance->m_currentVrrType, false);
         }
-        AVInput::_instance->AVInputVRRChange(port,vrrType,true);
+        instance->AVInputVRRChange(port, vrrType, true);
     }
 
-    AVInput::_instance->m_currentVrrType = vrrType;
+    instance->m_currentVrrType = vrrType;
 }
 
 
