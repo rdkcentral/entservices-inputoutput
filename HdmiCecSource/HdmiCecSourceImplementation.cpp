@@ -109,7 +109,6 @@ namespace WPEFramework
 //=========================================== HdmiCecSourceProcessor =========================================
        void HdmiCecSourceProcessor::process (const ActiveSource &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: ActiveSource %s : %s  : %s \n",GetOpName(msg.opCode()),msg.physicalAddress.name().c_str(),msg.physicalAddress.toString().c_str());
              if(msg.physicalAddress.toString() == physical_addr.toString())
                  isDeviceActiveSource = true;
@@ -122,7 +121,6 @@ namespace WPEFramework
 
        void HdmiCecSourceProcessor::process (const RequestActiveSource &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: RequestActiveSource\n");
              if(isDeviceActiveSource)
              {
@@ -139,14 +137,12 @@ namespace WPEFramework
        }
        void HdmiCecSourceProcessor::process (const Standby &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: Standby from %s\n", header.from.toString().c_str());
              HdmiCecSourceImplementation::_instance->SendStandbyMsgEvent(header.from.toInt());
 
        }
        void HdmiCecSourceProcessor::process (const GetCECVersion &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: GetCECVersion sending CECVersion response \n");
              try
              { 
@@ -159,14 +155,12 @@ namespace WPEFramework
        }
        void HdmiCecSourceProcessor::process (const CECVersion &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: CECVersion Version : %s \n",msg.version.toString().c_str());
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
       
        void HdmiCecSourceProcessor::process (const GiveOSDName &msg, const Header &header)
        {
-             printHeader(header);
              if (!(header.from == LogicalAddress(LogicalAddress::UNREGISTERED)))
              {
                  LOGINFO("Command: GiveOSDName sending SetOSDName : %s\n",osdName.toString().c_str());
@@ -195,7 +189,6 @@ namespace WPEFramework
        }
        void HdmiCecSourceProcessor::process (const GiveDeviceVendorID &msg, const Header &header)
        {
-             printHeader(header);
              try
              {
                  LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n",(isLGTvConnected)?lgVendorId.toString().c_str():appVendorId.toString().c_str());
@@ -213,7 +206,6 @@ namespace WPEFramework
       
        void HdmiCecSourceProcessor::process (const SetOSDName &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: SetOSDName OSDName : %s\n",msg.osdName.toString().c_str());
              if (HdmiCecSourceImplementation::_instance) {
                  bool isOSDNameUpdated = HdmiCecSourceImplementation::_instance->deviceList[header.from.toInt()].update(msg.osdName);
@@ -225,7 +217,6 @@ namespace WPEFramework
        }
        void HdmiCecSourceProcessor::process (const RoutingChange &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: RoutingChange From : %s To: %s \n",msg.from.toString().c_str(),msg.to.toString().c_str());
              if(msg.to.toString() == physical_addr.toString())
                  isDeviceActiveSource = true;
@@ -236,7 +227,6 @@ namespace WPEFramework
        }
        void HdmiCecSourceProcessor::process (const RoutingInformation &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: RoutingInformation Routing Information to Sink : %s\n",msg.toSink.toString().c_str());
              if(msg.toSink.toString() == physical_addr.toString())
                  isDeviceActiveSource = true;
@@ -247,7 +237,6 @@ namespace WPEFramework
        }
        void HdmiCecSourceProcessor::process (const SetStreamPath &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: SetStreamPath Set Stream Path to Sink : %s\n",msg.toSink.toString().c_str());
              if(msg.toSink.toString() == physical_addr.toString())
                  isDeviceActiveSource = true;
@@ -260,13 +249,11 @@ namespace WPEFramework
        
        void HdmiCecSourceProcessor::process (const ReportPhysicalAddress &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: ReportPhysicalAddress\n");
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
        void HdmiCecSourceProcessor::process (const DeviceVendorID &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: DeviceVendorID VendorID : %s\n",msg.vendorId.toString().c_str());
              if (HdmiCecSourceImplementation::_instance){
                  bool isVendorIdUpdated = HdmiCecSourceImplementation::_instance->deviceList[header.from.toInt()].update(msg.vendorId);
@@ -280,8 +267,6 @@ namespace WPEFramework
        }
        void HdmiCecSourceProcessor::process (const GiveDevicePowerStatus &msg, const Header &header)
        {
-             printHeader(header);
-             LOGINFO("Command: GiveDevicePowerStatus sending powerState :%d \n",powerState);
              try
              { 
                  conn.sendTo(header.from, MessageEncoder().encode(ReportPowerStatus(PowerStatus(powerState))));
@@ -293,32 +278,26 @@ namespace WPEFramework
        }
        void HdmiCecSourceProcessor::process (const ReportPowerStatus &msg, const Header &header)
        {
-             printHeader(header);
-			 if ((header.from == LogicalAddress(LogicalAddress::TV)))
-				 tvPowerState = msg.status;
-             LOGINFO("Command: ReportPowerStatus TV Power Status from:%s status : %s \n",header.from.toString().c_str(),msg.status.toString().c_str());
+             if ((header.from == LogicalAddress(LogicalAddress::TV)))
+                 tvPowerState = msg.status;
              HdmiCecSourceImplementation::_instance->addDevice(header.from.toInt());
        }
        void HdmiCecSourceProcessor::process (const UserControlPressed &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: UserControlPressed message received from:%s command : %d \n",header.from.toString().c_str(),msg.uiCommand.toInt());
              HdmiCecSourceImplementation::_instance->SendKeyPressMsgEvent(header.from.toInt(),msg.uiCommand.toInt());
        }
        void HdmiCecSourceProcessor::process (const UserControlReleased &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: UserControlReleased message received from:%s \n",header.from.toString().c_str());
              HdmiCecSourceImplementation::_instance->SendKeyReleaseMsgEvent(header.from.toInt());
        }
        void HdmiCecSourceProcessor::process (const FeatureAbort &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: FeatureAbort\n");
        }
        void HdmiCecSourceProcessor::process (const Abort &msg, const Header &header)
        {
-             printHeader(header);
              if (!(header.from == LogicalAddress(LogicalAddress::BROADCAST)))
              {
 		 LOGINFO("Command: Abort, sending FeatureAbort");
@@ -335,7 +314,6 @@ namespace WPEFramework
              LOGINFO("Command: Abort\n");
        }
        void HdmiCecSourceProcessor::process (const Polling &msg, const Header &header)                                 {
-             printHeader(header);
              LOGINFO("Command: Polling\n");
        }
 
