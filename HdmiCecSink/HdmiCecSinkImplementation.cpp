@@ -2480,7 +2480,6 @@ namespace WPEFramework
             }
 
             _instance->deviceList[logicalAddress].m_requestTime = std::chrono::steady_clock::now();
-            LOGINFO("request type %d", _instance->deviceList[logicalAddress].m_isRequested);
         }
 
         int HdmiCecSinkImplementation::requestStatus(const int logicalAddress) {
