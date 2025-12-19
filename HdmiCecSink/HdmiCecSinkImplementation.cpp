@@ -341,9 +341,11 @@ namespace WPEFramework
          updateDeviceTypeStatus = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_isDeviceTypeUpdated;
              updatePAStatus   = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_isPAUpdated;
          LOGINFO("updateDeviceTypeStatus %d updatePAStatus %d \n",updateDeviceTypeStatus,updatePAStatus);
-         if(HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_physicalAddr.toString() != msg.physicalAddress.toString() && updatePAStatus){
+         std::string currentPA = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_physicalAddr.toString();
+         std::string msgPA = msg.physicalAddress.toString();
+         if(currentPA != msgPA && updatePAStatus){
                 updatePAStatus= false;
-                LOGINFO("There is a change in physical address from current PA %s to newly reported PA %s\n",HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_physicalAddr.toString().c_str(),msg.physicalAddress.toString().c_str());
+                LOGINFO("There is a change in physical address from current PA %s to newly reported PA %s\n",currentPA.c_str(),msgPA.c_str());
              }
          HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].update(msg.physicalAddress);
          HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].update(msg.deviceType);
@@ -659,9 +661,8 @@ namespace WPEFramework
          {
              LOGERR("exception in thread join %s", e.what());
          }
-     
-             HdmiCecSinkImplementation::_instance = nullptr;
-             device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+            device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+            HdmiCecSinkImplementation::_instance = nullptr;
 
              try
              {
@@ -709,6 +710,8 @@ namespace WPEFramework
            {
                 LOGINFO("HdmiCecSink plugin device::Manager::Initialize failed");
                 LOG_DEVICE_EXCEPTION0();
+                HdmiCecSinkImplementation::_instance = nullptr;
+                return Core::ERROR_GENERAL;
            }
 
            // load persistence setting
@@ -2144,7 +2147,11 @@ namespace WPEFramework
                     catch(CECNoAckException &e)
                     {
                         if ( _instance->deviceList[i].m_isDevicePresent ) {
-                            disconnected.push_back(i);
+                            try {
+                                disconnected.push_back(i);
+                            } catch (const std::bad_alloc& e) {
+                                LOGERR("Memory allocation failed in disconnected vector: %s", e.what());
+                            }
                         }
                                                 //LOGWARN("Ping device: 0x%x caught %s \r\n", i, e.what());
                         usleep(50000);
@@ -2160,7 +2167,11 @@ namespace WPEFramework
                       /* If we get ACK, then the device is present in the network*/
                       if ( !_instance->deviceList[i].m_isDevicePresent )
                       {
-                          connected.push_back(i);
+                          try {
+                              connected.push_back(i);
+                          } catch (const std::bad_alloc& e) {
+                              LOGERR("Memory allocation failed in connected vector: %s", e.what());
+                          }
                                                 //LOGWARN("Ping success, added device: 0x%x \r\n", i);
                       }
                       usleep(50000);      
@@ -2435,7 +2446,7 @@ namespace WPEFramework
                     break;
             }
 
-            _instance->deviceList[logicalAddress].m_requestTime = std::chrono::system_clock::now();
+            _instance->deviceList[logicalAddress].m_requestTime = std::chrono::steady_clock::now();
         }
 
         int HdmiCecSinkImplementation::requestStatus(const int logicalAddress) {
@@ -2503,7 +2514,7 @@ namespace WPEFramework
 
             if ( _instance->deviceList[logicalAddress].m_isRequested != CECDeviceParams::REQUEST_NONE )
             {
-                elapsed = std::chrono::system_clock::now() - _instance->deviceList[logicalAddress].m_requestTime;
+                elapsed = std::chrono::steady_clock::now() - _instance->deviceList[logicalAddress].m_requestTime;
 
                 if ( elapsed.count() > HDMICECSINK_REQUEST_MAX_WAIT_TIME_MS )
                 {
