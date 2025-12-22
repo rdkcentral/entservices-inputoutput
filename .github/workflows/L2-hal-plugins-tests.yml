@@ -113,7 +113,7 @@ jobs:
         if: contains(steps.getfile.outputs.files, 'HdmiCecSource') || contains(steps.getfile.outputs.files, 'HdmiCecSink')
       - name: Clone the Manifest and build the associated binaries
         run: |
-          git clone -b topic/RDK-57171-Latest https://github.com/rdkcentral/entservices-inputoutput.git
+          git clone -b topic/RDK-57171-New https://github.com/rdkcentral/entservices-inputoutput.git
           cd entservices-inputoutput/L2HalMock
           chmod -Rf 777 setup_script.sh
           chmod -Rf 777 post_setup_script.sh
