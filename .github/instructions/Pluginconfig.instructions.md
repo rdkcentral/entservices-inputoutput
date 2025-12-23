@@ -8,7 +8,7 @@ applyTo: "**/*.config,**/*.conf.in"
 
 - Each plugin must define a <PluginName>.conf.in file that includes the following mandatory properties:
 
-  - **autostart**: Indicates whether the plugin should start automatically when the framework boots. This should be set to false by default.
+  - **autostart**: Indicates whether the plugin should start automatically when the framework boots. This should be set to false by default either directly or via the CMake variable
 
   - **callsign**: A unique identifier used to reference the plugin within the framework. Every callsign must be defined with a prefix of org.rdk and it must be followed by the ENT Service name written in PascalCase (e.g., org.rdk.PersistentStore).
 

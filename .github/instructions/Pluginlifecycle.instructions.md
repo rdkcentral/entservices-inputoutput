@@ -77,7 +77,7 @@ Core::hresult NativeJSImplementation::Initialize(string waylandDisplay)
 }
 ```
 
-- Before executing Initialize, ensure all private member variables are in a reset state (either initialized by the constructor or cleared by a prior Deinitialize). Validate this by asserting their default values.
+- Before executing Initialize(), ensure all private member variables are in a reset state (either initialized by the constructor or cleared by a prior Deinitialize()). Validate this by asserting their default values.
 
 **Example:**
 
