@@ -90,9 +90,15 @@
          void HdcpProfileImplementation::onHdcpProfileDisplayConnectionChanged()
          {
              HDCPStatus hdcpstatus;
-             GetHDCPStatusInternal(hdcpstatus);
-             dispatchEvent(HDCPPROFILE_EVENT_DISPLAYCONNECTIONCHANGED, hdcpstatus);
-             logHdcpStatus("onHdcpProfileDisplayConnectionChanged", hdcpstatus);
+             if (true == GetHDCPStatusInternal(hdcpstatus))
+             {
+                dispatchEvent(HDCPPROFILE_EVENT_DISPLAYCONNECTIONCHANGED, hdcpstatus);
+                logHdcpStatus("onHdcpProfileDisplayConnectionChanged", hdcpstatus);
+             }
+             else
+             {
+                LOGERR("Failed to getHdcpStatus");
+             }
          }
  
          void HdcpProfileImplementation::logHdcpStatus (const char *trigger, HDCPStatus& status)
@@ -132,15 +138,17 @@
              PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
              PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
 
+             HdcpProfileImplementation* instance = HdcpProfileImplementation::_instance;
+             
              ASSERT (_powerManagerPlugin);
-             if (_powerManagerPlugin){
+             if (_powerManagerPlugin && instance){
                  res = _powerManagerPlugin->GetPowerState(pwrStateCur, pwrStatePrev);
                  if (Core::ERROR_NONE != res)
                  {
                      LOGWARN("Failed to Invoke RPC method: GetPowerState");
                  }
                  LOGINFO("Received OnHDCPStatusChange  event data:%d  param.curState: %d \r\n", hdcpStatus,pwrStateCur);
-                 HdcpProfileImplementation::_instance->onHdmiOutputHDCPStatusEvent(hdcpStatus);
+                 instance->onHdmiOutputHDCPStatusEvent(hdcpStatus); 
              }
          }
 
@@ -165,9 +173,9 @@
              {
                  LOGERR("same notification is registered already");
              }
- 
+
             _adminLock.Unlock();
- 
+
              return Core::ERROR_NONE;
          }
  
@@ -275,8 +283,13 @@
              }
              catch (const std::exception& e)
              {
-                 LOGWARN("DS exception caught from %s\r\n", __FUNCTION__);
+                 LOGERR("DS exception [%s] caught\r\n", e.what());
+                 return false;
              }
+             catch (...) {
+                LOGERR("Failed to getHdcpStatus with unknown exception\n");
+                return false;
+            }
  
              hdcpstatus.isConnected = isConnected;
              hdcpstatus.isHDCPCompliant = isHDCPCompliant;

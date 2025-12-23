@@ -114,11 +114,10 @@ namespace WPEFramework
                 return ;
            }
 
-           
-           HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
-
+           // Unregister and cleanup
            if(nullptr != _hdmiCecSource)
            {
+             HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
              _hdmiCecSource->Unregister(&_notification);
              Exchange::JHdmiCecSource::Unregister(*this);
              _hdmiCecSource->Release();
