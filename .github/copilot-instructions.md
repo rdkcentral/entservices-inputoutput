@@ -6,7 +6,7 @@ When writing review comments based on custom instructions located in .github/ins
 
 ## Examples
 
-Refer: #interface-implementation 
+Refer: https://github.com/rdkcentral/entservices-inputoutput/blob/develop/.github/instructions/Plugin.instructions.md#interface-implementation 
 
 Refer: https://github.com/rdkcentral/entservices-inputoutput/blob/develop/.github/instructions/Pluginlifecycle.instructions.md#deactivated
 
