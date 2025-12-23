@@ -18,6 +18,8 @@
 **/
 
 #include <gtest/gtest.h>
+#include "COMLinkMock.h"
+#include <gmock/gmock.h>
 
 #include "AVInput.h"
 
@@ -30,34 +32,45 @@
 #include "ServiceMock.h"
 #include "ThunderPortability.h"
 
+#include "AVInputImplementation.h"
+#include "AVInputMock.h"
+#include "WorkerPoolImplementation.h"
+
 using namespace WPEFramework;
 
 using ::testing::NiceMock;
 
+
 class AVInputTest : public ::testing::Test {
-protected:
+
+    protected:
+
     Core::ProxyType<Plugin::AVInput> plugin;
     Core::JSONRPC::Handler& handler;
     DECL_CORE_JSONRPC_CONX connection;
+    Core::ProxyType<Plugin::AVInputImplementation> AVInputImpl;
+
+    NiceMock<ServiceMock> service;
+    NiceMock<COMLinkMock> comLinkMock;
+
+    Core::ProxyType<WorkerPoolImplementation> workerPool;
     string response;
+
+    AVInputMock* p_avInputMock                          = nullptr;
+    HdmiInputImplMock* p_hdmiInputImplMock              = nullptr;
+    CompositeInputImplMock* p_compositeInputImplMock    = nullptr;
+    HostImplMock* p_HostImplMock                        = nullptr;
+    IarmBusImplMock* p_iarmBusImplMock                  = nullptr;
+    ManagerImplMock* p_managerImplMock                  = nullptr;
+
+    PLUGINHOST_DISPATCHER* dispatcher;
 
     AVInputTest()
         : plugin(Core::ProxyType<Plugin::AVInput>::Create())
         , handler(*(plugin))
         , INIT_CONX(1, 0)
-    {
-    }
-    virtual ~AVInputTest() = default;
-};
-
-class AVInputDsTest : public AVInputTest {
-protected:
-    HdmiInputImplMock* p_hdmiInputImplMock = nullptr;
-    CompositeInputImplMock* p_compositeInputImplMock = nullptr;
-    HostImplMock* p_HostImplMock = nullptr;
-
-    AVInputDsTest()
-        : AVInputTest()
+        , workerPool(Core::ProxyType<WorkerPoolImplementation>::Create(2, Core::Thread::DefaultStackSize(), 16))
+        , dispatcher(nullptr)
     {
         p_hdmiInputImplMock  = new NiceMock <HdmiInputImplMock>;
         device::HdmiInput::setImpl(p_hdmiInputImplMock);
@@ -67,9 +80,69 @@ protected:
 
         p_HostImplMock = new NiceMock<HostImplMock>;
         device::Host::setImpl(p_HostImplMock);
+
+        p_managerImplMock  = new NiceMock <ManagerImplMock>;
+        device::Manager::setImpl(p_managerImplMock);
+
+        EXPECT_CALL(*p_managerImplMock, Initialize())
+            .Times(::testing::AnyNumber())
+            .WillRepeatedly(::testing::Return());
+
+        p_avInputMock  = new NiceMock<AVInputMock>;
+
+        Core::IWorkerPool::Assign(&(*workerPool));
+        workerPool->Run();
+
+        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
+            plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
+        dispatcher->Activate(&service);
+
+        #ifdef USE_THUNDER_R4
+        ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_))
+                .WillByDefault(::testing::Invoke(
+                    [&](const RPC::Object& object, const uint32_t waitTime, uint32_t& connectionId) {
+                        AVInputImpl = Core::ProxyType<Plugin::AVInputImplementation>::Create();
+                        return &AVInputImpl;
+                    }));
+        #else
+            ON_CALL(comLinkMock, Instantiate(::testing::_, ::testing::_, ::testing::_, ::testing::_, ::testing::_))
+                .WillByDefault(::testing::Return(AVInputImpl));
+        #endif
+
+        p_iarmBusImplMock  = new NiceMock <IarmBusImplMock>;
+        IarmBus::setImpl(p_iarmBusImplMock);
+
+        plugin->Initialize(&service);
     }
-    virtual ~AVInputDsTest() override
+
+    virtual ~AVInputTest()
     {
+        dispatcher->Deactivate();
+        dispatcher->Release();
+
+        plugin->Deinitialize(&service);
+
+        Core::IWorkerPool::Assign(nullptr);
+        workerPool.Release();
+
+        IarmBus::setImpl(nullptr);
+        if (p_iarmBusImplMock != nullptr) {
+            delete p_iarmBusImplMock;
+            p_iarmBusImplMock = nullptr;
+        }
+
+        if (p_avInputMock != nullptr) {
+            delete p_avInputMock;
+            p_avInputMock = nullptr;
+        }
+
+        device::Manager::setImpl(nullptr);
+        if (p_managerImplMock != nullptr)
+        {
+            delete p_managerImplMock;
+            p_managerImplMock = nullptr;
+        }
+
         device::HdmiInput::setImpl(nullptr);
         if (p_hdmiInputImplMock != nullptr)
         {
@@ -87,58 +160,6 @@ protected:
         if (p_HostImplMock != nullptr) {
             delete p_HostImplMock;
             p_HostImplMock = nullptr;
-        }
-    }
-};
-
-class AVInputInit : public AVInputDsTest {
-protected:
-    IarmBusImplMock* p_iarmBusImplMock = nullptr;
-    NiceMock<FactoriesImplementation> factoriesImplementation;
-    ManagerImplMock   *p_managerImplMock = nullptr ;
-    PLUGINHOST_DISPATCHER* dispatcher;
-    NiceMock<ServiceMock> service;
-    Core::JSONRPC::Message message;
-
-    AVInputInit()
-        : AVInputDsTest()
-    {
-        p_iarmBusImplMock = new NiceMock<IarmBusImplMock>;
-        IarmBus::setImpl(p_iarmBusImplMock);
-
-        p_managerImplMock  = new NiceMock <ManagerImplMock>;
-        device::Manager::setImpl(p_managerImplMock);
-
-        EXPECT_CALL(*p_managerImplMock, Initialize())
-            .Times(::testing::AnyNumber())
-            .WillRepeatedly(::testing::Return());
-        
-        EXPECT_EQ(string(""), plugin->Initialize(&service));
-
-        PluginHost::IFactories::Assign(&factoriesImplementation);
-        dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
-            plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
-        dispatcher->Activate(&service);
-    }
-
-    virtual ~AVInputInit() override
-    {
-        dispatcher->Deactivate();
-        dispatcher->Release();
-        PluginHost::IFactories::Assign(nullptr);
-
-        plugin->Deinitialize(&service);
-
-        IarmBus::setImpl(nullptr);
-        if (p_iarmBusImplMock != nullptr) {
-            delete p_iarmBusImplMock;
-            p_iarmBusImplMock = nullptr;
-        }
-        device::Manager::setImpl(nullptr);
-        if (p_managerImplMock != nullptr)
-        {
-            delete p_managerImplMock;
-            p_managerImplMock = nullptr;
         }
     }
 };
@@ -168,6 +189,115 @@ TEST_F(AVInputTest, RegisteredMethods)
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getSupportedGameFeatures")));
     EXPECT_EQ(Core::ERROR_NONE, handler.Exists(_T("getGameFeatureStatus")));
 }
+
+TEST_F(AVInputTest, contentProtected)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
+}
+
+class AVInputDsTest : public AVInputTest {
+
+    protected:
+
+    AVInputDsTest() : AVInputTest() {}
+    virtual ~AVInputDsTest() override {}
+};
+
+TEST_F(AVInputDsTest, numberOfInputs)
+{
+    ON_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
+        .WillByDefault(::testing::Return(1));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("numberOfInputs"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"numberOfInputs\":1,\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, currentVideoMode)
+{
+    ON_CALL(*p_hdmiInputImplMock, getCurrentVideoMode())
+        .WillByDefault(::testing::Return(string("unknown")));
+
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("currentVideoMode"), _T("{}"), response));
+    EXPECT_EQ(response, string("{\"currentVideoMode\":\"unknown\",\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, getEdid2AllmSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"0\",\"allmSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"allmSupport\":true,\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, getEdid2AllmSupport_ErrorCase)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"test\",\"allmSupport\":true}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+TEST_F(AVInputDsTest, setEdid2AllmSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEdid2AllmSupport"), _T("{\"portId\": \"0\",\"allmSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, setEdid2AllmSupport_ErrorCase)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setEdid2AllmSupport"), _T("{\"portId\": \"test\",\"allmSupport\":true}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+TEST_F(AVInputDsTest, getVRRSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"vrrSupport\":true,\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, getVRRSupport_ErrorCase)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"test\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+TEST_F(AVInputDsTest, setVRRSupport)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string("{\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, setVRRSupport_ErrorCase)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"test\",\"vrrSupport\":true}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+TEST_F(AVInputDsTest, getVRRFrameRate)
+{
+    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"0\"}"), response));
+    EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":0,\"success\":true}"));
+}
+
+TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
+{
+    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"test\"}"), response));
+    EXPECT_EQ(response, string(""));
+}
+
+class AVInputInit : public AVInputDsTest {
+protected:
+    NiceMock<FactoriesImplementation> factoriesImplementation;
+    Core::JSONRPC::Message message;
+
+    AVInputInit()
+        : AVInputDsTest()
+    {
+        PluginHost::IFactories::Assign(&factoriesImplementation);
+    }
+
+    virtual ~AVInputInit() override
+    {
+        PluginHost::IFactories::Assign(nullptr);
+    }
+};
 
 TEST_F(AVInputInit, getInputDevices)
 {
@@ -564,7 +694,73 @@ TEST_F(AVInputInit, getGameFeatureStatus_InvalidParameters)
     EXPECT_EQ(response, string(""));
 }
 
-TEST_F(AVInputInit, onDevicesChangedHDMI)
+class AVInputEvents : public AVInputDsTest {
+protected:
+    NiceMock<FactoriesImplementation> factoriesImplementation;
+    Core::JSONRPC::Message message;
+
+    Exchange::IAVInput::IDevicesChangedNotification*            DevicesChangedNotification          = nullptr;
+    Exchange::IAVInput::ISignalChangedNotification*             SignalChangedNotification           = nullptr;
+    Exchange::IAVInput::IInputStatusChangedNotification*        InputStatusChangedNotification      = nullptr;
+    Exchange::IAVInput::IVideoStreamInfoUpdateNotification*     VideoStreamInfoUpdateNotification   = nullptr;
+    Exchange::IAVInput::IGameFeatureStatusUpdateNotification*   GameFeatureStatusUpdateNotification = nullptr;
+    Exchange::IAVInput::IAviContentTypeUpdateNotification*      AviContentTypeUpdateNotification    = nullptr;
+
+    AVInputEvents()
+        : AVInputDsTest()
+    {
+        PluginHost::IFactories::Assign(&factoriesImplementation);
+
+        ON_CALL(*p_avInputMock, RegisterDevicesChangedNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IDevicesChangedNotification* notification) {
+                    DevicesChangedNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+
+        ON_CALL(*p_avInputMock, RegisterSignalChangedNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::ISignalChangedNotification* notification) {
+                    SignalChangedNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+
+        ON_CALL(*p_avInputMock, RegisterInputStatusChangedNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IInputStatusChangedNotification* notification) {
+                    InputStatusChangedNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+
+        ON_CALL(*p_avInputMock, RegisterVideoStreamInfoUpdateNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IVideoStreamInfoUpdateNotification* notification) {
+                    VideoStreamInfoUpdateNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+
+        ON_CALL(*p_avInputMock, RegisterGameFeatureStatusUpdateNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IGameFeatureStatusUpdateNotification* notification) {
+                    GameFeatureStatusUpdateNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+
+        ON_CALL(*p_avInputMock, RegisterAviContentTypeUpdateNotification(::testing::_))
+            .WillByDefault(::testing::Invoke(
+                [&](Exchange::IAVInput::IAviContentTypeUpdateNotification* notification) {
+                    AviContentTypeUpdateNotification = notification;
+            return Core::ERROR_NONE;
+                }));
+    }
+
+    virtual ~AVInputEvents() override
+    {
+        PluginHost::IFactories::Assign(nullptr);
+    }
+};
+
+TEST_F(AVInputEvents, onDevicesChangedHDMI)
 {
     Core::Event onDevicesChanged(false, true);
 
@@ -583,14 +779,15 @@ TEST_F(AVInputInit, onDevicesChangedHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_0, true);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
+TEST_F(AVInputEvents, onDevicesChangedCOMPOSITE)
 {
     Core::Event onDevicesChanged(false, true);
 
@@ -609,14 +806,15 @@ TEST_F(AVInputInit, onDevicesChangedCOMPOSITE)
 
     EVENT_SUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnCompositeInHotPlug(dsCOMPOSITE_IN_PORT_0, true);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInHotPlug(dsCOMPOSITE_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onDevicesChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onDevicesChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedStableHDMI)
+TEST_F(AVInputEvents, onSignalChangedStableHDMI)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -636,14 +834,15 @@ TEST_F(AVInputInit, onSignalChangedStableHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_STABLE);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_STABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
+TEST_F(AVInputEvents, onSignalChangedNoSignalHDMI)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -663,14 +862,15 @@ TEST_F(AVInputInit, onSignalChangedNoSignalHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedUnstableHDMI)
+TEST_F(AVInputEvents, onSignalChangedUnstableHDMI)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -690,14 +890,15 @@ TEST_F(AVInputInit, onSignalChangedUnstableHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0,dsHDMI_IN_SIGNAL_STATUS_UNSTABLE);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0,dsHDMI_IN_SIGNAL_STATUS_UNSTABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedNotSupportedHDMI)
+TEST_F(AVInputEvents, onSignalChangedNotSupportedHDMI)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -716,14 +917,15 @@ TEST_F(AVInputInit, onSignalChangedNotSupportedHDMI)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedDefaultHDMI)
+TEST_F(AVInputEvents, onSignalChangedDefaultHDMI)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -741,14 +943,16 @@ TEST_F(AVInputInit, onSignalChangedDefaultHDMI)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    plugin->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_MAX);
+    
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInEventSignalStatus(dsHDMI_IN_PORT_0, dsHDMI_IN_SIGNAL_STATUS_MAX);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedStableCOMPOSITE)
+TEST_F(AVInputEvents, onSignalChangedStableCOMPOSITE)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -766,14 +970,16 @@ TEST_F(AVInputInit, onSignalChangedStableCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_STABLE);
+    
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_STABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedNoSignalCOMPOSITE)
+TEST_F(AVInputEvents, onSignalChangedNoSignalCOMPOSITE)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -792,14 +998,15 @@ TEST_F(AVInputInit, onSignalChangedNoSignalCOMPOSITE)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOSIGNAL);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOSIGNAL);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedUnstableCOMPOSITE)
+TEST_F(AVInputEvents, onSignalChangedUnstableCOMPOSITE)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -818,14 +1025,15 @@ TEST_F(AVInputInit, onSignalChangedUnstableCOMPOSITE)
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_UNSTABLE);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_UNSTABLE);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedNotSupportedCOMPOSITE)
+TEST_F(AVInputEvents, onSignalChangedNotSupportedCOMPOSITE)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -843,14 +1051,15 @@ TEST_F(AVInputInit, onSignalChangedNotSupportedCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOTSUPPORTED);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_NOTSUPPORTED);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onSignalChangedDefaultCOMPOSITE)
+TEST_F(AVInputEvents, onSignalChangedDefaultCOMPOSITE)
 {
     Core::Event onSignalChanged(false, true);
 
@@ -868,14 +1077,15 @@ TEST_F(AVInputInit, onSignalChangedDefaultCOMPOSITE)
             }));
 
     EVENT_SUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
-    plugin->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_MAX);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInSignalStatus(dsCOMPOSITE_IN_PORT_0, dsCOMP_IN_SIGNAL_STATUS_MAX);
 
     EXPECT_EQ(Core::ERROR_NONE, onSignalChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onSignalChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOn_HDMI)
+TEST_F(AVInputEvents, onInputStatusChangeOn_HDMI)
 {
     Core::Event onInputStatusChanged(false, true);
 
@@ -897,14 +1107,15 @@ TEST_F(AVInputInit, onInputStatusChangeOn_HDMI)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("startInput"), _T("{\"portId\": \"0\" , \"typeOfInput\":\"HDMI\", \"requestAudioMix\": true, \"plane\" : 1, \"topMost\" : true}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
 
-    plugin->OnHdmiInEventStatus(dsHDMI_IN_PORT_0, true);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInEventStatus(dsHDMI_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOff_HDMI)
+TEST_F(AVInputEvents, onInputStatusChangeOff_HDMI)
 {
     Core::Event onInputStatusChanged(false, true);
 
@@ -926,7 +1137,8 @@ TEST_F(AVInputInit, onInputStatusChangeOff_HDMI)
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("stopInput"), _T("{\"typeOfInput\":\"HDMI\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
-    plugin->OnHdmiInEventStatus(dsHDMI_IN_PORT_0, false);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInEventStatus(dsHDMI_IN_PORT_0, false);
 
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
@@ -934,7 +1146,7 @@ TEST_F(AVInputInit, onInputStatusChangeOff_HDMI)
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOn_COMPOSITE)
+TEST_F(AVInputEvents, onInputStatusChangeOn_COMPOSITE)
 {
     Core::Event onInputStatusChanged(false, true);
 
@@ -955,14 +1167,15 @@ TEST_F(AVInputInit, onInputStatusChangeOn_COMPOSITE)
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("startInput"), _T("{\"portId\": \"0\" , \"typeOfInput\":\"COMPOSITE\", \"requestAudioMix\": true, \"plane\" : 1, \"topMost\" : true}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
-    plugin->OnCompositeInStatus(dsCOMPOSITE_IN_PORT_0, true);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInStatus(dsCOMPOSITE_IN_PORT_0, true);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, onInputStatusChangeOff_COMPOSITE)
+TEST_F(AVInputEvents, onInputStatusChangeOff_COMPOSITE)
 {
     Core::Event onInputStatusChanged(false, true);
 
@@ -983,14 +1196,15 @@ TEST_F(AVInputInit, onInputStatusChangeOff_COMPOSITE)
 
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("stopInput"), _T("{\"typeOfInput\":\"COMPOSITE\"}"), response));
     EXPECT_EQ(response, string("{\"success\":true}"));
-    plugin->OnCompositeInStatus(dsCOMPOSITE_IN_PORT_0, false);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInStatus(dsCOMPOSITE_IN_PORT_0, false);
 
     EXPECT_EQ(Core::ERROR_NONE, onInputStatusChanged.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("onInputStatusChanged"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate)
+TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate)
 {
     Core::Event gameFeatureStatusUpdate(false, true);
 
@@ -1009,14 +1223,15 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInAllmStatus(dsHDMI_IN_PORT_0,true);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInAllmStatus(dsHDMI_IN_PORT_0,true);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_HDMI_VRR)
+TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_HDMI_VRR)
 {
     Core::Event gameFeatureStatusUpdate(false, true);
 
@@ -1035,14 +1250,15 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_HDMI_VRR)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0,dsVRR_HDMI_VRR);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0,dsVRR_HDMI_VRR);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
+TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
 {
     Core::Event gameFeatureStatusUpdate(false, true);
 
@@ -1061,14 +1277,15 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
+TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
 {
     Core::Event gameFeatureStatusUpdate(false, true);
 
@@ -1087,14 +1304,15 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
     
-    plugin->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC_PREMIUM);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC_PREMIUM);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
+TEST_F(AVInputEvents, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 {
     Core::Event gameFeatureStatusUpdate(false, true);
 
@@ -1113,14 +1331,15 @@ TEST_F(AVInputInit, hdmiGameFeatureStatusUpdate_AMD_FREESYNC_PREMIUM_PRO)
 
     EVENT_SUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 
-    plugin->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC_PREMIUM_PRO);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVRRStatus(dsHDMI_IN_PORT_0, dsVRR_AMD_FREESYNC_PREMIUM_PRO);
 
     EXPECT_EQ(Core::ERROR_NONE, gameFeatureStatusUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("gameFeatureStatusUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate1_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate1_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1130,7 +1349,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":1920,\"height\":1080,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":60000,\"frameRateD\":1001}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":1920,\"height\":1080,\"progressive\":false,\"frameRateN\":60000,\"frameRateD\":1001}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1144,14 +1363,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_59dot94;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0,videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0,videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate2_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate2_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1161,7 +1381,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate2_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":720,\"height\":480,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":24000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":720,\"height\":480,\"progressive\":false,\"frameRateN\":24000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1175,14 +1395,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate2_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_24;
     
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate3_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate3_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1192,7 +1413,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate3_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":720,\"height\":576,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":25000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":720,\"height\":576,\"progressive\":false,\"frameRateN\":25000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1206,14 +1427,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate3_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_25;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate4_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate4_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1223,7 +1445,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate4_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":3840,\"height\":2160,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":30000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":3840,\"height\":2160,\"progressive\":false,\"frameRateN\":30000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1238,14 +1460,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate4_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_30;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate5_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate5_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1255,7 +1478,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate5_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":4096,\"height\":2160,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":50000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":4096,\"height\":2160,\"progressive\":false,\"frameRateN\":50000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1270,13 +1493,14 @@ TEST_F(AVInputInit, videoStreamInfoUpdate5_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_50;
     
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate6_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate6_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1286,7 +1510,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate6_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":4096,\"height\":2160,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":60000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":4096,\"height\":2160,\"progressive\":false,\"frameRateN\":60000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1301,14 +1525,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate6_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_60;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate7_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate7_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1318,7 +1543,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate7_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":4096,\"height\":2160,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":24000,\"frameRateD\":1001}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":4096,\"height\":2160,\"progressive\":false,\"frameRateN\":24000,\"frameRateD\":1001}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1333,14 +1558,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate7_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_23dot98;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate8_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate8_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1350,7 +1576,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate8_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":4096,\"height\":2160,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":30000,\"frameRateD\":1001}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":4096,\"height\":2160,\"progressive\":false,\"frameRateN\":30000,\"frameRateD\":1001}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1365,14 +1591,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate8_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_29dot97;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate9_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate9_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1382,7 +1609,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate9_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":1280,\"height\":720,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":30000,\"frameRateD\":1001}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":1280,\"height\":720,\"progressive\":false,\"frameRateN\":30000,\"frameRateD\":1001}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1397,14 +1624,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate9_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_29dot97;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
     
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate10_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate10_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1414,7 +1642,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate10_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":1280,\"height\":720,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":100000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":1280,\"height\":720,\"progressive\":false,\"frameRateN\":100000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1429,14 +1657,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate10_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_100;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate11_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate11_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1446,7 +1675,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate11_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":1280,\"height\":720,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":120000,\"frameRateD\":1001}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":1280,\"height\":720,\"progressive\":false,\"frameRateN\":120000,\"frameRateD\":1001}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1461,14 +1690,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate11_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_119dot88;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate12_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate12_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1478,7 +1708,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate12_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":1280,\"height\":720,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":120000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":1280,\"height\":720,\"progressive\":false,\"frameRateN\":120000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1493,14 +1723,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate12_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_120;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate13_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate13_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1510,7 +1741,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate13_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":1280,\"height\":720,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":200000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":1280,\"height\":720,\"progressive\":false,\"frameRateN\":200000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1525,14 +1756,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate13_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_200;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate14_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate14_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1542,7 +1774,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate14_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":1280,\"height\":720,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":240000,\"frameRateD\":1001}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":1280,\"height\":720,\"progressive\":false,\"frameRateN\":240000,\"frameRateD\":1001}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1557,14 +1789,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate14_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_239dot76;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdate15_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdate15_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1574,7 +1807,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate15_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":1280,\"height\":720,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":240000,\"frameRateD\":100}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":1280,\"height\":720,\"progressive\":false,\"frameRateN\":240000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1589,14 +1822,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate15_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_240;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdateDefault_HDMI)
+TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_HDMI)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1606,7 +1840,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdateDefault_HDMI)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":1920,\"height\":1080,\"progressive\":false,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":60000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"hdmiin:\\/\\/localhost\\/deviceid\\/0\",\"width\":1920,\"height\":1080,\"progressive\":false,\"frameRateN\":60000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1621,15 +1855,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdateDefault_HDMI)
     videoPortResolution.interlaced = true;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_MAX;
 
-    plugin->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInVideoModeUpdate(dsHDMI_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
     
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-
-TEST_F(AVInputInit, videoStreamInfoUpdate1_COMPOSITE)
+TEST_F(AVInputEvents, videoStreamInfoUpdate1_COMPOSITE)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1639,7 +1873,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_COMPOSITE)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":720,\"height\":480,\"progressive\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":24000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"width\":720,\"height\":480,\"progressive\":false,\"frameRateN\":24000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1652,7 +1886,8 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_COMPOSITE)
     videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_720x480;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_24;
 
-    plugin->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
@@ -1660,7 +1895,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate1_COMPOSITE)
 }
 
 
-TEST_F(AVInputInit, videoStreamInfoUpdate2_COMPOSITE)
+TEST_F(AVInputEvents, videoStreamInfoUpdate2_COMPOSITE)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1670,7 +1905,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdate2_COMPOSITE)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":720,\"height\":576,\"progressive\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":25000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text, "{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"width\":720,\"height\":576,\"progressive\":false,\"frameRateN\":25000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1683,14 +1918,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdate2_COMPOSITE)
     videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_720x576;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_25;
 
-    plugin->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, videoStreamInfoUpdateDefault_COMPOSITE)
+TEST_F(AVInputEvents, videoStreamInfoUpdateDefault_COMPOSITE)
 {
     Core::Event videoStreamInfoUpdate(false, true);
 
@@ -1700,7 +1936,7 @@ TEST_F(AVInputInit, videoStreamInfoUpdateDefault_COMPOSITE)
             [&](const uint32_t, const Core::ProxyType<Core::JSON::IElement>& json) {
                 string text;
                 EXPECT_TRUE(json->ToString(text));
-                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"width\":720,\"height\":576,\"progressive\":false,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"frameRateN\":60000,\"frameRateD\":1000}}");
+                EXPECT_EQ(text,"{\"jsonrpc\":\"2.0\",\"method\":\"org.rdk.AVInput.videoStreamInfoUpdate\",\"params\":{\"id\":0,\"locator\":\"cvbsin:\\/\\/localhost\\/deviceid\\/0\",\"width\":720,\"height\":576,\"progressive\":false,\"frameRateN\":60000,\"frameRateD\":1000}}");
 
                 videoStreamInfoUpdate.SetEvent();
 
@@ -1713,14 +1949,15 @@ TEST_F(AVInputInit, videoStreamInfoUpdateDefault_COMPOSITE)
     videoPortResolution.pixelResolution = dsVIDEO_PIXELRES_MAX;
     videoPortResolution.frameRate = dsVIDEO_FRAMERATE_MAX;
 
-    plugin->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnCompositeInVideoModeUpdate(dsCOMPOSITE_IN_PORT_0, videoPortResolution);
 
     EXPECT_EQ(Core::ERROR_NONE, videoStreamInfoUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("videoStreamInfoUpdate"), _T("org.rdk.AVInput"), message);
 }
 
-TEST_F(AVInputInit, aviContentTypeUpdate_HDMI)
+TEST_F(AVInputEvents, aviContentTypeUpdate_HDMI)
 {
     Core::Event aviContentTypeUpdate(false, true);
 
@@ -1739,93 +1976,10 @@ TEST_F(AVInputInit, aviContentTypeUpdate_HDMI)
 
     EVENT_SUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);    
 
-    plugin->OnHdmiInAVIContentType(dsHDMI_IN_PORT_0, dsAVICONTENT_TYPE_GRAPHICS);
+    ASSERT_NE(Plugin::AVInputImplementation::_instance, nullptr);
+    Plugin::AVInputImplementation::_instance->OnHdmiInAVIContentType(dsHDMI_IN_PORT_0, dsAVICONTENT_TYPE_GRAPHICS);
 
     EXPECT_EQ(Core::ERROR_NONE, aviContentTypeUpdate.Lock());
 
     EVENT_UNSUBSCRIBE(0, _T("aviContentTypeUpdate"), _T("org.rdk.AVInput"), message);
-}
-
-TEST_F(AVInputTest, contentProtected)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("contentProtected"), _T("{}"), response));
-    EXPECT_EQ(response, string("{\"isContentProtected\":true,\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, numberOfInputs)
-{
-    ON_CALL(*p_hdmiInputImplMock, getNumberOfInputs())
-        .WillByDefault(::testing::Return(1));
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("numberOfInputs"), _T("{}"), response));
-    EXPECT_EQ(response, string("{\"numberOfInputs\":1,\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, currentVideoMode)
-{
-    ON_CALL(*p_hdmiInputImplMock, getCurrentVideoMode())
-        .WillByDefault(::testing::Return(string("unknown")));
-
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("currentVideoMode"), _T("{}"), response));
-    EXPECT_EQ(response, string("{\"currentVideoMode\":\"unknown\",\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, getEdid2AllmSupport)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"0\",\"allmSupport\":true}"), response));
-    EXPECT_EQ(response, string("{\"allmSupport\":true,\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, getEdid2AllmSupport_ErrorCase)
-{
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getEdid2AllmSupport"), _T("{\"portId\": \"test\",\"allmSupport\":true}"), response));
-    EXPECT_EQ(response, string(""));
-}
-
-TEST_F(AVInputDsTest, setEdid2AllmSupport)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setEdid2AllmSupport"), _T("{\"portId\": \"0\",\"allmSupport\":true}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, setEdid2AllmSupport_ErrorCase)
-{
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setEdid2AllmSupport"), _T("{\"portId\": \"test\",\"allmSupport\":true}"), response));
-    EXPECT_EQ(response, string(""));
-}
-
-TEST_F(AVInputDsTest, getVRRSupport)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
-    EXPECT_EQ(response, string("{\"vrrSupport\":true,\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, getVRRSupport_ErrorCase)
-{
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRSupport"), _T("{\"portId\": \"test\",\"vrrSupport\":true}"), response));
-    EXPECT_EQ(response, string(""));
-}
-
-TEST_F(AVInputDsTest, setVRRSupport)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"0\",\"vrrSupport\":true}"), response));
-    EXPECT_EQ(response, string("{\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, setVRRSupport_ErrorCase)
-{
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("setVRRSupport"), _T("{\"portId\": \"test\",\"vrrSupport\":true}"), response));
-    EXPECT_EQ(response, string(""));
-}
-
-TEST_F(AVInputDsTest, getVRRFrameRate)
-{
-    EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"0\"}"), response));
-    EXPECT_EQ(response, string("{\"currentVRRVideoFrameRate\":0,\"success\":true}"));
-}
-
-TEST_F(AVInputDsTest, getVRRFrameRate_ErrorCase)
-{
-    EXPECT_EQ(Core::ERROR_GENERAL, handler.Invoke(connection, _T("getVRRFrameRate"), _T("{\"portId\": \"test\"}"), response));
-    EXPECT_EQ(response, string(""));
 }
