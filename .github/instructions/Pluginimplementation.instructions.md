@@ -35,7 +35,7 @@ LinkType:
 _telemetry = Core::ProxyType<JSONRPCLink>::Create(_T("org.rdk.telemetry"), _T(""), "token=" + token);
 ```
 
-Json-RPC:
+JSON-RPC:
 ```cpp
 uint32_t ret = m_SystemPluginObj->Invoke<JsonObject, JsonObject>(THUNDER_RPC_TIMEOUT, _T("getFriendlyName"), params, Result);
 ```

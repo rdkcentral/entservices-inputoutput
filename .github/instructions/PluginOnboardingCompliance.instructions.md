@@ -6,7 +6,7 @@ applyTo: "CMakeLists.txt"
 
 ### Coverity Scan Inclusion and Test Workflow Updates for New Plugins
 
-When adding a new plugin in `CMakeLists.txt`, you **must** also update the following to guarantee the plugin is included in all required test and Coverity analysis workflows:
+When adding a new plugin in `CMakeLists.txt`, you **must** also update the following files to ensure the plugin is included in all required test and Coverity analysis workflows:
 
 - **CI Workflow Files:**  
   - `L1-tests.yml`

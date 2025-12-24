@@ -43,7 +43,7 @@ const string HdcpProfile::Initialize(PluginHost::IShell* service) {
 
     Example: _hdcpProfile->Register(&_hdcpProfileNotification);
 
-- It must return a non-empty string on failure with a clear error message.
+- It must return a non-empty error message string on failure.
 
 **Example:**
 
