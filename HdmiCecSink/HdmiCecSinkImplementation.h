@@ -571,7 +571,7 @@ private:
             void sendGiveAudioStatusMsg();
             void onPowerModeChanged(const PowerState &currentState, const PowerState &newState);
             void registerEventHandlers();
-	    void onPresentationLanguageChanged(const string& language);
+	    	void onPresentationLanguageChanged(const string& language);
             void getHdmiArcPortID();
             int m_numberOfDevices; /* Number of connected devices othethan own device */
             bool m_audioDevicePowerStatusRequested;
@@ -694,7 +694,7 @@ private:
         HdmiCecSinkProcessor *msgProcessor;
         HdmiCecSinkFrameListener *msgFrameListener;
 		Exchange::IUserSettings *_userSettingsPlugin;
-	Core::Sink<UserSettingsNotification> _userSettingsNotification;
+		Core::Sink<UserSettingsNotification> _userSettingsNotification;
         PowerManagerInterfaceRef _powerManagerPlugin;
         Core::Sink<PowerManagerNotification> _pwrMgrNotification;
         bool _registeredEventHandlers;
