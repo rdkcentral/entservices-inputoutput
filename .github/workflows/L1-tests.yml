@@ -138,7 +138,7 @@ jobs:
         with:
           repository: rdkcentral/entservices-inputoutput
           path: entservices-inputoutput
-          ref: feature/L1-L2test
+          ref: feature/workflow-test
 
       - name: Checkout googletest
         uses: actions/checkout@v3
