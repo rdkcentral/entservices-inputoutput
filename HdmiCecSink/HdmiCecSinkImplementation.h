@@ -693,6 +693,7 @@ private:
         std::vector<uint8_t> m_connectedDevices;
         HdmiCecSinkProcessor *msgProcessor;
         HdmiCecSinkFrameListener *msgFrameListener;
+		Exchange::IUserSettings *_userSettingsPlugin;
 	Core::Sink<UserSettingsNotification> _userSettingsNotification;
         PowerManagerInterfaceRef _powerManagerPlugin;
         Core::Sink<PowerManagerNotification> _pwrMgrNotification;
