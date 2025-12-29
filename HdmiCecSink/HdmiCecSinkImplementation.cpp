@@ -110,7 +110,6 @@ static std::vector<DeviceFeatures> deviceFeatures = {DEVICE_FEATURES_TV};
 #define API_VERSION_NUMBER_PATCH 7
 
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
-Exchange::IUserSettings* _userSettingsPlugin = nullptr;
 
 namespace WPEFramework
 {
@@ -606,7 +605,8 @@ namespace WPEFramework
         , m_connectedDevices()
         , msgProcessor(nullptr)
         , msgFrameListener(nullptr)
-	, _userSettingsNotification(*this)
+		, _userSettingsPlugin(nullptr)
+		, _userSettingsNotification(*this)
         , _powerManagerPlugin()
         , _pwrMgrNotification(*this)
         , _registeredEventHandlers(false)
