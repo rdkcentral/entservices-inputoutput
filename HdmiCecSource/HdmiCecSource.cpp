@@ -126,18 +126,15 @@ namespace WPEFramework
                 LOGINFO("Invalid profile type for STB \n");
                 return ;
            }
-
-<<<<<<< HEAD
            // Unregister and cleanup
            if(nullptr != _hdmiCecSource)
            {
              HdmiCecSource::_notification.OnActiveSourceStatusUpdated(false);
            if(nullptr != _hdmiCecSource)
            {
-=======
            if(nullptr != _hdmiCecSource)
            {
->>>>>>> 86c5ff86f1acb4ed971f615fb38bf90a76334099
+
              _notification.OnActiveSourceStatusUpdated(false);
              _hdmiCecSource->Unregister(&_notification);
              Exchange::JHdmiCecSource::Unregister(*this);
