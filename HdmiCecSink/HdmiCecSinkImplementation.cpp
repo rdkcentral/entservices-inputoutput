@@ -714,7 +714,7 @@ namespace WPEFramework
                 LOGERR("HdmiCecSink plugin device::Manager::Initialize failed");
                 LOG_DEVICE_EXCEPTION0();
                 HdmiCecSinkImplementation::_instance = nullptr;
-return Core::ERROR_GENERAL;
+			    return Core::ERROR_GENERAL;
            }
 
            // load persistence setting
