@@ -191,7 +191,6 @@ namespace WPEFramework
        }
        void HdmiCecSinkProcessor::process (const Standby &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: Standby from %s\n", header.from.toString().c_str());
              HdmiCecSinkImplementation::_instance->SendStandbyMsgEvent(header.from.toInt());
        }
@@ -230,7 +229,6 @@ namespace WPEFramework
        }
        void HdmiCecSinkProcessor::process (const SetMenuLanguage &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: SetMenuLanguage Language : %s \n",msg.language.toString().c_str());
        }
        void HdmiCecSinkProcessor::process (const GiveOSDName &msg, const Header &header)
@@ -537,7 +535,6 @@ namespace WPEFramework
        }
       void HdmiCecSinkProcessor::process (const ReportAudioStatus &msg, const Header &header)
        {
-             printHeader(header);
              LOGINFO("Command: ReportAudioStatus  %s audio Mute status %d  means %s  and current Volume level is %d \n",GetOpName(msg.opCode()),msg.status.getAudioMuteStatus(),msg.status.toString().c_str(),msg.status.getAudioVolume());
          if(header.to.toInt() == LogicalAddress::BROADCAST){
         LOGINFO("Ignore Broadcast messages, accepts only direct messages");
