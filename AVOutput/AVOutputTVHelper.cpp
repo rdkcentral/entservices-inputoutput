@@ -32,7 +32,7 @@ static bool m_isDalsEnabled = false;
 namespace WPEFramework {
 namespace Plugin {
 
-    int AVOutputTV::getPictureModeIndex(std::string pqparam)
+    int AVOutputTV::getPictureModeIndex(const std::string& pqparam)
     {
         int index = -1;
         std::map<std::string, int> :: iterator it;
@@ -46,7 +46,7 @@ namespace Plugin {
         return index;
     }
 
-    int AVOutputTV::getSourceIndex(std::string pqparam)
+    int AVOutputTV::getSourceIndex(const std::string& pqparam)
     {
         int index = -1;
         std::map<std::string, int> :: iterator it;
@@ -60,7 +60,7 @@ namespace Plugin {
         return index;
     }
 
-    int AVOutputTV::getFormatIndex(std::string pqparam)
+    int AVOutputTV::getFormatIndex(const std::string& pqparam)
     {
         int index = -1;
         std::map<std::string, int> :: iterator it;
@@ -224,7 +224,9 @@ namespace Plugin {
 
         }
 
-        if (indexInfo.sourceIndex == -1 || indexInfo.pqmodeIndex == -1 || indexInfo.formatIndex == -1) {
+        // Coverity fix: Compare with 255 instead of -1 since paramIndex_t uses uint8_t
+        // When get*Index() functions return -1 (error), it wraps to 255 in uint8_t
+        if (indexInfo.sourceIndex == 255 || indexInfo.pqmodeIndex == 255 || indexInfo.formatIndex == 255) {
 	        return -1;
     	}
         LOGINFO("%s: Exit sourceIndex = %d pqmodeIndex = %d formatIndex = %d\n",__FUNCTION__,indexInfo.sourceIndex,indexInfo.pqmodeIndex,indexInfo.formatIndex);
@@ -312,7 +314,7 @@ namespace Plugin {
         return index;
     }
 
-    bool AVOutputTV::isIncluded(const std::set<string> set1,const std::set<string> set2)
+    bool AVOutputTV::isIncluded(const std::set<string>& set1,const std::set<string>& set2)
     {
         for( const auto& element : set2) {
             if(set1.find(element) == set1.end()) {
@@ -366,7 +368,7 @@ namespace Plugin {
         return ret;
     }
 
-    int AVOutputTV::isPlatformSupport(std::string pqparam)
+    int AVOutputTV::isPlatformSupport(const std::string& pqparam)
     {
         capVectors_t vectorInfo;
 
@@ -385,7 +387,7 @@ namespace Plugin {
         return 0;
     }
 
-    void AVOutputTV::spliltCapablities( capVectors_t& vectorInfo, capDetails_t stringInfo)
+    void AVOutputTV::spliltCapablities( capVectors_t& vectorInfo, const capDetails_t& stringInfo)
     {
         std::vector<std::pair<std::stringstream, std::vector<std::string>&>> streamVector;
 
@@ -412,7 +414,7 @@ namespace Plugin {
         }
     }
     
-    bool AVOutputTV::isCapablityCheckPassed( std::string param, capDetails_t inputInfo )
+    bool AVOutputTV::isCapablityCheckPassed( const std::string& param, const capDetails_t& inputInfo )
     {
 
         capDetails_t paramInfo;
@@ -767,7 +769,7 @@ namespace Plugin {
         return result;
     }
 
-    int AVOutputTV::convertToValidInputParameter(std::string pqparam, capDetails_t& info)
+    int AVOutputTV::convertToValidInputParameter(const std::string& pqparam, capDetails_t& info)
     {
 
         LOGINFO("Entry %s source %s pqmode %s format %s \n", __FUNCTION__, info.source.c_str(), info.pqmode.c_str(), info.format.c_str());
@@ -944,11 +946,13 @@ namespace Plugin {
         return ret;
     }
 
-    int AVOutputTV::updateAVoutputTVParam( std::string action, std::string tr181ParamName, capDetails_t info, tvPQParameterIndex_t pqParamIndex, int level )
+    int AVOutputTV::updateAVoutputTVParam( std::string action, std::string tr181ParamName, const capDetails_t& info, tvPQParameterIndex_t pqParamIndex, int level )
     {
         LOGINFO("Entry : %s\n",__FUNCTION__);
         valueVectors_t values;
-        paramIndex_t paramIndex;
+        // Coverity fix: Initialize struct to zero to prevent uninitialized field usage
+        // This ensures all 7 uint8_t fields start with defined values
+        paramIndex_t paramIndex = {};
         std::vector<int> sources;
         std::vector<int> pictureModes;
         std::vector<int> formats;
@@ -1118,8 +1122,13 @@ namespace Plugin {
                              {
                                 if(sync) {
                                     int value=0;
-                                    getLocalparam(tr181ParamName,paramIndex,value,pqParamIndex,sync);
-                                    level=value;
+                                    // Coverity fix: Check return value to ensure value is properly initialized
+                                    // The function returns int (-1 on error, 0 on success), validate before use
+                                    if (getLocalparam(tr181ParamName,paramIndex,value,pqParamIndex,sync) == 0) {
+                                        level=value;
+                                    } else {
+                                        LOGERR("%s: getLocalparam failed for LOCALDIMMING_LEVEL\n", __FUNCTION__);
+                                    }
                                 }
                                 ret |= SaveTVDimmingMode((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDimmingMode_t)level);
                                 break;
@@ -1240,10 +1249,11 @@ namespace Plugin {
         tr181ErrorCode_t err = tr181Success;
         TR181_ParamData_t param = {0};
         int ret = 0;
+        // Coverity fix: Use std::move() since parameters are passed by value and not reused
 
-        inputInfo.pqmode = pqmode;
-        inputInfo.source = source;
-        inputInfo.format = format;
+        inputInfo.pqmode = std::move(pqmode);
+        inputInfo.source = std::move(source);
+        inputInfo.format = std::move(format);
 
         ret = getSaveConfig("PictureMode", inputInfo, valueVectors);
 
@@ -1327,7 +1337,7 @@ namespace Plugin {
          return "UNKNOWN ERROR";
     }
 
-    int AVOutputTV::getSaveConfig(std::string param, capDetails_t capInfo, valueVectors_t &values)
+    int AVOutputTV::getSaveConfig(const std::string& param, capDetails_t capInfo, valueVectors_t &values)
     {
         LOGINFO("Entry : %s pqmode : %s source :%s format :%s component : %s color : %s control:%s\n",__FUNCTION__,capInfo.pqmode.c_str(),capInfo.source.c_str(),capInfo.format.c_str(),capInfo.component.c_str(),capInfo.color.c_str(),capInfo.control.c_str());
 
@@ -1566,7 +1576,7 @@ namespace Plugin {
         return CompColorEnum;
     }
 
-    tvError_t AVOutputTV::getParamsCaps(std::string param, capVectors_t &vecInfo)
+    tvError_t AVOutputTV::getParamsCaps(const std::string& param, capVectors_t &vecInfo)
     {
         tvError_t ret = tvERROR_NONE;
         capDetails_t stringInfo;
@@ -1866,9 +1876,10 @@ namespace Plugin {
         tvError_t ret = tvERROR_NONE;
         capDetails_t inputInfo;
         
-        inputInfo.pqmode = pqmode;
-        inputInfo.source = source;
-        inputInfo.format = format;
+        // Coverity fix: Use std::move() since parameters are passed by value and not reused
+        inputInfo.pqmode = std::move(pqmode);
+        inputInfo.source = std::move(source);
+        inputInfo.format = std::move(format);
 
         memset(&param, 0, sizeof(param));
         tr181ErrorCode_t err = getLocalParam(rfc_caller_id, AVOUTPUT_ASPECTRATIO_RFC_PARAM, &param);
@@ -1932,7 +1943,7 @@ namespace Plugin {
         return ret;
     }
 
-    int AVOutputTV::getCMSComponentEnumFromString(std::string component, tvComponentType_t& value)
+    int AVOutputTV::getCMSComponentEnumFromString(const std::string& component, tvComponentType_t& value)
     {
         int ret = 0;
 	
@@ -1948,7 +1959,7 @@ namespace Plugin {
         return ret;
     }
 
-    int AVOutputTV::getCMSColorEnumFromString(std::string color,tvDataComponentColor_t& value)
+    int AVOutputTV::getCMSColorEnumFromString(const std::string& color,tvDataComponentColor_t& value)
     {
         int ret = 0;
 	
@@ -2038,8 +2049,12 @@ namespace Plugin {
 
                 if ( convertWBParamToPQEnum(inputInfo.control,inputInfo.color,tvPQEnum) != 0 ) {
                     LOGERR("%s: %s/%s Param Not Found \n",__FUNCTION__,inputInfo.control.c_str(),inputInfo.color.c_str());
-                }    
-                updateAVoutputTVParam("sync","WhiteBalance",inputInfo,tvPQEnum,level);
+                }
+                // Coverity fix: Check return value to prevent undefined behavior
+                // The function returns int indicating success/failure, must be validated
+                if (!updateAVoutputTVParam("sync","WhiteBalance",inputInfo,tvPQEnum,level)) {
+                    LOGERR("%s: updateAVoutputTVParam failed for WhiteBalance sync\n", __FUNCTION__);
+                }
             }
         }
     }
@@ -2180,7 +2195,7 @@ namespace Plugin {
         }
     }
 
-    int AVOutputTV::getWBColorEnumFromString(std::string color,tvWBColor_t& value) {
+    int AVOutputTV::getWBColorEnumFromString(const std::string& color,tvWBColor_t& value) {
         int ret = 0;
 	
         if( color.compare("Red") == 0 )
@@ -2195,7 +2210,7 @@ namespace Plugin {
         return ret;
     }
 
-    int AVOutputTV::getWBControlEnumFromString(std::string color,tvWBControl_t& value) {
+    int AVOutputTV::getWBControlEnumFromString(const std::string& color,tvWBControl_t& value) {
         int ret = 0;
 	
         if( color.compare("Gain") == 0 )
@@ -2273,7 +2288,7 @@ namespace Plugin {
         return 0;
     }
 
-    int AVOutputTV::ReadCapablitiesFromConf(std::string param, capDetails_t& info)
+    int AVOutputTV::ReadCapablitiesFromConf(const std::string& param, capDetails_t& info)
     {
         int ret = 0;
 

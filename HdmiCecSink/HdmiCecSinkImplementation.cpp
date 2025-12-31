@@ -456,13 +456,13 @@ namespace WPEFramework
                         OpCode featureOpcode =  msg.feature;
             AbortReason abortReason = msg.reason;
 
-                        HdmiCecSinkImplementation::_instance->reportFeatureAbortEvent(logicaladdress,featureOpcode,abortReason);
+                        HdmiCecSinkImplementation::_instance->reportFeatureAbortEvent(std::move(logicaladdress),std::move(featureOpcode),std::move(abortReason));
 
                          if(msg.feature.opCode() == REQUEST_SHORT_AUDIO_DESCRIPTOR)
                  {
                             JsonArray audiodescriptor;
                             audiodescriptor.Add(0);
-                HdmiCecSinkImplementation::_instance->Send_ShortAudioDescriptor_Event(audiodescriptor);
+                HdmiCecSinkImplementation::_instance->Send_ShortAudioDescriptor_Event(std::move(audiodescriptor));
                         }
 
        }
@@ -474,7 +474,7 @@ namespace WPEFramework
                 AbortReason reason = AbortReason::UNRECOGNIZED_OPCODE;
                 LogicalAddress logicaladdress =header.from.toInt();
                 OpCode feature = msg.opCode();
-                HdmiCecSinkImplementation::_instance->sendFeatureAbort(logicaladdress, feature,reason);
+                HdmiCecSinkImplementation::_instance->sendFeatureAbort(std::move(logicaladdress), std::move(feature),std::move(reason));
          }
          else
          {
@@ -870,12 +870,16 @@ namespace WPEFramework
             else
             {
                     powerState = DEVICE_POWER_STATE_OFF;
-                    if((_instance->m_currentArcRoutingState == ARC_STATE_REQUEST_ARC_INITIATION) || (_instance->m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
+                    // Coverity fix: Protect m_currentArcRoutingState read with mutex to prevent data race
+                    // The mutex ensures thread-safe access to the shared arc routing state variable
                     {
-                        LOGINFO("%s: Stop ARC \n",__FUNCTION__);
-                        _instance->stopArc();
-            }
-
+                        std::lock_guard<std::mutex> lock(_instance->m_arcRoutingStateMutex);
+                        if((_instance->m_currentArcRoutingState == ARC_STATE_REQUEST_ARC_INITIATION) || (_instance->m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
+                        {
+                            LOGINFO("%s: Stop ARC \n",__FUNCTION__);
+                            _instance->stopArc();
+                        }
+                    }
                 }
                 if (_instance->cecEnableStatus)
             {
@@ -1057,14 +1061,18 @@ namespace WPEFramework
                  return;
             }
 
-        if ( (msg.status.toInt() == SYSTEM_AUDIO_MODE_OFF) && (m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
+        // Coverity fix: Protect m_currentArcRoutingState access with mutex to prevent data race
+        // The mutex ensures thread-safe access to the shared arc routing state variable
+        {
+            std::lock_guard<std::mutex> lock(m_arcRoutingStateMutex);
+            if ( (msg.status.toInt() == SYSTEM_AUDIO_MODE_OFF) && (m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
             {
                 /* ie system audio mode off -> amplifier goign to standby but still ARC is in initiated state,stop ARC and 
                  bring the ARC state machine to terminated state*/
                 LOGINFO("system audio mode off message but arc is not in terminated state so stopping ARC");
                 stopArc();
-
             }
+        }
 
         if (msg.status.toInt() == SYSTEM_AUDIO_MODE_ON) {
             LOGINFO("panel power state is %s", powerState ? "Off" : "On");
@@ -3007,7 +3015,12 @@ namespace WPEFramework
             }
 
             m_logicalAddressAllocated = LogicalAddress::UNREGISTERED;
-            m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+            // Coverity fix: Protect m_currentArcRoutingState write with mutex to prevent data race
+            // The mutex ensures thread-safe modification of the shared arc routing state variable
+            {
+                std::lock_guard<std::mutex> lock(m_arcRoutingStateMutex);
+                m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+            }
             if (m_audioStatusDetectionTimer.isActive()){
                     m_audioStatusDetectionTimer.stop();
             }
@@ -3102,7 +3115,12 @@ namespace WPEFramework
            if(!HdmiCecSinkImplementation::_instance)
             return;
 
-             LOGINFO("Current ARC State : %d\n", m_currentArcRoutingState);
+             // Coverity fix: Protect m_currentArcRoutingState read with mutex to prevent data race
+             // The mutex ensures thread-safe access to the shared arc routing state variable
+             {
+                 std::lock_guard<std::mutex> lock(m_arcRoutingStateMutex);
+                 LOGINFO("Current ARC State : %d\n", m_currentArcRoutingState);
+             }
 
         _instance->requestArcInitiation();
 
@@ -3136,11 +3154,16 @@ namespace WPEFramework
             {
                return;
             }
-        if(m_currentArcRoutingState == ARC_STATE_REQUEST_ARC_TERMINATION || m_currentArcRoutingState == ARC_STATE_ARC_TERMINATED)
+        // Coverity fix: Protect m_currentArcRoutingState read with mutex to prevent data race
+        // The mutex ensures thread-safe access to the shared arc routing state variable
+        {
+            std::lock_guard<std::mutex> lock(m_arcRoutingStateMutex);
+            if(m_currentArcRoutingState == ARC_STATE_REQUEST_ARC_TERMINATION || m_currentArcRoutingState == ARC_STATE_ARC_TERMINATED)
             {
                LOGINFO("ARC is either Termination  in progress or already Terminated");
                return;
             }
+        }
 
            _instance->requestArcTermination();
            /* start a timer for 3 sec to get the desired ARC_STATE_ARC_TERMINATED */
@@ -3182,7 +3205,12 @@ namespace WPEFramework
               return;
             }
 
-            LOGINFO("Got : INITIATE_ARC  and current Arcstate is %d\n",_instance->m_currentArcRoutingState);
+            // Coverity fix: Protect m_currentArcRoutingState read with mutex to prevent data race
+            // The mutex ensures thread-safe access to the shared arc routing state variable
+            {
+                std::lock_guard<std::mutex> lock(_instance->m_arcRoutingStateMutex);
+                LOGINFO("Got : INITIATE_ARC  and current Arcstate is %d\n",_instance->m_currentArcRoutingState);
+            }
 
             if (m_arcStartStopTimer.isActive())
             {
@@ -3209,7 +3237,12 @@ namespace WPEFramework
        {
             JsonObject params;
 
-            LOGINFO("Command: TERMINATE_ARC current arc state %d \n",HdmiCecSinkImplementation::_instance->m_currentArcRoutingState);
+            // Coverity fix: Protect m_currentArcRoutingState read with mutex to prevent data race
+            // The mutex ensures thread-safe access to the shared arc routing state variable
+            {
+                std::lock_guard<std::mutex> lock(HdmiCecSinkImplementation::_instance->m_arcRoutingStateMutex);
+                LOGINFO("Command: TERMINATE_ARC current arc state %d \n",HdmiCecSinkImplementation::_instance->m_currentArcRoutingState);
+            }
             if (m_arcStartStopTimer.isActive())
             {
                   m_arcStartStopTimer.stop();
