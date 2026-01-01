@@ -2494,8 +2494,7 @@ namespace WPEFramework
                     break;
             }
 
-            _instance->deviceList[logicalAddress].m_requestTime = std::chrono::system_clock::now();
-            LOGINFO("request type %d", _instance->deviceList[logicalAddress].m_isRequested);
+            _instance->deviceList[logicalAddress].m_requestTime = std::chrono::steady_clock::now();
         }
 
         int HdmiCecSinkImplementation::requestStatus(const int logicalAddress) {
@@ -2563,7 +2562,7 @@ namespace WPEFramework
 
             if ( _instance->deviceList[logicalAddress].m_isRequested != CECDeviceParams::REQUEST_NONE )
             {
-                elapsed = std::chrono::system_clock::now() - _instance->deviceList[logicalAddress].m_requestTime;
+                elapsed = std::chrono::steady_clock::now() - _instance->deviceList[logicalAddress].m_requestTime;
 
                 if ( elapsed.count() > HDMICECSINK_REQUEST_MAX_WAIT_TIME_MS )
                 {
@@ -2630,7 +2629,6 @@ namespace WPEFramework
 
             if( _instance->deviceList[logicalAddress].m_isRequested == CECDeviceParams::REQUEST_NONE)
             {
-                LOGINFO("Request Done");
                 return CECDeviceParams::REQUEST_DONE;
             }
 
