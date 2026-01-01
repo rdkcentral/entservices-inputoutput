@@ -661,9 +661,8 @@ namespace WPEFramework
          {
              LOGERR("exception in thread join %s", e.what());
          }
-     
-             HdmiCecSinkImplementation::_instance = nullptr;
-             device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+		   device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+           HdmiCecSinkImplementation::_instance = nullptr;
 
              try
              {
