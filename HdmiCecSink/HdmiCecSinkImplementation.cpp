@@ -1066,17 +1066,22 @@ namespace WPEFramework
                  return;
             }
 
-        // Coverity fix: Protect m_currentArcRoutingState access with mutex to prevent data race
-        // The mutex ensures thread-safe access to the shared arc routing state variable
+        // Coverity fix: Check arc routing state, then release mutex before calling stopArc()
+        // to avoid double lock. stopArc() acquires the same mutex internally.
+        bool shouldStopArc = false;
         {
             std::lock_guard<std::mutex> lock(m_arcRoutingStateMutex);
             if ( (msg.status.toInt() == SYSTEM_AUDIO_MODE_OFF) && (m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
             {
+                shouldStopArc = true;
+            }
+        }
+        if (shouldStopArc)
+        {
                 /* ie system audio mode off -> amplifier goign to standby but still ARC is in initiated state,stop ARC and 
                  bring the ARC state machine to terminated state*/
                 LOGINFO("system audio mode off message but arc is not in terminated state so stopping ARC");
                 stopArc();
-            }
         }
 
         if (msg.status.toInt() == SYSTEM_AUDIO_MODE_ON) {
@@ -1099,7 +1104,7 @@ namespace WPEFramework
                 index++;
             }
         }
-         }
+        }
          void HdmiCecSinkImplementation::Process_ReportAudioStatus_msg(const ReportAudioStatus msg)
          {
             if(!HdmiCecSinkImplementation::_instance)
