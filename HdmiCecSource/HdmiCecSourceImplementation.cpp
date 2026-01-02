@@ -322,9 +322,9 @@ namespace WPEFramework
 
     HdmiCecSourceImplementation::HdmiCecSourceImplementation()
     : cecEnableStatus(false),smConnection(nullptr), m_sendKeyEventThreadRun(false)
+    , msgProcessor(nullptr), msgFrameListener(nullptr)
     , _pwrMgrNotification(*this)
     , _registeredEventHandlers(false)
-    , msgProcessor(nullptr), msgFrameListener(nullptr)
     {
         LOGWARN("ctor");
         HdmiCecSourceImplementation::_instance = this;
