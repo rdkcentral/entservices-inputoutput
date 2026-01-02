@@ -870,15 +870,20 @@ namespace WPEFramework
             else
             {
                     powerState = DEVICE_POWER_STATE_OFF;
-                    // Coverity fix: Protect m_currentArcRoutingState read with mutex to prevent data race
-                    // The mutex ensures thread-safe access to the shared arc routing state variable
+                    // Coverity fix: Check arc routing state, then release mutex before calling stopArc()
+                    // to avoid double lock. stopArc() acquires the same mutex internally.
+                    bool shouldStopArc = false;
                     {
                         std::lock_guard<std::mutex> lock(_instance->m_arcRoutingStateMutex);
                         if((_instance->m_currentArcRoutingState == ARC_STATE_REQUEST_ARC_INITIATION) || (_instance->m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
                         {
-                            LOGINFO("%s: Stop ARC \n",__FUNCTION__);
-                            _instance->stopArc();
+                            shouldStopArc = true;
                         }
+                    }
+                    if (shouldStopArc)
+                    {
+                        LOGINFO("%s: Stop ARC \n",__FUNCTION__);
+                        _instance->stopArc();
                     }
                 }
                 if (_instance->cecEnableStatus)
