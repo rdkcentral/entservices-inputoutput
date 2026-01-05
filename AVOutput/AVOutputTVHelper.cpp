@@ -1337,7 +1337,7 @@ namespace Plugin {
          return "UNKNOWN ERROR";
     }
 
-    int AVOutputTV::getSaveConfig(const std::string& param, capDetails_t capInfo, valueVectors_t &values)
+    int AVOutputTV::getSaveConfig(const std::string& param,const capDetails_t& capInfo, valueVectors_t &values)
     {
         LOGINFO("Entry : %s pqmode : %s source :%s format :%s component : %s color : %s control:%s\n",__FUNCTION__,capInfo.pqmode.c_str(),capInfo.source.c_str(),capInfo.format.c_str(),capInfo.component.c_str(),capInfo.color.c_str(),capInfo.control.c_str());
 
@@ -2051,8 +2051,8 @@ namespace Plugin {
                     LOGERR("%s: %s/%s Param Not Found \n",__FUNCTION__,inputInfo.control.c_str(),inputInfo.color.c_str());
                 }
                 // Coverity fix: Check return value to prevent undefined behavior
-                // The function returns int indicating success/failure, must be validated
-                if (!updateAVoutputTVParam("sync","WhiteBalance",inputInfo,tvPQEnum,level)) {
+                // The function returns 0 on success non-zero on failure, must be validated
+                if (updateAVoutputTVParam("sync","WhiteBalance",inputInfo,tvPQEnum,level) != 0) {
                     LOGERR("%s: updateAVoutputTVParam failed for WhiteBalance sync\n", __FUNCTION__);
                 }
             }
