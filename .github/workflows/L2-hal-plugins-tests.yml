@@ -190,6 +190,7 @@ jobs:
             ${pwd}
             cd entservices-inputoutput/L2HalMock
             # nvim rdkservices/HdmiCecSink/HdmiCecSink.cpp
+            chmod 777 -Rf generate_coveragereport.sh
             ./generate_coveragereport.sh
         continue-on-error: false     
 
