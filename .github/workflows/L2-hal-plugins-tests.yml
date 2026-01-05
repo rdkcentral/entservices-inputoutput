@@ -152,6 +152,7 @@ jobs:
             ls
             ${pwd}
             cd entservices-inputoutput/L2HalMock
+            chmod +x generate_coveragereport.sh
             ./generate_coveragereport.sh
         continue-on-error: false       
 
@@ -178,21 +179,21 @@ jobs:
         continue-on-error: false
         
 
-      - name: Generating code coverage report
-        run: |
-            apt-get install -y neovim
-            apt-get -y update
-            apt-get install -y lcov
-            ${pwd}
+      #- name: Generating code coverage report
+        #run: |
+        #    apt-get install -y neovim
+        #    apt-get -y update
+        #    apt-get install -y lcov
+        #    ${pwd}
             #cd rdkservices/build/HdmiCecSource/CMakeFiles/WPEFrameworkHdmiCecSource.dir
-            ls
+        #    ls
             # killall -QUIT WPEFramework 
-            ${pwd}
-            cd entservices-inputoutput/L2HalMock
+        #    ${pwd}
+        #    cd entservices-inputoutput/L2HalMock
             # nvim rdkservices/HdmiCecSink/HdmiCecSink.cpp
-            chmod 777 -Rf generate_coveragereport.sh
-            ./generate_coveragereport.sh
-        continue-on-error: false     
+        #    chmod 777 -Rf generate_coveragereport.sh
+        #    ./generate_coveragereport.sh
+        #continue-on-error: false     
 
 
       - name: copying code coverage report
