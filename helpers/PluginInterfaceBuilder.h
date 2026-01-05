@@ -58,7 +58,7 @@ namespace Plugin {
 
         // use move
         PluginInterfaceRef(PluginInterfaceRef&& other)
-            : _interface(other._interface),
+            : _interface(other._interface), _service(other._service)
         {
             other._interface = nullptr;
             other._service = nullptr;    
