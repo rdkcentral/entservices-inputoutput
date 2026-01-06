@@ -194,10 +194,10 @@ namespace WPEFramework {
                                     Exchange::JHdmiCecSink::Event::SetSystemAudioModeEvent(_parent, audioMode);
                                 }
 
-                                void ShortAudiodescriptorEvent(const string& jsonresponse) override
+                                void ShortAudiodescriptorEvent(const string& ShortAudioDescriptor) override
                                 {
                                     LOGINFO("ShortAudiodescriptorEvent");
-                                    Exchange::JHdmiCecSink::Event::ShortAudiodescriptorEvent(_parent, jsonresponse);
+                                    Exchange::JHdmiCecSink::Event::ShortAudiodescriptorEvent(_parent, ShortAudioDescriptor);
                                 }
 
                                 void StandbyMessageReceived(const int logicalAddress) override
