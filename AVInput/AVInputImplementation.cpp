@@ -741,9 +741,9 @@ namespace Plugin {
      */
     void AVInputImplementation::AVInputVideoModeUpdate(int port, dsVideoPortResolution_t resolution, int type)
     {
-        int width;
-        int height;
-        bool progressive;
+        int width = 0;
+        int height = 0;
+        bool progressive = false;
         int frameRateN;
         int frameRateD;
 
