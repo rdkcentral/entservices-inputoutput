@@ -1124,11 +1124,10 @@ namespace Plugin {
                                     int value=0;
                                     // Coverity fix: Check return value to ensure value is properly initialized
                                     // The function returns int (-1 on error, 0 on success), validate before use
-                                    if (getLocalparam(tr181ParamName,paramIndex,value,pqParamIndex,sync) == 0) {
-                                        level=value;
-                                    } else {
-                                        LOGERR("%s: getLocalparam failed for LOCALDIMMING_LEVEL\n", __FUNCTION__);
-                                    }
+									if(getLocalparam(tr181ParamName,paramIndex,value,pqParamIndex,sync)) {
+					                    continue;
+									}
+									level=value;
                                 }
                                 ret |= SaveTVDimmingMode((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDimmingMode_t)level);
                                 break;
