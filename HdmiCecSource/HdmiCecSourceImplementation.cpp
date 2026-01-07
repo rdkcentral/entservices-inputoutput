@@ -411,22 +411,22 @@ namespace WPEFramework
                 {
                     CECEnable();
                 }
-		catch (const std::exception& e)
-		{
-			LOGERR("Configure Exception: %s", e.what());
+				catch (const std::exception& e)
+					{
+						LOGERR("Configure Exception: %s", e.what());
+						return Core::ERROR_GENERAL;
+					}
+				catch(...)
+					{
+						LOGWARN("Exception while enabling CEC settings .\r\n");
+						return Core::ERROR_GENERAL;
+					}
+			 }
+		} else {
+			msg = "IARM bus is not available";
+			LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
 			return Core::ERROR_GENERAL;
 		}
-                catch(...)
-                {
-                    LOGWARN("Exception while enabling CEC settings .\r\n");
-		    return Core::ERROR_GENERAL;
-                }
-             }
-        } else {
-            msg = "IARM bus is not available";
-            LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
-	    return Core::ERROR_GENERAL;
-        }
         ASSERT(_powerManagerPlugin);
         registerEventHandlers();
         return Core::ERROR_NONE;
@@ -908,41 +908,39 @@ namespace WPEFramework
            }
            if(true == enabled)
            {
-		   try{
-			   CECEnable();
+			   try{
+				   CECEnable();
+			   }
+			   catch (const std::exception& e)
+				   {
+					   LOGERR("setEnabledInternal Exception: %s", e.what());
+					   return Core::ERROR_GENERAL;
+				   }
+			   catch(...)
+				   {
+					   LOGWARN("Exception while enabling CEC settings .\r\n");
+					   return Core::ERROR_GENERAL;
+				   }
 		   }
-		   catch (const std::exception& e)
-		   {
-			   LOGERR("setEnabledInternal Exception: %s", e.what());
-			   return Core::ERROR_GENERAL;
-		   }
-
-		   catch(...)
-		   {
-			   LOGWARN("Exception while enabling CEC settings .\r\n");
-			   return Core::ERROR_GENERAL;
-		   }
-	   }
 
            else
            {
-		   try {
-			   CECDisable();
+			   try {
+				   CECDisable();
+			   }
+			   catch (const std::exception& e)
+				   {
+					   LOGERR("setEnabledInternal Exception: %s", e.what());
+					   return Core::ERROR_GENERAL;
+				   }
+			   catch(...)
+				   {
+					   LOGWARN("Exception while disabling CEC settings .\r\n");
+					   return Core::ERROR_GENERAL;
+				   }
 		   }
-		   catch (const std::exception& e)
-		   {
-			   LOGERR("setEnabledInternal Exception: %s", e.what());
-			   return Core::ERROR_GENERAL;
-		   }
-		   catch(...)
-		   {
-			   LOGWARN("Exception while disabling CEC settings .\r\n");
-			   return Core::ERROR_GENERAL;
-		   }
-           }
-           return Core::ERROR_NONE;
-
-        }
+			return Core::ERROR_NONE;
+		}
 
         Core::hresult HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
         {
