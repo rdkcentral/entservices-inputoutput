@@ -710,31 +710,30 @@ namespace WPEFramework
            {
                 LOGERR("HdmiCecSink plugin device::Manager::Initialize failed");
                 LOG_DEVICE_EXCEPTION0();
-		HdmiCecSinkImplementation::_instance = nullptr;
-		return Core::ERROR_GENERAL;
-           }
-
-           // load persistence setting
-	   try
-	   {
-		   loadSettings();
-           }
-	   catch(...)
-	   {
-		   LOGWARN("Exception while loading settings, continuing with defaults");
-	   }
-	   try
-	   {
-		   device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::CecSink");
-	   }
-	   catch(...)
-	   {
-		   LOGERR("Failed to register HDMI event handler");
-		   try{
-                      device::Manager::DeInitialize();
-		   } catch(...) {}
-		   return Core::ERROR_GENERAL;
-	   }
+			   HdmiCecSinkImplementation::_instance = nullptr;
+			   return Core::ERROR_GENERAL;
+		   }
+		   // load persistence setting
+		   try
+			   {
+				   loadSettings();
+			   }
+		   catch(...)
+		   {
+			   LOGWARN("Exception while loading settings, continuing with defaults");
+		   }
+		   try
+			   {
+				   device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::CecSink");
+			   }
+		   catch(...)
+		   {
+			   LOGERR("Failed to register HDMI event handler");
+			   try{
+				   device::Manager::DeInitialize();
+			   } catch(...) {}
+			   return Core::ERROR_GENERAL;
+		   }
 
 
            m_audioStatusDetectionTimer.connect( std::bind( &HdmiCecSinkImplementation::audioStatusTimerFunction, this ) );
@@ -775,39 +774,35 @@ namespace WPEFramework
                 LOGINFO(" Add to vector [%d] \n", i);
                 hdmiInputs.push_back(std::move(hdmiPort));
             }
-
-            LOGINFO("Check the HDMI State \n");
-	    try
-	    {
-		    CheckHdmiInState();
-            }
-	    catch(...)
-	    {
-		    LOGWARN("Exception while checking HDMI state");
-            }
-	    // Start threads after all initialization is complete
-	    m_sendKeyEventThreadExit = false;
-	    m_sendKeyEventThread = std::thread(threadSendKeyEvent);
-	    m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
-	    m_semSignaltoArcRoutingThread.acquire();
-	    m_arcRoutingThread = std::thread(threadArcRouting);
-	    
-            if (cecSettingEnabled)
-            {
-               try
-               {
-                   CECEnable();
-               }
-               catch(...)
-               {
-                   LOGERR("Exception while enabling CEC settings,cleaning up resources");
-		   // Cleanup threads
-		   m_sendKeyEventThreadExit = true;
-		   {
-			   std::unique_lock<std::mutex> lk(m_sendKeyEventMutex);
-			   m_sendKeyEventThreadRun = true;
-			   m_sendKeyCV.notify_one();
+		   LOGINFO("Check the HDMI State \n");
+		   try {
+			   CheckHdmiInState();
 		   }
+		   catch(...)
+		   {
+			   LOGWARN("Exception while checking HDMI state");
+		   }
+		   // Start threads after all initialization is complete
+		   m_sendKeyEventThreadExit = false;
+		   m_sendKeyEventThread = std::thread(threadSendKeyEvent);
+		   m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+		   m_semSignaltoArcRoutingThread.acquire();
+		   m_arcRoutingThread = std::thread(threadArcRouting);
+		   if (cecSettingEnabled)
+		   {
+			   try {
+				   CECEnable();
+			   }
+			   catch(...)
+			   {
+				   LOGERR("Exception while enabling CEC settings,cleaning up resources");
+				   // Cleanup threads
+				   m_sendKeyEventThreadExit = true;
+				   {
+					   std::unique_lock<std::mutex> lk(m_sendKeyEventMutex);
+					   m_sendKeyEventThreadRun = true;
+					   m_sendKeyCV.notify_one();
+				   }
 		   if (m_sendKeyEventThread.joinable()) {
 		      m_sendKeyEventThread.join();
 		   }
@@ -825,19 +820,16 @@ namespace WPEFramework
 		   return Core::ERROR_GENERAL;
 	       }
             }
-
-	    try
-	    {
-		    getCecVersion();
-	    }
-	    catch(...)
-            {
-		    LOGWARN("Exception while getting CEC version");
-	    }
-            LOGINFO(" HdmiCecSinkImplementation plugin Initialize completed \n");
-            return Core::ERROR_NONE;
-
-       }
+		   try {
+			   getCecVersion();
+		   }
+		   catch(...)
+		   {
+			   LOGWARN("Exception while getting CEC version");
+		   }
+		   LOGINFO(" HdmiCecSinkImplementation plugin Initialize completed \n");
+		   return Core::ERROR_NONE;
+	   }
 
        Core::hresult HdmiCecSinkImplementation::Register(Exchange::IHdmiCecSink::INotification* notification)
         {
