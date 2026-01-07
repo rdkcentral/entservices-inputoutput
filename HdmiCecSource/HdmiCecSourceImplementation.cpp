@@ -412,15 +412,15 @@ namespace WPEFramework
                     CECEnable();
                 }
 				catch (const std::exception& e)
-					{
-						LOGERR("Configure Exception: %s", e.what());
-						return Core::ERROR_GENERAL;
-					}
+				{
+					LOGERR("Configure Exception: %s", e.what());
+					return Core::ERROR_GENERAL;
+				}
 				catch(...)
-					{
-						LOGWARN("Exception while enabling CEC settings .\r\n");
-						return Core::ERROR_GENERAL;
-					}
+				{
+					LOGWARN("Exception while enabling CEC settings .\r\n");
+					return Core::ERROR_GENERAL;
+				}
 			 }
 		} else {
 			msg = "IARM bus is not available";
@@ -908,19 +908,19 @@ namespace WPEFramework
            }
            if(true == enabled)
            {
-			   try{
+			   try {
 				   CECEnable();
 			   }
 			   catch (const std::exception& e)
-				   {
-					   LOGERR("setEnabledInternal Exception: %s", e.what());
-					   return Core::ERROR_GENERAL;
-				   }
+			   {
+				   LOGERR("setEnabledInternal Exception: %s", e.what());
+				   return Core::ERROR_GENERAL;
+			   }
 			   catch(...)
-				   {
-					   LOGWARN("Exception while enabling CEC settings .\r\n");
-					   return Core::ERROR_GENERAL;
-				   }
+			   {
+				   LOGWARN("Exception while enabling CEC settings .\r\n");
+				   return Core::ERROR_GENERAL;
+			   }
 		   }
 
            else
@@ -929,15 +929,15 @@ namespace WPEFramework
 				   CECDisable();
 			   }
 			   catch (const std::exception& e)
-				   {
-					   LOGERR("setEnabledInternal Exception: %s", e.what());
-					   return Core::ERROR_GENERAL;
-				   }
+			   {
+				   LOGERR("setEnabledInternal Exception: %s", e.what());
+				   return Core::ERROR_GENERAL;
+			   }
 			   catch(...)
-				   {
-					   LOGWARN("Exception while disabling CEC settings .\r\n");
-					   return Core::ERROR_GENERAL;
-				   }
+			   {
+				   LOGWARN("Exception while disabling CEC settings .\r\n");
+				   return Core::ERROR_GENERAL;
+			   }
 		   }
 			return Core::ERROR_NONE;
 		}
