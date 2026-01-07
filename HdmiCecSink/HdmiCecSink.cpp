@@ -109,42 +109,38 @@ namespace WPEFramework
 
        void HdmiCecSink::Deinitialize(PluginHost::IShell* /* service */)
        {
-
-        if(nullptr != _hdmiCecSink)
-        {
-           bool enabled = false;
-           bool ret = false;
-           HdmiCecSink::_hdmiCecSink->GetEnabled(enabled,ret);
-
-            if(ret && enabled)
-            {
-                    Exchange::IHdmiCecSink::HdmiCecSinkSuccess success;
-                    HdmiCecSink::_hdmiCecSink->SetEnabled(false,success);
-            }
-
-             _hdmiCecSink->Unregister(&_notification);
-             Exchange::JHdmiCecSink::Unregister(*this);
-             _hdmiCecSink->Release();
-             _hdmiCecSink = nullptr;
-	     
-	     if (_service != nullptr && _connectionId != 0)
-	     {
-		     RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
-		     if (connection != nullptr)
-		     {
-			     try{
-				     connection->Terminate();
-			     }
-			     catch(const std::exception& e)
-			     {
-				     std::string errorMessage = "Failed to terminate connection: ";
-				     errorMessage += e.what();
-				     LOGWARN("%s",errorMessage.c_str());
-			     }
-			     connection->Release();
-		     }
-	     }
-	}
+		   if(nullptr != _hdmiCecSink)
+		   {
+			   bool enabled = false;
+			   bool ret = false;
+			   HdmiCecSink::_hdmiCecSink->GetEnabled(enabled,ret);
+			   if(ret && enabled)
+			   {
+				   Exchange::IHdmiCecSink::HdmiCecSinkSuccess success;
+				   HdmiCecSink::_hdmiCecSink->SetEnabled(false,success);
+			   }
+			   _hdmiCecSink->Unregister(&_notification);
+			   Exchange::JHdmiCecSink::Unregister(*this);
+			   _hdmiCecSink->Release();
+			   _hdmiCecSink = nullptr;
+			   if (_service != nullptr && _connectionId != 0)
+			   {
+				   RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
+				   if (connection != nullptr)
+				   {
+					   try {
+						   connection->Terminate();
+					   }
+					   catch(const std::exception& e)
+					   {
+						   std::string errorMessage = "Failed to terminate connection: ";
+						   errorMessage += e.what();
+						   LOGWARN("%s",errorMessage.c_str());
+					   }
+					   connection->Release();
+				   }
+			   }
+		   }
 		   _connectionId = 0;
 		   if (_service != nullptr)
 		   {
