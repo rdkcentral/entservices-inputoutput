@@ -54,7 +54,7 @@ namespace WPEFramework
 
        const std::string HdmiCecSink::Initialize(PluginHost::IShell *service)
        {
-	   Core::hresult res = Core::ERROR_GENERAL;
+		   Core::hresult res = Core::ERROR_GENERAL;
            profileType = searchRdkProfile();
 
            if (profileType == STB || profileType == NOT_FOUND)
@@ -77,36 +77,34 @@ namespace WPEFramework
 
            if(nullptr != _hdmiCecSink)
             {
-               res = _hdmiCecSink->Configure(service);
-	       if (res != Core::ERROR_NONE) {
-		       msg = "HdmiCecSink plugin platform configuration error";
-		       LOGERR("HdmiCecSink plugin platform configuration error. Failed to activate HdmiCecSink Plugin");
-		       _hdmiCecSink->Release();
-		       _hdmiCecSink = nullptr;
-		       _service->Release();
-		       _service = nullptr;
-		       _connectionId = 0;
-	       } else {
-		       LOGINFO("HdmiCecSink plugin platform configured successfully");		          
-		       _service->Register(&_notification);
-		      _hdmiCecSink->Register(&_notification);
-                      Exchange::JHdmiCecSink::Register(*this, _hdmiCecSink);
-                      LOGINFO("HdmiCecSink plugin is available. Successfully activated HdmiCecSink Plugin");
-            }
-	    }
-
-            else
-            {
-                msg = "HdmiCecSink plugin is not available";
-                LOGINFO("HdmiCecSink plugin is not available. Failed to activate HdmiCecSink Plugin");
-		_service->Release();
-		_service = nullptr;
-		_connectionId = 0;
-            }
-
-           // On success return empty, to indicate there is no error text.
-           return msg;
-        }
+				res = _hdmiCecSink->Configure(service);
+				if (res != Core::ERROR_NONE) {
+					msg = "HdmiCecSink plugin platform configuration error";
+					LOGERR("HdmiCecSink plugin platform configuration error. Failed to activate HdmiCecSink Plugin");
+					_hdmiCecSink->Release();
+					_hdmiCecSink = nullptr;
+					_service->Release();
+					_service = nullptr;
+					_connectionId = 0;
+				} else {
+					LOGINFO("HdmiCecSink plugin platform configured successfully");
+					_service->Register(&_notification);
+					_hdmiCecSink->Register(&_notification);
+					Exchange::JHdmiCecSink::Register(*this, _hdmiCecSink);
+					LOGINFO("HdmiCecSink plugin is available. Successfully activated HdmiCecSink Plugin");
+				}
+			}
+		   else
+		   {
+			   msg = "HdmiCecSink plugin is not available";
+			   LOGINFO("HdmiCecSink plugin is not available. Failed to activate HdmiCecSink Plugin");
+			   _service->Release();
+			   _service = nullptr;
+			   _connectionId = 0;
+		   }
+		   // On success return empty, to indicate there is no error text.
+		   return msg;
+	   }
 
 
        void HdmiCecSink::Deinitialize(PluginHost::IShell* /* service */)
@@ -147,16 +145,15 @@ namespace WPEFramework
 		     }
 	     }
 	}
-       	_connectionId = 0;
-
-	if (_service != nullptr)
-	{
-	   _service->Unregister(&_notification);
-           _service->Release();
-           _service = nullptr;
-	}
-           LOGINFO("HdmiCecSink plugin is deactivated. Successfully deactivated HdmiCecSink Plugin");
-        }
+		   _connectionId = 0;
+		   if (_service != nullptr)
+		   {
+			   _service->Unregister(&_notification);
+			   _service->Release();
+			   _service = nullptr;
+		   }
+		   LOGINFO("HdmiCecSink plugin is deactivated. Successfully deactivated HdmiCecSink Plugin");
+	   }
 
        string HdmiCecSink::Information() const
         {
