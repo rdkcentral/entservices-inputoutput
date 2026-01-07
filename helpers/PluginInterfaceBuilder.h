@@ -43,7 +43,7 @@ namespace Plugin {
         }
 
         PluginInterfaceRef(INTERFACE* interface, PluginHost::IShell* controller)
-            : _interface(interface), _service(controller)
+            : _interface(interface)
         {
         }
 
@@ -58,19 +58,16 @@ namespace Plugin {
 
         // use move
         PluginInterfaceRef(PluginInterfaceRef&& other)
-            : _interface(other._interface), _service(other._service)
+            : _interface(other._interface)
         {
-            other._interface = nullptr;
-            other._service = nullptr;    
+            other._interface = nullptr;   
         }
 
         PluginInterfaceRef& operator=(PluginInterfaceRef&& other)
         {
             if (this != &other) {
                 _interface = other._interface;
-                _service = other._service;
                 other._interface = nullptr;
-                other._service = nullptr;
             }
             return *this;
         }
