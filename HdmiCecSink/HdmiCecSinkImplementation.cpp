@@ -2194,7 +2194,11 @@ namespace WPEFramework
                     catch(CECNoAckException &e)
                     {
                         if ( _instance->deviceList[i].m_isDevicePresent ) {
-                            disconnected.push_back(i);
+                            try {
+                                disconnected.push_back(i);
+                            } catch (const std::bad_alloc& e) {
+                                LOGERR("Memory allocation failed in disconnected vector: %s", e.what());
+                            }
                         }
                                                 //LOGWARN("Ping device: 0x%x caught %s \r\n", i, e.what());
                         usleep(50000);
@@ -2210,7 +2214,11 @@ namespace WPEFramework
                       /* If we get ACK, then the device is present in the network*/
                       if ( !_instance->deviceList[i].m_isDevicePresent )
                       {
-                          connected.push_back(i);
+                          try {
+                              connected.push_back(i);
+                          } catch (const std::bad_alloc& e) {
+                              LOGERR("Memory allocation failed in connected vector: %s", e.what());
+                          }
                                                 //LOGWARN("Ping success, added device: 0x%x \r\n", i);
                       }
                       usleep(50000);      
