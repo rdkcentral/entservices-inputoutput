@@ -816,10 +816,10 @@ namespace WPEFramework
 		   device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
 		   try {
 			   device::Manager::DeInitialize();
-	           } catch(...) {}
-		   return Core::ERROR_GENERAL;
-	       }
-            }
+		   } catch(...) {}
+				   return Core::ERROR_GENERAL;
+			   }
+		   }
 		   try {
 			   getCecVersion();
 		   }
