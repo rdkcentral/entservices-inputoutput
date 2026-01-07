@@ -493,7 +493,7 @@ jobs:
           -include $GITHUB_WORKSPACE/entservices-testframework/Tests/mocks/tvTypes.h
           -include $GITHUB_WORKSPACE/entservices-testframework/Tests/mocks/essos-resmgr.h
           -include $GITHUB_WORKSPACE/entservices-testframework/Tests/mocks/HdmiCec.h
-          -Werror -Wall -Wno-unused-result -Wno-deprecated-declarations -Wno-error=format=
+          -Wall -Wno-unused-result -Wno-deprecated-declarations -Wno-error=format= -Werror
           -DUSE_IARMBUS
           -DENABLE_DEEP_SLEEP
           -DENABLE_SET_WAKEUP_SRC_CONFIG
