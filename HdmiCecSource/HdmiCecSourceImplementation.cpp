@@ -973,9 +973,9 @@ namespace WPEFramework
                 catch (const std::exception& e)
                 {
                     LOGWARN("CEC exception caught from LibCCEC::getInstance().init()");
-		    throw;
-                }
-            }
+					throw;
+				}
+			}
             libcecInitStatus++;
 
             m_sendKeyEventThreadExit = false;
@@ -984,27 +984,26 @@ namespace WPEFramework
                    m_sendKeyEventThread.get().join();
 	       }
                m_sendKeyEventThread = Utils::ThreadRAII(std::thread(threadSendKeyEvent));
-            } catch(const std::system_error& e) {
+			} catch(const std::system_error& e) {
                 LOGERR("exception in creating threadSendKeyEvent %s", e.what());
-		throw;
-	    }
-
-
-            //Acquire CEC Addresses
-	    try {
-		    getPhysicalAddress();
-		    getLogicalAddress();
-		    } catch (const std::exception& e) {
-			    LOGERR("CEC exception caught while getting addresses %s", e.what());
-			    throw;
-		    }
-	    try {
-		    smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
-		    } catch (const std::bad_alloc& e) {
-			    LOGERR("smConnection allocation failed %s", e.what());
-			    throw std::runtime_error("smConnection allocation failed");
-		    }
-	    smConnection->open();
+				throw;
+			}
+			
+			//Acquire CEC Addresses
+			try {
+				getPhysicalAddress();
+				getLogicalAddress();
+			} catch (const std::exception& e) {
+				LOGERR("CEC exception caught while getting addresses %s", e.what());
+				throw;
+			}
+			try {
+				smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
+			} catch (const std::bad_alloc& e) {
+				LOGERR("smConnection allocation failed %s", e.what());
+				throw std::runtime_error("smConnection allocation failed");
+			}
+			smConnection->open();
             msgProcessor = new HdmiCecSourceProcessor(*smConnection);
             msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
             smConnection->addFrameListener(msgFrameListener);
@@ -1080,12 +1079,12 @@ namespace WPEFramework
 	        catch(const std::system_error& e)
 	        {
 		        LOGERR("system_error exception in thread join %s", e.what());
-			throw;
+				throw;
 	        }
 	        catch(const std::exception& e)
 	        {
 		        LOGERR("exception in thread join %s", e.what());
-			throw;
+				throw;
 	        }
 
             if (smConnection != NULL)
