@@ -53,7 +53,7 @@ namespace WPEFramework
 
         const string HdmiCecSource::Initialize(PluginHost::IShell *service)
         {
-	   Core::hresult res = Core::ERROR_GENERAL;
+		   Core::hresult res = Core::ERROR_GENERAL;
            LOGWARN("Initlaizing HdmiCecSource plugin \n");
 
            profileType = searchRdkProfile();
@@ -75,43 +75,40 @@ namespace WPEFramework
            _service = service;
            _service->AddRef();
            _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
-
-           if(nullptr != _hdmiCecSource)
-            {
-                res = _hdmiCecSource->Configure(service);
-		if (res != Core::ERROR_NONE)
-		{
-			msg = "HdmiCecSource plugin platform configuration error";
-			LOGINFO("HdmiCecSource plugin configuration failed. Failed to activate HdmiCecSource Plugin");
-			_hdmiCecSource->Release();
-			_hdmiCecSource = nullptr;
-		}
-		else
-		{
-			_service->Register(&_notification);
-			_hdmiCecSource->Register(&_notification);
-			Exchange::JHdmiCecSource::Register(*this, _hdmiCecSource);
-			LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
-		}
-	    }
-
-            else
-            {
-                msg = "HdmiCecSource plugin is not available";
+			if(nullptr != _hdmiCecSource)
+			{
+				res = _hdmiCecSource->Configure(service);
+				if (res != Core::ERROR_NONE)
+				{
+					msg = "HdmiCecSource plugin platform configuration error";
+					LOGINFO("HdmiCecSource plugin configuration failed. Failed to activate HdmiCecSource Plugin");
+					_hdmiCecSource->Release();
+					_hdmiCecSource = nullptr;
+				}
+				else
+				{
+					_service->Register(&_notification);
+					_hdmiCecSource->Register(&_notification);
+					Exchange::JHdmiCecSource::Register(*this, _hdmiCecSource);
+					LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");
+				}
+			}
+			else
+			{
+				msg = "HdmiCecSource plugin is not available";
                 LOGINFO("HdmiCecSource plugin is not available. Failed to activate HdmiCecSource Plugin");
             }
-
-            if (0 != msg.length())
-            {
-		    // Only clean up rest of them; _hdmiCecSource already handled.
-		    _connectionId = 0;
-		    _service->Release();
-		    _service = nullptr;
-            }
-
-           // On success return empty, to indicate there is no error text.
-           return msg;
-        }
+			
+			if (0 != msg.length())
+			{
+				// Only clean up rest of them; _hdmiCecSource already handled.
+				_connectionId = 0;
+				_service->Release();
+				_service = nullptr;
+			}
+			// On success return empty, to indicate there is no error text.
+			return msg;
+		}
 
 
         void HdmiCecSource::Deinitialize(PluginHost::IShell* service)
@@ -128,43 +125,41 @@ namespace WPEFramework
                 LOGINFO("Invalid profile type for STB \n");
                 return ;
            }
-
-           
-
-           if(nullptr != _hdmiCecSource)
-           {
-	     _notification.OnActiveSourceStatusUpdated(false);
-             _hdmiCecSource->Unregister(&_notification);
-             Exchange::JHdmiCecSource::Unregister(*this);
-             _hdmiCecSource->Release();
-             _hdmiCecSource = nullptr;
-	   }
-	   if (_connectionId != 0 && _service != nullptr)
-	   {
-		   RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
-		   if (connection != nullptr)
-		   {
-			   try{
-				   connection->Terminate();
-			   }
-			   catch(const std::exception& e)
-			   {
-				   std::string errorMessage = "Failed to terminate connection: ";
-				   errorMessage += e.what();
-				   LOGWARN("%s",errorMessage.c_str());
-			   }
-			   connection->Release();
-		   }
-	   }
-	   if (_service != nullptr)
-	   {
-		   _connectionId = 0;
-		   _service->Unregister(&_notification);
-		   _service->Release();
-		   _service = nullptr;
-	   }
-	   LOGINFO("HdmiCecSource plugin is deactivated. Successfully deactivated HdmiCecSource Plugin");
-	}
+			
+			if(nullptr != _hdmiCecSource)
+			{
+				_notification.OnActiveSourceStatusUpdated(false);
+				_hdmiCecSource->Unregister(&_notification);
+				Exchange::JHdmiCecSource::Unregister(*this);
+				_hdmiCecSource->Release();
+				_hdmiCecSource = nullptr;
+			}
+			if (_connectionId != 0 && _service != nullptr)
+			{
+				RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
+				if (connection != nullptr)
+				{
+					try {
+						connection->Terminate();
+					}
+					catch(const std::exception& e)
+					{
+						std::string errorMessage = "Failed to terminate connection: ";
+						errorMessage += e.what();
+						LOGWARN("%s",errorMessage.c_str());
+					}
+					connection->Release();
+				}
+			}
+			if (_service != nullptr)
+			{
+				_connectionId = 0;
+				_service->Unregister(&_notification);
+				_service->Release();
+				_service = nullptr;
+			}
+			LOGINFO("HdmiCecSource plugin is deactivated. Successfully deactivated HdmiCecSource Plugin");
+		}
 
         string HdmiCecSource::Information() const
         {
