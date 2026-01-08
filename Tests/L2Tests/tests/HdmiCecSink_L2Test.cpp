@@ -277,6 +277,8 @@ public:
             }
         }
         signalled = m_event_signalled;
+        // Clear only the expected flags that were waited for, not all flags
+        m_event_signalled &= ~expected_status;
         return signalled;
     }
 };
