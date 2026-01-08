@@ -946,7 +946,7 @@ namespace Plugin {
         return ret;
     }
 
-    int AVOutputTV::updateAVoutputTVParam( std::string action, std::string tr181ParamName, const capDetails_t& info, tvPQParameterIndex_t pqParamIndex, int level )
+    int AVOutputTV::updateAVoutputTVParam( std::string action, std::string tr181ParamName, capDetails_t& info, tvPQParameterIndex_t pqParamIndex, int level )
     {
         LOGINFO("Entry : %s\n",__FUNCTION__);
         valueVectors_t values;
