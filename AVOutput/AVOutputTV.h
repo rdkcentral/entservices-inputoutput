@@ -333,7 +333,7 @@ class AVOutputTV : public AVOutputBase {
 		std::string getErrorString (tvError_t eReturn);
 
 		/* Get function to query TR181 entries or pq capability.ini file*/
-		int getSaveConfig(const std::string& param, const capDetails_t& capInfo, valueVectors_t &values);
+		int getSaveConfig(const std::string& param, capDetails_t& capInfo, valueVectors_t &values);
 		int getLocalparam( std::string forParam,paramIndex_t indexInfo,int & value,tvPQParameterIndex_t pqParamIndex,bool sync=false);
 		
 		tvDataComponentColor_t getComponentColorEnum(std::string colorName);
