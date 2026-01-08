@@ -986,7 +986,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, requestActiveSourceProccess){
 TEST_F(HdmiCecSourceInitializedEventTest, standyProcess){
     Core::Sink<NotificationHandler> notification;
     uint32_t signalled = false;
-    p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
@@ -1112,7 +1111,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, giveDeviceVendorIdProcess){
 TEST_F(HdmiCecSourceInitializedEventTest, setOSDNameProcess){
     Core::Sink<NotificationHandler> notification;
     uint32_t signalled = false;
-    p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
@@ -1140,7 +1138,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, routingChangeProcess){
     }
     Core::Sink<NotificationHandler> notification;
     uint32_t signalled = false;
-    p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
@@ -1168,7 +1165,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, routingInformationProcess){
     }
     Core::Sink<NotificationHandler> notification;
     uint32_t signalled = false;
-    p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
@@ -1194,7 +1190,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, setStreamPathProcess){
     }
     Core::Sink<NotificationHandler> notification;
     uint32_t signalled = false;
-    p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
@@ -1252,7 +1247,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, deviceVendorIDProcess){
     }
     Core::Sink<NotificationHandler> notification;
     uint32_t signalled = false;
-    p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
@@ -1323,7 +1317,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, reportPowerStatusProcess){
 TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess){
     Core::Sink<NotificationHandler> notification;
     uint32_t signalled = false;
-    p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
@@ -1344,7 +1337,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, userControlPressedProcess){
 TEST_F(HdmiCecSourceInitializedEventTest, userControlReleasedrocess){
     Core::Sink<NotificationHandler> notification;
     uint32_t signalled = false;
-    p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
@@ -1523,7 +1515,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, HdmiCecSourceFrameListener_notify_GetC
         iCounter ++;
     }
     Core::Sink<NotificationHandler> notification;
-    p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
@@ -1563,7 +1554,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, requestActiveSourceProcess_failure){
 TEST_F(HdmiCecSourceInitializedEventTest, standbyProcess_failure){
     Core::Sink<NotificationHandler> notification;
 
-    p_hdmiCecSourceMock->AddRef();
     p_hdmiCecSourceMock->Register(&notification);
 
     Header header;
