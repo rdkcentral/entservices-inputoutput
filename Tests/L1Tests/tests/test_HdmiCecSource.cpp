@@ -1858,6 +1858,9 @@ TEST_F(HdmiCecSourceInitializedEventTest, giveDeviceVendorIdProcess_LGTV){
 
     EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
 
+    // Give the detached thread time to complete
+    usleep(100 * 1000); // sleep for 100 milliseconds
+
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
     Header header;
