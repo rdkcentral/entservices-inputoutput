@@ -179,15 +179,15 @@ namespace WPEFramework
                     device::FrontPanelTextDisplay::getInstance("Text").setTextBrightness(clockBrightness);
 #endif
                     globalLedBrightness = device::FrontPanelIndicator::getInstance("Power").getBrightness();
-                    LOGINFO("Power light brightness, %d, power status %d", globalLedBrightness, powerStatus);
+                    //LOGINFO("Power light brightness, %d, power status %d", globalLedBrightness, powerStatus);
 
                     for (uint i = 0; i < fpIndicators.size(); i++)
                     {
                         LOGWARN("Initializing light %s", fpIndicators.at(i).getName().c_str());
-                        if (powerStatus)
+                        /*if (powerStatus)
                             device::FrontPanelIndicator::getInstance(fpIndicators.at(i).getName()).setBrightness(globalLedBrightness);
 
-                        device::FrontPanelIndicator::getInstance(fpIndicators.at(i).getName()).setState(false);
+                        device::FrontPanelIndicator::getInstance(fpIndicators.at(i).getName()).setState(false);*/
                     }
 
                     if (powerStatus)
