@@ -54,7 +54,6 @@ namespace WPEFramework
 
        const std::string HdmiCecSink::Initialize(PluginHost::IShell *service)
        {
-		   Core::hresult res = Core::ERROR_GENERAL;
            profileType = searchRdkProfile();
 
            if (profileType == STB || profileType == NOT_FOUND)
@@ -77,10 +76,22 @@ namespace WPEFramework
 
            if(nullptr != _hdmiCecSink)
             {
-				res = _hdmiCecSink->Configure(service);
+				Core::hresult res = _hdmiCecSink->Configure(service);
 				if (res != Core::ERROR_NONE) {
 					msg = "HdmiCecSink plugin platform configuration error";
 					LOGERR("HdmiCecSink plugin platform configuration error. Failed to activate HdmiCecSink Plugin");
+					if (_connectionId != 0 && _service != nullptr) {
+						RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
+						if (connection != nullptr) {
+							try {
+								connection->Terminate();
+							}
+							catch (const std::exception& e) {
+								LOGWARN("Failed to terminate connection: %s", e.what());
+							}
+							connection->Release();
+						}
+					}						
 					_hdmiCecSink->Release();
 					_hdmiCecSink = nullptr;
 					_service->Release();
@@ -98,6 +109,18 @@ namespace WPEFramework
 		   {
 			   msg = "HdmiCecSink plugin is not available";
 			   LOGINFO("HdmiCecSink plugin is not available. Failed to activate HdmiCecSink Plugin");
+			   if (_connectionId != 0 && _service != nullptr) {
+				   RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
+				   if (connection != nullptr) {
+					   try {
+						   connection->Terminate();
+					   }
+						catch (const std::exception& e) {
+							LOGWARN("Failed to terminate connection: %s", e.what());
+						}
+					   connection->Release();
+				   }
+			   }
 			   _service->Release();
 			   _service = nullptr;
 			   _connectionId = 0;
