@@ -269,24 +269,24 @@ class AVOutputTV : public AVOutputBase {
     private:
 
 		
-		int getPictureModeIndex(std::string pqmode);
-		int getSourceIndex(std::string source);
-		int getFormatIndex(std::string format);		
+		int getPictureModeIndex(const std::string& pqmode);
+		int getSourceIndex(const std::string& source);
+		int getFormatIndex(const std::string& format);		
 		int getPqParamIndex();
 		int getParamIndex(std::string param, capDetails_t& paramInfo, paramIndex_t& indexInfo);
 		int getDolbyModeIndex(const char * dolbyMode);
 		int getHDRModeIndex(const std::string HDRMode, const std::string format,tvDolbyMode_t &value);
 		tvDimmingMode_t getDimmingModeIndex(string mode);
 		
-		bool isIncluded(const std::set<string> set1,const std::set<string> set2);
+		bool isIncluded(const std::set<string>& set1,const std::set<string>& set2);
 		bool isSetRequired(std::string pqmode,std::string source,std::string format);
-		int isPlatformSupport(std::string pqparam);
+		int isPlatformSupport(const std::string& pqparam);
 		
 	
-		bool isCapablityCheckPassed( std::string param, capDetails_t inputInfo );
+		bool isCapablityCheckPassed( const std::string& param, const capDetails_t& inputInfo );
 		int parsingSetInputArgument(const JsonObject& parameters, std::string pqparam,capDetails_t& paramInfo);
 		int parsingGetInputArgument(const JsonObject& parameters, std::string pqparam, capDetails_t& info);
-		void spliltCapablities( capVectors_t& vectorInfo, capDetails_t stringInfo);
+		void spliltCapablities( capVectors_t& vectorInfo, const capDetails_t& stringInfo);
 		void spliltStringsAndConvertToSet( std::string pqmodeInfo,std::string formatInfo,std::string sourceInfo,std::set<string> &pqmode, std::set<string> &format, std::set<string> &source);
 		int validateIntegerInputParameter(std::string param, int inputValue);
 		int fetchCapablities(string pqparam, capDetails_t& info);
@@ -302,7 +302,7 @@ class AVOutputTV : public AVOutputBase {
 
 		std::string convertToString(std::vector<std::string> vec_strings);
 		void convertParamToLowerCase(std::string &source, std::string &pqmode, std::string &format);
-		int convertToValidInputParameter(std::string pqparam, capDetails_t& info);
+		int convertToValidInputParameter(const std::string& pqparam, capDetails_t& info);
 		string convertSourceIndexToString(int source);
 		string convertVideoFormatToString(int format);
 		string convertPictureIndexToString(int pqmode);
@@ -316,7 +316,7 @@ class AVOutputTV : public AVOutputBase {
 		 * it will call TVSettings HAL for setting/saving the value
 		 * Will be called whenever the application invokes set/reset call
 		 */
-		int updateAVoutputTVParam( std::string action, std::string tr181ParamName, capDetails_t info, tvPQParameterIndex_t pqParamIndex, int level );
+		int updateAVoutputTVParam( std::string action, std::string tr181ParamName, capDetails_t& info, tvPQParameterIndex_t pqParamIndex, int level );
 
 		/* Every bootup this function is called to sync TR181 to TVSettings HAL for saving the value */
 		tvError_t syncAvoutputTVParamsToHAL(std::string pqmode, std::string source, std::string format);
@@ -333,11 +333,11 @@ class AVOutputTV : public AVOutputBase {
 		std::string getErrorString (tvError_t eReturn);
 
 		/* Get function to query TR181 entries or pq capability.ini file*/
-		int getSaveConfig(std::string param, capDetails_t capInfo, valueVectors_t &values);
+		int getSaveConfig(const std::string& param, capDetails_t& capInfo, valueVectors_t &values);
 		int getLocalparam( std::string forParam,paramIndex_t indexInfo,int & value,tvPQParameterIndex_t pqParamIndex,bool sync=false);
 		
 		tvDataComponentColor_t getComponentColorEnum(std::string colorName);
-		tvError_t getParamsCaps(std::string param, capVectors_t &vecInfo);
+		tvError_t getParamsCaps(const std::string& param, capVectors_t &vecInfo);
 		int GetPanelID(char *panelid);
 		int ReadCapablitiesFromConf(std::string param, capDetails_t& info);
 		void getDimmingModeStringFromEnum(int value, std::string &toStore);
@@ -357,11 +357,11 @@ class AVOutputTV : public AVOutputBase {
 		std::string getCMSColorStringFromEnum(tvDataComponentColor_t value);
 		std::string getCMSComponentStringFromEnum(tvComponentType_t value);
 		std::string getWBControlStringFromEnum(tvWBControl_t value);
-		int getCMSColorEnumFromString(std::string color,tvDataComponentColor_t &value);
-		int getCMSComponentEnumFromString(std::string component, tvComponentType_t& value);
+		int getCMSColorEnumFromString(const std::string& color,tvDataComponentColor_t &value);
+		int getCMSComponentEnumFromString(const std::string& component, tvComponentType_t& value);
 		std::string getWBColorStringFromEnum(tvWBColor_t value);
-		int getWBColorEnumFromString(std::string color,tvWBColor_t& value);
-		int getWBControlEnumFromString(std::string color,tvWBControl_t& value);
+		int getWBColorEnumFromString(const std::string& color,tvWBColor_t& value);
+		int getWBControlEnumFromString(const std::string& color,tvWBControl_t& value);
 		int getColorTempEnumFromString(std::string color, tvColorTemp_t& value);
 
 		bool checkCMSColorAndComponentCapability(const std::string capValue, const std::string inputValue);
