@@ -25,24 +25,30 @@ source $PWD/../../../../env.sh
 export LDFLAGS="`pkg-config --libs libsafec`"
 export USE_DBUS=y
 export CXX=g++
-# export CXX=g++
+export RMFLAGS=""
+export STANDALONE_BUILD_ENABLED=y
+# export DSMGR_LOGGER_ENABLED=ON
+export CFLAGS="${CFLAGS} -DDSMGR_LOGGER_ENABLED"
+export CFLAGS="${CFLAGS} -DDS_AUDIO_SETTINGS_PERSISTENCE"
+# export LDFLAGS="${LDFLAGS} -lrdkloggers -lds-hal"
 
-# Set the path to the library
-# LIB_PATH=$DS_LIB_PATH
-# export LDFLAGS="-L$DS_LIB_PATH -lds -ldshalsrv -lds-hal"
-# export LD_LIBRARY_PATH=$LIB_PATH:$LD_LIBRARY_PATH
+# LIB_PATH="/home/kishore/PROJECT/Input_output/entservices-inputoutput/L2HalMock/workspace/deps/rdk/devicesettings/install/lib"
+# export LDFLAGS="-L$LIB_PATH -lds-hal"
 
-# LIB_PATH="/__w/entservices-inputoutput/entservices-inputoutput/entservices-inputoutput/L2HalMock/install/lib"
-# Export LDFLAGS with the path and the library
-export LDFLAGS="-L$WPEFRAMEWORK_LIB -lWPEFrameworkPowerController -lWPEFrameworkCore -lWPEFrameworkCOM -lWPEFrameworkMessaging"
-make 
+# Define macro for DSMGR logging
+# export CFLAGS="${CFLAGS} -DDSMGR_LOGGER_ENABLED"
+
+# Define macro with quoted string
+# export CFLAGS="${CFLAGS} -DRDK_DSHAL_NAME=\\\"libds-hal.so\\\""
+
+# Link rdkloggers library
+# export LDFLAGS="${LDFLAGS} -lrdkloggers"
+
+make
 if [ $? -ne 0 ] ; then
-  echo iarmmgr Build Failed
-  echo "Kishore print"
-  cd $DS_LIB_PATH
-  ls
+  echo Build Failed
   exit 1
 else
-  echo iarmmgr Build Success
+  echo Build Success
   exit 0
 fi
