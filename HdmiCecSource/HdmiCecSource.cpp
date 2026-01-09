@@ -100,13 +100,26 @@ namespace WPEFramework
 			{
 				msg = "HdmiCecSource plugin is not available";
                 LOGINFO("HdmiCecSource plugin is not available. Failed to activate HdmiCecSource Plugin");
+				if (_connectionId != 0 && _service != nullptr) {
+					RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
+					if (connection != nullptr) {
+						try {
+							connection->Terminate();
+						}
+						catch (const std::exception& e) {
+							std::string errorMessage = "Failed to terminate connection: ";
+							errorMessage += e.what();
+							LOGWARN("%s", errorMessage.c_str());
+						}
+						connection->Release();
+					}
+				}					
             }
 			
 			if (0 != msg.length())
 			{
-				if (_connectionId != 0 && _service) {
-					PluginHost::IShell* tmp = _service;
-					RPC::IRemoteConnection* connection = tmp->RemoteConnection(_connectionId);
+				if (_connectionId != 0 && _service != nullptr) {				
+					RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
 					if (connection != nullptr) {
 						try {
 							connection->Terminate();
