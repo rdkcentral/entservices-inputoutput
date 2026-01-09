@@ -52,8 +52,7 @@ namespace WPEFramework
         SERVICE_REGISTRATION(HdmiCecSource, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 
         const string HdmiCecSource::Initialize(PluginHost::IShell *service)
-        {
-		   Core::hresult res = Core::ERROR_GENERAL;
+        {		
            LOGWARN("Initlaizing HdmiCecSource plugin \n");
 
            profileType = searchRdkProfile();
@@ -77,7 +76,7 @@ namespace WPEFramework
            _hdmiCecSource = _service->Root<Exchange::IHdmiCecSource>(_connectionId, 5000, _T("HdmiCecSourceImplementation"));
 			if(nullptr != _hdmiCecSource)
 			{
-				res = _hdmiCecSource->Configure(service);
+				Core::hresult res = _hdmiCecSource->Configure(service);
 				if (res != Core::ERROR_NONE)
 				{
 					msg = "HdmiCecSource plugin platform configuration error";
@@ -101,6 +100,20 @@ namespace WPEFramework
 			
 			if (0 != msg.length())
 			{
+				if (_connectionId != 0 && _service != nullptr) {
+					RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
+					if (connection != nullptr) {
+						try {
+							connection->Terminate();
+						}
+						catch (const std::exception& e) {
+							std::string errorMessage = "Failed to terminate connection: ";
+							errorMessage += e.what();
+							LOGWARN("%s", errorMessage.c_str());
+						}
+						connection->Release();
+					}
+				}					
 				// Only clean up rest of them; _hdmiCecSource already handled.
 				_connectionId = 0;
 				_service->Release();
