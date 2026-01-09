@@ -1732,6 +1732,9 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_IOException)
 
     EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
 
+    // Give the detached thread time to complete to avoid race condition with test cleanup
+    usleep(500 * 1000); // sleep for 500 milliseconds
+
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 }
 
@@ -1755,6 +1758,9 @@ TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler_connect_ExceptionHand
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
     EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
+
+    // Give the detached thread time to complete to avoid race condition with test cleanup
+    usleep(500 * 1000); // sleep for 500 milliseconds
 
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 }
