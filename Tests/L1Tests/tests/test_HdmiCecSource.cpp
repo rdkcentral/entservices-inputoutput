@@ -518,6 +518,7 @@ protected:
     FactoriesImplementation factoriesImplementation;
     PLUGINHOST_DISPATCHER* dispatcher;
     Core::JSONRPC::Message message;
+    std::atomic<int> m_activeThreadCalls{0};
 
     HdmiCecSourceInitializedEventTest()
         : HdmiCecSourceInitializedTest()
@@ -527,10 +528,58 @@ protected:
         dispatcher = static_cast<PLUGINHOST_DISPATCHER*>(
             plugin->QueryInterface(PLUGINHOST_DISPATCHER_ID));
         dispatcher->Activate(&service);
+
+        // Wrap mock calls to track thread activity from OnDisplayHDMIHotPlug
+        ON_CALL(*p_hostImplMock, getDefaultVideoPortName())
+            .WillByDefault(::testing::Invoke([this]() {
+                m_activeThreadCalls++;
+                auto result = std::string("HDMI0");
+                m_activeThreadCalls--;
+                return result;
+            }));
+
+        ON_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
+            .WillByDefault(::testing::Invoke([this](const std::string& name) -> device::VideoOutputPort& {
+                m_activeThreadCalls++;
+                auto& result = device::VideoOutputPort::getInstance();
+                m_activeThreadCalls--;
+                return result;
+            }));
+
+        ON_CALL(*p_videoOutputPortMock, getDisplay())
+            .WillByDefault(::testing::Invoke([this]() -> device::Display& {
+                m_activeThreadCalls++;
+                auto& result = device::Display::getInstance();
+                m_activeThreadCalls--;
+                return result;
+            }));
+
+        ON_CALL(*p_displayMock, getEDIDBytes(::testing::_))
+            .WillByDefault(::testing::Invoke([this](std::vector<uint8_t>& edid) {
+                m_activeThreadCalls++;
+                edid.clear();
+                m_activeThreadCalls--;
+            }));
     }
 
     virtual ~HdmiCecSourceInitializedEventTest() override
     {
+        // Wait for any detached threads from OnDisplayHDMIHotPlug to complete
+        // by checking if mock methods are still being called
+        auto timeout = std::chrono::milliseconds(2000);
+        auto start = std::chrono::steady_clock::now();
+
+        while (m_activeThreadCalls > 0 &&
+               std::chrono::steady_clock::now() - start < timeout) {
+            usleep(10 * 1000); // 10ms polling interval
+        }
+
+        // If timeout reached with active calls, log warning
+        if (m_activeThreadCalls > 0) {
+            fprintf(stderr, "WARNING: Test destructor timeout with %d active thread calls\n", 
+                    m_activeThreadCalls.load());
+        }
+
         dispatcher->Deactivate();
         dispatcher->Release();
         PluginHost::IFactories::Assign(nullptr);
@@ -1732,9 +1781,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, pingDeviceUpdateList_IOException)
 
     EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
 
-    // Give the detached thread time to complete to avoid race condition with test cleanup
-    usleep(500 * 1000); // sleep for 500 milliseconds
-
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 }
 
@@ -1758,9 +1804,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler_connect_ExceptionHand
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
     EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
-
-    // Give the detached thread time to complete to avoid race condition with test cleanup
-    usleep(500 * 1000); // sleep for 500 milliseconds
 
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 }
@@ -1863,9 +1906,6 @@ TEST_F(HdmiCecSourceInitializedEventTest, giveDeviceVendorIdProcess_LGTV){
     EVENT_SUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
     EXPECT_NO_THROW(Plugin::HdmiCecSourceImplementation::_instance->OnDisplayHDMIHotPlug(dsDISPLAY_EVENT_CONNECTED));
-
-    // Give the detached thread time to complete to avoid race condition with test cleanup
-    usleep(500 * 1000); // sleep for 500 milliseconds
 
     EVENT_UNSUBSCRIBE(0, _T("onHdmiHotPlug"), _T("client.events.onHdmiHotPlug"), message);
 
