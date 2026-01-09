@@ -557,7 +557,8 @@ protected:
         ON_CALL(*p_displayMock, getEDIDBytes(::testing::_))
             .WillByDefault(::testing::Invoke([this](std::vector<uint8_t>& edid) {
                 m_activeThreadCalls++;
-                edid.clear();
+                // Use the standard helper function to provide valid EDID data
+                edid = createLGTVEdidBytes();
                 m_activeThreadCalls--;
             }));
     }
