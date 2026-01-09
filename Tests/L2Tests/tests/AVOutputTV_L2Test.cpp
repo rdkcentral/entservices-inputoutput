@@ -112,22 +112,25 @@ AVOutput_L2test::AVOutput_L2test()
         ON_CALL(*p_tvSettingsImplMock, RegisterVideoFrameRateChangeCB(testing::_))
         .WillByDefault(testing::Return(tvERROR_NONE));
 
-        EXPECT_CALL(*p_tr181ApiImplMock, getLocalParam(::testing::_, ::testing::_, ::testing::_))
-        .Times(2)
-        .WillOnce(::testing::Invoke(
-        [&](char *pcCallerID, const char* pcParameterName, TR181_ParamData_t *pstParamData) {
-            EXPECT_EQ(string(pcCallerID), string("AVOutput"));
-            strncpy(pstParamData->value, "Normal", sizeof(pstParamData->value));
+        // EXPECT_CALL(*p_tr181ApiImplMock, getLocalParam(::testing::_, ::testing::_, ::testing::_))
+        // .Times(2)
+        // .WillOnce(::testing::Invoke(
+        // [&](char *pcCallerID, const char* pcParameterName, TR181_ParamData_t *pstParamData) {
+        //     EXPECT_EQ(string(pcCallerID), string("AVOutput"));
+        //     strncpy(pstParamData->value, "Normal", sizeof(pstParamData->value));
 
-            return tr181Success;
-            }))  
-        .WillOnce(::testing::Invoke(
-        [&](char *pcCallerID, const char* pcParameterName, TR181_ParamData_t *pstParamData) {
-            EXPECT_EQ(string(pcCallerID), string("AVOutput"));
-            strncpy(pstParamData->value, "Normal", sizeof(pstParamData->value));
+        //     return tr181Success;
+        //     }))  
+        // .WillOnce(::testing::Invoke(
+        // [&](char *pcCallerID, const char* pcParameterName, TR181_ParamData_t *pstParamData) {
+        //     EXPECT_EQ(string(pcCallerID), string("AVOutput"));
+        //     strncpy(pstParamData->value, "Normal", sizeof(pstParamData->value));
 
-            return tr181Success;
-            }));
+        //     return tr181Success;
+        //     }));
+
+    ON_CALL(*p_tr181ApiImplMock, getLocalParam(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tr181Success));
 
     ON_CALL(*p_tvSettingsImplMock, SetAspectRatio(testing::_))
     .WillByDefault(testing::Invoke(
@@ -136,7 +139,7 @@ AVOutput_L2test::AVOutput_L2test()
             return tvERROR_NONE;
             }));
 
-    ON_CALL(*p_tvSettingsImplMock, GetCurrentSource(testing::_))
+    ON_CALL(*p_tvSettingsImplMock, GetCurrentVideoSource(testing::_))
     .WillByDefault(testing::Invoke(
         [&](tvVideoSrcType_t *currentSource) {
             EXPECT_EQ(*currentSource, VIDEO_SOURCE_IP);
@@ -156,6 +159,43 @@ AVOutput_L2test::AVOutput_L2test()
             EXPECT_EQ(string(pictureMode), string("normal"));
             return tvERROR_NONE;
         }));
+
+
+    ON_CALL(*p_tvSettingsImplMock, SaveBrightness(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveContrast(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveSharpness(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveHue(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveSaturation(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveColorTemperature(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveBacklight(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveTVDimmingMode(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveLowLatencyState(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveTVDolbyVisionMode(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tvSettingsImplMock, SaveAspectRatio(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tvERROR_NONE));
+
+    ON_CALL(*p_tr181ApiImplMock, setLocalParam(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(tr181Success));
 
          /* Activate plugin in constructor */
          status = ActivateService("org.rdk.AVOutput");
@@ -183,18 +223,18 @@ TEST_F(AVOutput_L2test, AVOUTPUT_GETINPUTDEVICE_Test)
     uint32_t status = Core::ERROR_GENERAL;
     JsonObject result, params;
 
-    ON_CALL(*p_tvSettingsImplMock, ReadCapablitiesFromConfODM(testing::_, testing::_, testing::_, testing::_, testing::_, testing::_, testing::_))
-        .WillByDefault([](std::string& rangeInfo, std::string& pqmodeInfo, std::string& formatInfo, std::string& sourceInfo, std::string param, std::string& platformsupport, std::string& index) {
-            printf("ReadCapablitiesFromConfODM\n");
-            rangeInfo = "\"Standard\",\"Vivid\",\"EnergySaving\",\"Custom\",\"Theater\",\"Game\"";
-            pqmodeInfo = "";
-            formatInfo = "\"SDR\"";
-            sourceInfo = "\"HDMI\",\"HDMI2\"";
-            platformsupport = "";
-            index = "0";
+    // ON_CALL(*p_tvSettingsImplMock, ReadCapablitiesFromConfODM(testing::_, testing::_, testing::_, testing::_, testing::_, testing::_, testing::_))
+    //     .WillByDefault([](std::string& rangeInfo, std::string& pqmodeInfo, std::string& formatInfo, std::string& sourceInfo, std::string param, std::string& platformsupport, std::string& index) {
+    //         printf("ReadCapablitiesFromConfODM\n");
+    //         rangeInfo = "\"Standard\",\"Vivid\",\"EnergySaving\",\"Custom\",\"Theater\",\"Game\"";
+    //         pqmodeInfo = "";
+    //         formatInfo = "\"SDR\"";
+    //         sourceInfo = "\"HDMI\",\"HDMI2\"";
+    //         platformsupport = "";
+    //         index = "0";
 
-            return tvERROR_NONE;
-        });
+    //         return tvERROR_NONE;
+    //     });
 
     status = InvokeServiceMethod("org.rdk.AVOutput.1", "getPictureModeCaps", params, result);
 

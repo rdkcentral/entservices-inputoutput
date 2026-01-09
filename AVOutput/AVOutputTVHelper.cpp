@@ -904,6 +904,7 @@ namespace Plugin {
     {
         tvError_t ret = tvERROR_NONE;
         std::string key;
+        printf("1.updateAVoutputTVParamToHAL: key = %s, forParam = %s, value = %d, setNotDelete = %d\n", key.c_str(), forParam.c_str(), value, setNotDelete);
 
         if( forParam.compare("CMS") == 0 )
             generateStorageIdentifierCMS(key,forParam,indexInfo);
@@ -911,6 +912,8 @@ namespace Plugin {
             generateStorageIdentifierWB(key,forParam,indexInfo);
         else 
             generateStorageIdentifier(key,forParam,indexInfo);
+
+        printf("2.updateAVoutputTVParamToHAL: key = %s, forParam = %s, value = %d, setNotDelete = %d\n", key.c_str(), forParam.c_str(), value, setNotDelete);
 
         if(key.empty()) {
             LOGERR("generateStorageIdentifierDirty failed\n");
@@ -922,14 +925,22 @@ namespace Plugin {
                 std::string toStore = std::to_string(value);
                 if (forParam.compare("ColorTemp") == 0) {
                     getColorTempStringFromEnum(value, toStore);
+                    printf("ColorTemp enum: %d, string: %s\n", value, toStore.c_str());
+                    // printf("Saving Color Temperature for source %d, pqmode %d, format %d with level %d\n", indexInfo.sourceIndex, indexInfo.pqmodeIndex, indexInfo.formatIndex, value);
                 }
                 else if(forParam.compare("DimmingMode") == 0 ) {
                     getDimmingModeStringFromEnum(value, toStore);
+                    printf("DimmingMode enum: %d, string: %s\n", value, toStore.c_str());
+                    // printf("Saving Dimming Mode for source %d, pqmode %d, format %d with level %d\n", indexInfo.sourceIndex, indexInfo.pqmodeIndex, indexInfo.formatIndex, value);
                 }
                 else if (forParam.compare("DolbyVisionMode") == 0 || forParam.compare("HDRMode") == 0 ) {
                     toStore = getDolbyModeStringFromEnum((tvDolbyMode_t)value);
+                    printf("DolbyMode enum: %d, string: %s\n", (tvDolbyMode_t)value, toStore.c_str());
+                    // printf("Saving Dolby Vision Mode for source %d, pqmode %d, format %d with level %s\n", indexInfo.sourceIndex, indexInfo.pqmodeIndex, indexInfo.formatIndex, toStore.c_str());
                 }
                 err = setLocalParam(rfc_caller_id, key.c_str(),toStore.c_str());
+                printf("3.updateAVoutputTVParamToHAL: key = %s, forParam = %s, toStore = %s\n", key.c_str(), forParam.c_str(), toStore.c_str());
+                printf("Saving %s for %s with value %s\n", key.c_str(), forParam.c_str(), toStore.c_str());
 
             }
             else {
@@ -960,12 +971,29 @@ namespace Plugin {
         LOGINFO("%s: Entry param : %s Action : %s pqmode : %s source :%s format :%s color:%s component:%s control:%s\n",__FUNCTION__,tr181ParamName.c_str(),action.c_str(),info.pqmode.c_str(),info.source.c_str(),info.format.c_str(),info.color.c_str(),info.component.c_str(),info.control.c_str() );
         ret = getSaveConfig(tr181ParamName,info, values);
         if( 0 == ret ) {
+            // Print tr181ParamName, info, and values as requested
+            printf("| tr181ParamName: %s\n", tr181ParamName.c_str());
+            printf("| info.pqmode: %s, info.source: %s, info.format: %s\n", info.pqmode.c_str(), info.source.c_str(), info.format.c_str());
+            for (const auto& v : values.pqmodeValues) {
+                printf("| values.pqmodeValues: %d\n", v);
+            }
+            printf("tr181ParamName: %s\n", tr181ParamName.c_str());
+            // For info and values, print relevant fields, e.g.:
+            printf("info.pqmode: %s, info.source: %s, info.format: %s\n", info.pqmode.c_str(), info.source.c_str(), info.format.c_str());
+            // For values, if it has vectors:
+            for (const auto& v : values.pqmodeValues) {
+                printf("values.pqmodeValues: %d\n", v);
+            }
+            printf("info.source: %s, info.format: %s\n", info.source.c_str(), info.format.c_str());
             for( int sourceType: values.sourceValues ) {
                 paramIndex.sourceIndex = sourceType;
+                printf("values.sourceValues: %d\n", sourceType);
                 for( int modeType : values.pqmodeValues ) {
                     paramIndex.pqmodeIndex = modeType;
+                    printf("values.pqmodeValues: %d\n", modeType);
                     for( int formatType : values.formatValues ) {
                         paramIndex.formatIndex = formatType;
+                        printf("values.formatValues: %d\n", formatType);
                         switch(pqParamIndex) {
                             case PQ_PARAM_BRIGHTNESS:
                             case PQ_PARAM_CONTRAST:
@@ -978,17 +1006,37 @@ namespace Plugin {
                             case PQ_PARAM_LOWLATENCY_STATE:
                             case PQ_PARAM_DOLBY_MODE:
                                 if(reset) {
+                                    printf("1049:Before updateAVoutputTVParamToHAL\n");
                                     ret |= updateAVoutputTVParamToHAL(tr181ParamName,paramIndex,0,false);
+                                    printf("Resetting %s to 0\n", tr181ParamName.c_str());                        
                                 }
                                 if(sync || reset) {
                                     int value=0;
+                                    printf("1015:Before getLocalparam\n");
+                                    // Print all parameters to be passed to getLocalparam
+                                    printf("Calling getLocalparam with: tr181ParamName='%s', paramIndex={sourceIndex=%d, pqmodeIndex=%d, formatIndex=%d, colorIndex=%d, componentIndex=%d, controlIndex=%d}, value(ptr)=%p, pqParamIndex=%d, sync=%d\n",
+                                        tr181ParamName.c_str(),
+                                        paramIndex.sourceIndex,
+                                        paramIndex.pqmodeIndex,
+                                        paramIndex.formatIndex,
+                                        paramIndex.colorIndex,
+                                        paramIndex.componentIndex,
+                                        paramIndex.controlIndex,
+                                        (void*)&value,
+                                        pqParamIndex,
+                                        (int)sync);
                                     if(getLocalparam(tr181ParamName,paramIndex,value,pqParamIndex,sync)) {
+                                        printf("Failed to get local param for %s\n", tr181ParamName.c_str());
                                         continue;
                                     }
+                                    printf("Value: %d\n", value);
                                     level=value;
+                                    printf("Synchronized %s to %d\n", tr181ParamName.c_str(), level);
                                 }
                                 if(set) {
+                                    printf("1023:Before updateAVoutputTVParamToHAL\n");
                                     ret |= updateAVoutputTVParamToHAL(tr181ParamName,paramIndex,level,true);
+                                    printf("Setting %s to %d\n", tr181ParamName.c_str(), level);
                                 }
                                 break;
                             default:
@@ -996,38 +1044,60 @@ namespace Plugin {
                         }
                         switch(pqParamIndex) {
                             case PQ_PARAM_BRIGHTNESS:
+                                printf("1033:Before SaveBrightness_PQ_PARAM_BRIGHTNESS\n");
                                 ret |= SaveBrightness((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
+                                printf("Saving Brightness for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_CONTRAST:
+                                printf("1038:Before SaveContrast_PQ_PARAM_CONTRAST\n");
                                 ret |= SaveContrast((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
+                                printf("Saving Contrast for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_SHARPNESS:
+                                printf("1043:Before SaveSharpness_PQ_PARAM_SHARPNESS\n");
                                 ret |= SaveSharpness((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
+                                printf("Saving Sharpness for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_HUE:
+                                printf("1048:Before SaveHue_PQ_PARAM_HUE\n");
                                 ret |= SaveHue((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
+                                printf("Saving Hue for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_SATURATION:
+                                printf("1053:Before SaveSaturation_PQ_PARAM_SATURATION\n");
                                 ret |= SaveSaturation((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
+                                printf("Saving Saturation for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_COLOR_TEMPERATURE:
+                                printf("1058:Before SaveColorTemperature_PQ_PARAM_COLOR_TEMPERATURE\n");
                                 ret |= SaveColorTemperature((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvColorTemp_t)level);
+                                printf("Saving Color Temperature for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_BACKLIGHT:
+                                printf("1058:Before SaveBacklight_PQ_PARAM_BACKLIGHT\n");
                                 ret |= SaveBacklight((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
+                                printf("Saving Backlight for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_DIMMINGMODE:
+                                printf("1068:Before SaveTVDimmingMode_PQ_PARAM_DIMMINGMODE\n");
                                 ret |= SaveTVDimmingMode((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDimmingMode_t)level);
+                                printf("Saving Dimming Mode for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_LOWLATENCY_STATE:
+                                printf("1068:Before SaveLowLatencyState_PQ_PARAM_LOWLATENCY_STATE\n");
                                 ret |= SaveLowLatencyState((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,level);
+                                printf("Saving Low Latency State for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                 break;
                             case PQ_PARAM_DOLBY_MODE:
+                                 printf("1078:Before SaveTVDolbyVisionMode_PQ_PARAM_DOLBY_MODE\n");
                                  ret |= SaveTVDolbyVisionMode((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDolbyMode_t)level);
+                                 printf("Saving Dolby Vision Mode for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                  break;
 
                             case PQ_PARAM_ASPECT_RATIO:
+                                 printf("1084:Before SaveAspectRatio_PQ_PARAM_ASPECT_RATIO\n");
                                  ret |= SaveAspectRatio((tvVideoSrcType_t)paramIndex.sourceIndex, paramIndex.pqmodeIndex,(tvVideoFormatType_t)paramIndex.formatIndex,(tvDisplayMode_t)level);
+                                 printf("Saving Aspect Ratio for source %d, pqmode %d, format %d with level %d\n", paramIndex.sourceIndex, paramIndex.pqmodeIndex, paramIndex.formatIndex, level);
                                  break;
                              
                             case PQ_PARAM_CMS_SATURATION_RED:                
@@ -1051,8 +1121,10 @@ namespace Plugin {
                             {
                                 for( int componentType : values.componentValues ) {
                                     paramIndex.componentIndex = componentType;
+                                    printf("values.componentValues: %d\n", componentType);
                                     for( int colorType : values.colorValues ) {
-                                        paramIndex.colorIndex = colorType;                     
+                                        paramIndex.colorIndex = colorType;  
+                                        printf("values.colorValues: %d\n", colorType);
                                         if(reset) {
                                             ret |= updateAVoutputTVParamToHAL(tr181ParamName,paramIndex,0,false);
 		                		        }
@@ -1280,6 +1352,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::generateStorageIdentifier(std::string &key, std::string forParam, paramIndex_t info)
     {
+        printf("INSIDE generateStorageIdentifier\n");
         key+=std::string(AVOUTPUT_GENERIC_STRING_RFC_PARAM);
         key+=STRING_SOURCE+convertSourceIndexToString(info.sourceIndex)+std::string(".")+STRING_PICMODE+convertPictureIndexToString(info.pqmodeIndex)+std::string(".")+std::string(STRING_FORMAT)+convertVideoFormatToString(info.formatIndex)+std::string(".")+forParam;
         return tvERROR_NONE;
@@ -1287,6 +1360,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::generateStorageIdentifierCMS(std::string &key, std::string forParam, paramIndex_t info)
     {
+        printf("INSIDE generateStorageIdentifierCMS\n");
         key+=std::string(AVOUTPUT_GENERIC_STRING_RFC_PARAM);
         key+=STRING_SOURCE+convertSourceIndexToString(info.sourceIndex)+std::string(".")+STRING_PICMODE+convertPictureIndexToString(info.pqmodeIndex)+std::string(".")+std::string(STRING_FORMAT)+convertVideoFormatToString(info.formatIndex)+std::string(".")+STRING_COLOR+getCMSColorStringFromEnum((tvDataComponentColor_t)info.colorIndex)+std::string(".")+STRING_COMPONENT+getCMSComponentStringFromEnum((tvComponentType_t)info.componentIndex)+std::string(".")+forParam;
         return tvERROR_NONE;
@@ -1294,6 +1368,7 @@ namespace Plugin {
 
     uint32_t AVOutputTV::generateStorageIdentifierWB(std::string &key, std::string forParam, paramIndex_t info)
     {
+        printf("INSIDE generateStorageIdentifierWB\n");
         key+=std::string(AVOUTPUT_GENERIC_STRING_RFC_PARAM);
         key+=STRING_SOURCE+convertSourceIndexToString(info.sourceIndex)+std::string(".")+STRING_PICMODE+convertPictureIndexToString(info.pqmodeIndex)+std::string(".")+std::string(STRING_FORMAT)+convertVideoFormatToString(info.formatIndex)+std::string(".")+STRING_COLOR+getWBColorStringFromEnum((tvWBColor_t)info.colorIndex)+std::string(".")+STRING_CONTROL+getWBControlStringFromEnum((tvWBControl_t)info.controlIndex)+std::string(".")+forParam;
         return tvERROR_NONE;
@@ -1438,16 +1513,21 @@ namespace Plugin {
 
     int AVOutputTV::getLocalparam( std::string forParam,paramIndex_t indexInfo,int & value,tvPQParameterIndex_t pqParamIndex,bool sync)
     {
+        printf("INSIDE getLocalparam\n");
         string key;
         TR181_ParamData_t param={0};
         
         if( forParam.compare("CMS") == 0 ) {
+            printf("Before generateStorageIdentifierCMS\n");
             generateStorageIdentifierCMS(key,forParam,indexInfo);
         } else if( forParam.compare("WhiteBalance") == 0 ) {
+            printf("Before generateStorageIdentifierWB\n");
             generateStorageIdentifierWB(key,forParam,indexInfo);
         } else {
+            printf("Before generateStorageIdentifier\n");
             generateStorageIdentifier(key,forParam,indexInfo);
         }
+        printf("Key: %s\n", key.c_str());
 
         if(key.empty()) {
             LOGERR("generateStorageIdentifier failed\n");
@@ -1455,43 +1535,57 @@ namespace Plugin {
         }
 
         tr181ErrorCode_t err=getLocalParam(rfc_caller_id, key.c_str(), &param);
+        printf("1517:after getLocalParam\n");
 
         if ( tr181Success == err ) {//Fetch new tr181format values
             if( forParam.compare("ColorTemp") == 0 ) {
+                printf("1521:before strncmp starts\n");
                 if (strncmp(param.value, "Standard", strlen(param.value))==0) {
+                    printf("1523:before value=tvColorTemp_STANDARD\n");
                     value=tvColorTemp_STANDARD;
                 }
                 else if (strncmp(param.value, "Warm", strlen(param.value))==0) {
+                    printf("1527:before value=tvColorTemp_WARM\n");
                     value=tvColorTemp_WARM;
                 }
                 else if (strncmp(param.value, "Cold", strlen(param.value))==0) {
+                    printf("1531:before value=tvColorTemp_COLD\n");
                     value=tvColorTemp_COLD;
                 }
                 else if (strncmp(param.value, "UserDefined", strlen(param.value))==0) {
+                    printf("1535:before value=tvColorTemp_USER\n");
                     value=tvColorTemp_USER;
                 }
                 else {
+                    printf("1539:before value=tvColorTemp_STANDARD\n");
                     value=tvColorTemp_STANDARD;
 		        }
                 return 0;
             }
            else if( forParam.compare("DimmingMode") == 0 ) {
+               printf("After comparing with DimmingMode\n");
                if (strncmp(param.value, "Fixed", strlen(param.value))==0) {
+                   printf("1547:before value=tvDimmingMode_Fixed\n");
                    value=tvDimmingMode_Fixed;
 	           }
                else if (strncmp(param.value, "Local", strlen(param.value))==0) {
+                   printf("1551:before value=tvDimmingMode_Local\n");
                    value=tvDimmingMode_Local;
 	           }
                else if (strncmp(param.value, "Global", strlen(param.value))==0) {
+                   printf("1555:before value=tvDimmingMode_Global\n");
                    value=tvDimmingMode_Global;
 	           }
                return 0;
            }
            else if ( forParam.compare("DolbyVisionMode") == 0) {
+               printf("After comparing with DolbyVisionMode\n");
                if (strncmp(param.value, "Dark", strlen(param.value)) == 0) {
+                   printf("1563:before value=tvDolbyMode_Dark\n");
                    value = tvDolbyMode_Dark;
                }
                else if(strncmp(param.value, "Game", strlen(param.value)) == 0) {
+                   printf("1567:before value=tvDolbyMode_Game\n");
                    value = tvDolbyMode_Game;
                }
                else {
@@ -1500,22 +1594,29 @@ namespace Plugin {
                return 0;
            }
 	       else if ( forParam.compare("HDRMode") == 0) {
+               printf("After comparing with HDRMode\n");
                if (strncmp(param.value, "Dark", strlen(param.value)) == 0 && key.find("DV") != std::string::npos ) {
+                   printf("1563:before value=tvDolbyMode_Dark\n");
                    value = tvDolbyMode_Dark;
                }
                else if(strncmp(param.value, "Bright", strlen(param.value)) == 0 && key.find("DV") != std::string::npos ) {
+                   printf("1567:before value=tvDolbyMode_Game\n");
                    value = tvDolbyMode_Game;
                }
 	           else if(strncmp(param.value, "Dark", strlen(param.value)) == 0 && key.find("HDR10") != std::string::npos ) {
+                   printf("1586:before value=tvHDR10Mode_Dark\n");
                    value = tvHDR10Mode_Dark;
                }
 	           else if(strncmp(param.value, "Bright", strlen(param.value)) == 0 && key.find("HDR10") != std::string::npos ) {
+                   printf("1590:before value=tvHDR10Mode_Bright\n");
                    value = tvHDR10Mode_Bright;
                }
 	           else if(strncmp(param.value, "Dark", strlen(param.value)) == 0 && key.find("HLG") != std::string::npos ) {
+                   printf("1594:before value=tvHLGMode_Dark\n");
                    value = tvHLGMode_Dark;
                }
                else if(strncmp(param.value, "Bright", strlen(param.value)) == 0 && key.find("HLG") != std::string::npos ) {
+                   printf("1598:before value=tvHLGMode_Bright\n");
                    value = tvHLGMode_Bright;
                }
                else {
@@ -1532,7 +1633,9 @@ namespace Plugin {
             if( sync ) {
                 return 1;
             }
+            printf("1615:Getting default PQ params\n");
             GetDefaultPQParams(indexInfo.pqmodeIndex,(tvVideoSrcType_t)indexInfo.sourceIndex,(tvVideoFormatType_t)indexInfo.formatIndex,pqParamIndex,&value);
+            printf("1616:after GetDefaultPQParams value=%d\n", value);
             LOGINFO("Default value from DB : %s : %d \n",key.c_str(),value);
             return 0;
         }
