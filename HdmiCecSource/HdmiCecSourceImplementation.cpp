@@ -414,11 +414,13 @@ namespace WPEFramework
                 catch(...)
                 {
                     LOGWARN("Exception while enabling CEC settings .\r\n");
+		    return Core::ERROR_GENERAL;
                 }
              }
         } else {
             msg = "IARM bus is not available";
             LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
+	    return Core::ERROR_GENERAL;
         }
         ASSERT(_powerManagerPlugin);
         registerEventHandlers();
@@ -958,10 +960,20 @@ namespace WPEFramework
 
 
             //Acquire CEC Addresses
-            getPhysicalAddress();
-            getLogicalAddress();
+	      try {
+		      getPhysicalAddress();
+		      getLogicalAddress();
+	      }
+	      catch (...) 
+	      {
+		      LOGWARN("Exception while getting CEC addresses");
+	      }
 
             smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
+	    if (!smConnection) {
+		    LOGERR("smConnection allocation failed, skipping further setup");
+		    return;
+	    }
             smConnection->open();
             msgProcessor = new HdmiCecSourceProcessor(*smConnection);
             msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
