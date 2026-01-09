@@ -782,16 +782,16 @@ namespace WPEFramework
 		   {
 			   LOGWARN("Exception while checking HDMI state");
 		   }
-		   // Start threads after all initialization is complete
-		   m_sendKeyEventThreadExit = false;
-		   m_sendKeyEventThread = std::thread(threadSendKeyEvent);
-		   m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
-		   m_semSignaltoArcRoutingThread.acquire();
-		   m_arcRoutingThread = std::thread(threadArcRouting);
 		   if (cecSettingEnabled)
 		   {
 			   try {
 				   CECEnable();
+				   // Start threads after all initialization is complete
+				   m_sendKeyEventThreadExit = false;
+				   m_sendKeyEventThread = std::thread(threadSendKeyEvent);
+				   m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+				   m_arcRoutingThread = std::thread(threadArcRouting);
+				   m_semSignaltoArcRoutingThread.acquire();				  
 			   }
 			   catch(...)
 			   {
@@ -803,20 +803,25 @@ namespace WPEFramework
 					   m_sendKeyEventThreadRun = true;
 					   m_sendKeyCV.notify_one();
 				   }
-		   if (m_sendKeyEventThread.joinable()) {
-		      m_sendKeyEventThread.join();
-		   }
-		   m_currentArcRoutingState = ARC_STATE_ARC_EXIT;
-		   m_semSignaltoArcRoutingThread.release();
-		   if (m_arcRoutingThread.joinable()) {
-		       m_arcRoutingThread.join();
-		   }
-
-		   // Cleanup device manager and event handlers
-		   device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
-		   try {
-			   device::Manager::DeInitialize();
-		   } catch(...) {}
+				   if (m_sendKeyEventThread.joinable()) {
+					   m_sendKeyEventThread.join();
+				   }
+				   m_currentArcRoutingState = ARC_STATE_ARC_EXIT;
+				   m_semSignaltoArcRoutingThread.release();
+				   if (m_arcRoutingThread.joinable()) {
+					   m_arcRoutingThread.join();
+				   }
+				   m_pollThreadExit = true;
+				   m_ThreadExitCV.notify_one();
+				   if (m_pollThread.joinable()) {
+					   m_pollThread.join();
+				   }
+				   // Cleanup device manager and event handlers
+				   device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+				   try {
+					   device::Manager::DeInitialize();
+				   } catch(...) {}
+				   HdmiCecSinkImplementation::_instance = nullptr;
 				   return Core::ERROR_GENERAL;
 			   }
 		   }
