@@ -119,6 +119,8 @@ protected:
         dispatcher->Deactivate();
         dispatcher->Release();
 
+        workerPool->Stop();
+
         Core::IWorkerPool::Assign(nullptr);
         workerPool.Release();
     
@@ -213,11 +215,20 @@ protected:
             .Times(::testing::AnyNumber())
             .WillRepeatedly(::testing::Return());
 
+        // Deinitialize the instance created by parent class first
+        plugin->Deinitialize(&service);
+
+        // Small delay to ensure worker threads complete any pending jobs
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
         EXPECT_EQ(string(""), plugin->Initialize(&service));
     }
 
     virtual ~HDCPProfileEventIarmTest() override
     {
+        // Small delay to allow worker threads to complete pending dispatched events
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
         plugin->Deinitialize(&service);
         device::Manager::setImpl(nullptr);
         if (p_managerImplMock != nullptr)
