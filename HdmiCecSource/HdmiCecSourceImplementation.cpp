@@ -411,15 +411,22 @@ namespace WPEFramework
                 {
                     CECEnable();
                 }
-                catch(...)
-                {
-                    LOGWARN("Exception while enabling CEC settings .\r\n");
-                }
-             }
-        } else {
-            msg = "IARM bus is not available";
-            LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
-        }
+				catch (const std::exception& e)
+				{
+					LOGERR("Configure Exception: %s", e.what());
+					return Core::ERROR_GENERAL;
+				}
+				catch(...)
+				{
+					LOGWARN("Exception while enabling CEC settings .\r\n");
+					return Core::ERROR_GENERAL;
+				}
+			 }
+		} else {
+			msg = "IARM bus is not available";
+			LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
+			return Core::ERROR_GENERAL;
+		}
         ASSERT(_powerManagerPlugin);
         registerEventHandlers();
         return Core::ERROR_NONE;
@@ -901,15 +908,39 @@ namespace WPEFramework
            }
            if(true == enabled)
            {
-               CECEnable();
-           }
+			   try {
+				   CECEnable();
+			   }
+			   catch (const std::exception& e)
+			   {
+				   LOGERR("setEnabledInternal Exception: %s", e.what());
+				   return Core::ERROR_GENERAL;
+			   }
+			   catch(...)
+			   {
+				   LOGWARN("Exception while enabling CEC settings .\r\n");
+				   return Core::ERROR_GENERAL;
+			   }
+		   }
+
            else
            {
-               CECDisable();
-           }
-           return Core::ERROR_NONE;
-
-        }
+			   try {
+				   CECDisable();
+			   }
+			   catch (const std::exception& e)
+			   {
+				   LOGERR("setEnabledInternal Exception: %s", e.what());
+				   return Core::ERROR_GENERAL;
+			   }
+			   catch(...)
+			   {
+				   LOGWARN("Exception while disabling CEC settings .\r\n");
+				   return Core::ERROR_GENERAL;
+			   }
+		   }
+			return Core::ERROR_NONE;
+		}
 
         Core::hresult HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
         {
@@ -942,8 +973,9 @@ namespace WPEFramework
                 catch (const std::exception& e)
                 {
                     LOGWARN("CEC exception caught from LibCCEC::getInstance().init()");
-                }
-            }
+					throw;
+				}
+			}
             libcecInitStatus++;
 
             m_sendKeyEventThreadExit = false;
@@ -952,17 +984,26 @@ namespace WPEFramework
                    m_sendKeyEventThread.get().join();
 	       }
                m_sendKeyEventThread = Utils::ThreadRAII(std::thread(threadSendKeyEvent));
-            } catch(const std::system_error& e) {
+			} catch(const std::system_error& e) {
                 LOGERR("exception in creating threadSendKeyEvent %s", e.what());
-	    }
-
-
-            //Acquire CEC Addresses
-            getPhysicalAddress();
-            getLogicalAddress();
-
-            smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
-            smConnection->open();
+				throw;
+			}
+			
+			//Acquire CEC Addresses
+			try {
+				getPhysicalAddress();
+				getLogicalAddress();
+			} catch (const std::exception& e) {
+				LOGERR("CEC exception caught while getting addresses %s", e.what());
+				throw;
+			}
+			try {
+				smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
+			} catch (const std::bad_alloc& e) {
+				LOGERR("smConnection allocation failed %s", e.what());
+				throw std::runtime_error("smConnection allocation failed");
+			}
+			smConnection->open();
             msgProcessor = new HdmiCecSourceProcessor(*smConnection);
             msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
             smConnection->addFrameListener(msgFrameListener);
@@ -1038,10 +1079,12 @@ namespace WPEFramework
 	        catch(const std::system_error& e)
 	        {
 		        LOGERR("system_error exception in thread join %s", e.what());
+				throw;
 	        }
 	        catch(const std::exception& e)
 	        {
 		        LOGERR("exception in thread join %s", e.what());
+				throw;
 	        }
 
             if (smConnection != NULL)
