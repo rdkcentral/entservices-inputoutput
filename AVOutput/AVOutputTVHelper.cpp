@@ -740,7 +740,9 @@ namespace Plugin {
         tr181_param_name += "."+convertSourceIndexToString(current_source)+"."+"Format."+convertVideoFormatToString(current_format)+"."+"PictureModeString";
         tr181ErrorCode_t err = getLocalParam(rfc_caller_id, tr181_param_name.c_str(), &param);
         if ( tr181Success == err ) {
+            LOGINFO("Plugin Optimization Before SetTVPictureMode() \n");
             ret = SetTVPictureMode(param.value);
+	    LOGINFO("Plugin Optimization After SetTVPictureMode() \n");
 
             if(ret != tvERROR_NONE) {
                 LOGWARN("Picture Mode set failed: %s\n",getErrorString(ret).c_str());
@@ -1843,7 +1845,9 @@ namespace Plugin {
                 (dsVIDEO_PIXELRES_MAX == m_currentHdmiInResoluton)) {
                 LOGWARN("%s: Setting %d zoom mode for below 4K", __FUNCTION__, m_videoZoomMode);
 #endif
+		LOGINFO("Plugin Optimization : Before SetAspectRatio() \n");
                 ret = SetAspectRatio(mode);
+		LOGINFO("Plugin Optimization : After SetAspectRatio() \n");
 #if !defined (HDMIIN_4K_ZOOM)
             }
             else {
@@ -1853,7 +1857,9 @@ namespace Plugin {
         }
         else {
             LOGWARN("%s: HdmiInput is not started yet. m_isDisabledHdmiIn4KZoom: %d", __FUNCTION__, AVOutputTV::instance->m_isDisabledHdmiIn4KZoom);
+	    LOGINFO("Plugin Optimization : Before SetAspectRatio() \n");
             ret = SetAspectRatio((tvDisplayMode_t)m_videoZoomMode);
+	    LOGINFO("Plugin Optimization : After  SetAspectRatio() \n");
         }
 #endif
         return ret;
