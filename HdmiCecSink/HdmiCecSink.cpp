@@ -94,16 +94,18 @@ namespace WPEFramework
 					}						
 					_hdmiCecSink->Release();
 					_hdmiCecSink = nullptr;
-					_service->Release();
-					_service = nullptr;
-					_connectionId = 0;
-				} else {
-					LOGINFO("HdmiCecSink plugin platform configured successfully");
-					_service->Register(&_notification);
-					_hdmiCecSink->Register(&_notification);
-					Exchange::JHdmiCecSink::Register(*this, _hdmiCecSink);
-					LOGINFO("HdmiCecSink plugin is available. Successfully activated HdmiCecSink Plugin");
+					if (_service != nullptr) {
+						_service->Release();
+						_service = nullptr;
+					}
+					return msg;
 				}
+				LOGINFO("HdmiCecSink plugin platform configured successfully");
+				_service->Register(&_notification);
+				_hdmiCecSink->Register(&_notification);
+				Exchange::JHdmiCecSink::Register(*this, _hdmiCecSink);
+				LOGINFO("HdmiCecSink plugin is available. Successfully activated HdmiCecSink Plugin");
+				return "";
 			}
 		   else
 		   {
@@ -120,10 +122,12 @@ namespace WPEFramework
 						}
 					   connection->Release();
 				   }
+				   _connectionId = 0;
 			   }
-			   _service->Release();
-			   _service = nullptr;
-			   _connectionId = 0;
+			   if (_service != nullptr) {
+				   _service->Release();
+				   _service = nullptr;
+			   }
 		   }
 		   // On success return empty, to indicate there is no error text.
 		   return msg;
