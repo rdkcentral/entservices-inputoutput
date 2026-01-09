@@ -63,6 +63,10 @@ namespace WPEFramework
            }
 
            string msg = "";
+		   if (service == nullptr) {
+			   LOGERR("HdmiCecSink Initialize: service is null");
+			   return "Invalid service";
+			}
 
            ASSERT(nullptr != service);
            ASSERT(nullptr == _service);
@@ -94,8 +98,9 @@ namespace WPEFramework
 					}						
 					_hdmiCecSink->Release();
 					_hdmiCecSink = nullptr;
-					if (_service != nullptr) {
-						_service->Release();
+					if (_service) {
+						PluginHost::IShell* tmp = _service;
+						tmp->Release(); 
 						_service = nullptr;
 					}
 					return msg;
@@ -124,8 +129,9 @@ namespace WPEFramework
 				   }
 				   _connectionId = 0;
 			   }
-			   if (_service != nullptr) {
-				   _service->Release();
+			   if (_service) {
+				   PluginHost::IShell* tmp = _service;
+				   tmp->Release();
 				   _service = nullptr;
 			   }
 		   }
