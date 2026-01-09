@@ -64,6 +64,10 @@ namespace WPEFramework
            }
 
            string msg = "";
+			if (service == nullptr) {
+				LOGERR("HdmiCecSource Initialize: service is null");
+				return "Invalid service";
+			}
 
            ASSERT(nullptr != service);
            ASSERT(nullptr == _service);
@@ -100,8 +104,9 @@ namespace WPEFramework
 			
 			if (0 != msg.length())
 			{
-				if (_connectionId != 0 && _service != nullptr) {
-					RPC::IRemoteConnection* connection = _service->RemoteConnection(_connectionId);
+				if (_connectionId != 0 && _service) {
+					PluginHost::IShell* tmp = _service;
+					RPC::IRemoteConnection* connection = tmp->RemoteConnection(_connectionId);
 					if (connection != nullptr) {
 						try {
 							connection->Terminate();
@@ -116,8 +121,11 @@ namespace WPEFramework
 				}					
 				// Only clean up rest of them; _hdmiCecSource already handled.
 				_connectionId = 0;
-				_service->Release();
-				_service = nullptr;
+				if (_service) {
+					PluginHost::IShell* tmp = _service;
+					tmp->Release();
+					_service = nullptr;
+				}
 			}
 			// On success return empty, to indicate there is no error text.
 			return msg;
