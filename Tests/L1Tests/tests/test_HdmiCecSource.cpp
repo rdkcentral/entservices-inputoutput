@@ -1864,8 +1864,10 @@ TEST_F(HdmiCecSourceInitializedEventTest, SetLgTV){
 
     ON_CALL(*p_displayMock, getEDIDBytes(::testing::_))
         .WillByDefault(::testing::Invoke(
-            [&](std::vector<uint8_t> &edidVec2) {
+            [this](std::vector<uint8_t> &edidVec2) {
+                m_activeThreadCalls++;
                 edidVec2 = createLGTVEdidBytes();
+                m_activeThreadCalls--;
             }));
     
     ON_CALL(*p_hostImplMock, getDefaultVideoPortName())
@@ -1897,8 +1899,10 @@ TEST_F(HdmiCecSourceInitializedEventTest, giveDeviceVendorIdProcess_LGTV){
 
     ON_CALL(*p_displayMock, getEDIDBytes(::testing::_))
         .WillByDefault(::testing::Invoke(
-            [&](std::vector<uint8_t> &edidVec2) {
+            [this](std::vector<uint8_t> &edidVec2) {
+                m_activeThreadCalls++;
                 edidVec2 = createLGTVEdidBytes();
+                m_activeThreadCalls--;
             }));
     
     ON_CALL(*p_hostImplMock, getDefaultVideoPortName())
