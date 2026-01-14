@@ -140,7 +140,7 @@ namespace WPEFramework
 //=========================================== HdmiCecSinkProcessor =========================================
        void HdmiCecSinkProcessor::process (const ActiveSource &msg, const Header &header)
        {
-             LOGINFO("Command: ActiveSource %s : %s  : %s \n",GetOpName(msg.opCode()),msg.physicalAddress.name().c_str(),msg.physicalAddress.toString().c_str());
+		   LOGINFO("Command: ActiveSource %s : %s  : %s \n",GetOpName(msg.opCode()),msg.physicalAddress.name().c_str(),msg.physicalAddress.toString().c_str());
          if(!(header.to == LogicalAddress(LogicalAddress::BROADCAST))){
         LOGINFO("Ignore Direct messages, accepts only broadcast messages");
         return;
@@ -341,7 +341,7 @@ namespace WPEFramework
          updateDeviceTypeStatus = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_isDeviceTypeUpdated;
              updatePAStatus   = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_isPAUpdated;
          LOGINFO("updateDeviceTypeStatus %d updatePAStatus %d \n",updateDeviceTypeStatus,updatePAStatus);
-         std::string currentPA = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_physicalAddr.toString();
+		 std::string currentPA = HdmiCecSinkImplementation::_instance->deviceList[header.from.toInt()].m_physicalAddr.toString();
          std::string msgPA = msg.physicalAddress.toString();
          if(currentPA != msgPA && updatePAStatus){
                 updatePAStatus= false;
@@ -558,7 +558,7 @@ namespace WPEFramework
        }
       void HdmiCecSinkProcessor::process (const RequestCurrentLatency &msg, const Header &header)
        {
-         LOGINFO("Command: Request Current Latency :%s, physical address: %s",GetOpName(msg.opCode()),msg.physicaladdress.toString().c_str());
+             LOGINFO("Command: Request Current Latency :%s, physical address: %s",GetOpName(msg.opCode()),msg.physicaladdress.toString().c_str());
 
          if(msg.physicaladdress.toString() == physical_addr.toString()) {
              HdmiCecSinkImplementation::_instance->setLatencyInfo();
@@ -661,8 +661,8 @@ namespace WPEFramework
          {
              LOGERR("exception in thread join %s", e.what());
          }
-            device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
-            HdmiCecSinkImplementation::_instance = nullptr;
+		   device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+           HdmiCecSinkImplementation::_instance = nullptr;
 
              try
              {
@@ -708,22 +708,33 @@ namespace WPEFramework
            }
            catch(const device::Exception& err)
            {
-                LOGINFO("HdmiCecSink plugin device::Manager::Initialize failed");
+                LOGERR("HdmiCecSink plugin device::Manager::Initialize failed");
                 LOG_DEVICE_EXCEPTION0();
-                HdmiCecSinkImplementation::_instance = nullptr;
-                return Core::ERROR_GENERAL;
-           }
+			   HdmiCecSinkImplementation::_instance = nullptr;
+			   return Core::ERROR_GENERAL;
+		   }
+		   // load persistence setting
+		   try
+			   {
+				   loadSettings();
+			   }
+		   catch(...)
+		   {
+			   LOGWARN("Exception while loading settings, continuing with defaults");
+		   }
+		   try
+			   {
+				   device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::CecSink");
+			   }
+		   catch(...)
+		   {
+			   LOGERR("Failed to register HDMI event handler");
+			   try{
+				   device::Manager::DeInitialize();
+			   } catch(...) {}
+			   return Core::ERROR_GENERAL;
+		   }
 
-           // load persistence setting
-           loadSettings();
-           device::Host::getInstance().Register(baseInterface<device::Host::IHdmiInEvents>(), "WPE::CecSink");
-
-           m_sendKeyEventThreadExit = false;
-           m_sendKeyEventThread = std::thread(threadSendKeyEvent);
-
-           m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
-           m_semSignaltoArcRoutingThread.acquire();
-           m_arcRoutingThread = std::thread(threadArcRouting);
 
            m_audioStatusDetectionTimer.connect( std::bind( &HdmiCecSinkImplementation::audioStatusTimerFunction, this ) );
            m_audioStatusDetectionTimer.setSingleShot(true);
@@ -751,7 +762,7 @@ namespace WPEFramework
             }
             catch(const device::Exception& err)
             {
-               LOGINFO("HdmiCecSink plugin device::HdmiInput::getInstance().getNumberOfInputs failed so defaulting to 3");
+               LOGWARN("HdmiCecSink plugin device::HdmiInput::getInstance().getNumberOfInputs failed so defaulting to 3");
                m_numofHdmiInput = 3;
                LOG_DEVICE_EXCEPTION0();
             }
@@ -763,26 +774,67 @@ namespace WPEFramework
                 LOGINFO(" Add to vector [%d] \n", i);
                 hdmiInputs.push_back(std::move(hdmiPort));
             }
-
-            LOGINFO("Check the HDMI State \n");
-
-            CheckHdmiInState();
-            if (cecSettingEnabled)
-            {
-               try
-               {
-                   CECEnable();
-               }
-               catch(...)
-               {
-                   LOGWARN("Exception while enabling CEC settings .\r\n");
-               }
-            }
-            getCecVersion();
-            LOGINFO(" HdmiCecSinkImplementation plugin Initialize completed \n");
-            return Core::ERROR_NONE;
-
-       }
+		   LOGINFO("Check the HDMI State \n");
+		   try {
+			   CheckHdmiInState();
+		   }
+		   catch(...)
+		   {
+			   LOGWARN("Exception while checking HDMI state");
+		   }
+		   if (cecSettingEnabled)
+		   {
+			   try {
+				   CECEnable();
+				   // Start threads after all initialization is complete
+				   m_sendKeyEventThreadExit = false;
+				   m_sendKeyEventThread = std::thread(threadSendKeyEvent);
+				   m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
+				   m_arcRoutingThread = std::thread(threadArcRouting);
+				   m_semSignaltoArcRoutingThread.acquire();				  
+			   }
+			   catch(...)
+			   {
+				   LOGERR("Exception while enabling CEC settings,cleaning up resources");
+				   // Cleanup threads
+				   m_sendKeyEventThreadExit = true;
+				   {
+					   std::unique_lock<std::mutex> lk(m_sendKeyEventMutex);
+					   m_sendKeyEventThreadRun = true;
+					   m_sendKeyCV.notify_one();
+				   }
+				   if (m_sendKeyEventThread.joinable()) {
+					   m_sendKeyEventThread.join();
+				   }
+				   m_currentArcRoutingState = ARC_STATE_ARC_EXIT;
+				   m_semSignaltoArcRoutingThread.release();
+				   if (m_arcRoutingThread.joinable()) {
+					   m_arcRoutingThread.join();
+				   }
+				   m_pollThreadExit = true;
+				   m_ThreadExitCV.notify_one();
+				   if (m_pollThread.joinable()) {
+					   m_pollThread.join();
+				   }
+				   // Cleanup device manager and event handlers
+				   device::Host::getInstance().UnRegister(baseInterface<device::Host::IHdmiInEvents>());
+				   try {
+					   device::Manager::DeInitialize();
+				   } catch(...) {}
+				   HdmiCecSinkImplementation::_instance = nullptr;
+				   return Core::ERROR_GENERAL;
+			   }
+		   }
+		   try {
+			   getCecVersion();
+		   }
+		   catch(...)
+		   {
+			   LOGWARN("Exception while getting CEC version");
+		   }
+		   LOGINFO(" HdmiCecSinkImplementation plugin Initialize completed \n");
+		   return Core::ERROR_NONE;
+	   }
 
        Core::hresult HdmiCecSinkImplementation::Register(Exchange::IHdmiCecSink::INotification* notification)
         {
