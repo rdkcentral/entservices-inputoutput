@@ -23,6 +23,7 @@
 #include "ccec/Connection.hpp"
 #include "ccec/CECFrame.hpp"
 #include "ccec/MessageEncoder.hpp"
+#include "ccec/Exception.hpp"
 #include "host.hpp"
 
 #include "dsDisplay.h"
@@ -94,7 +95,7 @@ namespace WPEFramework
 //=========================================== HdmiCecSourceFrameListener =========================================
         void HdmiCecSourceFrameListener::notify(const CECFrame &in) const {
                 const uint8_t *buf = NULL;
-                char strBuffer[512] = {0}; 
+                char strBuffer[512] = {0};
                 size_t len = 0;
 
                 in.getBuffer(&buf, &len);
@@ -126,9 +127,9 @@ namespace WPEFramework
              {
                   LOGINFO("sending  ActiveSource\n");
                   try
-                  { 
+                  {
                       conn.sendTo(LogicalAddress::BROADCAST, MessageEncoder().encode(ActiveSource(physical_addr)));
-                  } 
+                  }
                   catch(...)
                   {
                      LOGWARN("Exception while sending ActiveSource");
@@ -145,9 +146,9 @@ namespace WPEFramework
        {
              LOGINFO("Command: GetCECVersion sending CECVersion response \n");
              try
-             { 
+             {
                  conn.sendTo(header.from, MessageEncoder().encode(CECVersion(Version::V_1_4)));
-             } 
+             }
              catch(...)
              {
                  LOGWARN("Exception while sending CECVersion ");
@@ -165,7 +166,7 @@ namespace WPEFramework
              {
                  LOGINFO("Command: GiveOSDName sending SetOSDName : %s\n",osdName.toString().c_str());
                  try
-                 { 
+                 {
                      conn.sendTo(header.from, MessageEncoder().encode(SetOSDName(osdName)));
                  }
                  catch(...)
@@ -178,10 +179,10 @@ namespace WPEFramework
        {
              LOGINFO("Command: GivePhysicalAddress\n");
              try
-             { 
+             {
                  LOGINFO(" sending ReportPhysicalAddress response physical_addr :%s logicalAddress :%x \n",physical_addr.toString().c_str(), logicalAddress.toInt());
-                 conn.sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(ReportPhysicalAddress(physical_addr,logicalAddress.toInt()))); 
-             } 
+                 conn.sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(ReportPhysicalAddress(physical_addr,logicalAddress.toInt())));
+             }
              catch(...)
              {
                 LOGWARN("Exception while sending ReportPhysicalAddress ");
@@ -194,7 +195,7 @@ namespace WPEFramework
                  LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n",(isLGTvConnected)?lgVendorId.toString().c_str():appVendorId.toString().c_str());
                  if(isLGTvConnected)
                      conn.sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(lgVendorId)));
-                 else 
+                 else
                      conn.sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(appVendorId)));
              }
              catch(...)
@@ -268,9 +269,9 @@ namespace WPEFramework
        void HdmiCecSourceProcessor::process (const GiveDevicePowerStatus &msg, const Header &header)
        {
              try
-             { 
+             {
                  conn.sendTo(header.from, MessageEncoder().encode(ReportPowerStatus(PowerStatus(powerState))));
-             } 
+             }
              catch(...)
              {
                  LOGWARN("Exception while sending ReportPowerStatus");
@@ -302,9 +303,9 @@ namespace WPEFramework
              {
 		 LOGINFO("Command: Abort, sending FeatureAbort");
 		 try
-		 { 
+		 {
 		     conn.sendTo(header.from, MessageEncoder().encode(FeatureAbort(OpCode(msg.opCode()),AbortReason(ABORT_REASON_ID))));
-		 } 
+		 }
 		 catch(...)
 		 {
 		     LOGWARN("Exception while sending FeatureAbort command");
@@ -411,14 +412,21 @@ namespace WPEFramework
                 {
                     CECEnable();
                 }
+                catch (const std::exception& e)
+                {
+                    LOGERR("Configure Exception: %s", e.what());
+                    return Core::ERROR_GENERAL;
+                }
                 catch(...)
                 {
                     LOGWARN("Exception while enabling CEC settings .\r\n");
+                    return Core::ERROR_GENERAL;
                 }
              }
         } else {
             msg = "IARM bus is not available";
             LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
+            return Core::ERROR_GENERAL;
         }
         ASSERT(_powerManagerPlugin);
         registerEventHandlers();
@@ -428,13 +436,11 @@ namespace WPEFramework
     void HdmiCecSourceImplementation::registerEventHandlers()
     {
         ASSERT (_powerManagerPlugin);
-    
+
         if(!_registeredEventHandlers && _powerManagerPlugin) {
             _registeredEventHandlers = true;
             _powerManagerPlugin->Register(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
         }
-
-
     }
 
     Core::hresult HdmiCecSourceImplementation::Register(Exchange::IHdmiCecSource::INotification* notification)
@@ -755,15 +761,15 @@ namespace WPEFramework
                      try
                      {
                          LOGINFO(" sending ReportPhysicalAddress response physical_addr :%s logicalAddress :%x \n",physical_addr.toString().c_str(), logicalAddress.toInt());
-                         smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(ReportPhysicalAddress(physical_addr,logicalAddress.toInt()))); 
+                         smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(ReportPhysicalAddress(physical_addr,logicalAddress.toInt())));
 
                          LOGINFO("Command: GiveDeviceVendorID sending VendorID response :%s\n", \
                              (isLGTvConnected)?lgVendorId.toString().c_str():appVendorId.toString().c_str());
                          if(isLGTvConnected)
                              smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(lgVendorId)));
-                         else 
+                         else
                              smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(appVendorId)));
-                     } 
+                     }
                      catch(...)
                      {
                          LOGWARN("Exception while sending Messages onHdmiHotPlug\n");
@@ -835,7 +841,7 @@ namespace WPEFramework
                     isConfigAdded = true;
                 }
 
-                appVendorId = {(uint8_t)(vendorId >> 16 & 0xff),(uint8_t)(vendorId >> 8 & 0xff),(uint8_t) (vendorId & 0xff)}; 
+                appVendorId = {(uint8_t)(vendorId >> 16 & 0xff),(uint8_t)(vendorId >> 8 & 0xff),(uint8_t) (vendorId & 0xff)};
                 LOGINFO("appVendorId : %s  vendorId :%x \n",appVendorId.toString().c_str(), vendorId );
 
                 if(isConfigAdded)
@@ -899,16 +905,39 @@ namespace WPEFramework
                Utils::persistJsonSettings (CEC_SETTING_ENABLED_FILE, CEC_SETTING_ENABLED, JsonValue(enabled));
                cecSettingEnabled = enabled;
            }
-           if(true == enabled)
+           if (true == enabled)
            {
-               CECEnable();
+                try {
+                    CECEnable();
+                }
+                catch (const std::exception& e)
+                {
+                   LOGERR("setEnabledInternal Exception: %s", e.what());
+                   return Core::ERROR_GENERAL;
+                }
+                catch(...)
+                {
+                   LOGWARN("Exception while enabling CEC settings .\r\n");
+                   return Core::ERROR_GENERAL;
+                }
            }
            else
            {
-               CECDisable();
+                try {
+                    CECDisable();
+                }
+                catch (const std::exception& e)
+                {
+                   LOGERR("setEnabledInternal Exception: %s", e.what());
+                   return Core::ERROR_GENERAL;
+                }
+                catch(...)
+                {
+                   LOGWARN("Exception while disabling CEC settings .\r\n");
+                   return Core::ERROR_GENERAL;
+                }
            }
            return Core::ERROR_NONE;
-
         }
 
         Core::hresult HdmiCecSourceImplementation::SetOTPEnabled(const bool &enabled, HdmiCecSourceSuccess &success)
@@ -933,7 +962,7 @@ namespace WPEFramework
                 return;
             }
 
-            if(0 == libcecInitStatus)
+            if (0 == libcecInitStatus)
             {
                 try
                 {
@@ -942,6 +971,7 @@ namespace WPEFramework
                 catch (const std::exception& e)
                 {
                     LOGWARN("CEC exception caught from LibCCEC::getInstance().init()");
+                    throw;
                 }
             }
             libcecInitStatus++;
@@ -950,18 +980,28 @@ namespace WPEFramework
             try {
                if (m_sendKeyEventThread.get().joinable()) {
                    m_sendKeyEventThread.get().join();
-	       }
+               }
                m_sendKeyEventThread = Utils::ThreadRAII(std::thread(threadSendKeyEvent));
             } catch(const std::system_error& e) {
                 LOGERR("exception in creating threadSendKeyEvent %s", e.what());
-	    }
+                throw;
+            }
 
+            try {
+                //Acquire CEC Addresses
+                getPhysicalAddress();
+                getLogicalAddress();
+            } catch (const std::exception& e) {
+                LOGERR("CEC exception caught while getting addresses %s", e.what());
+                throw;
+            }
 
-            //Acquire CEC Addresses
-            getPhysicalAddress();
-            getLogicalAddress();
-
-            smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
+	    try {
+                smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
+            } catch (const std::bad_alloc& e) {
+                LOGERR("smConnection allocation failed %s", e.what());
+                throw std::runtime_error("smConnection allocation failed");
+            }
             smConnection->open();
             msgProcessor = new HdmiCecSourceProcessor(*smConnection);
             msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
@@ -980,7 +1020,7 @@ namespace WPEFramework
                                                  (isLGTvConnected)?lgVendorId.toString().c_str():appVendorId.toString().c_str());
                 if(isLGTvConnected)
                     smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(lgVendorId)));
-                else 
+                else
                     smConnection->sendTo(LogicalAddress(LogicalAddress::BROADCAST), MessageEncoder().encode(DeviceVendorID(appVendorId)));
 
                 LOGWARN("Start Update thread %p", smConnection );
@@ -1038,10 +1078,12 @@ namespace WPEFramework
 	        catch(const std::system_error& e)
 	        {
 		        LOGERR("system_error exception in thread join %s", e.what());
+                throw;
 	        }
 	        catch(const std::exception& e)
 	        {
 		        LOGERR("exception in thread join %s", e.what());
+                throw;
 	        }
 
             if (smConnection != NULL)
@@ -1089,6 +1131,7 @@ namespace WPEFramework
                 catch (const std::exception& e)
                 {
                     LOGWARN("CEC exception caught from LibCCEC::getInstance().term() ");
+                    throw;
                 }
             }
 
@@ -1220,7 +1263,7 @@ namespace WPEFramework
         Core::hresult HdmiCecSourceImplementation::PerformOTPAction(HdmiCecSourceSuccess &success)
         {
             LOGINFO("PerformOTPAction ");
-            bool ret = false; 
+            bool ret = false;
 
             if((true == cecEnableStatus) && (cecOTPSettingEnabled == true))
             {
