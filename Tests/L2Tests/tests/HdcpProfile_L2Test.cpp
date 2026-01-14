@@ -62,7 +62,7 @@ public:
     {
     }
 
-    void OnDisplayConnectionChanged(const HDCPStatus& hdcpStatus) override
+    void onDisplayConnectionChanged(const HDCPStatus& hdcpStatus)
     {
         TEST_LOG("OnDisplayConnectionChanged notification received");
         TEST_LOG("  isConnected: %d", hdcpStatus.isConnected);
@@ -197,14 +197,14 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
 
     // Setup VideoOutputPort mocks
     ON_CALL(*p_videoOutputPortMock, getType())
-        .WillByDefault(::testing::Return(device::VideoOutputPortType::kHDMI));
+        .WillByDefault(::testing::ReturnRef(device::VideoOutputPortType::kHDMI));
 
     ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
         .WillByDefault(::testing::Return(true));
 
     EXPECT_CALL(*p_videoOutputPortMock, getType())
         .Times(::testing::AnyNumber())
-        .WillRepeatedly(::testing::Return(device::VideoOutputPortType::kHDMI));
+        .WillRepeatedly(::testing::ReturnRef(device::VideoOutputPortType::kHDMI));
 
     EXPECT_CALL(*p_videoOutputPortMock, isDisplayConnected())
         .Times(::testing::AnyNumber())
@@ -214,23 +214,23 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Return(dsHDCP_STATUS_AUTHENTICATED));
 
-    EXPECT_CALL(*p_videoOutputPortMock, getHdcpProtocolVersion())
+    EXPECT_CALL(*p_videoOutputPortMock, getHDCPProtocol())
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Return(dsHDCP_VERSION_2X));
 
-    EXPECT_CALL(*p_videoOutputPortMock, getHdcpReceiverProtocol())
+    EXPECT_CALL(*p_videoOutputPortMock, getHDCPReceiverProtocol())
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Return(dsHDCP_VERSION_2X));
 
-    EXPECT_CALL(*p_videoOutputPortMock, getHdcpCurrentProtocol())
+    EXPECT_CALL(*p_videoOutputPortMock, getHDCPCurrentProtocol())
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Return(dsHDCP_VERSION_2X));
 
     // Setup Host singleton mocks
-    ON_CALL(*p_hostMock, getVideoOutputPort(::testing::_))
+    ON_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
         .WillByDefault(::testing::Return(device::VideoOutputPort::getInstance()));
 
-    EXPECT_CALL(*p_hostMock, getVideoOutputPort(::testing::_))
+    EXPECT_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Return(device::VideoOutputPort::getInstance()));
 
@@ -313,10 +313,25 @@ uint32_t HdcpProfile_L2Test::CreateHdcpProfileInterfaceObject()
 {
     TEST_LOG("Creating HdcpProfile interface object");
     
-    m_controller_hdcpProfile = m_controller->QueryInterfaceByCallsign<PluginHost::IShell>(HDCPPROFILE_CALLSIGN);
+    TEST_LOG("Creating HdcpProfile_Engine");
+    HdcpProfile_Engine = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
+    HdcpProfile_Client = Core::ProxyType<RPC::CommunicatorClient>::Create(
+        Core::NodeId("/tmp/communicator"), 
+        Core::ProxyType<Core::IIPCServer>(HdcpProfile_Engine));
+
+    TEST_LOG("Creating HdcpProfile_Engine Announcements");
+#if ((THUNDER_VERSION == 2) || ((THUNDER_VERSION == 4) && (THUNDER_VERSION_MINOR == 2)))
+    HdcpProfile_Engine->Announcements(HdcpProfile_Client->Announcement());
+#endif
+
+    if (!HdcpProfile_Client.IsValid()) {
+        TEST_LOG("Invalid HdcpProfile_Client");
+        return Core::ERROR_GENERAL;
+    }
     
-    if (m_controller_hdcpProfile == nullptr) {
-        TEST_LOG("Failed to get controller interface");
+    m_controller_hdcpProfile = HdcpProfile_Client->Open<PluginHost::IShell>(_T("org.rdk.HdcpProfile"), ~0, 3000);
+    if (!m_controller_hdcpProfile) {
+        TEST_LOG("Failed to open HdcpProfile controller");
         return Core::ERROR_GENERAL;
     }
 
