@@ -196,15 +196,8 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
             }));
 
     // Setup VideoOutputPort mocks
-    ON_CALL(*p_videoOutputPortMock, getType())
-        .WillByDefault(::testing::ReturnRef(device::VideoOutputPortType::kHDMI));
-
     ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
         .WillByDefault(::testing::Return(true));
-
-    EXPECT_CALL(*p_videoOutputPortMock, getType())
-        .Times(::testing::AnyNumber())
-        .WillRepeatedly(::testing::ReturnRef(device::VideoOutputPortType::kHDMI));
 
     EXPECT_CALL(*p_videoOutputPortMock, isDisplayConnected())
         .Times(::testing::AnyNumber())
@@ -228,11 +221,17 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
 
     // Setup Host singleton mocks
     ON_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
-        .WillByDefault(::testing::Return(device::VideoOutputPort::getInstance()));
+        .WillByDefault(::testing::Invoke(
+            [](const std::string& name) -> device::VideoOutputPort& {
+                return device::VideoOutputPort::getInstance();
+            }));
 
     EXPECT_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
         .Times(::testing::AnyNumber())
-        .WillRepeatedly(::testing::Return(device::VideoOutputPort::getInstance()));
+        .WillRepeatedly(::testing::Invoke(
+            [](const std::string& name) -> device::VideoOutputPort& {
+                return device::VideoOutputPort::getInstance();
+            }));
 
     // Create COM-RPC infrastructure
     HdcpProfile_Engine = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
