@@ -186,6 +186,14 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Return(IARM_RESULT_SUCCESS));
 
+    // Mock RFC calls if needed
+    ON_CALL(*p_rfcApiImplMock, getRFCParameter(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [](char* pcCallerID, const char* pcParameterName, RFC_ParamData_t* pstParamData) {
+                // Return failure for any RFC parameters - plugin should use defaults
+                return WDMP_FAILURE;
+            }));
+
     // Mock IARM Bus calls
     EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Call(::testing::_, ::testing::_, ::testing::_, ::testing::_))
         .Times(::testing::AnyNumber())
@@ -238,6 +246,10 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
     HdcpProfile_Client = Core::ProxyType<RPC::CommunicatorClient>::Create(
         Core::NodeId("/tmp/communicator"),
         Core::ProxyType<Core::IIPCServer>(HdcpProfile_Engine));
+
+    /* Activate plugin in constructor */
+    uint32_t status = ActivateService("org.rdk.HdcpProfile");
+    EXPECT_EQ(Core::ERROR_NONE, status);
 
     // Activate the plugin
     CreateHdcpProfileInterfaceObject();
