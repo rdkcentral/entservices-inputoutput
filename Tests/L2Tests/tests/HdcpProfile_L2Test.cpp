@@ -219,6 +219,10 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Return(dsHDCP_VERSION_2X));
 
+    EXPECT_CALL(*p_videoOutputPortMock, isContentProtected())
+        .Times(::testing::AnyNumber())
+        .WillRepeatedly(::testing::Return(true));
+
     EXPECT_CALL(*p_videoOutputPortMock, getHDCPReceiverProtocol())
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Return(dsHDCP_VERSION_2X));
@@ -228,6 +232,13 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
         .WillRepeatedly(::testing::Return(dsHDCP_VERSION_2X));
 
     // Setup Host singleton mocks
+    ON_CALL(*p_hostImplMock, getDefaultVideoPortName())
+        .WillByDefault(::testing::Return(std::string("HDMI0")));
+
+    EXPECT_CALL(*p_hostImplMock, getDefaultVideoPortName())
+        .Times(::testing::AnyNumber())
+        .WillRepeatedly(::testing::Return(std::string("HDMI0")));
+
     ON_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
         .WillByDefault(::testing::Invoke(
             [](const std::string& name) -> device::VideoOutputPort& {
@@ -240,6 +251,14 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
             [](const std::string& name) -> device::VideoOutputPort& {
                 return device::VideoOutputPort::getInstance();
             }));
+
+    // Setup VideoOutputPortConfig mocks
+    ON_CALL(*p_videoOutputPortConfigImplMock, getPort(::testing::_))
+        .WillByDefault(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
+
+    EXPECT_CALL(*p_videoOutputPortConfigImplMock, getPort(::testing::_))
+        .Times(::testing::AnyNumber())
+        .WillRepeatedly(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
 
     // Create COM-RPC infrastructure
     HdcpProfile_Engine = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
