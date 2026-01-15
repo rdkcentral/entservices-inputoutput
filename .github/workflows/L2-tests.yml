@@ -387,7 +387,6 @@ jobs:
           -DTHUNDER_VERSION=4
           -DTHUNDER_VERSION_MAJOR=4
           -DTHUNDER_VERSION_MINOR=4
-          -DDEVICE_TYPE=AVOutputTV
           -DPLUGIN_PERSISTENTSTORE_PATH="/tmp/secure/persistent/rdkservicestore"
           -DPLUGIN_PERSISTENTSTORE_LEGACYPATH="/tmp/persistent/rdkservicestore"
           -I $GITHUB_WORKSPACE/entservices-testframework/Tests/headers
@@ -467,7 +466,6 @@ jobs:
           -DTHUNDER_VERSION=4
           -DTHUNDER_VERSION_MAJOR=4
           -DTHUNDER_VERSION_MINOR=4
-          -DDEVICE_TYPE=AVOutputTV
           -DPLUGIN_PERSISTENTSTORE_PATH="/tmp/secure/persistent/rdkservicestore"
           -DPLUGIN_PERSISTENTSTORE_LEGACYPATH="/tmp/persistent/rdkservicestore"
           -I $GITHUB_WORKSPACE/entservices-testframework/Tests/headers
@@ -522,10 +520,8 @@ jobs:
           -DCMAKE_DISABLE_FIND_PACKAGE_RBus=ON
           -DCMAKE_DISABLE_FIND_PACKAGE_CEC=ON
           -DPLUGIN_AVINPUT=ON
-          -DPLUGIN_AVOUTPUT=OFF
           -DPLUGIN_HDMICECSINK=ON
           -DPLUGIN_HDMICECSOURCE=ON
-          -DAVOUTPUT_TV=OFF
           -DUSE_THUNDER_R4=ON
           -DPLUGIN_L2Tests=ON
           -DRDK_SERVICE_L2_TEST=ON
@@ -553,7 +549,6 @@ jobs:
           -DTHUNDER_VERSION=4
           -DTHUNDER_VERSION_MAJOR=4
           -DTHUNDER_VERSION_MINOR=4
-          -DDEVICE_TYPE=AVOutputTV
           -DPLUGIN_PERSISTENTSTORE_PATH="/tmp/secure/persistent/rdkservicestore"
           -DPLUGIN_PERSISTENTSTORE_LEGACYPATH="/tmp/persistent/rdkservicestore"
           -I $GITHUB_WORKSPACE/entservices-testframework/Tests/headers
@@ -599,10 +594,8 @@ jobs:
           -DCMAKE_DISABLE_FIND_PACKAGE_RFC=ON
           -DCMAKE_DISABLE_FIND_PACKAGE_RBus=ON
           -DPLUGIN_AVINPUT=ON
-          -DPLUGIN_AVOUTPUT=OFF
           -DPLUGIN_HDMICECSINK=ON
           -DPLUGIN_HDMICECSOURCE=ON
-          -DAVOUTPUT_TV=OFF
           -DUSE_THUNDER_R4=ON
           -DPLUGIN_L2Tests=ON
           -DRDK_SERVICE_L2_TEST=ON
