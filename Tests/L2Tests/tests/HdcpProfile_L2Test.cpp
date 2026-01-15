@@ -125,8 +125,6 @@ protected:
 
 public:
     uint32_t CreateHdcpProfileInterfaceObject();
-    uint32_t WaitForRequestStatus(uint32_t timeout_ms, HdcpProfileL2test_async_events_t expected_status);
-    void onDisplayConnectionChanged(const JsonObject& message);
 
 protected:
     Exchange::IHdcpProfile* m_hdcpProfilePlugin = nullptr;
@@ -260,17 +258,11 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
 
-    // Create COM-RPC infrastructure
-    HdcpProfile_Engine = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
-    HdcpProfile_Client = Core::ProxyType<RPC::CommunicatorClient>::Create(
-        Core::NodeId("/tmp/communicator"),
-        Core::ProxyType<Core::IIPCServer>(HdcpProfile_Engine));
-
     /* Activate plugin in constructor */
     uint32_t status = ActivateService("org.rdk.HdcpProfile");
     EXPECT_EQ(Core::ERROR_NONE, status);
 
-    // Activate the plugin
+    // Create COM-RPC interface and register notifications
     CreateHdcpProfileInterfaceObject();
 }
 
@@ -300,43 +292,6 @@ HdcpProfile_L2Test::~HdcpProfile_L2Test()
 
     device::Manager::DeInitialize();
     TEST_LOG("HdcpProfile_L2Test Destructor - Cleanup Complete");
-}
-
-void HdcpProfile_L2Test::onDisplayConnectionChanged(const JsonObject& message)
-{
-    TEST_LOG("JSON-RPC onDisplayConnectionChanged event received");
-    
-    std::unique_lock<std::mutex> lock(m_mutex);
-    m_event_signalled |= ON_DISPLAY_CONNECTION_CHANGED;
-    m_condition_variable.notify_one();
-}
-
-uint32_t HdcpProfile_L2Test::WaitForRequestStatus(uint32_t timeout_ms, HdcpProfileL2test_async_events_t expected_status)
-{
-    std::unique_lock<std::mutex> lock(m_mutex);
-    auto now = std::chrono::system_clock::now();
-    
-    if (m_condition_variable.wait_until(lock, now + std::chrono::milliseconds(timeout_ms),
-        [this, expected_status]() { return (m_event_signalled & expected_status) != 0; })) {
-        return m_event_signalled;
-    }
-    
-    TEST_LOG("Timeout waiting for event 0x%08X, got 0x%08X", expected_status, m_event_signalled);
-    return HDCPPROFILE_STATUS_INVALID;
-}
-
-MATCHER_P(MatchRequest, data, "")
-{
-    bool match = true;
-    std::string expected;
-    std::string actual;
-
-    data.ToString(expected);
-    arg.ToString(actual);
-    TEST_LOG(" rec = %s, arg = %s", expected.c_str(), actual.c_str());
-    EXPECT_STREQ(expected.c_str(), actual.c_str());
-
-    return match;
 }
 
 uint32_t HdcpProfile_L2Test::CreateHdcpProfileInterfaceObject()
