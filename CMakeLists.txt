@@ -48,10 +48,6 @@ if(PLUGIN_AVINPUT)
     add_subdirectory(AVInput)
 endif()
 
-if(PLUGIN_AVOUTPUT)
-    add_subdirectory(AVOutput)
-endif()
-
 if(PLUGIN_HDMICECSOURCE)
     add_subdirectory(HdmiCecSource)
 endif()
