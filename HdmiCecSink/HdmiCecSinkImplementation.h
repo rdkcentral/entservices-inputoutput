@@ -528,6 +528,7 @@ private:
             static HdmiCecSinkImplementation* _instance;
             CECDeviceParams deviceList[16];
             std::vector<HdmiPortMap> hdmiInputs;
+			std::string mapToIso639_2(const string& lang_BCP47);
             int m_currentActiveSource;
             void updateInActiveSource(const int logical_address, const InActiveSource &source );
             void updateActiveSource(const int logical_address, const ActiveSource &source );
