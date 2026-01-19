@@ -794,12 +794,17 @@ namespace WPEFramework
             }
            else
            {
-                   string presentationLanguage;
+                   string presentationLanguage, isoLang;
                    uint32_t status = _userSettingsPlugin->GetPresentationLanguage(presentationLanguage);
                    if (status == Core::ERROR_NONE) {
-                           LOGINFO("successfully retrived the Presentation language from the userSettings plugin\n");
-                           setCurrentLanguage(Language(presentationLanguage.data()));
-                           sendMenuLanguage();
+					   LOGINFO("successfully retrieved the Presentation language from the userSettings plugin\n");
+					   LOGINFO("language BCP47 : %s", presentationLanguage.c_str());
+					   
+					   isoLang = mapToIso639_2(presentationLanguage);
+					   LOGINFO("language ISO 639-2: %s", isoLang.c_str());
+					   
+					   setCurrentLanguage(Language(isoLang.data()));
+					   sendMenuLanguage();
                    }
                    else {
                            LOGERR("Failed to get presentation language: %u", status);
@@ -890,8 +895,11 @@ namespace WPEFramework
 
            LOGINFO("OnPresentationLanguageChanged");
            LOGINFO("language: %s", presentationLanguage.c_str());
-
-           setCurrentLanguage(Language(presentationLanguage.data()));
+		   
+		   string isoLang = mapToIso639_2(presentationLanguage);
+		   LOGINFO("language ISO 639-2: %s", isoLang.c_str());
+		   
+		   setCurrentLanguage(Language(isoLang.data()));
            sendMenuLanguage();
        }
 
@@ -1764,6 +1772,46 @@ namespace WPEFramework
 
             return cecSettingEnabled;
         }
+
+       std::string HdmiCecSinkImplementation::mapToIso639_2(const string& lang_BCP47)
+       {
+               if (lang_BCP47.empty())
+				   return "eng";
+		   
+               std::string lang = lang_BCP47.substr(0, lang_BCP47.find('-'));
+               std::transform(lang.begin(), lang.end(), lang.begin(), ::tolower);
+
+               if (lang.length() == 3)
+				   return lang;
+
+               static const std::unordered_map<std::string, std::string> iso639_1_to_2 = {
+               {"en", "eng"},
+               {"fr", "fra"},
+               {"de", "deu"},
+               {"es", "spa"},
+               {"it", "ita"},
+               {"pt", "por"},
+               {"ru", "rus"},
+               {"zh", "zho"},
+               {"ja", "jpn"},
+               {"ko", "kor"},
+               {"ar", "ara"},
+               {"hi", "hin"},
+               {"nl", "nld"},
+               {"sv", "swe"},
+               {"fi", "fin"},
+               {"no", "nor"},
+               {"da", "dan"},
+               {"pl", "pol"},
+               {"tr", "tur"}
+               };
+
+               auto it = iso639_1_to_2.find(lang);
+               if (it != iso639_1_to_2.end())
+                       return it->second;
+
+               return "eng";
+       }
 
         void HdmiCecSinkImplementation::setEnabled(bool enabled)
         {
