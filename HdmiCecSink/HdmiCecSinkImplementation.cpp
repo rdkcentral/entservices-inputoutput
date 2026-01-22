@@ -2980,12 +2980,22 @@ namespace WPEFramework
                 return;
             }
 
-            if(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)
+            // Check and wait for ARC termination with proper locking
+            bool needsArcStop = false;
+            {
+                std::lock_guard<std::mutex> arcLock(m_arcRoutingStateMutex);
+                needsArcStop = (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED);
+            }
+
+            if(needsArcStop)
             {
                 stopArc();
                 /* coverity[sleep : FALSE] */
-                while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED) {
+                bool arcTerminated = false;
+                while (!arcTerminated) {
                     usleep(500000);
+                    std::lock_guard<std::mutex> arcLock(m_arcRoutingStateMutex);
+                    arcTerminated = (m_currentArcRoutingState == ARC_STATE_ARC_TERMINATED);
                 }
             }
 
