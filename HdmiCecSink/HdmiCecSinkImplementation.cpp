@@ -456,7 +456,7 @@ namespace WPEFramework
                         OpCode featureOpcode =  msg.feature;
             AbortReason abortReason = msg.reason;
 
-                        HdmiCecSinkImplementation::_instance->reportFeatureAbortEvent(logicaladdress, featureOpcode, abortReason);
+                        HdmiCecSinkImplementation::_instance->reportFeatureAbortEvent(logicaladdress,featureOpcode,abortReason);
 
                          if(msg.feature.opCode() == REQUEST_SHORT_AUDIO_DESCRIPTOR)
                  {
@@ -474,7 +474,7 @@ namespace WPEFramework
                 AbortReason reason = AbortReason::UNRECOGNIZED_OPCODE;
                 LogicalAddress logicaladdress =header.from.toInt();
                 OpCode feature = msg.opCode();
-                HdmiCecSinkImplementation::_instance->sendFeatureAbort(logicaladdress, feature, reason);
+                HdmiCecSinkImplementation::_instance->sendFeatureAbort(logicaladdress,feature,reason);
          }
          else
          {
@@ -1026,7 +1026,7 @@ namespace WPEFramework
         {
             audiodescriptor.Add(descriptor);
         }
-       HdmiCecSinkImplementation::_instance->Send_ShortAudioDescriptor_Event(audiodescriptor);
+       HdmiCecSinkImplementation::_instance->Send_ShortAudioDescriptor_Event(std::move(audiodescriptor));
         }
 
        void HdmiCecSinkImplementation::updateCurrentLatency(int videoLatency, bool lowLatencyMode,int audioOutputCompensated, int audioOutputDelay = 0)
