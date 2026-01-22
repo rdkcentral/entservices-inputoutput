@@ -1130,7 +1130,7 @@ namespace WPEFramework
 
                 if (logicalAddress.toInt() != addr.toInt() || logicalAddressDeviceType != logicalAddrDeviceType)
                 {
-                    logicalAddress = addr;
+                    logicalAddress = std::move(addr);
                     logicalAddressDeviceType = std::move(logicalAddrDeviceType);
                     if(smConnection)
                         smConnection->setSource(logicalAddress); //update initiator LA
