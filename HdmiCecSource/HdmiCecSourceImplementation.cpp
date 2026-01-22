@@ -325,6 +325,10 @@ namespace WPEFramework
     , msgProcessor(nullptr), msgFrameListener(nullptr)
     , _pwrMgrNotification(*this)
     , _registeredEventHandlers(false)
+    , m_numberOfDevices(0)
+    , m_pollThreadExit(false)
+    , m_updateThreadExit(false)
+    , m_sendKeyEventThreadExit(false)
     {
         LOGWARN("ctor");
         HdmiCecSourceImplementation::_instance = this;
