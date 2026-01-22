@@ -42,7 +42,7 @@ namespace Plugin {
     SERVICE_REGISTRATION(AVInputImplementation, 1, 0);
     AVInputImplementation* AVInputImplementation::_instance = nullptr;
 
-    AVInputImplementation::AVInputImplementation() : _adminLock(), _registeredDsEventHandlers(false)
+    AVInputImplementation::AVInputImplementation() : _adminLock(), service(nullptr), _registeredDsEventHandlers(false)
     {
         LOGINFO("Create AVInputImplementation Instance");
 
