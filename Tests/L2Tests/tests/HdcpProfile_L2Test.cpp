@@ -291,6 +291,9 @@ uint32_t HdcpProfile_L2Test::CreateHdcpProfileInterfaceObject()
             m_hdcpProfilePlugin = m_controller_hdcpProfile->QueryInterface<Exchange::IHdcpProfile>();
             return_value = Core::ERROR_NONE;
         }
+        else{
+            TEST_LOG("Failed to get HdcpProfile Plugin Interface");
+        }
     }
     return return_value;
 }
