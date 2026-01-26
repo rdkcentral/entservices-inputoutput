@@ -60,6 +60,7 @@ namespace WPEFramework
     
 	const string HdcpProfile::Initialize(PluginHost::IShell *service)
         {
+            LOGINFO("HdcpProfile::Initialize Entry");
             string message = "";
 
             ASSERT(nullptr != service);

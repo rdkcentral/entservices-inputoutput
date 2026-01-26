@@ -253,6 +253,7 @@
  
          bool HdcpProfileImplementation::GetHDCPStatusInternal(HDCPStatus& hdcpstatus)
          {
+            LOGINFO("GetHDCPStatusInternal Entry");
              bool isConnected     = false;
              bool isHDCPCompliant = false;
              bool isHDCPEnabled   = true;
