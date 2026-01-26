@@ -319,6 +319,10 @@ TEST_F(HdcpProfile_L2Test, GetHDCPStatus_COMRPC)
     uint32_t result = m_hdcpProfilePlugin->GetHDCPStatus(hdcpStatus, success);
     
     EXPECT_EQ(result, Core::ERROR_NONE);
+    if (result != Core::ERROR_NONE) {
+        std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+        TEST_LOG("Err: %s", errorMsg.c_str());
+    }
     EXPECT_TRUE(success);
     
     TEST_LOG("HDCP Status:");
@@ -365,6 +369,10 @@ TEST_F(HdcpProfile_L2Test, GetSettopHDCPSupport_COMRPC)
     uint32_t result = m_hdcpProfilePlugin->GetSettopHDCPSupport(supportedHDCPVersion, isHDCPSupported, success);
     
     EXPECT_EQ(result, Core::ERROR_NONE);
+    if (result != Core::ERROR_NONE) {
+        std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+        TEST_LOG("Err: %s", errorMsg.c_str());
+    }
     EXPECT_TRUE(success);
     EXPECT_TRUE(isHDCPSupported);
     EXPECT_FALSE(supportedHDCPVersion.empty());
@@ -617,6 +625,10 @@ TEST_F(HdcpProfile_L2Test, MultipleStatusQueries_COMRPC)
         uint32_t result = m_hdcpProfilePlugin->GetHDCPStatus(hdcpStatus, success);
         
         EXPECT_EQ(result, Core::ERROR_NONE);
+        if (result != Core::ERROR_NONE) {
+            std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+            TEST_LOG("Err: %s", errorMsg.c_str());
+        }
         EXPECT_TRUE(success);
         EXPECT_TRUE(hdcpStatus.isConnected);
         
@@ -655,6 +667,10 @@ TEST_F(HdcpProfile_L2Test, HDCPVersionConsistency_COMRPC)
     bool success = false;
     uint32_t result = m_hdcpProfilePlugin->GetHDCPStatus(hdcpStatus, success);
     EXPECT_EQ(result, Core::ERROR_NONE);
+    if (result != Core::ERROR_NONE) {
+        std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+        TEST_LOG("Err: %s", errorMsg.c_str());
+    }
     EXPECT_TRUE(success);
     
     // Get settop support
@@ -662,6 +678,10 @@ TEST_F(HdcpProfile_L2Test, HDCPVersionConsistency_COMRPC)
     bool isSupported = false;
     result = m_hdcpProfilePlugin->GetSettopHDCPSupport(supportedVersion, isSupported, success);
     EXPECT_EQ(result, Core::ERROR_NONE);
+    if (result != Core::ERROR_NONE) {
+        std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+        TEST_LOG("Err: %s", errorMsg.c_str());
+    }
     EXPECT_TRUE(success);
     
     // Verify that supportedVersion matches between both calls
@@ -702,6 +722,10 @@ TEST_F(HdcpProfile_L2Test, StatusWhenDisplayNotConnected_COMRPC)
     uint32_t result = m_hdcpProfilePlugin->GetHDCPStatus(hdcpStatus, success);
     
     EXPECT_EQ(result, Core::ERROR_NONE);
+    if (result != Core::ERROR_NONE) {
+        std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+        TEST_LOG("Err: %s", errorMsg.c_str());
+    }
     EXPECT_TRUE(success);
     EXPECT_FALSE(hdcpStatus.isConnected);
     

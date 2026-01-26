@@ -323,6 +323,7 @@
              {
                  hdcpstatus.currentHDCPVersion = "1.4";
              }
+             LOGINFO("GetHDCPStatusInternal Exit");
              return true;
          }
  
