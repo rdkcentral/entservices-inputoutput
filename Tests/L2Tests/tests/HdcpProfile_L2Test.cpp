@@ -323,6 +323,9 @@ TEST_F(HdcpProfile_L2Test, GetHDCPStatus_COMRPC)
         std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
         TEST_LOG("Err: %s", errorMsg.c_str());
     }
+    else{
+        TEST_LOG("GetHDCPStatus COM-RPC call succeeded with result: %d", result);
+    }
     EXPECT_TRUE(success);
     
     TEST_LOG("HDCP Status:");
