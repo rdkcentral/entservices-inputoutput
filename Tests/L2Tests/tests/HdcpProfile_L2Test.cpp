@@ -296,43 +296,26 @@ HdcpProfile_L2Test::~HdcpProfile_L2Test()
 
 uint32_t HdcpProfile_L2Test::CreateHdcpProfileInterfaceObject()
 {
-    TEST_LOG("Creating HdcpProfile interface object");
-    
+    uint32_t return_value = Core::ERROR_GENERAL;
+
     TEST_LOG("Creating HdcpProfile_Engine");
     HdcpProfile_Engine = Core::ProxyType<RPC::InvokeServerType<1, 0, 4>>::Create();
-    HdcpProfile_Client = Core::ProxyType<RPC::CommunicatorClient>::Create(
-        Core::NodeId("/tmp/communicator"), 
-        Core::ProxyType<Core::IIPCServer>(HdcpProfile_Engine));
+    HdcpProfile_Client = Core::ProxyType<RPC::CommunicatorClient>::Create(Core::NodeId("/tmp/communicator"), Core::ProxyType<Core::IIPCServer>(HdcpProfile_Engine));
 
     TEST_LOG("Creating HdcpProfile_Engine Announcements");
 #if ((THUNDER_VERSION == 2) || ((THUNDER_VERSION == 4) && (THUNDER_VERSION_MINOR == 2)))
     HdcpProfile_Engine->Announcements(HdcpProfile_Client->Announcement());
 #endif
-
     if (!HdcpProfile_Client.IsValid()) {
         TEST_LOG("Invalid HdcpProfile_Client");
-        return Core::ERROR_GENERAL;
+    } else {
+        m_controller_hdcpProfile = HdcpProfile_Client->Open<PluginHost::IShell>(_T("org.rdk.HdcpProfile"), ~0, 3000);
+        if (m_controller_hdcpProfile) {
+            m_hdcpProfilePlugin = m_controller_hdcpProfile->QueryInterface<Exchange::IHdcpProfile>();
+            return_value = Core::ERROR_NONE;
+        }
     }
-    
-    m_controller_hdcpProfile = HdcpProfile_Client->Open<PluginHost::IShell>(_T("org.rdk.HdcpProfile"), ~0, 3000);
-    if (!m_controller_hdcpProfile) {
-        TEST_LOG("Failed to open HdcpProfile controller");
-        return Core::ERROR_GENERAL;
-    }
-
-#if ((THUNDER_VERSION == 2) || ((THUNDER_VERSION == 4) && (THUNDER_VERSION_MINOR == 2)))
-    m_controller_hdcpProfile->Activate(PluginHost::IShell::REQUESTED);
-#endif
-
-    m_hdcpProfilePlugin = m_controller_hdcpProfile->QueryInterface<Exchange::IHdcpProfile>();
-    if (m_hdcpProfilePlugin != nullptr) {
-        m_hdcpProfilePlugin->Register(&m_notificationHandler);
-        TEST_LOG("HdcpProfile interface created successfully");
-        return Core::ERROR_NONE;
-    }
-    
-    TEST_LOG("Failed to get HdcpProfile interface");
-    return Core::ERROR_GENERAL;
+    return return_value;
 }
 
 // ============================= COM-RPC Test Cases =============================
