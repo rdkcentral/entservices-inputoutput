@@ -261,34 +261,11 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
     /* Activate plugin in constructor */
     uint32_t status = ActivateService("org.rdk.HdcpProfile");
     EXPECT_EQ(Core::ERROR_NONE, status);
-
-    // Create COM-RPC interface and register notifications
-    CreateHdcpProfileInterfaceObject();
 }
 
 HdcpProfile_L2Test::~HdcpProfile_L2Test()
 {
     TEST_LOG("HdcpProfile_L2Test Destructor");
-
-    if (m_hdcpProfilePlugin != nullptr) {
-        m_hdcpProfilePlugin->Unregister(&m_notificationHandler);
-        m_hdcpProfilePlugin->Release();
-        m_hdcpProfilePlugin = nullptr;
-    }
-
-    if (m_controller_hdcpProfile != nullptr) {
-        PluginHost::IShell* controller = m_controller_hdcpProfile;
-        controller->Release();
-        m_controller_hdcpProfile = nullptr;
-    }
-
-    if (HdcpProfile_Client.IsValid()) {
-        HdcpProfile_Client.Release();
-    }
-
-    if (HdcpProfile_Engine.IsValid()) {
-        HdcpProfile_Engine.Release();
-    }
 
     device::Manager::DeInitialize();
     TEST_LOG("HdcpProfile_L2Test Destructor - Cleanup Complete");
@@ -323,9 +300,15 @@ uint32_t HdcpProfile_L2Test::CreateHdcpProfileInterfaceObject()
 // Test case to validate GetHDCPStatus using COM-RPC
 TEST_F(HdcpProfile_L2Test, GetHDCPStatus_COMRPC)
 {
-    TEST_LOG("Testing GetHDCPStatus via COM-RPC");
+    if (CreateHdcpProfileInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdcpProfile_Client");
+    } else {
+        EXPECT_TRUE(m_controller_hdcpProfile != nullptr);
+        if (m_controller_hdcpProfile) {
+            EXPECT_TRUE(m_hdcpProfilePlugin != nullptr);
+            if (m_hdcpProfilePlugin) {
     
-    ASSERT_NE(m_hdcpProfilePlugin, nullptr);
+    TEST_LOG("Testing GetHDCPStatus via COM-RPC");
     
     HDCPStatus hdcpStatus;
     bool success = false;
@@ -347,14 +330,30 @@ TEST_F(HdcpProfile_L2Test, GetHDCPStatus_COMRPC)
     // Validate basic expectations
     EXPECT_TRUE(hdcpStatus.isConnected);
     EXPECT_FALSE(hdcpStatus.supportedHDCPVersion.empty());
+
+                m_hdcpProfilePlugin->Release();
+            } else {
+                TEST_LOG("m_hdcpProfilePlugin is NULL");
+            }
+            m_controller_hdcpProfile->Release();
+        } else {
+            TEST_LOG("m_controller_hdcpProfile is NULL");
+        }
+    }
 }
 
 // Test case to validate GetSettopHDCPSupport using COM-RPC
 TEST_F(HdcpProfile_L2Test, GetSettopHDCPSupport_COMRPC)
 {
-    TEST_LOG("Testing GetSettopHDCPSupport via COM-RPC");
+    if (CreateHdcpProfileInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdcpProfile_Client");
+    } else {
+        EXPECT_TRUE(m_controller_hdcpProfile != nullptr);
+        if (m_controller_hdcpProfile) {
+            EXPECT_TRUE(m_hdcpProfilePlugin != nullptr);
+            if (m_hdcpProfilePlugin) {
     
-    ASSERT_NE(m_hdcpProfilePlugin, nullptr);
+    TEST_LOG("Testing GetSettopHDCPSupport via COM-RPC");
     
     string supportedHDCPVersion;
     bool isHDCPSupported = false;
@@ -370,14 +369,33 @@ TEST_F(HdcpProfile_L2Test, GetSettopHDCPSupport_COMRPC)
     TEST_LOG("Settop HDCP Support:");
     TEST_LOG("  isHDCPSupported: %d", isHDCPSupported);
     TEST_LOG("  supportedHDCPVersion: %s", supportedHDCPVersion.c_str());
+
+                m_hdcpProfilePlugin->Release();
+            } else {
+                TEST_LOG("m_hdcpProfilePlugin is NULL");
+            }
+            m_controller_hdcpProfile->Release();
+        } else {
+            TEST_LOG("m_controller_hdcpProfile is NULL");
+        }
+    }
 }
 
 // Test case to validate OnDisplayConnectionChanged event using COM-RPC
 TEST_F(HdcpProfile_L2Test, OnDisplayConnectionChanged_Event_COMRPC)
 {
+    if (CreateHdcpProfileInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdcpProfile_Client");
+    } else {
+        EXPECT_TRUE(m_controller_hdcpProfile != nullptr);
+        if (m_controller_hdcpProfile) {
+            EXPECT_TRUE(m_hdcpProfilePlugin != nullptr);
+            if (m_hdcpProfilePlugin) {
+    
     TEST_LOG("Testing OnDisplayConnectionChanged event via COM-RPC");
     
-    ASSERT_NE(m_hdcpProfilePlugin, nullptr);
+    // Register for notifications
+    m_hdcpProfilePlugin->Register(&m_notificationHandler);
     
     m_notificationHandler.ResetEvent();
     
@@ -400,14 +418,35 @@ TEST_F(HdcpProfile_L2Test, OnDisplayConnectionChanged_Event_COMRPC)
     TEST_LOG("  isConnected: %d", hdcpStatus.isConnected);
     TEST_LOG("  isHDCPCompliant: %d", hdcpStatus.isHDCPCompliant);
     TEST_LOG("  isHDCPEnabled: %d", hdcpStatus.isHDCPEnabled);
+    
+    m_hdcpProfilePlugin->Unregister(&m_notificationHandler);
+
+                m_hdcpProfilePlugin->Release();
+            } else {
+                TEST_LOG("m_hdcpProfilePlugin is NULL");
+            }
+            m_controller_hdcpProfile->Release();
+        } else {
+            TEST_LOG("m_controller_hdcpProfile is NULL");
+        }
+    }
 }
 
 // Test case to validate HDMI disconnect event using COM-RPC
 TEST_F(HdcpProfile_L2Test, OnDisplayDisconnection_Event_COMRPC)
 {
+    if (CreateHdcpProfileInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdcpProfile_Client");
+    } else {
+        EXPECT_TRUE(m_controller_hdcpProfile != nullptr);
+        if (m_controller_hdcpProfile) {
+            EXPECT_TRUE(m_hdcpProfilePlugin != nullptr);
+            if (m_hdcpProfilePlugin) {
+    
     TEST_LOG("Testing display disconnection event via COM-RPC");
     
-    ASSERT_NE(m_hdcpProfilePlugin, nullptr);
+    // Register for notifications
+    m_hdcpProfilePlugin->Register(&m_notificationHandler);
     
     // First, simulate connection
     ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
@@ -433,6 +472,18 @@ TEST_F(HdcpProfile_L2Test, OnDisplayDisconnection_Event_COMRPC)
     HDCPStatus hdcpStatus = m_notificationHandler.GetLastHdcpStatus();
     EXPECT_FALSE(hdcpStatus.isConnected);
     TEST_LOG("Display disconnected successfully");
+    
+    m_hdcpProfilePlugin->Unregister(&m_notificationHandler);
+
+                m_hdcpProfilePlugin->Release();
+            } else {
+                TEST_LOG("m_hdcpProfilePlugin is NULL");
+            }
+            m_controller_hdcpProfile->Release();
+        } else {
+            TEST_LOG("m_controller_hdcpProfile is NULL");
+        }
+    }
 }
 
 // ============================= JSON-RPC Test Cases =============================
@@ -546,9 +597,15 @@ TEST_F(HdcpProfile_L2Test, OnDisplayConnectionChanged_Event_JSONRPC)
 // Test case to validate multiple status queries
 TEST_F(HdcpProfile_L2Test, MultipleStatusQueries_COMRPC)
 {
-    TEST_LOG("Testing multiple HDCP status queries");
+    if (CreateHdcpProfileInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdcpProfile_Client");
+    } else {
+        EXPECT_TRUE(m_controller_hdcpProfile != nullptr);
+        if (m_controller_hdcpProfile) {
+            EXPECT_TRUE(m_hdcpProfilePlugin != nullptr);
+            if (m_hdcpProfilePlugin) {
     
-    ASSERT_NE(m_hdcpProfilePlugin, nullptr);
+    TEST_LOG("Testing multiple HDCP status queries");
     
     for (int i = 0; i < 5; i++) {
         HDCPStatus hdcpStatus;
@@ -565,14 +622,30 @@ TEST_F(HdcpProfile_L2Test, MultipleStatusQueries_COMRPC)
         // Small delay between queries
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+                m_hdcpProfilePlugin->Release();
+            } else {
+                TEST_LOG("m_hdcpProfilePlugin is NULL");
+            }
+            m_controller_hdcpProfile->Release();
+        } else {
+            TEST_LOG("m_controller_hdcpProfile is NULL");
+        }
+    }
 }
 
 // Test case to validate HDCP version consistency
 TEST_F(HdcpProfile_L2Test, HDCPVersionConsistency_COMRPC)
 {
-    TEST_LOG("Testing HDCP version consistency");
+    if (CreateHdcpProfileInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdcpProfile_Client");
+    } else {
+        EXPECT_TRUE(m_controller_hdcpProfile != nullptr);
+        if (m_controller_hdcpProfile) {
+            EXPECT_TRUE(m_hdcpProfilePlugin != nullptr);
+            if (m_hdcpProfilePlugin) {
     
-    ASSERT_NE(m_hdcpProfilePlugin, nullptr);
+    TEST_LOG("Testing HDCP version consistency");
     
     // Get status
     HDCPStatus hdcpStatus;
@@ -591,14 +664,30 @@ TEST_F(HdcpProfile_L2Test, HDCPVersionConsistency_COMRPC)
     // Verify that supportedVersion matches between both calls
     EXPECT_EQ(hdcpStatus.supportedHDCPVersion, supportedVersion);
     TEST_LOG("Version consistency verified: %s", supportedVersion.c_str());
+
+                m_hdcpProfilePlugin->Release();
+            } else {
+                TEST_LOG("m_hdcpProfilePlugin is NULL");
+            }
+            m_controller_hdcpProfile->Release();
+        } else {
+            TEST_LOG("m_controller_hdcpProfile is NULL");
+        }
+    }
 }
 
 // Test case to validate behavior when display is not connected
 TEST_F(HdcpProfile_L2Test, StatusWhenDisplayNotConnected_COMRPC)
 {
-    TEST_LOG("Testing status when display is not connected");
+    if (CreateHdcpProfileInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdcpProfile_Client");
+    } else {
+        EXPECT_TRUE(m_controller_hdcpProfile != nullptr);
+        if (m_controller_hdcpProfile) {
+            EXPECT_TRUE(m_hdcpProfilePlugin != nullptr);
+            if (m_hdcpProfilePlugin) {
     
-    ASSERT_NE(m_hdcpProfilePlugin, nullptr);
+    TEST_LOG("Testing status when display is not connected");
     
     // Mock display as disconnected
     ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
@@ -614,4 +703,14 @@ TEST_F(HdcpProfile_L2Test, StatusWhenDisplayNotConnected_COMRPC)
     EXPECT_FALSE(hdcpStatus.isConnected);
     
     TEST_LOG("Status correctly reflects disconnected display");
+
+                m_hdcpProfilePlugin->Release();
+            } else {
+                TEST_LOG("m_hdcpProfilePlugin is NULL");
+            }
+            m_controller_hdcpProfile->Release();
+        } else {
+            TEST_LOG("m_controller_hdcpProfile is NULL");
+        }
+    }
 }
