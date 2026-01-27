@@ -263,8 +263,7 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
 HdcpProfile_L2Test::~HdcpProfile_L2Test()
 {
     TEST_LOG("HdcpProfile_L2Test Destructor");
-
-    status = DeactivateService("org.rdk.HdcpProfile");
+    uint32_t status = DeactivateService("org.rdk.HdcpProfile");
     EXPECT_EQ(Core::ERROR_NONE, status);
 
     device::Manager::DeInitialize();
