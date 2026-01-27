@@ -794,6 +794,9 @@ namespace WPEFramework
             }
            else
            {
+			       _userSettingsPlugin->Register(&_userSettingsNotification);
+                   LOGINFO("Successfully registered for UserSettings notifications");
+
                    string presentationLanguage, isoLang;
                    uint32_t status = _userSettingsPlugin->GetPresentationLanguage(presentationLanguage);
                    if (status == Core::ERROR_NONE) {
@@ -810,8 +813,6 @@ namespace WPEFramework
                            LOGERR("Failed to get presentation language: %u", status);
                    }
 
-                   _userSettingsPlugin->Register(&_userSettingsNotification);
-                   LOGINFO("Successfully registered for UserSettings notifications");
            }
 
             LOGINFO(" HdmiCecSinkImplementation plugin Initialize completed \n");
@@ -894,7 +895,7 @@ namespace WPEFramework
                return;
 
            LOGINFO("OnPresentationLanguageChanged");
-           LOGINFO("language: %s", presentationLanguage.c_str());
+           LOGINFO("language BCP47: %s", presentationLanguage.c_str());
 		   
 		   string isoLang = mapToIso639_2(presentationLanguage);
 		   LOGINFO("language ISO 639-2: %s", isoLang.c_str());
