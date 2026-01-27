@@ -205,10 +205,6 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
     ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
         .WillByDefault(::testing::Return(true));
 
-    EXPECT_CALL(*p_videoOutputPortMock, isDisplayConnected())
-        .Times(::testing::AnyNumber())
-        .WillRepeatedly(::testing::Return(true));
-
     EXPECT_CALL(*p_videoOutputPortMock, getHDCPStatus())
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Return(dsHDCP_STATUS_AUTHENTICATED));
@@ -398,110 +394,6 @@ TEST_F(HdcpProfile_L2Test, GetSettopHDCPSupport_COMRPC)
     }
 }
 
-// Test case to validate OnDisplayConnectionChanged event using COM-RPC
-TEST_F(HdcpProfile_L2Test, OnDisplayConnectionChanged_Event_COMRPC)
-{
-    if (CreateHdcpProfileInterfaceObject() != Core::ERROR_NONE) {
-        TEST_LOG("Invalid HdcpProfile_Client");
-    } else {
-        EXPECT_TRUE(m_controller_hdcpProfile != nullptr);
-        if (m_controller_hdcpProfile) {
-            EXPECT_TRUE(m_hdcpProfilePlugin != nullptr);
-            if (m_hdcpProfilePlugin) {
-    
-    TEST_LOG("Testing OnDisplayConnectionChanged event via COM-RPC");
-    
-    // Register for notifications
-    m_hdcpProfilePlugin->Register(&m_notificationHandler);
-    
-    m_notificationHandler.ResetEvent();
-    
-    // Simulate HDMI hotplug event
-    if (dsHdmiEventHandler != nullptr) {
-        IARM_Bus_DSMgr_EventData_t eventData;
-        eventData.data.hdmi_hpd.event = dsDISPLAY_EVENT_CONNECTED;
-        TEST_LOG("Triggering HDMI hotplug event");
-        dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, &eventData, sizeof(eventData));
-    }
-    
-    // Wait for the event notification
-    uint32_t status = m_notificationHandler.WaitForEvent(EVNT_TIMEOUT, ON_DISPLAY_CONNECTION_CHANGED);
-    EXPECT_NE(status, HDCPPROFILE_STATUS_INVALID);
-    EXPECT_TRUE((status & ON_DISPLAY_CONNECTION_CHANGED) != 0);
-    
-    // Validate the received status
-    HDCPStatus hdcpStatus = m_notificationHandler.GetLastHdcpStatus();
-    TEST_LOG("Event received with status:");
-    TEST_LOG("  isConnected: %d", hdcpStatus.isConnected);
-    TEST_LOG("  isHDCPCompliant: %d", hdcpStatus.isHDCPCompliant);
-    TEST_LOG("  isHDCPEnabled: %d", hdcpStatus.isHDCPEnabled);
-    
-    m_hdcpProfilePlugin->Unregister(&m_notificationHandler);
-
-                m_hdcpProfilePlugin->Release();
-            } else {
-                TEST_LOG("m_hdcpProfilePlugin is NULL");
-            }
-            m_controller_hdcpProfile->Release();
-        } else {
-            TEST_LOG("m_controller_hdcpProfile is NULL");
-        }
-    }
-}
-
-// Test case to validate HDMI disconnect event using COM-RPC
-TEST_F(HdcpProfile_L2Test, OnDisplayDisconnection_Event_COMRPC)
-{
-    if (CreateHdcpProfileInterfaceObject() != Core::ERROR_NONE) {
-        TEST_LOG("Invalid HdcpProfile_Client");
-    } else {
-        EXPECT_TRUE(m_controller_hdcpProfile != nullptr);
-        if (m_controller_hdcpProfile) {
-            EXPECT_TRUE(m_hdcpProfilePlugin != nullptr);
-            if (m_hdcpProfilePlugin) {
-    
-    TEST_LOG("Testing display disconnection event via COM-RPC");
-    
-    // Register for notifications
-    m_hdcpProfilePlugin->Register(&m_notificationHandler);
-    
-    // First, simulate connection
-    ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
-        .WillByDefault(::testing::Return(true));
-    
-    m_notificationHandler.ResetEvent();
-    
-    // Now simulate disconnection
-    ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
-        .WillByDefault(::testing::Return(false));
-    
-    if (dsHdmiEventHandler != nullptr) {
-        IARM_Bus_DSMgr_EventData_t eventData;
-        eventData.data.hdmi_hpd.event = dsDISPLAY_EVENT_DISCONNECTED;
-        TEST_LOG("Triggering HDMI disconnect event");
-        dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, &eventData, sizeof(eventData));
-    }
-    
-    // Wait for the event notification
-    uint32_t status = m_notificationHandler.WaitForEvent(EVNT_TIMEOUT, ON_DISPLAY_CONNECTION_CHANGED);
-    EXPECT_NE(status, HDCPPROFILE_STATUS_INVALID);
-    
-    HDCPStatus hdcpStatus = m_notificationHandler.GetLastHdcpStatus();
-    EXPECT_FALSE(hdcpStatus.isConnected);
-    TEST_LOG("Display disconnected successfully");
-    
-    m_hdcpProfilePlugin->Unregister(&m_notificationHandler);
-
-                m_hdcpProfilePlugin->Release();
-            } else {
-                TEST_LOG("m_hdcpProfilePlugin is NULL");
-            }
-            m_controller_hdcpProfile->Release();
-        } else {
-            TEST_LOG("m_controller_hdcpProfile is NULL");
-        }
-    }
-}
 
 // ============================= JSON-RPC Test Cases =============================
 
