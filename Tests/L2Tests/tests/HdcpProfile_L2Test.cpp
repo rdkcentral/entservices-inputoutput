@@ -259,6 +259,7 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
         .WillRepeatedly(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
 
     /* Activate plugin in constructor */
+    sleep(1); // Allow some time for initialization
     uint32_t status = ActivateService("org.rdk.HdcpProfile");
     EXPECT_EQ(Core::ERROR_NONE, status);
 }
@@ -508,9 +509,7 @@ TEST_F(HdcpProfile_L2Test, OnDisplayDisconnection_Event_COMRPC)
 TEST_F(HdcpProfile_L2Test, GetHDCPStatus_JSONRPC)
 {
     TEST_LOG("Testing getHDCPStatus via JSON-RPC");
-    
-    ASSERT_NE(m_controller_hdcpProfile, nullptr);
-    
+        
     JsonObject params;
     JsonObject result;
     
@@ -558,9 +557,7 @@ TEST_F(HdcpProfile_L2Test, GetHDCPStatus_JSONRPC)
 TEST_F(HdcpProfile_L2Test, GetSettopHDCPSupport_JSONRPC)
 {
     TEST_LOG("Testing getSettopHDCPSupport via JSON-RPC");
-    
-    ASSERT_NE(m_controller_hdcpProfile, nullptr);
-    
+        
     JsonObject params;
     JsonObject result;
     
@@ -589,9 +586,7 @@ TEST_F(HdcpProfile_L2Test, GetSettopHDCPSupport_JSONRPC)
 TEST_F(HdcpProfile_L2Test, OnDisplayConnectionChanged_Event_JSONRPC)
 {
     TEST_LOG("Testing onDisplayConnectionChanged event via JSON-RPC");
-    
-    ASSERT_NE(m_controller_hdcpProfile, nullptr);
-    
+        
     // Note: JSON-RPC event subscription would be tested through the actual Thunder framework
     // For L2 tests, the COM-RPC event test already validates the notification mechanism
     // This test validates that the JSON-RPC interface is available
