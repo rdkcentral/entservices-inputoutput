@@ -253,7 +253,6 @@
  
          bool HdcpProfileImplementation::GetHDCPStatusInternal(HDCPStatus& hdcpstatus)
          {
-            LOGINFO("GetHDCPStatusInternal Entry");
              bool isConnected     = false;
              bool isHDCPCompliant = false;
              bool isHDCPEnabled   = true;
@@ -323,7 +322,6 @@
              {
                  hdcpstatus.currentHDCPVersion = "1.4";
              }
-             LOGINFO("GetHDCPStatusInternal Exit");
              return true;
          }
  
