@@ -471,20 +471,38 @@ TEST_F(HdcpProfile_L2Test, OnDisplayConnectionChanged_HDCPStatusChange_COMRPC)
     // Reset event flag before triggering the event
     m_notificationHandler.ResetEvent();
     
-    // Trigger HDCP status change event
-    if (powerEventHandler != nullptr) {
+    // Trigger HDCP status change event via DS event mechanism
+    if (dsHdmiEventHandler != nullptr) {
         TEST_LOG("Triggering HDCP status change event");
-        IARM_Bus_PWRMgr_EventData_t eventData;
-        eventData.data.state.curState = IARM_BUS_PWRMGR_POWERSTATE_ON;
-        eventData.data.state.newState = IARM_BUS_PWRMGR_POWERSTATE_ON;
-        powerEventHandler(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_EVENT_MODECHANGED, &eventData, 0);
+        IARM_Bus_DSMgr_EventData_t eventData;
+        eventData.data.hdmi_hdcp.hdcpStatus = dsHDCP_STATUS_AUTHENTICATED;
+        dsHdmiEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_HDCP_STATUS, &eventData, 0);
         
-        // Small delay to allow event processing
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // Wait for the event notification
+        uint32_t eventStatus = m_notificationHandler.WaitForEvent(EVNT_TIMEOUT, ON_DISPLAY_CONNECTION_CHANGED);
         
-        TEST_LOG("HDCP status change event triggered");
+        EXPECT_NE(eventStatus, HDCPPROFILE_STATUS_INVALID);
+        if (eventStatus != HDCPPROFILE_STATUS_INVALID) {
+            TEST_LOG("OnDisplayConnectionChanged notification received after HDCP status change");
+            
+            // Validate the received HDCP status
+            HDCPStatus receivedStatus = m_notificationHandler.GetLastHdcpStatus();
+            TEST_LOG("Received HDCP Status:");
+            TEST_LOG("  isConnected: %d", receivedStatus.isConnected);
+            TEST_LOG("  isHDCPCompliant: %d", receivedStatus.isHDCPCompliant);
+            TEST_LOG("  isHDCPEnabled: %d", receivedStatus.isHDCPEnabled);
+            TEST_LOG("  hdcpReason: %d", receivedStatus.hdcpReason);
+            TEST_LOG("  supportedHDCPVersion: %s", receivedStatus.supportedHDCPVersion.c_str());
+            TEST_LOG("  receiverHDCPVersion: %s", receivedStatus.receiverHDCPVersion.c_str());
+            TEST_LOG("  currentHDCPVersion: %s", receivedStatus.currentHDCPVersion.c_str());
+            
+            // Validate that HDCP status reflects authenticated state
+            EXPECT_TRUE(receivedStatus.isHDCPCompliant);
+        } else {
+            TEST_LOG("Timeout waiting for OnDisplayConnectionChanged notification");
+        }
     } else {
-        TEST_LOG("powerEventHandler is NULL, skipping HDCP status change test");
+        TEST_LOG("dsHdmiEventHandler is NULL, cannot trigger HDCP status change event");
     }
     
     // Unregister from notifications
