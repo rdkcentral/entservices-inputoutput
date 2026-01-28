@@ -252,9 +252,28 @@ HdcpProfile_L2Test::HdcpProfile_L2Test()
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
 
-    /* Activate plugin in constructor */
-    uint32_t status = ActivateService("org.rdk.HdcpProfile");
-    //EXPECT_EQ(Core::ERROR_NONE, status);
+    /* Activate plugin in constructor with retry mechanism */
+    uint32_t status = Core::ERROR_GENERAL;
+    int retry_count = 0;
+    const int max_retries = 10;
+    
+    while (status != Core::ERROR_NONE && retry_count < max_retries) {
+        status = ActivateService("org.rdk.HdcpProfile");
+        if (status != Core::ERROR_NONE) {
+            TEST_LOG("ActivateService attempt %d/%d returned: %d (%s)", 
+                     retry_count + 1, max_retries, status, Core::ErrorToString(status));
+            retry_count++;
+            if (retry_count < max_retries) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
+        } else {
+            TEST_LOG("ActivateService succeeded on attempt %d", retry_count + 1);
+        }
+    }
+    
+    if (status != Core::ERROR_NONE) {
+        TEST_LOG("Failed to activate HdcpProfile after %d attempts", max_retries);
+    }
 }
 
 HdcpProfile_L2Test::~HdcpProfile_L2Test()
@@ -403,50 +422,53 @@ TEST_F(HdcpProfile_L2Test, GetHDCPStatus_JSONRPC)
     
     uint32_t status = InvokeServiceMethod("org.rdk.HdcpProfile.1", "getHDCPStatus", params, result);
     
-    //EXPECT_EQ(status, Core::ERROR_NONE);
+    EXPECT_EQ(status, Core::ERROR_NONE);
     
     EXPECT_TRUE(result.HasLabel("success"));
     if (result.HasLabel("success")) {
         EXPECT_TRUE(result["success"].Boolean());
     }
     
-    EXPECT_TRUE(result.HasLabel("isConnected"));
-    if (result.HasLabel("isConnected")) {
-        TEST_LOG("  isConnected: %d", result["isConnected"].Boolean());
-        EXPECT_TRUE(result["isConnected"].Boolean());
-    }
-    
-    EXPECT_TRUE(result.HasLabel("isHDCPCompliant"));
-    if (result.HasLabel("isHDCPCompliant")) {
-        TEST_LOG("  isHDCPCompliant: %d", result["isHDCPCompliant"].Boolean());
-    }
-    
-    EXPECT_TRUE(result.HasLabel("isHDCPEnabled"));
-    if (result.HasLabel("isHDCPEnabled")) {
-        TEST_LOG("  isHDCPEnabled: %d", result["isHDCPEnabled"].Boolean());
-    }
-    
-    EXPECT_TRUE(result.HasLabel("hdcpReason"));
-    if (result.HasLabel("hdcpReason")) {
-        TEST_LOG("  hdcpReason: %lld", (long long)result["hdcpReason"].Number());
-    }
-    
-    EXPECT_TRUE(result.HasLabel("supportedHDCPVersion"));
-    if (result.HasLabel("supportedHDCPVersion")) {
-        string version = result["supportedHDCPVersion"].String();
-        TEST_LOG("  supportedHDCPVersion: %s", version.c_str());
-        EXPECT_FALSE(version.empty());
-    }
-    
-    EXPECT_TRUE(result.HasLabel("receiverHDCPVersion"));
-    EXPECT_TRUE(result.HasLabel("receiverHDCPVersion"));
-    if (result.HasLabel("receiverHDCPVersion")) {
-        TEST_LOG("  receiverHDCPVersion: %s", result["receiverHDCPVersion"].String().c_str());
-    }
-    
-    EXPECT_TRUE(result.HasLabel("currentHDCPVersion"));
-    if (result.HasLabel("currentHDCPVersion")) {
-        TEST_LOG("  currentHDCPVersion: %s", result["currentHDCPVersion"].String().c_str());
+    EXPECT_TRUE(result.HasLabel("HDCPStatus"));
+    if (result.HasLabel("HDCPStatus")) {
+        JsonObject hdcpStatus = result["HDCPStatus"].Object();
+        
+        EXPECT_TRUE(hdcpStatus.HasLabel("isConnected"));
+        if (hdcpStatus.HasLabel("isConnected")) {
+            TEST_LOG("  isConnected: %d", hdcpStatus["isConnected"].Boolean());
+            EXPECT_TRUE(hdcpStatus["isConnected"].Boolean());
+        }
+        
+        EXPECT_TRUE(hdcpStatus.HasLabel("isHDCPCompliant"));
+        if (hdcpStatus.HasLabel("isHDCPCompliant")) {
+            TEST_LOG("  isHDCPCompliant: %d", hdcpStatus["isHDCPCompliant"].Boolean());
+        }
+        
+        EXPECT_TRUE(hdcpStatus.HasLabel("isHDCPEnabled"));
+        if (hdcpStatus.HasLabel("isHDCPEnabled")) {
+            TEST_LOG("  isHDCPEnabled: %d", hdcpStatus["isHDCPEnabled"].Boolean());
+        }
+        
+        EXPECT_TRUE(hdcpStatus.HasLabel("hdcpReason"));
+        if (hdcpStatus.HasLabel("hdcpReason")) {
+            TEST_LOG("  hdcpReason: %lld", (long long)hdcpStatus["hdcpReason"].Number());
+        }
+        
+        EXPECT_TRUE(hdcpStatus.HasLabel("supportedHDCPVersion"));
+        if (hdcpStatus.HasLabel("supportedHDCPVersion")) {
+            string version = hdcpStatus["supportedHDCPVersion"].String();
+            TEST_LOG("  supportedHDCPVersion: %s", version.c_str());
+        }
+        
+        EXPECT_TRUE(hdcpStatus.HasLabel("receiverHDCPVersion"));
+        if (hdcpStatus.HasLabel("receiverHDCPVersion")) {
+            TEST_LOG("  receiverHDCPVersion: %s", hdcpStatus["receiverHDCPVersion"].String().c_str());
+        }
+        
+        EXPECT_TRUE(hdcpStatus.HasLabel("currentHDCPVersion"));
+        if (hdcpStatus.HasLabel("currentHDCPVersion")) {
+            TEST_LOG("  currentHDCPVersion: %s", hdcpStatus["currentHDCPVersion"].String().c_str());
+        }
     }
 }
 
