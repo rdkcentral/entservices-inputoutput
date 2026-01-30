@@ -257,6 +257,13 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
 {
     TEST_LOG("HdmiCecSource_L2Test Constructor");
 
+    // Setup device.properties file
+    system("ls -lh /etc/");
+    removeFile("/etc/device.properties");
+    system("ls -lh /etc/");
+    createFile("/etc/device.properties", "RDK_PROFILE=STB");
+    system("ls -lh /etc/");
+
     // Mock IARM Bus initialization
     EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Init(::testing::_))
         .Times(::testing::AnyNumber())
@@ -314,6 +321,11 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
 HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
 {
     TEST_LOG("HdmiCecSource_L2Test Destructor");
+
+    // Cleanup device.properties file
+    system("ls -lh /etc/");
+    removeFile("/etc/device.properties");
+    system("ls -lh /etc/");
 
     uint32_t status = DeactivateService("org.rdk.HdmiCecSource");
     //EXPECT_EQ(status, Core::ERROR_NONE);
