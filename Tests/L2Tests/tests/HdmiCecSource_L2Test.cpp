@@ -358,48 +358,20 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
                 };
             }));
 
-    // Mock HDMI CEC Connection
-    ON_CALL(*p_libCCECImplMock, open())
-        .WillByDefault(::testing::Return());
+    // Mock HDMI CEC Connection - remove these mocks as they're not available in L2TestMocks
+    // The CEC connection is handled internally by the plugin
 
-    ON_CALL(*p_libCCECImplMock, close())
-        .WillByDefault(::testing::Return());
-
-    ON_CALL(*p_libCCECImplMock, addFrameListener(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [this](FrameListener* listener) {
-                registeredListener = listener;
-                listeners.push_back(listener);
-            }));
-
-    ON_CALL(*p_libCCECImplMock, removeFrameListener(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [this](FrameListener* listener) {
-                auto it = std::find(listeners.begin(), listeners.end(), listener);
-                if (it != listeners.end()) {
-                    listeners.erase(it);
-                }
-                if (registeredListener == listener) {
-                    registeredListener = nullptr;
-                }
-            }));
-
-    ON_CALL(*p_libCCECImplMock, sendAsync(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [](const CECFrame& frame) {
-                // Simulate successful send
-            }));
-
-    ON_CALL(*p_libCCECImplMock, sendTo(::testing::_, ::testing::_, ::testing::_, ::testing::_))
-        .WillByDefault(::testing::Return());
-
-    ON_CALL(*p_libCCECImplMock, poll(::testing::_))
-        .WillByDefault(::testing::Return());
-
-    // Mock MessageEncoder - use generic matcher for DataBlock
-    ON_CALL(*p_messageEncoderMock, encode(::testing::_))
+    // Mock MessageEncoder - need to mock both overloads explicitly
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const DataBlock&>(::testing::_)))
         .WillByDefault(::testing::Invoke(
             [](const DataBlock& m) -> CECFrame& {
+                static CECFrame frame;
+                return frame;
+            }));
+
+    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
+        .WillByDefault(::testing::Invoke(
+            [](const UserControlPressed& m) -> CECFrame& {
                 static CECFrame frame;
                 return frame;
             }));
@@ -439,8 +411,7 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
     removeFile("/etc/device.properties");
     system("ls -lh /etc/");
 
-    uint32_t status = DeactivateService("org.rdk.HdmiCecSource");
-    //EXPECT_EQ(status, Core::ERROR_NONE);
+    DeactivateService("org.rdk.HdmiCecSource");
 
     if (HdmiCecSource_Client.IsValid()) {
         HdmiCecSource_Client.Release();
