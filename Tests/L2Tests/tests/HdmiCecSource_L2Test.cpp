@@ -43,6 +43,29 @@ using IHdmiCecSourceDeviceListIterator = WPEFramework::Exchange::IHdmiCecSource:
 using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
 
 namespace {
+    static void removeFile(const char* fileName)
+	{
+		if (std::remove(fileName) != 0)
+		{
+			printf("File %s failed to remove\n", fileName);
+			perror("Error deleting file");
+		}
+		else
+		{
+			printf("File %s successfully deleted\n", fileName);
+		}
+	}
+	
+	static void createFile(const char* fileName, const char* fileContent)
+	{
+		removeFile(fileName);
+
+		std::ofstream fileContentStream(fileName);
+		fileContentStream << fileContent;
+		fileContentStream << "\n";
+		fileContentStream.close();
+	}
+
 class AsyncHandlerMock {
 public:
     virtual ~AsyncHandlerMock() = default;
