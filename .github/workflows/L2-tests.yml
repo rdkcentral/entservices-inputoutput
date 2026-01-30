@@ -517,6 +517,7 @@ jobs:
           -DPLUGIN_AVINPUT=ON
           -DPLUGIN_AVOUTPUT=OFF
           -DPLUGIN_HDMICECSINK=ON
+          -DPLUGIN_HDMICECSOURCE=ON
           -DAVOUTPUT_TV=OFF
           -DUSE_THUNDER_R4=ON
           -DPLUGIN_L2Tests=ON
@@ -593,6 +594,7 @@ jobs:
           -DPLUGIN_AVINPUT=ON
           -DPLUGIN_AVOUTPUT=OFF
           -DPLUGIN_HDMICECSINK=ON
+          -DPLUGIN_HDMICECSOURCE=ON
           -DAVOUTPUT_TV=OFF
           -DUSE_THUNDER_R4=ON
           -DPLUGIN_L2Tests=ON
