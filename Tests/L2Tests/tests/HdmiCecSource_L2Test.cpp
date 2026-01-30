@@ -289,74 +289,6 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Return(IARM_RESULT_SUCCESS));
 
-    // Mock Device Services (DS) APIs
-    ON_CALL(*p_dsDisplayMock, dsDisplayInit())
-        .WillByDefault(::testing::Return(dsERR_NONE));
-
-    ON_CALL(*p_dsDisplayMock, dsGetDisplay(::testing::_, ::testing::_))
-        .WillByDefault(::testing::Return(dsERR_NONE));
-
-    ON_CALL(*p_dsDisplayMock, dsGetEDIDBytes(::testing::_, ::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [](int handle, unsigned char** edid, int* length) {
-                static unsigned char mockEdid[256] = {0};
-                // Set up basic EDID structure
-                mockEdid[0] = 0x00;
-                mockEdid[1] = 0xFF;
-                mockEdid[2] = 0xFF;
-                mockEdid[3] = 0xFF;
-                *edid = mockEdid;
-                *length = 256;
-                return dsERR_NONE;
-            }));
-
-    ON_CALL(*p_dsDisplayMock, dsDisplayTerm())
-        .WillByDefault(::testing::Return(dsERR_NONE));
-
-    // Mock video output port APIs
-    ON_CALL(*p_videoOutputPortMock, getPort(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [](const std::string& name) -> device::VideoOutputPort& {
-                static device::VideoOutputPort mockPort;
-                return mockPort;
-            }));
-
-    // Mock CEC connection APIs
-    ON_CALL(*p_cecConnectionMock, open())
-        .WillByDefault(::testing::Return());
-
-    ON_CALL(*p_cecConnectionMock, close())
-        .WillByDefault(::testing::Return());
-
-    ON_CALL(*p_cecConnectionMock, addFrameListener(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [this](FrameListener* listener) {
-                registeredListener = listener;
-                listeners.push_back(listener);
-                TEST_LOG("FrameListener registered");
-            }));
-
-    ON_CALL(*p_cecConnectionMock, removeFrameListener(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [this](FrameListener* listener) {
-                auto it = std::find(listeners.begin(), listeners.end(), listener);
-                if (it != listeners.end()) {
-                    listeners.erase(it);
-                }
-                TEST_LOG("FrameListener unregistered");
-            }));
-
-    ON_CALL(*p_cecConnectionMock, sendAsync(::testing::_))
-        .WillByDefault(::testing::Return());
-
-    // Mock Host APIs
-    ON_CALL(*p_hostMock, getVideoOutputPort(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [](const std::string& name) -> device::VideoOutputPort& {
-                static device::VideoOutputPort mockPort;
-                return mockPort;
-            }));
-
     // Activate the service with retry logic
     uint32_t status = Core::ERROR_GENERAL;
     int retry_count = 0;
@@ -954,12 +886,12 @@ TEST_F(HdmiCecSource_L2Test, GetOTPEnabled_JSONRPC)
     EXPECT_TRUE(result.HasLabel("enabled"));
     if (result.HasLabel("enabled")) {
         bool enabled = result["enabled"].Boolean();
-        TEST_LOG("  enabled: %d", enabled);reateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
-        TEST_LOG("Invalid HdmiCecSource_Client");
-    } else {
-        EXPECT_TRUE(m_controller_cecSource != nullptr);
-        if (m_controller_cecSource) {
-            EXPECT_TRUE(m_cecSourcePl via COM-RPC
+        TEST_LOG("  enabled: %d", enabled);
+    }
+}
+
+/**
+ * @brief Test SendStandbyMessage API via COM-RPC
  *
  * This test verifies that the SendStandbyMessage API works correctly using COM-RPC interface.
  */
