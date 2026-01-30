@@ -556,6 +556,109 @@ TEST_F(HdmiCecSource_L2Test, SetEnabled_COMRPC)
 }
 
 /**
+ * @brief Test SetEnabled API via JSON-RPC
+ *
+ * This test verifies that the setEnabled API works correctly using JSON-RPC interface.
+ */
+TEST_F(HdmiCecSource_L2Test, SetEnabled_JSONRPC)
+{
+    TEST_LOG("Testing setEnabled via JSON-RPC");
+
+    JsonObject params;
+    params["enabled"] = true;
+    JsonObject result;
+
+    uint32_t status = InvokeServiceMethod("org.rdk.HdmiCecSource.1", "setEnabled", params, result);
+
+    EXPECT_EQ(status, Core::ERROR_NONE);
+
+    // Validate success field
+    EXPECT_TRUE(result.HasLabel("success"));
+    if (result.HasLabel("success")) {
+        EXPECT_TRUE(result["success"].Boolean());
+        TEST_LOG("  success: %d", result["success"].Boolean());
+    }
+}
+
+/**
+ * @brief Test GetEnabled API via COM-RPC
+ *
+ * This test verifies that the GetEnabled API works correctly using COM-RPC interface.
+ */
+TEST_F(HdmiCecSource_L2Test, GetEnabled_COMRPC)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSource != nullptr);
+        if (m_controller_cecSource) {
+            EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+            if (m_cecSourcePlugin) {
+                TEST_LOG("Testing GetEnabled via COM-RPC");
+
+                // Declare output parameters
+                bool enabled = false;
+                bool success = false;
+
+                // Call the API
+                uint32_t result = m_cecSourcePlugin->GetEnabled(enabled, success);
+
+                // Validate result
+                EXPECT_EQ(result, Core::ERROR_NONE);
+                if (result != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(success);
+
+                // Log output
+                TEST_LOG("  enabled: %d", enabled);
+                TEST_LOG("  success: %d", success);
+
+                m_cecSourcePlugin->Unregister(&m_notificationHandler);
+                m_cecSourcePlugin->Release();
+            } else {
+                TEST_LOG("m_cecSourcePlugin is NULL");
+            }
+            m_controller_cecSource->Release();
+        } else {
+            TEST_LOG("m_controller_cecSource is NULL");
+        }
+    }
+}
+
+/**
+ * @brief Test GetEnabled API via JSON-RPC
+ *
+ * This test verifies that the getEnabled API works correctly using JSON-RPC interface.
+ */
+TEST_F(HdmiCecSource_L2Test, GetEnabled_JSONRPC)
+{
+    TEST_LOG("Testing getEnabled via JSON-RPC");
+
+    JsonObject params;
+    JsonObject result;
+
+    uint32_t status = InvokeServiceMethod("org.rdk.HdmiCecSource.1", "getEnabled", params, result);
+
+    EXPECT_EQ(status, Core::ERROR_NONE);
+
+    // Validate success field
+    EXPECT_TRUE(result.HasLabel("success"));
+    if (result.HasLabel("success")) {
+        EXPECT_TRUE(result["success"].Boolean());
+        TEST_LOG("  success: %d", result["success"].Boolean());
+    }
+
+    // Validate enabled field
+    EXPECT_TRUE(result.HasLabel("enabled"));
+    if (result.HasLabel("enabled")) {
+        bool enabled = result["enabled"].Boolean();
+        TEST_LOG("  enabled: %d", enabled);
+    }
+}
+
+/**
  * @brief Test SetOSDName API via COM-RPC
  *
  * This test verifies that the SetOSDName API works correctly using COM-RPC interface.
@@ -750,7 +853,69 @@ TEST_F(HdmiCecSource_L2Test, SetVendorId_COMRPC)
             m_controller_cecSource->Release();
         } else {
             TEST_LOG("m_controller_cecSource is NULL");
-        }SetOTPEnabled API via COM-RPC
+        }
+    }
+}
+
+/**
+ * @brief Test SetVendorId API via JSON-RPC
+ *
+ * This test verifies that the setVendorId API works correctly using JSON-RPC interface.
+ */
+TEST_F(HdmiCecSource_L2Test, SetVendorId_JSONRPC)
+{
+    TEST_LOG("Testing setVendorId via JSON-RPC");
+
+    JsonObject params;
+    params["vendorid"] = "0019FB";
+    JsonObject result;
+
+    uint32_t status = InvokeServiceMethod("org.rdk.HdmiCecSource.1", "setVendorId", params, result);
+
+    EXPECT_EQ(status, Core::ERROR_NONE);
+
+    // Validate success field
+    EXPECT_TRUE(result.HasLabel("success"));
+    if (result.HasLabel("success")) {
+        EXPECT_TRUE(result["success"].Boolean());
+        TEST_LOG("  success: %d", result["success"].Boolean());
+    }
+}
+
+/**
+ * @brief Test GetVendorId API via JSON-RPC
+ *
+ * This test verifies that the getVendorId API works correctly using JSON-RPC interface.
+ */
+TEST_F(HdmiCecSource_L2Test, GetVendorId_JSONRPC)
+{
+    TEST_LOG("Testing getVendorId via JSON-RPC");
+
+    JsonObject params;
+    JsonObject result;
+
+    uint32_t status = InvokeServiceMethod("org.rdk.HdmiCecSource.1", "getVendorId", params, result);
+
+    EXPECT_EQ(status, Core::ERROR_NONE);
+
+    // Validate success field
+    EXPECT_TRUE(result.HasLabel("success"));
+    if (result.HasLabel("success")) {
+        EXPECT_TRUE(result["success"].Boolean());
+        TEST_LOG("  success: %d", result["success"].Boolean());
+    }
+
+    // Validate vendorid field
+    EXPECT_TRUE(result.HasLabel("vendorid"));
+    if (result.HasLabel("vendorid")) {
+        string vendorId = result["vendorid"].String();
+        EXPECT_FALSE(vendorId.empty());
+        TEST_LOG("  vendorid: %s", vendorId.c_str());
+    }
+}
+
+/**
+ * @brief Test SetOTPEnabled API via COM-RPC
  *
  * This test verifies that the SetOTPEnabled API works correctly using COM-RPC interface.
  */
@@ -962,12 +1127,12 @@ TEST_F(HdmiCecSource_L2Test, SendStandbyMessage_JSONRPC)
     EXPECT_TRUE(result.HasLabel("success"));
     if (result.HasLabel("success")) {
         EXPECT_TRUE(result["success"].Boolean());
-        TEST_LOG("  success: %d", result["success"].Boolean());   }
-            m_controller_cecSource->Release();
-        } else {
-            TEST_LOG("m_controller_cecSource is NULL");
-        }
-    } via COM-RPC
+        TEST_LOG("  success: %d", result["success"].Boolean());
+    }
+}
+
+/**
+ * @brief Test SendKeyPressEvent API via COM-RPC
  *
  * This test verifies that the SendKeyPressEvent API works correctly using COM-RPC interface.
  */
@@ -1037,12 +1202,60 @@ TEST_F(HdmiCecSource_L2Test, SendKeyPressEvent_JSONRPC)
     EXPECT_TRUE(result.HasLabel("success"));
     if (result.HasLabel("success")) {
         EXPECT_TRUE(result["success"].Boolean());
-        TEST_LOG("  success: %d", result["success"].Boolean());XPECT_FALSE(vendorId.empty()); Test GetEnabled API via JSON-RPC
+        TEST_LOG("  success: %d", result["success"].Boolean());
+    }
+}
+
+/**
+ * @brief Test GetVendorId API via COM-RPC
  *
- * This test verifies that the getEnabled API works correctly using JSON-RPC interface.
+ * This test verifies that the GetVendorId API works correctly using COM-RPC interface.
  */
-TEST_F(HdmiCecSource_L2Test, GetEnabled_JSONRPC)
-{ via COM-RPC
+TEST_F(HdmiCecSource_L2Test, GetVendorId_COMRPC)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSource != nullptr);
+        if (m_controller_cecSource) {
+            EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+            if (m_cecSourcePlugin) {
+                TEST_LOG("Testing GetVendorId via COM-RPC");
+
+                // Declare output parameters
+                string vendorId;
+                bool success = false;
+
+                // Call the API
+                uint32_t result = m_cecSourcePlugin->GetVendorId(vendorId, success);
+
+                // Validate result
+                EXPECT_EQ(result, Core::ERROR_NONE);
+                if (result != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(success);
+                EXPECT_FALSE(vendorId.empty());
+
+                // Log output
+                TEST_LOG("  vendorId: %s", vendorId.c_str());
+                TEST_LOG("  success: %d", success);
+
+                m_cecSourcePlugin->Unregister(&m_notificationHandler);
+                m_cecSourcePlugin->Release();
+            } else {
+                TEST_LOG("m_cecSourcePlugin is NULL");
+            }
+            m_controller_cecSource->Release();
+        } else {
+            TEST_LOG("m_controller_cecSource is NULL");
+        }
+    }
+}
+
+/**
+ * @brief Test GetDeviceList API via COM-RPC
  *
  * This test verifies that the GetDeviceList API returns the correct device information using COM-RPC interface.
  */
