@@ -339,38 +339,40 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
         .WillByDefault(::testing::Return(std::string("HDMI0")));
 
     ON_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
-        .WillByDefault(::testing::Return(device::VideoOutputPort::getInstance()));
+        .WillByDefault(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
 
     // Mock VideoOutputPort methods
     ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
         .WillByDefault(::testing::Return(true));
 
     ON_CALL(*p_videoOutputPortMock, getDisplay())
-        .WillByDefault(::testing::Return(device::Display::getInstance()));
+        .WillByDefault(::testing::ReturnRef(device::Display::getInstance()));
 
-    // Mock Display methods
-    std::vector<uint8_t> edidVec = {
-        0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
-        0x4C, 0x2D, 0xFE, 0x08, 0x00, 0x00, 0x00, 0x00
-    };
-    ON_CALL(*p_displayMock, getEDIDBytes())
-        .WillByDefault(::testing::Return(edidVec));
+    // Mock Display methods - getEDIDBytes is void and takes a reference parameter
+    ON_CALL(*p_displayMock, getEDIDBytes(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [](std::vector<uint8_t>& edid) {
+                edid = {
+                    0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
+                    0x4C, 0x2D, 0xFE, 0x08, 0x00, 0x00, 0x00, 0x00
+                };
+            }));
 
     // Mock HDMI CEC Connection
-    ON_CALL(*p_connectionImplMock, open())
+    ON_CALL(*p_libCCECImplMock, open())
         .WillByDefault(::testing::Return());
 
-    ON_CALL(*p_connectionImplMock, close())
+    ON_CALL(*p_libCCECImplMock, close())
         .WillByDefault(::testing::Return());
 
-    ON_CALL(*p_connectionImplMock, addFrameListener(::testing::_))
+    ON_CALL(*p_libCCECImplMock, addFrameListener(::testing::_))
         .WillByDefault(::testing::Invoke(
             [this](FrameListener* listener) {
                 registeredListener = listener;
                 listeners.push_back(listener);
             }));
 
-    ON_CALL(*p_connectionImplMock, removeFrameListener(::testing::_))
+    ON_CALL(*p_libCCECImplMock, removeFrameListener(::testing::_))
         .WillByDefault(::testing::Invoke(
             [this](FrameListener* listener) {
                 auto it = std::find(listeners.begin(), listeners.end(), listener);
@@ -382,81 +384,25 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
                 }
             }));
 
-    ON_CALL(*p_connectionImplMock, sendAsync(::testing::_))
+    ON_CALL(*p_libCCECImplMock, sendAsync(::testing::_))
         .WillByDefault(::testing::Invoke(
             [](const CECFrame& frame) {
                 // Simulate successful send
             }));
 
-    ON_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+    ON_CALL(*p_libCCECImplMock, sendTo(::testing::_, ::testing::_, ::testing::_, ::testing::_))
         .WillByDefault(::testing::Return());
 
-    ON_CALL(*p_connectionImplMock, poll(::testing::_))
+    ON_CALL(*p_libCCECImplMock, poll(::testing::_))
         .WillByDefault(::testing::Return());
 
-    // Mock MessageEncoder
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const ActiveSource&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const InActiveSource&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const ImageViewOn&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const TextViewOn&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const RequestActiveSource&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const Standby&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const SetOSDName&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const GiveOSDName&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const GiveDeviceVendorID&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const DeviceVendorID&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const GivePhysicalAddress&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const ReportPhysicalAddress&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const GetCECVersion&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const CECVersion&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const GiveDevicePowerStatus&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const ReportPowerStatus&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlPressed&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const UserControlReleased&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const FeatureAbort&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const Abort&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
-
-    ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const Polling&>(::testing::_)))
-        .WillByDefault(::testing::ReturnRef(*new CECFrame()));
+    // Mock MessageEncoder - use generic matcher for DataBlock
+    ON_CALL(*p_messageEncoderMock, encode(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [](const DataBlock& m) -> CECFrame& {
+                static CECFrame frame;
+                return frame;
+            }));
 
     // Mock Wraps
     ON_CALL(*p_wrapsImplMock, access(::testing::_, ::testing::_))
