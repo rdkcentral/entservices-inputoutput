@@ -703,9 +703,12 @@ TEST_F(HdmiCecSource_L2Test, GetOSDName_JSONRPC)
     if (result.HasLabel("name")) {
         string osdName = result["name"].String();
         TEST_LOG("  name: %s", osdName.c_str());
-        EXPECT_FALSE(osdName.empty());e {
-        EXPECT_TRUE(m_controller_cecSource != nullptr);
-        if (m_cSetVendorId API via COM-RPC
+        EXPECT_FALSE(osdName.empty());
+    }
+}
+
+/**
+ * @brief Test SetVendorId API via COM-RPC
  *
  * This test verifies that the SetVendorId API works correctly using COM-RPC interface.
  */
