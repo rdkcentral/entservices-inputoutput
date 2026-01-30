@@ -318,11 +318,11 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
     uint32_t status = DeactivateService("org.rdk.HdmiCecSource");
     EXPECT_EQ(status, Core::ERROR_NONE);
 
-    if (HdmiCecSource_Client) {
+    if (HdmiCecSource_Client.IsValid()) {
         HdmiCecSource_Client.Release();
     }
 
-    if (HdmiCecSource_Engine) {
+    if (HdmiCecSource_Engine.IsValid()) {
         HdmiCecSource_Engine.Release();
     }
 
@@ -552,7 +552,11 @@ TEST_F(HdmiCecSource_L2Test, SetEnabled_COMRPC)
         } else {
             TEST_LOG("m_controller_cecSource is NULL");
         }
-    }SetOSDName API via COM-RPC
+    }
+}
+
+/**
+ * @brief Test SetOSDName API via COM-RPC
  *
  * This test verifies that the SetOSDName API works correctly using COM-RPC interface.
  */
