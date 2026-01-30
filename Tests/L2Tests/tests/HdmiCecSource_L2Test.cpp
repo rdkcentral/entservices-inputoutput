@@ -1373,12 +1373,12 @@ TEST_F(HdmiCecSource_L2Test, GetDeviceList_JSONRPC)
                 TEST_LOG("    Device[%d].osdName: %s", i, osdName.c_str());
                 EXPECT_FALSE(osdName.empty());
             }
-                string testOSDName = "TestSTB";
-                HdmiCecSourceSuccess setResult;
-                uint32_t result = m_cecSourcePlugin->SetOSDName(testOSDName, setResult);
-                EXPECT_EQ(result, Core::ERROR_NONE);
-                EXPECT_TRUE(setResult.success);
- via COM-RPC
+        }
+    }
+}
+
+/**
+ * @brief Test PerformOTPAction API via COM-RPC
  *
  * This test verifies that the PerformOTPAction API works correctly using COM-RPC interface.
  */
@@ -1443,38 +1443,6 @@ TEST_F(HdmiCecSource_L2Test, PerformOTPAction_JSONRPC)
     if (result.HasLabel("success")) {
         EXPECT_TRUE(result["success"].Boolean());
         TEST_LOG("  success: %d", result["success"].Boolean());
-    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
-        TEST_LOG("Invalid HdmiCecSource_Client");
-    } else {
-        EXPECT_TRUE(m_controller_cecSource != nullptr);
-        if (m_controller_cecSource) {
-            EXPECT_TRUE(m_cecSourcePlugin != nullptr);
-            if (m_cecSourcePlugin) {
-                // Set Vendor ID
-                string testVendorId = "0019FB";
-                HdmiCecSourceSuccess setResult;
-                uint32_t result = m_cecSourcePlugin->SetVendorId(testVendorId, setResult);
-                EXPECT_EQ(result, Core::ERROR_NONE);
-                EXPECT_TRUE(setResult.success);
-
-                // Get Vendor ID
-                string vendorId;
-                bool success = false;
-                result = m_cecSourcePlugin->GetVendorId(vendorId, success);
-                EXPECT_EQ(result, Core::ERROR_NONE);
-                EXPECT_TRUE(success);
-                EXPECT_EQ(vendorId, testVendorId);
-                TEST_LOG("GetVendorId: vendorId=%s, success=%d", vendorId.c_str(), success);
-
-                m_cecSourcePlugin->Unregister(&m_notificationHandler);
-                m_cecSourcePlugin->Release();
-            } else {
-                TEST_LOG("m_cecSourcePlugin is NULL");
-            }
-            m_controller_cecSource->Release();
-        } else {
-            TEST_LOG("m_controller_cecSource is NULL");
-        }
     }
 }
 
