@@ -386,7 +386,9 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
     const int max_retries = 10;
 
     while (status != Core::ERROR_NONE && retry_count < max_retries) {
+        TEST_LOG("Attempting to activate HdmiCecSource service, attempt %d", retry_count + 1);
         status = ActivateService("org.rdk.HdmiCecSource");
+        TEST_LOG("ActivateService returned: %d (%s)", status, Core::ErrorToString(status));
         if (status != Core::ERROR_NONE) {
             TEST_LOG("ActivateService attempt %d/%d returned: %d (%s)",
                      retry_count + 1, max_retries, status, Core::ErrorToString(status));
