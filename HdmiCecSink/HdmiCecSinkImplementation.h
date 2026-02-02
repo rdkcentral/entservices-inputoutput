@@ -40,6 +40,7 @@
 
 #include "UtilsLogging.h"
 #include <interfaces/IPowerManager.h>
+#include <interfaces/IUserSettings.h>
 #include "PowerManagerInterface.h"
 #include <interfaces/IHdmiCecSink.h>
 #include "host.hpp"
@@ -528,6 +529,7 @@ private:
             static HdmiCecSinkImplementation* _instance;
             CECDeviceParams deviceList[16];
             std::vector<HdmiPortMap> hdmiInputs;
+			std::string mapToIso639_2(const string& lang_BCP47);
             int m_currentActiveSource;
             void updateInActiveSource(const int logical_address, const InActiveSource &source );
             void updateActiveSource(const int logical_address, const ActiveSource &source );
@@ -571,6 +573,7 @@ private:
             void sendGiveAudioStatusMsg();
             void onPowerModeChanged(const PowerState &currentState, const PowerState &newState);
             void registerEventHandlers();
+	    	void onPresentationLanguageChanged(const string& language);
             void getHdmiArcPortID();
             int m_numberOfDevices; /* Number of connected devices othethan own device */
             bool m_audioDevicePowerStatusRequested;
@@ -613,6 +616,33 @@ private:
                     HdmiCecSinkImplementation& _parent;
                 
             };
+
+	    class UserSettingsNotification : public Exchange::IUserSettings::INotification {
+                private:
+                    UserSettingsNotification(const UserSettingsNotification&) = delete;
+                    UserSettingsNotification& operator=(const UserSettingsNotification&) = delete;
+
+                public:
+                    explicit UserSettingsNotification(HdmiCecSinkImplementation& parent)
+                        : _parent(parent)
+                    {
+                    }
+                    ~UserSettingsNotification() override = default;
+
+                public:
+                    void OnPresentationLanguageChanged(const string& language) override
+                    {
+                        _parent.onPresentationLanguageChanged(language);
+                    }
+
+                    BEGIN_INTERFACE_MAP(UserSettingsNotification)
+                    INTERFACE_ENTRY(Exchange::IUserSettings::INotification)
+                    END_INTERFACE_MAP
+
+                private:
+                    HdmiCecSinkImplementation& _parent;
+           };
+
         // We do not allow this plugin to be copied !!
         HdmiCecSinkImplementation(const HdmiCecSinkImplementation&) = delete;
         HdmiCecSinkImplementation& operator=(const HdmiCecSinkImplementation&) = delete;
@@ -665,6 +695,8 @@ private:
         std::vector<uint8_t> m_connectedDevices;
         HdmiCecSinkProcessor *msgProcessor;
         HdmiCecSinkFrameListener *msgFrameListener;
+		Exchange::IUserSettings *_userSettingsPlugin;
+		Core::Sink<UserSettingsNotification> _userSettingsNotification;
         PowerManagerInterfaceRef _powerManagerPlugin;
         Core::Sink<PowerManagerNotification> _pwrMgrNotification;
         bool _registeredEventHandlers;
