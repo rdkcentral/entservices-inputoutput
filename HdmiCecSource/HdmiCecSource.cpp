@@ -104,6 +104,11 @@ namespace WPEFramework
            LOGWARN("Deinitialize HdmiCecSource plugin \n");
 
            //ASSERT(nullptr != service);
+           if(service == nullptr)
+           {
+                LOGINFO("HdmiCecSource Deinitialize: service is nullptr \n");
+                return ;
+           }
            
 
            profileType = searchRdkProfile();
