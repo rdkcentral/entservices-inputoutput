@@ -380,8 +380,12 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
     ON_CALL(*p_wrapsImplMock, access(::testing::_, ::testing::_))
         .WillByDefault(::testing::Return(0));
 
+    /* Activate plugin in constructor */
+    uint32_t status = ActivateService("org.rdk.PowerManager");
+    EXPECT_EQ(Core::ERROR_NONE, status);
+
     // Activate the service with retry logic
-    uint32_t status = Core::ERROR_GENERAL;
+    status = Core::ERROR_GENERAL;
     int retry_count = 0;
     const int max_retries = 10;
 
@@ -414,6 +418,7 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
     system("ls -lh /etc/");
 
     DeactivateService("org.rdk.HdmiCecSource");
+    DeactivateService("org.rdk.PowerManager");
 
     if (HdmiCecSource_Client.IsValid()) {
         HdmiCecSource_Client.Release();
