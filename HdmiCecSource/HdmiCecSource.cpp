@@ -139,10 +139,15 @@ namespace WPEFramework
                 connection->Release();
              }
            }
+           else{
+                LOGINFO("HdmiCecSource plugin is not available during Deinitialize");
+           }
 
            _connectionId = 0;
            _service->Unregister(&_notification);
+           LOGINFO("HdmiCecSource plugin is deactivated. Unregistered HdmiCecSource Notification");
            _service->Release();
+           LOGINFO("HdmiCecSource plugin is deactivated. Released HdmiCecSource Service");
            _service = nullptr;
            LOGINFO("HdmiCecSource plugin is deactivated. Successfully deactivated HdmiCecSource Plugin");
         }
