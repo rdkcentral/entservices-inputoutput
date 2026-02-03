@@ -284,6 +284,9 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
     removeFile("/etc/device.properties");
     createFile("/etc/device.properties", "RDK_PROFILE=STB");
 
+    // Add sleep to ensure file is properly written to disk
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     // Mock IARM Bus initialization
     EXPECT_CALL(*p_iarmBusImplMock, IARM_Bus_Init(::testing::_))
         .Times(::testing::AnyNumber())
@@ -333,6 +336,30 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
     // Mock device settings Manager
     ON_CALL(*p_managerImplMock, Initialize())
         .WillByDefault(::testing::Return());
+
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
+        .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
+
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_INIT())
+        .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_GetPowerState(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](PWRMgr_PowerState_t* powerState) {
+                *powerState = PWRMGR_POWERSTATE_ON; // Default to ON state
+                return PWRMGR_SUCCESS;
+            }));
+
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetPowerState(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](PWRMgr_PowerState_t powerState) {
+                // All tests are run without settings file
+                // so default expected power state is ON
+                return PWRMGR_SUCCESS;
+            }));
 
     // Mock Host methods
     ON_CALL(*p_hostImplMock, getDefaultVideoPortName())
@@ -396,11 +423,25 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
 {
     TEST_LOG("HdmiCecSource_L2Test Destructor");
 
-    // Cleanup device.properties file
-    removeFile("/etc/device.properties");
+    ON_CALL(*p_connectionMock, close())
+        .WillByDefault(::testing::Return());
+
+    sleep(5);
+
+    
 
     DeactivateService("org.rdk.HdmiCecSource");
+
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_TERM())
+        .WillOnce(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_TERM())
+        .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
+
+
     DeactivateService("org.rdk.PowerManager");
+
+    
 
     if (HdmiCecSource_Client.IsValid()) {
         HdmiCecSource_Client.Release();
@@ -409,6 +450,9 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
     if (HdmiCecSource_Engine.IsValid()) {
         HdmiCecSource_Engine.Release();
     }
+
+    // Cleanup device.properties file
+    removeFile("/etc/device.properties");
 
     TEST_LOG("HdmiCecSource_L2Test cleanup complete");
 }
