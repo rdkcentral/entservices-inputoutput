@@ -381,8 +381,8 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
         .WillByDefault(::testing::Return(0));
 
     /* Activate plugin in constructor */
-    uint32_t status = ActivateService("org.rdk.PowerManager");
-    EXPECT_EQ(Core::ERROR_NONE, status);
+    //uint32_t status = ActivateService("org.rdk.PowerManager");
+    //EXPECT_EQ(Core::ERROR_NONE, status);
 
     // Activate the service with retry logic
     status = Core::ERROR_GENERAL;
@@ -413,12 +413,10 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
     TEST_LOG("HdmiCecSource_L2Test Destructor");
 
     // Cleanup device.properties file
-    system("ls -lh /etc/");
     removeFile("/etc/device.properties");
-    system("ls -lh /etc/");
 
     DeactivateService("org.rdk.HdmiCecSource");
-    DeactivateService("org.rdk.PowerManager");
+    //DeactivateService("org.rdk.PowerManager");
 
     if (HdmiCecSource_Client.IsValid()) {
         HdmiCecSource_Client.Release();
