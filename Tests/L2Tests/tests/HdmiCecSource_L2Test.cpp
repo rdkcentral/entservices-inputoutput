@@ -407,6 +407,23 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
     ON_CALL(*p_wrapsImplMock, access(::testing::_, ::testing::_))
         .WillByDefault(::testing::Return(0));
 
+    // Mock PowerManager HAL for PowerManager plugin initialization
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
+        .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
+
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_INIT())
+        .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
+
+    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_GetPowerState(::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](PWRMgr_PowerState_t* powerState) {
+                *powerState = PWRMGR_POWERSTATE_ON;
+                return PWRMGR_SUCCESS;
+            }));
+
     /* Activate plugin in constructor */
     uint32_t status = ActivateService("org.rdk.PowerManager");
     if (status != Core::ERROR_NONE) {
