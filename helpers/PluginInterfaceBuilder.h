@@ -39,13 +39,11 @@ namespace Plugin {
     public:
         PluginInterfaceRef()
             : _interface(nullptr)
-            , _service(nullptr)
         {
         }
 
         PluginInterfaceRef(INTERFACE* interface, PluginHost::IShell* controller)
             : _interface(interface)
-            , _service(controller)
         {
         }
 

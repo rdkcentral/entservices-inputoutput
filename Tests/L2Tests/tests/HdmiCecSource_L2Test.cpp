@@ -337,30 +337,6 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
     ON_CALL(*p_managerImplMock, Initialize())
         .WillByDefault(::testing::Return());
 
-    ON_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
-        .WillByDefault(::testing::Return(DEEPSLEEPMGR_SUCCESS));
-
-    ON_CALL(*p_powerManagerHalMock, PLAT_INIT())
-        .WillByDefault(::testing::Return(PWRMGR_SUCCESS));
-
-    ON_CALL(*p_powerManagerHalMock, PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
-        .WillByDefault(::testing::Return(PWRMGR_SUCCESS));
-
-    ON_CALL(*p_powerManagerHalMock, PLAT_API_GetPowerState(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [](PWRMgr_PowerState_t* powerState) {
-                *powerState = PWRMGR_POWERSTATE_ON; // Default to ON state
-                return PWRMGR_SUCCESS;
-            }));
-
-    ON_CALL(*p_powerManagerHalMock, PLAT_API_SetPowerState(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [](PWRMgr_PowerState_t powerState) {
-                // All tests are run without settings file
-                // so default expected power state is ON
-                return PWRMGR_SUCCESS;
-            }));
-
     // Mock Host methods
     ON_CALL(*p_hostImplMock, getDefaultVideoPortName())
         .WillByDefault(::testing::Return(std::string("HDMI0")));
@@ -422,6 +398,29 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
             [](PWRMgr_PowerState_t* powerState) {
                 *powerState = PWRMGR_POWERSTATE_ON;
                 return PWRMGR_SUCCESS;
+            }));
+
+    ON_CALL(*p_rfcApiImplMock, getRFCParameter(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [](char* pcCallerID, const char* pcParameterName, RFC_ParamData_t* pstParamData) {
+                if (strcmp("RFC_DATA_ThermalProtection_POLL_INTERVAL", pcParameterName) == 0) {
+                    strcpy(pstParamData->value, "2");
+                    return WDMP_SUCCESS;
+                } else if (strcmp("RFC_ENABLE_ThermalProtection", pcParameterName) == 0) {
+                    strcpy(pstParamData->value, "true");
+                    return WDMP_SUCCESS;
+                } else if (strcmp("RFC_DATA_ThermalProtection_DEEPSLEEP_GRACE_INTERVAL", pcParameterName) == 0) {
+                    strcpy(pstParamData->value, "6");
+                    return WDMP_SUCCESS;
+                } else {
+                    return WDMP_FAILURE;
+                }
+            }));
+
+    EXPECT_CALL(*p_mfrMock, mfrSetTempThresholds(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [](int high, int critical) {
+                return mfrERR_NONE;
             }));
 
     /* Activate plugin in constructor */
