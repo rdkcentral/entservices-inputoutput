@@ -337,24 +337,24 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
     ON_CALL(*p_managerImplMock, Initialize())
         .WillByDefault(::testing::Return());
 
-    EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
-        .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
+    ON_CALL(*p_powerManagerHalMock, PLAT_DS_INIT())
+        .WillByDefault(::testing::Return(DEEPSLEEPMGR_SUCCESS));
 
-    EXPECT_CALL(*p_powerManagerHalMock, PLAT_INIT())
-        .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
+    ON_CALL(*p_powerManagerHalMock, PLAT_INIT())
+        .WillByDefault(::testing::Return(PWRMGR_SUCCESS));
 
-    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Return(PWRMGR_SUCCESS));
+    ON_CALL(*p_powerManagerHalMock, PLAT_API_SetWakeupSrc(::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(PWRMGR_SUCCESS));
 
-    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_GetPowerState(::testing::_))
-        .WillRepeatedly(::testing::Invoke(
+    ON_CALL(*p_powerManagerHalMock, PLAT_API_GetPowerState(::testing::_))
+        .WillByDefault(::testing::Invoke(
             [](PWRMgr_PowerState_t* powerState) {
                 *powerState = PWRMGR_POWERSTATE_ON; // Default to ON state
                 return PWRMGR_SUCCESS;
             }));
 
-    EXPECT_CALL(*p_powerManagerHalMock, PLAT_API_SetPowerState(::testing::_))
-        .WillRepeatedly(::testing::Invoke(
+    ON_CALL(*p_powerManagerHalMock, PLAT_API_SetPowerState(::testing::_))
+        .WillByDefault(::testing::Invoke(
             [](PWRMgr_PowerState_t powerState) {
                 // All tests are run without settings file
                 // so default expected power state is ON
@@ -432,11 +432,11 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
 
     DeactivateService("org.rdk.HdmiCecSource");
 
-    EXPECT_CALL(*p_powerManagerHalMock, PLAT_TERM())
-        .WillOnce(::testing::Return(PWRMGR_SUCCESS));
+    ON_CALL(*p_powerManagerHalMock, PLAT_TERM())
+        .WillByDefault(::testing::Return(PWRMGR_SUCCESS));
 
-    EXPECT_CALL(*p_powerManagerHalMock, PLAT_DS_TERM())
-        .WillOnce(::testing::Return(DEEPSLEEPMGR_SUCCESS));
+    ON_CALL(*p_powerManagerHalMock, PLAT_DS_TERM())
+        .WillByDefault(::testing::Return(DEEPSLEEPMGR_SUCCESS));
 
 
     DeactivateService("org.rdk.PowerManager");
