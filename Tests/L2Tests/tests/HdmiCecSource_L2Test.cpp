@@ -408,12 +408,12 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
         .WillByDefault(::testing::Return(0));
 
     /* Activate plugin in constructor */
-    //uint32_t status = ActivateService("org.rdk.PowerManager");
-    //if (status != Core::ERROR_NONE) {
-    //    TEST_LOG("Failed to activate PowerManager, status: %d", status);
-    //}
+    uint32_t status = ActivateService("org.rdk.PowerManager");
+    if (status != Core::ERROR_NONE) {
+        TEST_LOG("Failed to activate PowerManager, status: %d", status);
+    }
 
-    uint32_t status = ActivateService("org.rdk.HdmiCecSource");
+    status = ActivateService("org.rdk.HdmiCecSource");
     if (status != Core::ERROR_NONE) {
         TEST_LOG("Failed to activate HdmiCecSource, status: %d", status);
     }
@@ -426,12 +426,6 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
     ON_CALL(*p_connectionMock, close())
         .WillByDefault(::testing::Return());
 
-    sleep(5);
-
-    
-
-    DeactivateService("org.rdk.HdmiCecSource");
-
     ON_CALL(*p_powerManagerHalMock, PLAT_TERM())
         .WillByDefault(::testing::Return(PWRMGR_SUCCESS));
 
@@ -439,7 +433,10 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
         .WillByDefault(::testing::Return(DEEPSLEEPMGR_SUCCESS));
 
 
-    //DeactivateService("org.rdk.PowerManager");
+    DeactivateService("org.rdk.HdmiCecSource");
+
+
+    DeactivateService("org.rdk.PowerManager");
 
     
 
