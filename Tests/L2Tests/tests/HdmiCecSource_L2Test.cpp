@@ -381,6 +381,7 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
         .WillByDefault(::testing::Return(0));
 
     /* Activate plugin in constructor */
+    uint32_t status = 0;
     //uint32_t status = ActivateService("org.rdk.PowerManager");
     //EXPECT_EQ(Core::ERROR_NONE, status);
 
