@@ -283,6 +283,8 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
     // Setup device.properties file
     removeFile("/etc/device.properties");
     createFile("/etc/device.properties", "RDK_PROFILE=STB");
+    createFile("/opt/persistent/ds/cecData_2.json", "0");
+    createFile("/tmp/pwrmgr_restarted", "2");
 
     // Add sleep to ensure file is properly written to disk
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -466,6 +468,9 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
 
     // Cleanup device.properties file
     removeFile("/etc/device.properties");
+    removeFile("/tmp/pwrmgr_restarted");
+    removeFile("/opt/persistent/ds/cecData_2.json");
+    removeFile("/opt/uimgr_settings.bin");
 
     TEST_LOG("HdmiCecSource_L2Test cleanup complete");
 }
