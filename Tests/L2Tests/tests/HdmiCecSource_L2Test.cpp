@@ -381,30 +381,17 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
         .WillByDefault(::testing::Return(0));
 
     /* Activate plugin in constructor */
-    uint32_t status = 0;
-    //uint32_t status = ActivateService("org.rdk.PowerManager");
-    //EXPECT_EQ(Core::ERROR_NONE, status);
+    //uint32_t status = 0;
+    uint32_t status = ActivateService("org.rdk.PowerManager");
+    EXPECT_EQ(Core::ERROR_NONE, status);
 
     // Activate the service with retry logic
     status = Core::ERROR_GENERAL;
     int retry_count = 0;
     const int max_retries = 10;
 
-    while (status != Core::ERROR_NONE && retry_count < max_retries) {
-        TEST_LOG("Attempting to activate HdmiCecSource service, attempt %d", retry_count + 1);
-        status = ActivateService("org.rdk.HdmiCecSource");
-        TEST_LOG("ActivateService returned: %d (%s)", status, Core::ErrorToString(status));
-        if (status != Core::ERROR_NONE) {
-            TEST_LOG("ActivateService attempt %d/%d returned: %d (%s)",
-                     retry_count + 1, max_retries, status, Core::ErrorToString(status));
-            retry_count++;
-            if (retry_count < max_retries) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            }
-        } else {
-            TEST_LOG("ActivateService succeeded on attempt %d", retry_count + 1);
-        }
-    }
+    status = ActivateService("org.rdk.HdmiCecSource");
+    EXPECT_EQ(Core::ERROR_NONE, status);
 
     //EXPECT_EQ(status, Core::ERROR_NONE);
 }
@@ -417,7 +404,7 @@ HdmiCecSource_L2Test::~HdmiCecSource_L2Test()
     removeFile("/etc/device.properties");
 
     DeactivateService("org.rdk.HdmiCecSource");
-    //DeactivateService("org.rdk.PowerManager");
+    DeactivateService("org.rdk.PowerManager");
 
     if (HdmiCecSource_Client.IsValid()) {
         HdmiCecSource_Client.Release();
