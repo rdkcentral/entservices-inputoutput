@@ -2013,9 +2013,8 @@ TEST_F(HdmiCecSource_L2Test, InjectUserControlReleasedFrameAndVerifyEvent)
  *
  * This test injects an ActiveSource CEC frame with our physical address
  * and verifies that the OnActiveSourceStatusUpdated event is triggered with true status.
- * Disabled: Requires full CEC stack initialization with static instance pointer
  */
-TEST_F(HdmiCecSource_L2Test, DISABLED_InjectActiveSourceFrameAndVerifyEvent)
+TEST_F(HdmiCecSource_L2Test, InjectActiveSourceFrameAndVerifyEvent)
 {
     if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
         TEST_LOG("Invalid HdmiCecSource_Client");
@@ -2037,9 +2036,10 @@ TEST_F(HdmiCecSource_L2Test, DISABLED_InjectActiveSourceFrameAndVerifyEvent)
         return;
     }
 
-    // Inject ActiveSource frame (Opcode 0x82) with physical address matching ours (0x0F, 0x0F)
+    // Inject ActiveSource frame (Opcode 0x82) with physical address matching ours
+    // Physical address: 0x0F, 0x0F, 0x0F, 0x0F (all 4 bytes)
     // From device (4) to all (broadcast)
-    uint8_t buffer[] = { 0x4F, 0x82, 0x0F, 0x0F };
+    uint8_t buffer[] = { 0x4F, 0x82, 0x0F, 0x0F, 0x0F, 0x0F };
     CECFrame frame(buffer, sizeof(buffer));
     
     TEST_LOG("Injecting ActiveSource CEC frame with our physical address");
@@ -2047,6 +2047,9 @@ TEST_F(HdmiCecSource_L2Test, DISABLED_InjectActiveSourceFrameAndVerifyEvent)
         if (listener)
             listener->notify(frame);
     }
+
+    // Give the system time to process the frame and trigger events
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     // Wait for OnActiveSourceStatusUpdated event
     uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_ACTIVE_SOURCE_STATUS_UPDATED);
@@ -2064,9 +2067,8 @@ TEST_F(HdmiCecSource_L2Test, DISABLED_InjectActiveSourceFrameAndVerifyEvent)
  *
  * This test injects a ReportPhysicalAddress CEC frame and verifies that the OnDeviceAdded
  * and OnDeviceInfoUpdated events are triggered.
- * Disabled: Requires full CEC stack initialization with static instance pointer
  */
-TEST_F(HdmiCecSource_L2Test, DISABLED_InjectReportPhysicalAddressFrameAndVerifyEvent)
+TEST_F(HdmiCecSource_L2Test, InjectReportPhysicalAddressFrameAndVerifyEvent)
 {
     if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
         TEST_LOG("Invalid HdmiCecSource_Client");
@@ -2100,6 +2102,9 @@ TEST_F(HdmiCecSource_L2Test, DISABLED_InjectReportPhysicalAddressFrameAndVerifyE
             listener->notify(frame);
     }
 
+    // Give the system time to process the frame and trigger events
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
     // The device should be added - wait for OnDeviceAdded event
     uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
     EXPECT_TRUE(signalled & ON_DEVICE_ADDED);
@@ -2115,9 +2120,8 @@ TEST_F(HdmiCecSource_L2Test, DISABLED_InjectReportPhysicalAddressFrameAndVerifyE
  * @brief Test DeviceVendorID frame injection and verify OnDeviceInfoUpdated event
  *
  * This test injects a DeviceVendorID CEC frame and verifies that the OnDeviceInfoUpdated event is triggered.
- * Disabled: Requires full CEC stack initialization with static instance pointer
  */
-TEST_F(HdmiCecSource_L2Test, DISABLED_InjectDeviceVendorIDFrameAndVerifyEvent)
+TEST_F(HdmiCecSource_L2Test, InjectDeviceVendorIDFrameAndVerifyEvent)
 {
     if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
         TEST_LOG("Invalid HdmiCecSource_Client");
@@ -2148,6 +2152,9 @@ TEST_F(HdmiCecSource_L2Test, DISABLED_InjectDeviceVendorIDFrameAndVerifyEvent)
         if (listener)
             listener->notify(setupFrame);
     }
+    
+    // Give time to process
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     
     // Wait for device to be added
     uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
@@ -2180,9 +2187,8 @@ TEST_F(HdmiCecSource_L2Test, DISABLED_InjectDeviceVendorIDFrameAndVerifyEvent)
  * @brief Test SetOSDName frame injection and verify OnDeviceInfoUpdated event
  *
  * This test injects a SetOSDName CEC frame and verifies that the OnDeviceInfoUpdated event is triggered.
- * Disabled: Requires full CEC stack initialization with static instance pointer
  */
-TEST_F(HdmiCecSource_L2Test, DISABLED_InjectSetOSDNameFrameAndVerifyEvent)
+TEST_F(HdmiCecSource_L2Test, InjectSetOSDNameFrameAndVerifyEvent)
 {
     if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
         TEST_LOG("Invalid HdmiCecSource_Client");
@@ -2213,6 +2219,9 @@ TEST_F(HdmiCecSource_L2Test, DISABLED_InjectSetOSDNameFrameAndVerifyEvent)
         if (listener)
             listener->notify(setupFrame);
     }
+    
+    // Give time to process
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     
     // Wait for device to be added
     uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
