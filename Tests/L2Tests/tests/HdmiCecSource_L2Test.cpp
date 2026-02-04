@@ -363,8 +363,28 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
                 };
             }));
 
-    // Mock HDMI CEC Connection - remove these mocks as they're not available in L2TestMocks
-    // The CEC connection is handled internally by the plugin
+    // Mock HDMI CEC Connection - capture frame listeners for event injection
+    ON_CALL(*p_connectionMock, addFrameListener(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [this](FrameListener* listener) {
+                TEST_LOG("addFrameListener called with address: %p", static_cast<void*>(listener));
+                if (listener != nullptr) {
+                    registeredListener = listener;
+                    listeners.push_back(listener);
+                    TEST_LOG("Frame listener registered, total listeners: %zu", listeners.size());
+                }
+            }));
+
+    ON_CALL(*p_connectionMock, removeFrameListener(::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [this](FrameListener* listener) {
+                TEST_LOG("removeFrameListener called");
+                auto it = std::find(listeners.begin(), listeners.end(), listener);
+                if (it != listeners.end()) {
+                    listeners.erase(it);
+                    TEST_LOG("Frame listener removed, remaining listeners: %zu", listeners.size());
+                }
+            }));
 
     // Mock MessageEncoder - need to mock both overloads explicitly
     ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const DataBlock&>(::testing::_)))
@@ -1847,4 +1867,383 @@ TEST_F(HdmiCecSource_L2Test, OnDeviceAddedEvent)
             TEST_LOG("m_controller_cecSource is NULL");
         }
     }
+}
+
+//======================================== Frame Injection Tests ========================================
+
+/**
+ * @brief Test Standby frame injection and verify standbyMessageReceived event
+ *
+ * This test injects a Standby CEC frame and verifies that the standbyMessageReceived event is triggered.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectStandbyFrameAndVerifyEvent)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject Standby frame (Opcode 0x36)
+    // From TV (0) to device (4)
+    uint8_t buffer[] = { 0x04, 0x36 };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting Standby CEC frame");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // Wait for standbyMessageReceived event
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, STANDBY_MESSAGE_RECEIVED);
+    EXPECT_TRUE(signalled & STANDBY_MESSAGE_RECEIVED);
+    EXPECT_EQ(m_notificationHandler.GetLogicalAddress(), 0);
+    TEST_LOG("Standby event verified");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test UserControlPressed frame injection and verify onKeyPressEvent event
+ *
+ * This test injects a UserControlPressed CEC frame and verifies that the onKeyPressEvent is triggered.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectUserControlPressedFrameAndVerifyEvent)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject UserControlPressed frame (Opcode 0x44) with keycode for Volume Up (0x41)
+    // From TV (0) to device (4)
+    uint8_t buffer[] = { 0x04, 0x44, 0x41 };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting UserControlPressed CEC frame with Volume Up key");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // Wait for onKeyPressEvent
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_KEY_PRESS_EVENT);
+    EXPECT_TRUE(signalled & ON_KEY_PRESS_EVENT);
+    EXPECT_EQ(m_notificationHandler.GetLogicalAddress(), 0);
+    EXPECT_EQ(m_notificationHandler.GetKeyCode(), 0x41);
+    TEST_LOG("UserControlPressed event verified");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test UserControlReleased frame injection and verify onKeyReleaseEvent event
+ *
+ * This test injects a UserControlReleased CEC frame and verifies that the onKeyReleaseEvent is triggered.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectUserControlReleasedFrameAndVerifyEvent)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject UserControlReleased frame (Opcode 0x45)
+    // From TV (0) to device (4)
+    uint8_t buffer[] = { 0x04, 0x45 };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting UserControlReleased CEC frame");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // Wait for onKeyReleaseEvent
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_KEY_RELEASE_EVENT);
+    EXPECT_TRUE(signalled & ON_KEY_RELEASE_EVENT);
+    EXPECT_EQ(m_notificationHandler.GetLogicalAddress(), 0);
+    TEST_LOG("UserControlReleased event verified");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test ActiveSource frame injection and verify OnActiveSourceStatusUpdated event
+ *
+ * This test injects an ActiveSource CEC frame with our physical address
+ * and verifies that the OnActiveSourceStatusUpdated event is triggered with true status.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectActiveSourceFrameAndVerifyEvent)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject ActiveSource frame (Opcode 0x82) with physical address matching ours (0x0F, 0x0F)
+    // From device (4) to all (broadcast)
+    uint8_t buffer[] = { 0x4F, 0x82, 0x0F, 0x0F };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting ActiveSource CEC frame with our physical address");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // Wait for OnActiveSourceStatusUpdated event
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_ACTIVE_SOURCE_STATUS_UPDATED);
+    EXPECT_TRUE(signalled & ON_ACTIVE_SOURCE_STATUS_UPDATED);
+    EXPECT_TRUE(m_notificationHandler.GetActiveSourceStatus());
+    TEST_LOG("ActiveSource event verified with status=true");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test ReportPhysicalAddress frame injection and verify OnDeviceAdded event
+ *
+ * This test injects a ReportPhysicalAddress CEC frame and verifies that the OnDeviceAdded
+ * and OnDeviceInfoUpdated events are triggered.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectReportPhysicalAddressFrameAndVerifyEvent)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject ReportPhysicalAddress frame (Opcode 0x84)
+    // From Playback Device 1 (logical address 4) to all (broadcast F)
+    // Physical address 2.0.0.0, Device type: Playback Device (0x04)
+    uint8_t buffer[] = { 0x4F, 0x84, 0x20, 0x00, 0x04 };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting ReportPhysicalAddress CEC frame from device 4");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // The device should be added - wait for OnDeviceAdded event
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
+    EXPECT_TRUE(signalled & ON_DEVICE_ADDED);
+    EXPECT_EQ(m_notificationHandler.GetLogicalAddress(), 4);
+    TEST_LOG("OnDeviceAdded event verified for logical address 4");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test DeviceVendorID frame injection and verify OnDeviceInfoUpdated event
+ *
+ * This test injects a DeviceVendorID CEC frame and verifies that the OnDeviceInfoUpdated event is triggered.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectDeviceVendorIDFrameAndVerifyEvent)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // First add the device by injecting ReportPhysicalAddress
+    uint8_t setupBuffer[] = { 0x4F, 0x84, 0x20, 0x00, 0x04 };
+    CECFrame setupFrame(setupBuffer, sizeof(setupBuffer));
+    
+    TEST_LOG("Setting up: Injecting ReportPhysicalAddress CEC frame");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(setupFrame);
+    }
+    
+    // Wait for device to be added
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
+    EXPECT_TRUE(signalled & ON_DEVICE_ADDED);
+    m_notificationHandler.ResetEvent();
+
+    // Now inject DeviceVendorID frame (Opcode 0x87)
+    // From device 4 to all (broadcast), Vendor ID: LG (0x00E091)
+    uint8_t buffer[] = { 0x4F, 0x87, 0x00, 0xE0, 0x91 };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting DeviceVendorID CEC frame with LG vendor ID");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // Wait for OnDeviceInfoUpdated event
+    signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_INFO_UPDATED);
+    EXPECT_TRUE(signalled & ON_DEVICE_INFO_UPDATED);
+    EXPECT_EQ(m_notificationHandler.GetLogicalAddress(), 4);
+    TEST_LOG("OnDeviceInfoUpdated event verified after DeviceVendorID");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test SetOSDName frame injection and verify OnDeviceInfoUpdated event
+ *
+ * This test injects a SetOSDName CEC frame and verifies that the OnDeviceInfoUpdated event is triggered.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectSetOSDNameFrameAndVerifyEvent)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // First add the device by injecting ReportPhysicalAddress
+    uint8_t setupBuffer[] = { 0x4F, 0x84, 0x20, 0x00, 0x04 };
+    CECFrame setupFrame(setupBuffer, sizeof(setupBuffer));
+    
+    TEST_LOG("Setting up: Injecting ReportPhysicalAddress CEC frame");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(setupFrame);
+    }
+    
+    // Wait for device to be added
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
+    EXPECT_TRUE(signalled & ON_DEVICE_ADDED);
+    m_notificationHandler.ResetEvent();
+
+    // Now inject SetOSDName frame (Opcode 0x47)
+    // From device 4 to us (device 3 or 0), OSD Name: "TestDev"
+    uint8_t buffer[] = { 0x40, 0x47, 'T', 'e', 's', 't', 'D', 'e', 'v' };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting SetOSDName CEC frame with name 'TestDev'");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // Wait for OnDeviceInfoUpdated event
+    signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_INFO_UPDATED);
+    EXPECT_TRUE(signalled & ON_DEVICE_INFO_UPDATED);
+    EXPECT_EQ(m_notificationHandler.GetLogicalAddress(), 4);
+    TEST_LOG("OnDeviceInfoUpdated event verified after SetOSDName");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
 }
