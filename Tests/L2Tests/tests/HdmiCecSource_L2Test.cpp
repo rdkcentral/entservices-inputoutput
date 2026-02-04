@@ -2037,9 +2037,9 @@ TEST_F(HdmiCecSource_L2Test, InjectActiveSourceFrameAndVerifyEvent)
     }
 
     // Inject ActiveSource frame (Opcode 0x82) with physical address matching ours
-    // Physical address: 0x0F, 0x0F, 0x0F, 0x0F (all 4 bytes)
+    // Physical address: 0x0F0F (15.15.15.15 in 2-byte CEC format)
     // From device (4) to all (broadcast)
-    uint8_t buffer[] = { 0x4F, 0x82, 0x0F, 0x0F, 0x0F, 0x0F };
+    uint8_t buffer[] = { 0x4F, 0x82, 0x0F, 0x0F };
     CECFrame frame(buffer, sizeof(buffer));
     
     TEST_LOG("Injecting ActiveSource CEC frame with our physical address");
@@ -2107,9 +2107,31 @@ TEST_F(HdmiCecSource_L2Test, InjectReportPhysicalAddressFrameAndVerifyEvent)
 
     // The device should be added - wait for OnDeviceAdded event
     uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
-    //EXPECT_TRUE(signalled & ON_DEVICE_ADDED);
-    EXPECT_EQ(m_notificationHandler.GetLogicalAddress(), 4);
-    TEST_LOG("OnDeviceAdded event verified for logical address 4");
+
+    // Verify the physical address was correctly set
+    uint32_t numberOfDevices = 0;
+    IHdmiCecSourceDeviceListIterator* deviceList = nullptr;
+    bool success = false;
+    
+    uint32_t result = m_cecSourcePlugin->GetDeviceList(numberOfDevices, deviceList, success);
+    EXPECT_EQ(result, Core::ERROR_NONE);
+    EXPECT_TRUE(success);
+    
+    if (deviceList != nullptr) {
+        HdmiCecSourceDevice device;
+        bool deviceFound = false;
+        while (deviceList->Next(device)) {
+            if (device.logicalAddress == 4) {
+                // Physical address should be 2.0.0.0 (0x2000)
+                EXPECT_EQ(device.physicalAddress, "2.0.0.0");
+                TEST_LOG("Physical address verified: %s", device.physicalAddress.c_str());
+                deviceFound = true;
+                break;
+            }
+        }
+        EXPECT_TRUE(deviceFound);
+        deviceList->Release();
+    }
 
     m_cecSourcePlugin->Unregister(&m_notificationHandler);
     m_cecSourcePlugin->Release();
