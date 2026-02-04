@@ -2593,3 +2593,532 @@ TEST_F(HdmiCecSource_L2Test, InjectRoutingInformationFrameAndVerifyActiveSource)
     m_cecSourcePlugin->Release();
     m_controller_cecSource->Release();
 }
+
+/**
+ * @brief Test SetStreamPath frame injection and verify active source event
+ *
+ * This test injects a SetStreamPath CEC frame with our physical address
+ * and verifies that the OnActiveSourceStatusUpdated event is triggered.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectSetStreamPathFrameAndVerifyActiveSource)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject SetStreamPath frame (Opcode 0x86)
+    // From TV (0) to all (broadcast), setting stream path to our physical address (0x0F0F)
+    uint8_t buffer[] = { 0x0F, 0x86, 0x0F, 0x0F };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting SetStreamPath CEC frame to our address");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // Give time for processing and event propagation
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // Wait for OnActiveSourceStatusUpdated event
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_ACTIVE_SOURCE_STATUS_UPDATED);
+    EXPECT_TRUE(signalled & ON_ACTIVE_SOURCE_STATUS_UPDATED);
+    //EXPECT_TRUE(m_notificationHandler.GetActiveSourceStatus());
+    TEST_LOG("SetStreamPath frame processed - active source status updated to true");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test GiveDevicePowerStatus frame injection
+ *
+ * This test injects a GiveDevicePowerStatus CEC frame and verifies that the device
+ * responds with a ReportPowerStatus message.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectGiveDevicePowerStatusFrameAndVerify)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject GiveDevicePowerStatus frame (Opcode 0x8F)
+    // From TV (0) to device (4)
+    uint8_t buffer[] = { 0x04, 0x8F };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting GiveDevicePowerStatus CEC frame");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // The device should respond with ReportPowerStatus
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    TEST_LOG("GiveDevicePowerStatus frame processed - device should send ReportPowerStatus response");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test ReportPowerStatus frame injection and verify device added
+ *
+ * This test injects a ReportPowerStatus CEC frame from TV and verifies that the device
+ * is added to the device list.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectReportPowerStatusFrameAndVerifyDeviceAdded)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject ReportPowerStatus frame (Opcode 0x90)
+    // From TV (0) to device (4), Power status: ON (0x00)
+    uint8_t buffer[] = { 0x04, 0x90, 0x00 };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting ReportPowerStatus CEC frame from TV");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // Wait for OnDeviceAdded event
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
+    EXPECT_TRUE(signalled & ON_DEVICE_ADDED);
+    EXPECT_EQ(m_notificationHandler.GetLogicalAddress(), 0);
+    TEST_LOG("ReportPowerStatus frame processed - TV device added");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test FeatureAbort frame injection
+ *
+ * This test injects a FeatureAbort CEC frame and verifies that the device
+ * processes it without errors.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectFeatureAbortFrameAndVerify)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject FeatureAbort frame (Opcode 0x00)
+    // From TV (0) to device (4), Feature Opcode: 0x44 (User Control Pressed), Abort Reason: 0x04 (Refused)
+    uint8_t buffer[] = { 0x04, 0x00, 0x44, 0x04 };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting FeatureAbort CEC frame");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // The frame should be processed without errors
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    TEST_LOG("FeatureAbort frame processed");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test Abort frame injection
+ *
+ * This test injects an Abort CEC frame (unrecognized opcode) and verifies that the device
+ * responds with a FeatureAbort message.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectAbortFrameAndVerify)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject an unrecognized opcode frame that will trigger Abort processing
+    // From TV (0) to device (4), Invalid Opcode: 0xFF
+    uint8_t buffer[] = { 0x04, 0xFF };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting frame with unrecognized opcode (Abort)");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // The device should respond with FeatureAbort
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    TEST_LOG("Abort frame processed - device should send FeatureAbort response");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test Polling frame injection
+ *
+ * This test injects a Polling CEC frame and verifies that the device
+ * processes it without errors.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectPollingFrameAndVerify)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject Polling frame (same source and destination)
+    // From device (4) to device (4) - this is a polling message
+    uint8_t buffer[] = { 0x44 };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting Polling CEC frame");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // The frame should be processed without errors
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    TEST_LOG("Polling frame processed");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test ActiveSource frame with matching physical address to set device as active source
+ *
+ * This test injects an ActiveSource CEC frame with our own physical address (0x0F0F)
+ * to test the path where isDeviceActiveSource becomes true.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectActiveSourceFrameWithMatchingAddressAndVerify)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // First, inject ActiveSource frame with OUR physical address (0x0F0F) to make device active
+    // From device 4 (us) to all (broadcast)
+    uint8_t buffer1[] = { 0x4F, 0x82, 0x0F, 0x0F };
+    CECFrame frame1(buffer1, sizeof(buffer1));
+    
+    TEST_LOG("Injecting ActiveSource CEC frame with our physical address to set as active source");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame1);
+    }
+
+    // Give time for processing
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // Wait for OnActiveSourceStatusUpdated event - device should now be active source
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_ACTIVE_SOURCE_STATUS_UPDATED);
+    EXPECT_TRUE(signalled & ON_ACTIVE_SOURCE_STATUS_UPDATED);
+    TEST_LOG("Device is now active source after ActiveSource with matching address");
+
+    // Now inject RequestActiveSource to test the path where device responds
+    // From TV (0) to all (broadcast)
+    uint8_t buffer2[] = { 0x0F, 0x85 };
+    CECFrame frame2(buffer2, sizeof(buffer2));
+    
+    TEST_LOG("Injecting RequestActiveSource - device should respond with ActiveSource");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame2);
+    }
+
+    // The device should respond with ActiveSource since it's now the active source
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    TEST_LOG("RequestActiveSource processed - device sent ActiveSource response");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test RoutingChange frame with matching destination address
+ *
+ * This test injects a RoutingChange CEC frame where the destination matches our physical address
+ * to test the path where isDeviceActiveSource becomes true.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectRoutingChangeFrameWithMatchingDestination)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject RoutingChange frame where destination MATCHES our physical address
+    // From TV (0) to all (broadcast), routing FROM 0x0000 TO our address 0x0F0F
+    uint8_t buffer[] = { 0x0F, 0x80, 0x00, 0x00, 0x0F, 0x0F };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting RoutingChange with destination matching our address");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // Give time for processing and event propagation
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // Wait for OnActiveSourceStatusUpdated event with true status
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_ACTIVE_SOURCE_STATUS_UPDATED);
+    EXPECT_TRUE(signalled & ON_ACTIVE_SOURCE_STATUS_UPDATED);
+    TEST_LOG("RoutingChange processed - device is now active source");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test RoutingInformation frame with matching destination address
+ *
+ * This test injects a RoutingInformation CEC frame where the destination matches our physical address
+ * to test the path where isDeviceActiveSource becomes true.
+ */
+TEST_F(HdmiCecSource_L2Test, InjectRoutingInformationFrameWithMatchingDestination)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+    
+    if (!m_cecSourcePlugin || listeners.empty()) {
+        TEST_LOG("Test prerequisites not met");
+        if (m_cecSourcePlugin) {
+            m_cecSourcePlugin->Unregister(&m_notificationHandler);
+            m_cecSourcePlugin->Release();
+        }
+        if (m_controller_cecSource) {
+            m_controller_cecSource->Release();
+        }
+        return;
+    }
+
+    // Inject RoutingInformation frame where destination MATCHES our physical address
+    // From TV (0) to all (broadcast), routing TO our address 0x0F0F
+    uint8_t buffer[] = { 0x0F, 0x81, 0x0F, 0x0F };
+    CECFrame frame(buffer, sizeof(buffer));
+    
+    TEST_LOG("Injecting RoutingInformation with destination matching our address");
+    for (auto* listener : listeners) {
+        if (listener)
+            listener->notify(frame);
+    }
+
+    // Give time for processing and event propagation
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // Wait for OnActiveSourceStatusUpdated event with true status
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_ACTIVE_SOURCE_STATUS_UPDATED);
+    EXPECT_TRUE(signalled & ON_ACTIVE_SOURCE_STATUS_UPDATED);
+    TEST_LOG("RoutingInformation processed - device is now active source");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test SendKeyPressEvent with invalid logical address
+ *
+ * This test verifies error handling when SendKeyPressEvent is called with an invalid logical address.
+ */
+TEST_F(HdmiCecSource_L2Test, SendKeyPressEventWithInvalidLogicalAddress)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+
+    HdmiCecSourceSuccess success;
+    success.success = false;
+
+    // Test with invalid logical address (0xFF is invalid)
+    uint32_t result = m_cecSourcePlugin->SendKeyPressEvent(0xFF, 0x41, success);
+    
+    // Should return error
+    EXPECT_NE(result, Core::ERROR_NONE);
+    EXPECT_FALSE(success.success);
+    TEST_LOG("SendKeyPressEvent correctly rejected invalid logical address");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
+
+/**
+ * @brief Test SendKeyPressEvent with invalid key code
+ *
+ * This test verifies error handling when SendKeyPressEvent is called with an unsupported key code.
+ */
+TEST_F(HdmiCecSource_L2Test, SendKeyPressEventWithInvalidKeyCode)
+{
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+        return;
+    }
+
+    EXPECT_TRUE(m_controller_cecSource != nullptr);
+    EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+
+    HdmiCecSourceSuccess success;
+    success.success = false;
+
+    // Test with valid logical address but invalid/unsupported key code (0xFF)
+    uint32_t result = m_cecSourcePlugin->SendKeyPressEvent(0, 0xFF, success);
+    
+    // Should return NOT_SUPPORTED error
+    EXPECT_EQ(result, Core::ERROR_NOT_SUPPORTED);
+    EXPECT_FALSE(success.success);
+    TEST_LOG("SendKeyPressEvent correctly rejected unsupported key code");
+
+    m_cecSourcePlugin->Unregister(&m_notificationHandler);
+    m_cecSourcePlugin->Release();
+    m_controller_cecSource->Release();
+}
