@@ -375,17 +375,6 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
                 }
             }));
 
-    ON_CALL(*p_connectionMock, removeFrameListener(::testing::_))
-        .WillByDefault(::testing::Invoke(
-            [this](FrameListener* listener) {
-                TEST_LOG("removeFrameListener called");
-                auto it = std::find(listeners.begin(), listeners.end(), listener);
-                if (it != listeners.end()) {
-                    listeners.erase(it);
-                    TEST_LOG("Frame listener removed, remaining listeners: %zu", listeners.size());
-                }
-            }));
-
     // Mock MessageEncoder - need to mock both overloads explicitly
     ON_CALL(*p_messageEncoderMock, encode(::testing::Matcher<const DataBlock&>(::testing::_)))
         .WillByDefault(::testing::Invoke(
