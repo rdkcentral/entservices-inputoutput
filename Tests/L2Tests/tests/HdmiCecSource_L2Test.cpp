@@ -44,38 +44,27 @@ using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
 
 namespace {
     static void removeFile(const char* fileName)
-    {
-        // Use sudo for protected files
-        if (strcmp(fileName, "/etc/device.properties") == 0 || strcmp(fileName, "/opt/persistent/ds/cecData_2.json") == 0 || strcmp(fileName, "/tmp/pwrmgr_restarted") == 0) {
-            char cmd[256];
-            snprintf(cmd, sizeof(cmd), "sudo rm -f %s", fileName);
-            int ret = system(cmd);
-            if (ret != 0) {
-                printf("File %s failed to remove with sudo\n", fileName);
-                perror("Error deleting file");
-            } else {
-                printf("File %s successfully deleted with sudo\n", fileName);
-            }
-        } else {
-            if (std::remove(fileName) != 0)
-            {
-                printf("File %s failed to remove\n", fileName);
-                perror("Error deleting file");
-            }
-            else
-            {
-                printf("File %s successfully deleted\n", fileName);
-            }
-        }
-    }
+	{
+		if (std::remove(fileName) != 0)
+		{
+			printf("File %s failed to remove\n", fileName);
+			perror("Error deleting file");
+		}
+		else
+		{
+			printf("File %s successfully deleted\n", fileName);
+		}
+	}
 	
 	static void createFile(const char* fileName, const char* fileContent)
 	{
-        std::ofstream fileContentStream(fileName);
-        fileContentStream << fileContent;
-        fileContentStream << "\n";
-        fileContentStream.close();
-    }
+		removeFile(fileName);
+
+		std::ofstream fileContentStream(fileName);
+		fileContentStream << fileContent;
+		fileContentStream << "\n";
+		fileContentStream.close();
+	}
 
 class AsyncHandlerMock {
 public:
@@ -100,8 +89,6 @@ public:
     MOCK_METHOD(void, onKeyPressEvent, (int logicalAddress, int keyCode), (override));
 };
 }
-
-
 
 // Event flags for different CEC events
 typedef enum : uint32_t {
@@ -234,6 +221,24 @@ private:
     bool m_activeSourceStatus;
     int m_logicalAddress;
     int m_keyCode;
+};
+
+class AsyncHandlerMock_HdmiCecSource {
+public:
+    AsyncHandlerMock_HdmiCecSource()
+    {
+        m_asyncHandlerMock = new NiceMock<MockAsyncHandler>;
+    }
+
+    virtual ~AsyncHandlerMock_HdmiCecSource()
+    {
+        delete m_asyncHandlerMock;
+    }
+
+    MockAsyncHandler& mock() { return *m_asyncHandlerMock; }
+
+private:
+    MockAsyncHandler* m_asyncHandlerMock;
 };
 
 class HdmiCecSource_L2Test : public L2TestMocks {
@@ -2329,7 +2334,7 @@ TEST_F(HdmiCecSource_L2Test, InjectCECVersionFrameAndVerifyDeviceAdded)
 
     // Wait for OnDeviceAdded event
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    //uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
+    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
     //EXPECT_TRUE(signalled & ON_DEVICE_ADDED);
     //EXPECT_EQ(m_notificationHandler.GetLogicalAddress(), 5);
     TEST_LOG("CECVersion frame processed - device 5 added");
