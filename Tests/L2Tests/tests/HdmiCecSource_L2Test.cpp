@@ -66,6 +66,19 @@ namespace {
         fileContentStream.close();
     }
 
+class AsyncHandlerMock {
+public:
+    virtual ~AsyncHandlerMock() = default;
+    virtual void onActiveSourceStatusUpdated(bool status) = 0;
+    virtual void onDeviceAdded(int logicalAddress) = 0;
+    virtual void onDeviceRemoved(int logicalAddress) = 0;
+    virtual void onDeviceInfoUpdated(int logicalAddress) = 0;
+    virtual void standbyMessageReceived(int logicalAddress) = 0;
+    virtual void onKeyReleaseEvent(int logicalAddress) = 0;
+    virtual void onKeyPressEvent(int logicalAddress, int keyCode) = 0;
+};
+
+
 
 // Event flags for different CEC events
 typedef enum : uint32_t {
