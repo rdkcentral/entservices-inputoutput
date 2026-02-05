@@ -44,51 +44,28 @@ using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
 
 namespace {
     static void removeFile(const char* fileName)
-	{
-		if (std::remove(fileName) != 0)
-		{
-			printf("File %s failed to remove\n", fileName);
-			perror("Error deleting file");
-		}
-		else
-		{
-			printf("File %s successfully deleted\n", fileName);
-		}
-	}
-	
-	static void createFile(const char* fileName, const char* fileContent)
-	{
-		removeFile(fileName);
+    {
+        if (std::remove(fileName) != 0)
+        {
+            printf("File %s failed to remove\n", fileName);
+            perror("Error deleting file");
+        }
+        else
+        {
+            printf("File %s successfully deleted\n", fileName);
+        }
+    }
+    
+    static void createFile(const char* fileName, const char* fileContent)
+    {
+        removeFile(fileName);
 
-		std::ofstream fileContentStream(fileName);
-		fileContentStream << fileContent;
-		fileContentStream << "\n";
-		fileContentStream.close();
-	}
+        std::ofstream fileContentStream(fileName);
+        fileContentStream << fileContent;
+        fileContentStream << "\n";
+        fileContentStream.close();
+    }
 
-class AsyncHandlerMock {
-public:
-    virtual ~AsyncHandlerMock() = default;
-    virtual void onActiveSourceStatusUpdated(bool status) = 0;
-    virtual void onDeviceAdded(int logicalAddress) = 0;
-    virtual void onDeviceRemoved(int logicalAddress) = 0;
-    virtual void onDeviceInfoUpdated(int logicalAddress) = 0;
-    virtual void standbyMessageReceived(int logicalAddress) = 0;
-    virtual void onKeyReleaseEvent(int logicalAddress) = 0;
-    virtual void onKeyPressEvent(int logicalAddress, int keyCode) = 0;
-};
-
-class MockAsyncHandler : public AsyncHandlerMock {
-public:
-    MOCK_METHOD(void, onActiveSourceStatusUpdated, (bool status), (override));
-    MOCK_METHOD(void, onDeviceAdded, (int logicalAddress), (override));
-    MOCK_METHOD(void, onDeviceRemoved, (int logicalAddress), (override));
-    MOCK_METHOD(void, onDeviceInfoUpdated, (int logicalAddress), (override));
-    MOCK_METHOD(void, standbyMessageReceived, (int logicalAddress), (override));
-    MOCK_METHOD(void, onKeyReleaseEvent, (int logicalAddress), (override));
-    MOCK_METHOD(void, onKeyPressEvent, (int logicalAddress, int keyCode), (override));
-};
-}
 
 // Event flags for different CEC events
 typedef enum : uint32_t {
