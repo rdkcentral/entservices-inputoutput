@@ -71,6 +71,9 @@ namespace {
 	
 	static void createFile(const char* fileName, const char* fileContent)
 	{
+        std::ofstream fileContentStream(fileName);
+        fileContentStream << fileContent;
+        fileContentStream << "\n";
         fileContentStream.close();
     }
 
@@ -231,68 +234,6 @@ private:
     bool m_activeSourceStatus;
     int m_logicalAddress;
     int m_keyCode;
-};
-
-class HdmiCecSource_L2Test;
-
-// RAII helper class to manage HdmiCecSource interface lifecycle
-class HdmiCecSourceInterfaceHelper {
-public:
-    explicit HdmiCecSourceInterfaceHelper(HdmiCecSource_L2Test* test)
-        : m_test(test)
-        , m_plugin(nullptr)
-        , m_controller(nullptr)
-        , m_isValid(false)
-    {
-        if (m_test->CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
-            TEST_LOG("Invalid HdmiCecSource_Client");
-            return;
-        }
-        
-        m_plugin = m_test->m_cecSourcePlugin;
-        m_controller = m_test->m_controller_cecSource;
-        
-        EXPECT_TRUE(m_controller != nullptr);
-        if (m_controller == nullptr) {
-            TEST_LOG("m_controller_cecSource is NULL");
-            return;
-        }
-        
-        EXPECT_TRUE(m_plugin != nullptr);
-        if (m_plugin == nullptr) {
-            TEST_LOG("m_cecSourcePlugin is NULL");
-            return;
-        }
-        
-        m_isValid = true;
-    }
-    
-    ~HdmiCecSourceInterfaceHelper()
-    {
-        if (m_plugin != nullptr) {
-            m_plugin->Release();
-            m_plugin = nullptr;
-        }
-        if (m_controller != nullptr) {
-            m_controller->Release();
-            m_controller = nullptr;
-        }
-    }
-    
-    // Delete copy and move operations
-    HdmiCecSourceInterfaceHelper(const HdmiCecSourceInterfaceHelper&) = delete;
-    HdmiCecSourceInterfaceHelper& operator=(const HdmiCecSourceInterfaceHelper&) = delete;
-    HdmiCecSourceInterfaceHelper(HdmiCecSourceInterfaceHelper&&) = delete;
-    HdmiCecSourceInterfaceHelper& operator=(HdmiCecSourceInterfaceHelper&&) = delete;
-    
-    bool IsValid() const { return m_isValid; }
-    Exchange::IHdmiCecSource* Plugin() const { return m_plugin; }
-    
-private:
-    HdmiCecSource_L2Test* m_test;
-    Exchange::IHdmiCecSource* m_plugin;
-    PluginHost::IShell* m_controller;
-    bool m_isValid;
 };
 
 class HdmiCecSource_L2Test : public L2TestMocks {
@@ -647,33 +588,44 @@ void HdmiCecSource_L2Test::onKeyPressEvent(const JsonObject& message)
  */
 TEST_F(HdmiCecSource_L2Test, GetActiveSourceStatus_COMRPC)
 {
-    HdmiCecSourceInterfaceHelper helper(this);
-    if (!helper.IsValid()) {
-        return;
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSource != nullptr);
+        if (m_controller_cecSource) {
+            EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+            if (m_cecSourcePlugin) {
+                TEST_LOG("Testing GetActiveSourceStatus via COM-RPC");
+
+                // Declare output parameters
+                bool isActiveSource = false;
+                bool success = false;
+
+                // Call the API
+                uint32_t result = m_cecSourcePlugin->GetActiveSourceStatus(isActiveSource, success);
+
+                // Validate result
+                EXPECT_EQ(result, Core::ERROR_NONE);
+                if (result != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(success);
+
+                // Log and validate output
+                TEST_LOG("  isActiveSource: %d", isActiveSource);
+                TEST_LOG("  success: %d", success);
+
+                m_cecSourcePlugin->Unregister(&m_notificationHandler);
+                m_cecSourcePlugin->Release();
+            } else {
+                TEST_LOG("m_cecSourcePlugin is NULL");
+            }
+            m_controller_cecSource->Release();
+        } else {
+            TEST_LOG("m_controller_cecSource is NULL");
+        }
     }
-    
-    TEST_LOG("Testing GetActiveSourceStatus via COM-RPC");
-
-    // Declare output parameters
-    bool isActiveSource = false;
-    bool success = false;
-
-    // Call the API
-    uint32_t result = helper.Plugin()->GetActiveSourceStatus(isActiveSource, success);
-
-    // Validate result
-    EXPECT_EQ(result, Core::ERROR_NONE);
-    if (result != Core::ERROR_NONE) {
-        std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
-        TEST_LOG("Err: %s", errorMsg.c_str());
-    }
-    EXPECT_TRUE(success);
-
-    // Log and validate output
-    TEST_LOG("  isActiveSource: %d", isActiveSource);
-    TEST_LOG("  success: %d", success);
-
-    helper.Plugin()->Unregister(&m_notificationHandler);
 }
 
 /**
@@ -715,31 +667,42 @@ TEST_F(HdmiCecSource_L2Test, GetActiveSourceStatus_JSONRPC)
  */
 TEST_F(HdmiCecSource_L2Test, SetEnabled_COMRPC)
 {
-    HdmiCecSourceInterfaceHelper helper(this);
-    if (!helper.IsValid()) {
-        return;
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSource != nullptr);
+        if (m_controller_cecSource) {
+            EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+            if (m_cecSourcePlugin) {
+                TEST_LOG("Testing SetEnabled via COM-RPC");
+
+                // Declare output parameters
+                HdmiCecSourceSuccess setResult;
+
+                // Call the API
+                uint32_t result = m_cecSourcePlugin->SetEnabled(true, setResult);
+
+                // Validate result
+                EXPECT_EQ(result, Core::ERROR_NONE);
+                if (result != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(setResult.success);
+
+                // Log output
+                TEST_LOG("  success: %d", setResult.success);
+
+                m_cecSourcePlugin->Unregister(&m_notificationHandler);
+                m_cecSourcePlugin->Release();
+            } else {
+                TEST_LOG("m_cecSourcePlugin is NULL");
+            }
+            m_controller_cecSource->Release();
+        } else {
+            TEST_LOG("m_controller_cecSource is NULL");
+        }
     }
-    
-    TEST_LOG("Testing SetEnabled via COM-RPC");
-
-    // Declare output parameters
-    HdmiCecSourceSuccess setResult;
-
-    // Call the API
-    uint32_t result = helper.Plugin()->SetEnabled(true, setResult);
-
-    // Validate result
-    EXPECT_EQ(result, Core::ERROR_NONE);
-    if (result != Core::ERROR_NONE) {
-        std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
-        TEST_LOG("Err: %s", errorMsg.c_str());
-    }
-    EXPECT_TRUE(setResult.success);
-
-    // Log output
-    TEST_LOG("  success: %d", setResult.success);
-
-    helper.Plugin()->Unregister(&m_notificationHandler);
 }
 
 /**
@@ -774,33 +737,44 @@ TEST_F(HdmiCecSource_L2Test, SetEnabled_JSONRPC)
  */
 TEST_F(HdmiCecSource_L2Test, GetEnabled_COMRPC)
 {
-    HdmiCecSourceInterfaceHelper helper(this);
-    if (!helper.IsValid()) {
-        return;
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSource != nullptr);
+        if (m_controller_cecSource) {
+            EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+            if (m_cecSourcePlugin) {
+                TEST_LOG("Testing GetEnabled via COM-RPC");
+
+                // Declare output parameters
+                bool enabled = false;
+                bool success = false;
+
+                // Call the API
+                uint32_t result = m_cecSourcePlugin->GetEnabled(enabled, success);
+
+                // Validate result
+                EXPECT_EQ(result, Core::ERROR_NONE);
+                if (result != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(success);
+
+                // Log output
+                TEST_LOG("  enabled: %d", enabled);
+                TEST_LOG("  success: %d", success);
+
+                m_cecSourcePlugin->Unregister(&m_notificationHandler);
+                m_cecSourcePlugin->Release();
+            } else {
+                TEST_LOG("m_cecSourcePlugin is NULL");
+            }
+            m_controller_cecSource->Release();
+        } else {
+            TEST_LOG("m_controller_cecSource is NULL");
+        }
     }
-    
-    TEST_LOG("Testing GetEnabled via COM-RPC");
-
-    // Declare output parameters
-    bool enabled = false;
-    bool success = false;
-
-    // Call the API
-    uint32_t result = helper.Plugin()->GetEnabled(enabled, success);
-
-    // Validate result
-    EXPECT_EQ(result, Core::ERROR_NONE);
-    if (result != Core::ERROR_NONE) {
-        std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
-        TEST_LOG("Err: %s", errorMsg.c_str());
-    }
-    EXPECT_TRUE(success);
-
-    // Log output
-    TEST_LOG("  enabled: %d", enabled);
-    TEST_LOG("  success: %d", success);
-
-    helper.Plugin()->Unregister(&m_notificationHandler);
 }
 
 /**
@@ -841,33 +815,44 @@ TEST_F(HdmiCecSource_L2Test, GetEnabled_JSONRPC)
  */
 TEST_F(HdmiCecSource_L2Test, SetOSDName_COMRPC)
 {
-    HdmiCecSourceInterfaceHelper helper(this);
-    if (!helper.IsValid()) {
-        return;
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSource != nullptr);
+        if (m_controller_cecSource) {
+            EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+            if (m_cecSourcePlugin) {
+                TEST_LOG("Testing SetOSDName via COM-RPC");
+
+                // Declare output parameters
+                string testOSDName = "TestSTB";
+                HdmiCecSourceSuccess setResult;
+
+                // Call the API
+                uint32_t result = m_cecSourcePlugin->SetOSDName(testOSDName, setResult);
+
+                // Validate result
+                EXPECT_EQ(result, Core::ERROR_NONE);
+                if (result != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(setResult.success);
+
+                // Log output
+                TEST_LOG("  osdName set to: %s", testOSDName.c_str());
+                TEST_LOG("  success: %d", setResult.success);
+
+                m_cecSourcePlugin->Unregister(&m_notificationHandler);
+                m_cecSourcePlugin->Release();
+            } else {
+                TEST_LOG("m_cecSourcePlugin is NULL");
+            }
+            m_controller_cecSource->Release();
+        } else {
+            TEST_LOG("m_controller_cecSource is NULL");
+        }
     }
-    
-    TEST_LOG("Testing SetOSDName via COM-RPC");
-
-    // Declare output parameters
-    string testOSDName = "TestSTB";
-    HdmiCecSourceSuccess setResult;
-
-    // Call the API
-    uint32_t result = helper.Plugin()->SetOSDName(testOSDName, setResult);
-
-    // Validate result
-    EXPECT_EQ(result, Core::ERROR_NONE);
-    if (result != Core::ERROR_NONE) {
-        std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
-        TEST_LOG("Err: %s", errorMsg.c_str());
-    }
-    EXPECT_TRUE(setResult.success);
-
-    // Log output
-    TEST_LOG("  osdName set to: %s", testOSDName.c_str());
-    TEST_LOG("  success: %d", setResult.success);
-
-    helper.Plugin()->Unregister(&m_notificationHandler);
 }
 
 /**
@@ -902,34 +887,45 @@ TEST_F(HdmiCecSource_L2Test, SetOSDName_JSONRPC)
  */
 TEST_F(HdmiCecSource_L2Test, GetOSDName_COMRPC)
 {
-    HdmiCecSourceInterfaceHelper helper(this);
-    if (!helper.IsValid()) {
-        return;
+    if (CreateHdmiCecSourceInterfaceObject() != Core::ERROR_NONE) {
+        TEST_LOG("Invalid HdmiCecSource_Client");
+    } else {
+        EXPECT_TRUE(m_controller_cecSource != nullptr);
+        if (m_controller_cecSource) {
+            EXPECT_TRUE(m_cecSourcePlugin != nullptr);
+            if (m_cecSourcePlugin) {
+                TEST_LOG("Testing GetOSDName via COM-RPC");
+
+                // Declare output parameters
+                string osdName;
+                bool success = false;
+
+                // Call the API
+                uint32_t result = m_cecSourcePlugin->GetOSDName(osdName, success);
+
+                // Validate result
+                EXPECT_EQ(result, Core::ERROR_NONE);
+                if (result != Core::ERROR_NONE) {
+                    std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
+                    TEST_LOG("Err: %s", errorMsg.c_str());
+                }
+                EXPECT_TRUE(success);
+
+                // Log and validate output
+                TEST_LOG("  osdName: %s", osdName.c_str());
+                TEST_LOG("  success: %d", success);
+                EXPECT_FALSE(osdName.empty());
+
+                m_cecSourcePlugin->Unregister(&m_notificationHandler);
+                m_cecSourcePlugin->Release();
+            } else {
+                TEST_LOG("m_cecSourcePlugin is NULL");
+            }
+            m_controller_cecSource->Release();
+        } else {
+            TEST_LOG("m_controller_cecSource is NULL");
+        }
     }
-    
-    TEST_LOG("Testing GetOSDName via COM-RPC");
-
-    // Declare output parameters
-    string osdName;
-    bool success = false;
-
-    // Call the API
-    uint32_t result = helper.Plugin()->GetOSDName(osdName, success);
-
-    // Validate result
-    EXPECT_EQ(result, Core::ERROR_NONE);
-    if (result != Core::ERROR_NONE) {
-        std::string errorMsg = "COM-RPC returned error " + std::to_string(result) + " (" + std::string(Core::ErrorToString(result)) + ")";
-        TEST_LOG("Err: %s", errorMsg.c_str());
-    }
-    EXPECT_TRUE(success);
-
-    // Log and validate output
-    TEST_LOG("  osdName: %s", osdName.c_str());
-    TEST_LOG("  success: %d", success);
-    EXPECT_FALSE(osdName.empty());
-
-    helper.Plugin()->Unregister(&m_notificationHandler);
 }
 
 /**
@@ -2333,7 +2329,7 @@ TEST_F(HdmiCecSource_L2Test, InjectCECVersionFrameAndVerifyDeviceAdded)
 
     // Wait for OnDeviceAdded event
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
+    //uint32_t signalled = WaitForRequestStatus(EVNT_TIMEOUT, ON_DEVICE_ADDED);
     //EXPECT_TRUE(signalled & ON_DEVICE_ADDED);
     //EXPECT_EQ(m_notificationHandler.GetLogicalAddress(), 5);
     TEST_LOG("CECVersion frame processed - device 5 added");
