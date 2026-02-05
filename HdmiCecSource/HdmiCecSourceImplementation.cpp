@@ -322,6 +322,8 @@ namespace WPEFramework
 
     HdmiCecSourceImplementation::HdmiCecSourceImplementation()
     : cecEnableStatus(false)
+    , cecSettingEnabled(false)
+    , cecOTPSettingEnabled(false)
     , smConnection(nullptr)
     , m_numberOfDevices(0)
     , m_pollThreadExit(false)
