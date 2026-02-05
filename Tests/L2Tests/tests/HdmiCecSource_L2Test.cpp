@@ -223,24 +223,6 @@ private:
     int m_keyCode;
 };
 
-class AsyncHandlerMock_HdmiCecSource {
-public:
-    AsyncHandlerMock_HdmiCecSource()
-    {
-        m_asyncHandlerMock = new NiceMock<MockAsyncHandler>;
-    }
-
-    virtual ~AsyncHandlerMock_HdmiCecSource()
-    {
-        delete m_asyncHandlerMock;
-    }
-
-    MockAsyncHandler& mock() { return *m_asyncHandlerMock; }
-
-private:
-    MockAsyncHandler* m_asyncHandlerMock;
-};
-
 class HdmiCecSource_L2Test : public L2TestMocks {
 protected:
     HdmiCecSource_L2Test();
