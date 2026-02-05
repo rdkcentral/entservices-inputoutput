@@ -78,6 +78,18 @@ public:
     virtual void onKeyPressEvent(int logicalAddress, int keyCode) = 0;
 };
 
+class MockAsyncHandler : public AsyncHandlerMock {
+public:
+    MOCK_METHOD(void, onActiveSourceStatusUpdated, (bool status), (override));
+    MOCK_METHOD(void, onDeviceAdded, (int logicalAddress), (override));
+    MOCK_METHOD(void, onDeviceRemoved, (int logicalAddress), (override));
+    MOCK_METHOD(void, onDeviceInfoUpdated, (int logicalAddress), (override));
+    MOCK_METHOD(void, standbyMessageReceived, (int logicalAddress), (override));
+    MOCK_METHOD(void, onKeyReleaseEvent, (int logicalAddress), (override));
+    MOCK_METHOD(void, onKeyPressEvent, (int logicalAddress, int keyCode), (override));
+};
+}
+
 
 
 // Event flags for different CEC events
