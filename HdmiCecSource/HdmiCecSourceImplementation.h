@@ -39,13 +39,9 @@
 #include "UtilsBIT.h"
 #include "UtilsThreadRAII.h"
 
-#include <interfaces/IPowerManager.h>
-#include "PowerManagerInterface.h"
 #include <interfaces/IHdmiCecSource.h>
 
 using namespace WPEFramework;
-using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
-using ThermalTemperature = WPEFramework::Exchange::IPowerManager::ThermalTemperature;
 
 namespace WPEFramework {
 
@@ -225,36 +221,8 @@ namespace WPEFramework {
             END_INTERFACE_MAP
 
 
-        private:
-            class PowerManagerNotification : public Exchange::IPowerManager::IModeChangedNotification {
-            private:
-                PowerManagerNotification(const PowerManagerNotification&) = delete;
-                PowerManagerNotification& operator=(const PowerManagerNotification&) = delete;
             
-            public:
-                explicit PowerManagerNotification(HdmiCecSourceImplementation& parent)
-                    : _parent(parent)
-                {
-                }
-                ~PowerManagerNotification() override = default;
-            
-            public:
-                void OnPowerModeChanged(const PowerState currentState, const PowerState newState) override
-                {
-                    _parent.onPowerModeChanged(currentState, newState);
-                }
-
-                template <typename T>
-                T* baseInterface()
-                {
-                    static_assert(std::is_base_of<T, PowerManagerNotification>(), "base type mismatch");
-                    return static_cast<T*>(this);
-                }
-
-                BEGIN_INTERFACE_MAP(PowerManagerNotification)
-                INTERFACE_ENTRY(Exchange::IPowerManager::IModeChangedNotification)
-                END_INTERFACE_MAP
-
+ 
             private:
                 HdmiCecSourceImplementation& _parent;
         
@@ -284,10 +252,10 @@ namespace WPEFramework {
 		
             HdmiCecSourceProcessor *msgProcessor;
             HdmiCecSourceFrameListener *msgFrameListener;
-            void InitializePowerManager(PluginHost::IShell *service);
             const void InitializeIARM();
             void DeinitializeIARM();
             static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void pwrMgrModeChangeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
             void onHdmiHotPlug(int connectStatus);
             bool loadSettings();
             void persistSettings(bool enableStatus);
@@ -311,9 +279,6 @@ namespace WPEFramework {
             static void threadCecDaemonInitHandler();
             static void threadCecStatusUpdateHandler(int data);
             uint32_t sendKeyPressEvent(const int logicalAddress, int keyCode);
-            PowerManagerInterfaceRef _powerManagerPlugin;
-            Core::Sink<PowerManagerNotification> _pwrMgrNotification;
-            bool _registeredEventHandlers;
             private:
                 mutable Core::CriticalSection _adminLock;
                 std::list<Exchange::IHdmiCecSource::INotification*> _hdmiCecSourceNotifications;

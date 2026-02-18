@@ -24,6 +24,7 @@
  #include "videoOutputPort.hpp"
  #include "videoOutputPortConfig.hpp"
  #include "dsMgr.h"
+#include "pwrMgr.h"
  #include "manager.hpp"
  #include "host.hpp"
  
@@ -39,7 +40,6 @@
  #define API_VERSION_NUMBER_MINOR 0
  #define API_VERSION_NUMBER_PATCH 9
  
- using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
  
  namespace WPEFramework
  {
@@ -48,7 +48,6 @@
          SERVICE_REGISTRATION(HdcpProfileImplementation, 1, 0);
          HdcpProfileImplementation *HdcpProfileImplementation::_instance = nullptr;
          
-         PowerManagerInterfaceRef HdcpProfileImplementation::_powerManagerPlugin;        
          
          
          HdcpProfileImplementation::HdcpProfileImplementation()
@@ -61,9 +60,6 @@
          HdcpProfileImplementation::~HdcpProfileImplementation()
          {
              LOGINFO("Call HdcpProfileImplementation destructor\n");
-             if (_powerManagerPlugin) {
-                _powerManagerPlugin.Reset();
-             }
              if(_service != nullptr)
              {
                 _service->Release();
@@ -73,14 +69,6 @@
              mShell = nullptr;
          }
  
-         void HdcpProfileImplementation::InitializePowerManager(PluginHost::IShell *service)
-         {
-             _powerManagerPlugin = PowerManagerInterfaceBuilder(_T("org.rdk.PowerManager"))
-                                     .withIShell(service)
-                                     .withRetryIntervalMS(200)
-                                     .withRetryCount(25)
-                                     .createInterface();
-         }
  
          void HdcpProfileImplementation::InitializeIARM()
          {
@@ -146,8 +134,6 @@
          void HdcpProfileImplementation::dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
          {
              uint32_t res = Core::ERROR_GENERAL;
-             PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
-             PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
  
              if(!HdcpProfileImplementation::_instance)
                  return;
@@ -162,21 +148,14 @@
              }
              else if (IARM_BUS_DSMGR_EVENT_HDCP_STATUS == eventId)
              {
-                 ASSERT (_powerManagerPlugin);
-                 if (_powerManagerPlugin){
-                     res = _powerManagerPlugin->GetPowerState(pwrStateCur, pwrStatePrev);
-                     if (Core::ERROR_NONE != res)
-                     {
-                         LOGWARN("Failed to Invoke RPC method: GetPowerState");
-                     }
-                     else
-                     {
-                         IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
-                         int hdcpStatus = eventData->data.hdmi_hdcp.hdcpStatus;
-                         LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDCP_STATUS  event data:%d  param.curState: %d \r\n", hdcpStatus,pwrStateCur);
-                         HdcpProfileImplementation::_instance->onHdmiOutputHDCPStatusEvent(hdcpStatus);
-                     }
-                 }
+                IARM_Bus_PWRMgr_GetPowerState_Param_t param;
+                check_ret = IARM_Bus_Call(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_GetPowerState, (void *)&param, sizeof(param));
+                if(check_ret != IARM_RESULT_SUCCESS)
+                    LOGWARN("Failed to Invoke RPC method: GetPowerState");
+                    IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
+                    int hdcpStatus = eventData->data.hdmi_hdcp.hdcpStatus;
+                    LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDCP_STATUS  event data:%d  param.curState: %d \r\n", hdcpStatus,pwrStateCur);
+                    HdcpProfileImplementation::_instance->onHdmiOutputHDCPStatusEvent(hdcpStatus);
              }
          }
  

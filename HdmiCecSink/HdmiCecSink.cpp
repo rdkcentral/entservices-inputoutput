@@ -25,6 +25,7 @@
 #include "host.hpp"
 #include "UtilsgetRFCConfig.h"
 
+#include "pwrMgr.h"
 #include "dsMgr.h"
 #include "dsRpc.h"
 #include "dsDisplay.h"
@@ -681,8 +682,6 @@ namespace WPEFramework
 
        HdmiCecSink::HdmiCecSink()
        : PluginHost::JSONRPC()
-        , _pwrMgrNotification(*this)
-        , _registeredEventHandlers(false)
        {
            LOGWARN("Initlaizing HdmiCecSink");
        }
@@ -690,9 +689,9 @@ namespace WPEFramework
        HdmiCecSink::~HdmiCecSink()
        {
        }
-       const std::string HdmiCecSink::Initialize(PluginHost::IShell *service)
+       const std::string HdmiCecSink::Initialize(PluginHost::IShell * /* service */)
        {
-            InitializePowerManager(service);
+
 		   profileType = searchRdkProfile();
 
 		   if (profileType == STB || profileType == NOT_FOUND)
@@ -765,17 +764,15 @@ namespace WPEFramework
            m_arcStartStopTimer.connect( std::bind( &HdmiCecSink::arcStartStopTimerFunction, this ) );
            m_arcStartStopTimer.setSingleShot(true);
             // get power state:
-            Core::hresult res = Core::ERROR_GENERAL;
-            PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
-            PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
-
-            ASSERT (_powerManagerPlugin);
-            if (_powerManagerPlugin) {
-                res = _powerManagerPlugin->GetPowerState(pwrStateCur, pwrStatePrev);
-                if (Core::ERROR_NONE == res) {
-                    powerState = (pwrStateCur == WPEFramework::Exchange::IPowerManager::POWER_STATE_ON) ? DEVICE_POWER_STATE_ON : DEVICE_POWER_STATE_OFF;
-                    LOGINFO("Current state is PowerManagerPlugin: (%d) powerState :%d \n", pwrStateCur, powerState);
-                }
+            IARM_Bus_PWRMgr_GetPowerState_Param_t param;
+            err = IARM_Bus_Call(IARM_BUS_PWRMGR_NAME,
+                            IARM_BUS_PWRMGR_API_GetPowerState,
+                            (void *)&param,
+                            sizeof(param));
+            if(err == IARM_RESULT_SUCCESS)
+            {
+                powerState = (param.curState == IARM_BUS_PWRMGR_POWERSTATE_ON)? DEVICE_POWER_STATE_ON :  DEVICE_POWER_STATE_OFF;
+                LOGINFO("Current state is IARM: (%d) powerState :%d \n",param.curState,powerState);
             }
 
             err = IARM_Bus_Call(IARM_BUS_DSMGR_NAME,
@@ -822,12 +819,6 @@ namespace WPEFramework
 
        void HdmiCecSink::Deinitialize(PluginHost::IShell* /* service */)
        {
-           if(_powerManagerPlugin)
-           {
-               _powerManagerPlugin->Unregister(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
-               _powerManagerPlugin.Reset();
-           }
-           _registeredEventHandlers = false;
 
 		profileType = searchRdkProfile();
 
@@ -888,6 +879,7 @@ namespace WPEFramework
             {
                 IARM_Result_t res;
                 IARM_CHECK( IARM_Bus_RegisterEventHandler(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, dsHdmiEventHandler) );
+                IARM_CHECK( IARM_Bus_RegisterEventHandler(IARM_BUS_PWRMGR_NAME,IARM_BUS_PWRMGR_EVENT_MODECHANGED, pwrMgrModeChangeEventHandler) );
            }
        }
 
@@ -897,26 +889,8 @@ namespace WPEFramework
             {
                 IARM_Result_t res;
                 IARM_CHECK( IARM_Bus_RemoveEventHandler(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, dsHdmiEventHandler) );
+                IARM_CHECK( IARM_Bus_RemoveEventHandler(IARM_BUS_PWRMGR_NAME,IARM_BUS_PWRMGR_EVENT_MODECHANGED, pwrMgrModeChangeEventHandler) );
             }
-       }
-
-        void HdmiCecSink::InitializePowerManager(PluginHost::IShell *service)
-        {
-            _powerManagerPlugin = PowerManagerInterfaceBuilder(_T("org.rdk.PowerManager"))
-                                    .withIShell(service)
-                                    .withRetryIntervalMS(200)
-                                    .withRetryCount(25)
-                                    .createInterface();
-            registerEventHandlers();
-        }
-       void HdmiCecSink::registerEventHandlers()
-       {
-           ASSERT (_powerManagerPlugin);
-
-           if(!_registeredEventHandlers && _powerManagerPlugin) {
-               _registeredEventHandlers = true;
-               _powerManagerPlugin->Register(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
-           }
        }
 
        void HdmiCecSink::dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
@@ -934,48 +908,53 @@ namespace WPEFramework
             }
        }
 
-       void HdmiCecSink::onPowerModeChanged(const PowerState currentState, const PowerState newState)
+       void HdmiCecSink::pwrMgrModeChangeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
        {
             if(!HdmiCecSink::_instance)
                 return;
 
-            LOGINFO("Event IARM_BUS_PWRMGR_EVENT_MODECHANGED: State Changed %d -- > %d\r",
-                    currentState, newState);
-            LOGWARN(" m_logicalAddressAllocated 0x%x CEC enable status %d \n",_instance->m_logicalAddressAllocated,_instance->cecEnableStatus);
-            if(newState == WPEFramework::Exchange::IPowerManager::POWER_STATE_ON)
-            {
-                powerState = DEVICE_POWER_STATE_ON; 
-            }
-            else
-            {
-                    powerState = DEVICE_POWER_STATE_OFF;
-                    if((_instance->m_currentArcRoutingState == ARC_STATE_REQUEST_ARC_INITIATION) || (_instance->m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
+            if (strcmp(owner, IARM_BUS_PWRMGR_NAME)  == 0) {
+                if (eventId == IARM_BUS_PWRMGR_EVENT_MODECHANGED ) {
+                    IARM_Bus_PWRMgr_EventData_t *param = (IARM_Bus_PWRMgr_EventData_t *)data;
+                    LOGINFO("Event IARM_BUS_PWRMGR_EVENT_MODECHANGED: State Changed %d -- > %d\r",
+                            param->data.state.curState, param->data.state.newState);
+		           LOGWARN(" m_logicalAddressAllocated 0x%x CEC enable status %d \n",_instance->m_logicalAddressAllocated,_instance->cecEnableStatus);
+                    if(param->data.state.newState == IARM_BUS_PWRMGR_POWERSTATE_ON)
                     {
-                        LOGINFO("%s: Stop ARC \n",__FUNCTION__);
-                        _instance->stopArc();
-            }
+                        powerState = DEVICE_POWER_STATE_ON; 
+					}
+                    else
+                   	{
+                            powerState = DEVICE_POWER_STATE_OFF;
+                            if((_instance->m_currentArcRoutingState == ARC_STATE_REQUEST_ARC_INITIATION) || (_instance->m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
+                            {
+                                LOGINFO("%s: Stop ARC \n",__FUNCTION__);
+                                _instance->stopArc();
+			    }
 
-            	}
-                if (_instance->cecEnableStatus)
-            {
-            if ( _instance->m_logicalAddressAllocated != LogicalAddress::UNREGISTERED )
-            {
-            	_instance->deviceList[_instance->m_logicalAddressAllocated].m_powerStatus = PowerStatus(powerState);
+                   	}
+                        if (_instance->cecEnableStatus)
+		        {
+					if ( _instance->m_logicalAddressAllocated != LogicalAddress::UNREGISTERED )
+					{
+						_instance->deviceList[_instance->m_logicalAddressAllocated].m_powerStatus = PowerStatus(powerState);
 
-            	if ( powerState != DEVICE_POWER_STATE_ON )
-            	{
-            	   /*  reset the current active source when TV on going to standby */
-                   			    HdmiCecSink::_instance->m_currentActiveSource = -1;
-            	}
-                                        /* Initiate a ping straight away */
-                                        HdmiCecSink::_instance->m_pollNextState = POLL_THREAD_STATE_PING;
-                                        HdmiCecSink::_instance->m_ThreadExitCV.notify_one();
-            }
-            }
-            else
-            {
-            LOGWARN("CEC not Enabled\n");
-            }
+						if ( powerState != DEVICE_POWER_STATE_ON )
+						{
+						   /*  reset the current active source when TV on going to standby */
+                           			    HdmiCecSink::_instance->m_currentActiveSource = -1;
+						}
+                                                /* Initiate a ping straight away */
+                                                HdmiCecSink::_instance->m_pollNextState = POLL_THREAD_STATE_PING;
+                                                HdmiCecSink::_instance->m_ThreadExitCV.notify_one();
+					}
+			}
+			else
+			{
+				LOGWARN("CEC not Enabled\n");
+			}
+                }
+           }
        }
 
 

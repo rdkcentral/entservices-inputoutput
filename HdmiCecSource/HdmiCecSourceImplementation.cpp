@@ -25,6 +25,7 @@
 #include "ccec/MessageEncoder.hpp"
 #include "host.hpp"
 
+#include "pwrMgr.h"
 #include "dsMgr.h"
 #include "dsDisplay.h"
 #include "videoOutputPort.hpp"
@@ -397,8 +398,6 @@ namespace WPEFramework
     {
         LOGINFO("Configure");
         ASSERT(service != nullptr);
-        PowerState pwrStateCur = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
-        PowerState pwrStatePrev = WPEFramework::Exchange::IPowerManager::POWER_STATE_UNKNOWN;
         Core::hresult res = Core::ERROR_GENERAL;
         string msg;
         if (Utils::IARM::init()) {
@@ -410,7 +409,6 @@ namespace WPEFramework
 
             //CEC plugin functionalities will only work if CECmgr is available. If plugin Initialize failure upper layer will call dtor directly.
             InitializeIARM();
-            InitializePowerManager(service);
 
             // load persistence setting
             loadSettings();
@@ -437,16 +435,17 @@ namespace WPEFramework
                  LOGWARN("Exception in getting edid info .\r\n");
              }
 
-             // get power state:
-             ASSERT (_powerManagerPlugin);
-             if (_powerManagerPlugin){
-                 res = _powerManagerPlugin->GetPowerState(pwrStateCur, pwrStatePrev);
-                 if (Core::ERROR_NONE == res)
-                 {
-                     powerState = (pwrStateCur == WPEFramework::Exchange::IPowerManager::POWER_STATE_ON)?0:1 ;
-                     LOGINFO("Current state is PowerManagerPlugin: (%d) powerState :%d \n",pwrStateCur,powerState);
-                 }
-             }
+                // get power state:
+                IARM_Bus_PWRMgr_GetPowerState_Param_t param;
+                int err = IARM_Bus_Call(IARM_BUS_PWRMGR_NAME,
+                            IARM_BUS_PWRMGR_API_GetPowerState,
+                            (void *)&param,
+                            sizeof(param));
+                if(err == IARM_RESULT_SUCCESS)
+                {
+                    powerState = (param.curState == IARM_BUS_PWRMGR_POWERSTATE_ON)?0:1 ;
+                    LOGINFO("Current state is IARM: (%d) powerState :%d \n",param.curState,powerState);
+                }
 
              if (cecSettingEnabled)
              {
@@ -463,22 +462,9 @@ namespace WPEFramework
             msg = "IARM bus is not available";
             LOGERR("IARM bus is not available. Failed to activate HdmiCecSource Plugin");
         }
-        ASSERT(_powerManagerPlugin);
-        registerEventHandlers();
         return Core::ERROR_NONE;
     }
 
-    void HdmiCecSourceImplementation::registerEventHandlers()
-    {
-        ASSERT (_powerManagerPlugin);
-    
-        if(!_registeredEventHandlers && _powerManagerPlugin) {
-            _registeredEventHandlers = true;
-            _powerManagerPlugin->Register(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
-        }
-
-
-    }
 
     Core::hresult HdmiCecSourceImplementation::Register(Exchange::IHdmiCecSource::INotification* notification)
     {
@@ -720,21 +706,12 @@ namespace WPEFramework
             }
        }
 
-        void HdmiCecSourceImplementation::InitializePowerManager(PluginHost::IShell *service)
-        {
-            LOGINFO("Connect the COM-RPC socket\n");
-            _powerManagerPlugin = PowerManagerInterfaceBuilder(_T("org.rdk.PowerManager"))
-                                    .withIShell(service)
-                                    .withRetryIntervalMS(200)
-                                    .withRetryCount(25)
-                                    .createInterface();
-            registerEventHandlers();
-        }
 
        const void HdmiCecSourceImplementation::InitializeIARM()
        {
             IARM_Result_t res;
             IARM_CHECK( IARM_Bus_RegisterEventHandler(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, dsHdmiEventHandler) );
+            IARM_CHECK( IARM_Bus_RegisterEventHandler(IARM_BUS_PWRMGR_NAME,IARM_BUS_PWRMGR_EVENT_MODECHANGED, pwrMgrModeChangeEventHandler) );
        }
 
        void HdmiCecSourceImplementation::DeinitializeIARM()
@@ -743,6 +720,7 @@ namespace WPEFramework
             {
                 IARM_Result_t res;
                 IARM_CHECK( IARM_Bus_RemoveEventHandler(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG,dsHdmiEventHandler) );
+                IARM_CHECK( IARM_Bus_RemoveEventHandler(IARM_BUS_PWRMGR_NAME,IARM_BUS_PWRMGR_EVENT_MODECHANGED,pwrMgrModeChangeEventHandler) );
             }
        }
         void HdmiCecSourceImplementation::threadHotPlugEventHandler(int data)
@@ -780,20 +758,26 @@ namespace WPEFramework
             }
        }
 
-       void HdmiCecSourceImplementation::onPowerModeChanged(const PowerState currentState, const PowerState newState)
+       void HdmiCecSource::pwrMgrModeChangeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
        {
             if(!HdmiCecSourceImplementation::_instance)
                 return;
 
-            LOGINFO("Event IARM_BUS_PWRMGR_EVENT_MODECHANGED: State Changed %d -- > %d\r",
-                    currentState, newState);
-            if (WPEFramework::Exchange::IPowerManager::POWER_STATE_ON == newState)
-            {
-                powerState = 0;
-                HdmiCecSourceImplementation::_instance->getLogicalAddress(); // get the updated LA after wakeup
-            }
-            else
-                powerState = 1;
+            if (strcmp(owner, IARM_BUS_PWRMGR_NAME)  == 0) {
+                if (eventId == IARM_BUS_PWRMGR_EVENT_MODECHANGED ) {
+                    IARM_Bus_PWRMgr_EventData_t *param = (IARM_Bus_PWRMgr_EventData_t *)data;
+                    LOGINFO("Event IARM_BUS_PWRMGR_EVENT_MODECHANGED: State Changed %d -- > %d\r",
+                            param->data.state.curState, param->data.state.newState);
+                    if(param->data.state.newState == IARM_BUS_PWRMGR_POWERSTATE_ON)
+                    {
+                        powerState = 0; 
+                        HdmiCecSourceImplementation::_instance->getLogicalAddress(); // get the updated LA after wakeup
+                    }
+                    else
+                        powerState = 1;
+
+                }
+           }
        }
 
        void HdmiCecSourceImplementation::onHdmiHotPlug(int connectStatus)
