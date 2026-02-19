@@ -216,16 +216,11 @@ namespace WPEFramework {
                    int keyCode;
                 }SendKeyInfo;
             BEGIN_INTERFACE_MAP(HdmiCecSourceImplementation)
-                INTERFACE_ENTRY(Exchange::IHdmiCecSource)
+            INTERFACE_ENTRY(Exchange::IHdmiCecSource)
             END_INTERFACE_MAP
-
-
-            
+          
  
             private:
-                HdmiCecSourceImplementation& _parent;
-        
-            };
             // We do not allow this plugin to be copied !!
             HdmiCecSourceImplementation(const HdmiCecSourceImplementation&) = delete;
             HdmiCecSourceImplementation& operator=(const HdmiCecSourceImplementation&) = delete;
