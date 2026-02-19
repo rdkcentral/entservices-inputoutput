@@ -42,7 +42,6 @@
 #include <interfaces/IHdmiCecSource.h>
 
 using namespace WPEFramework;
-using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
 
 namespace WPEFramework {
 
