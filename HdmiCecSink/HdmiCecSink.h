@@ -39,13 +39,6 @@
 #include <chrono>
 
 #include "UtilsLogging.h"
-#include <interfaces/IPowerManager.h>
-#include "PowerManagerInterface.h"
-
-using namespace WPEFramework;
-using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
-using ThermalTemperature = WPEFramework::Exchange::IPowerManager::ThermalTemperature;
-
 
 namespace WPEFramework {
 
@@ -573,8 +566,6 @@ private:
             void sendKeyReleaseEvent(const int logicalAddress);
 	    void sendUserControlPressed(const int logicalAddress, int keyCode);
             void sendUserControlReleased(const int logicalAddress);
-            void onPowerModeChanged(const PowerState currentState, const PowerState newState);
-            void registerEventHandlers();
             void sendGiveAudioStatusMsg();
             void getHdmiArcPortID();
 			int m_numberOfDevices; /* Number of connected devices othethan own device */
@@ -586,38 +577,6 @@ private:
             END_INTERFACE_MAP
 
         private:
-            class PowerManagerNotification : public Exchange::IPowerManager::IModeChangedNotification {
-            private:
-                PowerManagerNotification(const PowerManagerNotification&) = delete;
-                PowerManagerNotification& operator=(const PowerManagerNotification&) = delete;
-
-            public:
-                explicit PowerManagerNotification(HdmiCecSink& parent)
-                    : _parent(parent)
-                {
-                }
-                ~PowerManagerNotification() override = default;
-
-            public:
-                void OnPowerModeChanged(const PowerState currentState, const PowerState newState) override
-                {
-                    _parent.onPowerModeChanged(currentState, newState);
-                }
-
-                template <typename T>
-                T* baseInterface()
-                {
-                    static_assert(std::is_base_of<T, PowerManagerNotification>(), "base type mismatch");
-                    return static_cast<T*>(this);
-                }
-            
-                BEGIN_INTERFACE_MAP(PowerManagerNotification)
-                INTERFACE_ENTRY(Exchange::IPowerManager::IModeChangedNotification)
-                END_INTERFACE_MAP
-
-            private:
-                HdmiCecSink& _parent;
-            };
             // We do not allow this plugin to be copied !!
             HdmiCecSink(const HdmiCecSink&) = delete;
             HdmiCecSink& operator=(const HdmiCecSink&) = delete;
@@ -649,7 +608,6 @@ private:
 			uint32_t getAudioDeviceConnectedStatusWrapper(const JsonObject& parameters, JsonObject& response);
                         uint32_t requestAudioDevicePowerStatusWrapper(const JsonObject& parameters, JsonObject& response);
                         uint32_t setLatencyInfoWrapper(const JsonObject& parameters, JsonObject& response);
-            void InitializePowerManager(PluginHost::IShell *service);
 			//End methods
             std::string logicalAddressDeviceType;
             bool cecSettingEnabled;
@@ -697,9 +655,6 @@ private:
 			std::vector<uint8_t> m_connectedDevices;
             HdmiCecSinkProcessor *msgProcessor;
             HdmiCecSinkFrameListener *msgFrameListener;
-            PowerManagerInterfaceRef _powerManagerPlugin;
-            Core::Sink<PowerManagerNotification> _pwrMgrNotification;
-            bool _registeredEventHandlers;
             const void InitializeIARM();
             void DeinitializeIARM();
 			void allocateLogicalAddress(int deviceType);
@@ -712,6 +667,7 @@ private:
 			static void threadRun();
 			void cecMonitoringThread();
             static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void pwrMgrModeChangeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
             void onHdmiHotPlug(int portId, int connectStatus);
             bool loadSettings();
             void persistSettings(bool enableStatus);

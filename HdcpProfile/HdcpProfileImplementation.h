@@ -22,7 +22,6 @@
  #include "Module.h"
  #include <interfaces/Ids.h>
  #include <interfaces/IHdcpProfile.h>
- #include <interfaces/IPowerManager.h>
  #include<interfaces/IConfiguration.h>
  
  #include <com/com.h>
@@ -32,7 +31,6 @@
  
  #include "libIBus.h"
  
- #include "PowerManagerInterface.h"
  
  namespace WPEFramework
  {
@@ -116,7 +114,6 @@
              Core::hresult GetHDCPStatus(HDCPStatus& hdcpstatus,bool& success) override;
              Core::hresult GetSettopHDCPSupport(string& supportedHDCPVersion,bool& isHDCPSupported,bool& success) override;
              bool GetHDCPStatusInternal(HDCPStatus& hdcpstatus);
-             void InitializePowerManager(PluginHost::IShell *service);
              void InitializeIARM();
              void DeinitializeIARM();
              static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
@@ -124,7 +121,6 @@
              void onHdmiOutputHDCPStatusEvent(int);
              void logHdcpStatus (const char *trigger, HDCPStatus& status);   
              void onHdcpProfileDisplayConnectionChanged();  
-             static PowerManagerInterfaceRef _powerManagerPlugin;      
              uint32_t Configure(PluginHost::IShell* service) override;
  
          private:
