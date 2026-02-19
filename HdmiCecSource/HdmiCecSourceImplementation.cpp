@@ -372,8 +372,6 @@ namespace WPEFramework
 
     HdmiCecSourceImplementation::HdmiCecSourceImplementation()
     : cecEnableStatus(false),smConnection(nullptr), m_sendKeyEventThreadRun(false)
-    , _pwrMgrNotification(*this)
-    , _registeredEventHandlers(false)
     {
         LOGWARN("ctor");
         HdmiCecSourceImplementation::_instance = this;
@@ -383,22 +381,14 @@ namespace WPEFramework
     {
          LOGWARN("dtor");
          HdmiCecSourceImplementation::_instance = nullptr;
-
-           if(_powerManagerPlugin)
-           {
-               _powerManagerPlugin->Unregister(_pwrMgrNotification.baseInterface<Exchange::IPowerManager::IModeChangedNotification>());
-               _powerManagerPlugin.Reset();
-           }
-           _registeredEventHandlers = false;
-
-           DeinitializeIARM();
+         DeinitializeIARM();
     }
 
     Core::hresult HdmiCecSourceImplementation::Configure(PluginHost::IShell* service)
     {
         LOGINFO("Configure");
         ASSERT(service != nullptr);
-        Core::hresult res = Core::ERROR_GENERAL;
+
         string msg;
         if (Utils::IARM::init()) {
             //Initialize cecEnableStatus to false in ctor
@@ -758,7 +748,7 @@ namespace WPEFramework
             }
        }
 
-       void HdmiCecSource::pwrMgrModeChangeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
+       void HdmiCecSourceImplementation::pwrMgrModeChangeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
        {
             if(!HdmiCecSourceImplementation::_instance)
                 return;
@@ -770,8 +760,7 @@ namespace WPEFramework
                             param->data.state.curState, param->data.state.newState);
                     if(param->data.state.newState == IARM_BUS_PWRMGR_POWERSTATE_ON)
                     {
-                        powerState = 0; 
-                        HdmiCecSourceImplementation::_instance->getLogicalAddress(); // get the updated LA after wakeup
+                        powerState = 0;
                     }
                     else
                         powerState = 1;

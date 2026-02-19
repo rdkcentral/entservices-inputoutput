@@ -148,7 +148,7 @@
              else if (IARM_BUS_DSMGR_EVENT_HDCP_STATUS == eventId)
              {
                 IARM_Bus_PWRMgr_GetPowerState_Param_t param;
-                IARM_Result_t check_ret = IARM_Bus_Call(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_GetPowerState, (void *)&param, sizeof(param));
+                check_ret = IARM_Bus_Call(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_GetPowerState, (void *)&param, sizeof(param));
                 if(check_ret != IARM_RESULT_SUCCESS) 
 				{
                     LOGWARN("Failed to Invoke RPC method: GetPowerState");
