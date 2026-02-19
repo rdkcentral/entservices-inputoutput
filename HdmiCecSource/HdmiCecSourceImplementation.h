@@ -42,6 +42,7 @@
 #include <interfaces/IHdmiCecSource.h>
 
 using namespace WPEFramework;
+using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
 
 namespace WPEFramework {
 
@@ -192,7 +193,6 @@ namespace WPEFramework {
         public:
             HdmiCecSourceImplementation();
             virtual ~HdmiCecSourceImplementation();
-            void onPowerModeChanged(const PowerState currentState, const PowerState newState);
             void registerEventHandlers();
             static HdmiCecSourceImplementation* _instance;
             CECDeviceInfo_2 deviceList[16];
@@ -230,8 +230,6 @@ namespace WPEFramework {
             // We do not allow this plugin to be copied !!
             HdmiCecSourceImplementation(const HdmiCecSourceImplementation&) = delete;
             HdmiCecSourceImplementation& operator=(const HdmiCecSourceImplementation&) = delete;
-
-            
 		
             //End methods
             std::string logicalAddressDeviceType;
@@ -279,6 +277,7 @@ namespace WPEFramework {
             static void threadCecDaemonInitHandler();
             static void threadCecStatusUpdateHandler(int data);
             uint32_t sendKeyPressEvent(const int logicalAddress, int keyCode);
+
             private:
                 mutable Core::CriticalSection _adminLock;
                 std::list<Exchange::IHdmiCecSource::INotification*> _hdmiCecSourceNotifications;
