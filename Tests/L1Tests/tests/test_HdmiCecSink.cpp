@@ -71,38 +71,6 @@ namespace
 		fileContentStream << "\n";
 		fileContentStream.close();
 	}
-
-	static void CreateCecSettingsFile(const std::string& filePath, bool cecEnabled = true, bool cecOTPEnabled = true, const std::string& osdName = "TV Box", unsigned int vendorId = 0x0019FB)
-	{
-		Core::File file(filePath);
-		
-		if (file.Exists()) {
-			file.Destroy();
-		}
-		
-		file.Create();
-		
-		JsonObject parameters;
-		parameters["cecEnabled"] = cecEnabled;
-		parameters["cecOTPEnabled"] = cecOTPEnabled;
-		parameters["cecOSDName"] = osdName;
-		parameters["cecVendorId"] = vendorId;
-		
-		parameters.IElement::ToFile(file);
-		file.Close();
-	}
-
-	static void CreateCecSettingsFileNoParams(const std::string& filePath)
-	{
-		Core::File file(filePath);
-		
-		if (file.Exists()) {
-			file.Destroy();
-		}
-		
-		file.Create();
-		file.Close();
-	}
 }
 
 class HdmiCecSinkInitializeTest : public ::testing::Test {
@@ -2644,7 +2612,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, InjectReportPowerStatus_AudioSystem_After
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     // Now inject ReportPowerStatus from Audio System (LA=5) to TV (LA=0)
-    // This should trigger line 428: reportAudioDevicePowerStatusInfo()
+    // This should trigger reportAudioDevicePowerStatusInfo()
     uint8_t audioSystemPowerStatusFrame[] = { 0x50, 0x90, 0x00 }; // From Audio System LA=5, Power On
 
     EXPECT_NO_THROW(InjectCECFrame(audioSystemPowerStatusFrame, sizeof(audioSystemPowerStatusFrame)));
@@ -2690,6 +2658,9 @@ TEST_F(HdmiCecSinkInitializedEventDsTest, onPresentationLanguageChanged_Differen
 
 TEST_F(HdmiCecSinkInitializedEventDsTest, onPresentationLanguageChanged_EmptyLanguage)
 {
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
     // Test with empty language string
     Plugin::HdmiCecSinkImplementation::_instance->onPresentationLanguageChanged("");
 }
@@ -2697,7 +2668,7 @@ TEST_F(HdmiCecSinkInitializedEventDsTest, onPresentationLanguageChanged_EmptyLan
 // Test fixture description: onPowerModeChanged event handler - tests PowerManager notification
 TEST_F(HdmiCecSinkInitializedEventDsTest, onPowerModeChanged_StandbyToOn)
 {
-    // Transition from STANDBY to ON
+    // Transition from STANDBY to ON - verifies power state update without CEC messages
     Plugin::HdmiCecSinkImplementation::_instance->onPowerModeChanged(
         WPEFramework::Exchange::IPowerManager::POWER_STATE_STANDBY,
         WPEFramework::Exchange::IPowerManager::POWER_STATE_ON
@@ -2718,7 +2689,10 @@ TEST_F(HdmiCecSinkInitializedEventDsTest, onPowerModeChanged_OnToStandby)
 
 TEST_F(HdmiCecSinkInitializedEventDsTest, onPowerModeChanged_StandbyToStandby)
 {
-    // No state change (STANDBY to STANDBY) - ensures else branch is covered
+    EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Return());
+
+    // Transition from STANDBY to STANDBY
     Plugin::HdmiCecSinkImplementation::_instance->onPowerModeChanged(
         WPEFramework::Exchange::IPowerManager::POWER_STATE_STANDBY,
         WPEFramework::Exchange::IPowerManager::POWER_STATE_STANDBY
@@ -2745,7 +2719,7 @@ TEST_F(HdmiCecSinkInitializedEventDsTest, onPowerModeChanged_OnToStandby_WithAct
     // Small delay to ensure ARC state is set
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    // Now transition to STANDBY - should trigger stopArc() path (lines 916-921)
+    // Now transition to STANDBY - should trigger stopArc() path
     Plugin::HdmiCecSinkImplementation::_instance->onPowerModeChanged(
         WPEFramework::Exchange::IPowerManager::POWER_STATE_ON,
         WPEFramework::Exchange::IPowerManager::POWER_STATE_STANDBY
@@ -2810,7 +2784,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, removeDevice_ViaHotplugDisconnect_AudioDe
     
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    // Trigger hotplug disconnect for audio device - should hit lines 2446-2462
+    // Trigger hotplug disconnect for audio device
     // This tests the special audio device removal logic
     Plugin::HdmiCecSinkImplementation::_instance->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_0, false);
 }
@@ -2870,7 +2844,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, removeDevice_AudioDevice_WithActiveTimer)
     
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    // Now remove the audio device - should stop timer and reset audio status flags (lines 2451-2456)
+    // Now remove the audio device - should stop timer and reset audio status flags
     Plugin::HdmiCecSinkImplementation::_instance->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_0, false);
 }
 
@@ -2881,20 +2855,20 @@ TEST_F(HdmiCecSinkFrameProcessingTest, removeDevice_DifferentPhysicalAddresses)
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    // Test devices on different HDMI ports (tests line 2438-2443 loop)
-    uint8_t device1[] = { 0x4F, 0x84, 0x10, 0x00, 0x04 }; // PA=1.0.0.0 (port 1)
-    uint8_t device2[] = { 0x3F, 0x84, 0x20, 0x00, 0x04 }; // PA=2.0.0.0 (port 2)
+    // Test devices on different HDMI ports
+    uint8_t device1[] = { 0x4F, 0x84, 0x10, 0x00, 0x04 }; // PA=1.0.0.0 (port 0)
+    uint8_t device2[] = { 0x3F, 0x84, 0x20, 0x00, 0x04 }; // PA=2.0.0.0 (port 1)
     
     EXPECT_NO_THROW(InjectCECFrame(device1, sizeof(device1)));
     EXPECT_NO_THROW(InjectCECFrame(device2, sizeof(device2)));
     
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    // Remove device on port 1 - tests the physical address matching logic
+    // Remove device on port 0 - tests the physical address matching logic
     Plugin::HdmiCecSinkImplementation::_instance->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_0, false);
 }
 
-// Test fixture description: Device chain management - covers addChild lines 291-322
+// Test fixture description: Device chain management
 TEST_F(HdmiCecSinkFrameProcessingTest, DeviceChain_AddChild_SingleLevelPhysicalAddress)
 {
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
@@ -3082,13 +3056,13 @@ TEST_F(HdmiCecSinkFrameProcessingTest, DeviceChain_GetRoute_NonMatchingPort)
         
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    // First establish HDMI port connection (use port that won't match PA=3.0.0.0)
+    // First establish HDMI port connection on port 0
     Plugin::HdmiCecSinkImplementation::_instance->OnHdmiInEventHotPlug(dsHDMI_IN_PORT_0, true);
     
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     
-    // Add device with PA=3.0.0.0 (port 3 - assumes only 2 ports configured)
-    // This tests the else branch in getRoute where physical address doesn't match port
+    // Add device with PA=3.0.0.0 so that the physical address does not correspond to the connected HDMI port
+    // This tests the else branch in getRoute where the physical address does not map to the active port
     uint8_t device1[] = { 0x4F, 0x84, 0x30, 0x00, 0x04 }; // LA=4, PA=3.0.0.0
     EXPECT_NO_THROW(InjectCECFrame(device1, sizeof(device1)));
     
@@ -3135,12 +3109,6 @@ TEST_F(HdmiCecSinkFrameProcessingTest, DeviceChain_GetRoute_AllDepthLevels)
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveRoute"), _T("{}"), response));
 }
 
-//=============================================================================
-// HdmiPortMap Direct Method Tests (L1 Level)
-// These tests directly call public methods of HdmiPortMap class to ensure coverage
-// HdmiPortMap is a public nested class with public methods, so direct testing is appropriate
-//=============================================================================
-
 // Test fixture description: Direct addChild test for single-level physical address
 TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_AddChild_SingleLevel_Direct)
 {
@@ -3148,14 +3116,12 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_AddChild_SingleLevel_Direct)
     
     // Access hdmiInputs (public member) and test addChild directly
     // First set up the port with a logical address
-    LogicalAddress testLA(4);
-    PhysicalAddress portPA(1, 0, 0, 0); // Port 0 base address
-    PhysicalAddress devicePA(1, 1, 0, 0); // Single level depth
+    LogicalAddress testLA = LogicalAddress(4);
+    PhysicalAddress devicePA(1, 1, 0, 0); // Device at PA=1.1.0.0 (one child level under root port 1)
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].update(testLA);
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].addChild(LogicalAddress(5), devicePA);
     
-    // Verify the device was added to the chain
     EXPECT_EQ(Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].m_deviceChain[0].m_childsLogicalAddr[0], 5);
 }
 
@@ -3164,14 +3130,14 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_AddChild_TwoLevel_Direct)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    LogicalAddress testLA(4);
-    PhysicalAddress portPA(2, 0, 0, 0); // Port 1 base address
-    PhysicalAddress devicePA(2, 1, 2, 0); // Two level depth
+    LogicalAddress testLA = LogicalAddress(4);
+    PhysicalAddress devicePA(2, 1, 2, 0); // Device at PA=2.1.2.0 (two child levels under root port 2)
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[1].update(testLA);
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[1].addChild(LogicalAddress(6), devicePA);
     
-    // Verify device was added to level 1 chain (byte[2] = 2, so index 1)
+    // Verify device stored in m_deviceChain[1] (2nd level chain, 0-indexed) at 
+    // m_childsLogicalAddr[1] (PA byte[2]=2 maps to index 1 via offset calculation: byte_value - 1 = index)
     EXPECT_EQ(Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[1].m_deviceChain[1].m_childsLogicalAddr[1], 6);
 }
 
@@ -3180,14 +3146,14 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_AddChild_ThreeLevel_Direct)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    LogicalAddress testLA(4);
-    PhysicalAddress portPA(1, 0, 0, 0); // Port 0 base address
-    PhysicalAddress devicePA(1, 2, 3, 4); // Three level depth
+    LogicalAddress testLA = LogicalAddress(4);
+    PhysicalAddress devicePA(1, 2, 3, 4); // Device at PA=1.2.3.4 (three child levels under root port 1)
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].update(testLA);
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].addChild(LogicalAddress(7), devicePA);
     
-    // Verify device was added to level 2 chain (byte[3] = 4, so index 3)
+    // Verify device stored in m_deviceChain[2] (3rd level chain, 0-indexed, used when 
+    // byte[3]!=0) at m_childsLogicalAddr[3] (PA byte[3]=4 maps to index 3, byte values are 1-based)
     EXPECT_EQ(Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].m_deviceChain[2].m_childsLogicalAddr[3], 7);
 }
 
@@ -3196,8 +3162,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_AddChild_DirectConnection_Dir
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    PhysicalAddress portPA(2, 0, 0, 0); // Port 1 base address
-    PhysicalAddress devicePA(2, 0, 0, 0); // Exactly matches port PA
+    PhysicalAddress devicePA(2, 0, 0, 0); // Exactly matches port 1 base address (2.0.0.0)
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[1].addChild(LogicalAddress(8), devicePA);
     
@@ -3211,7 +3176,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_RemoveChild_SingleLevel_Direc
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
     // First add a child
-    LogicalAddress testLA(4);
+    LogicalAddress testLA = LogicalAddress(4);
     PhysicalAddress devicePA(1, 3, 0, 0); // Single level
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].update(testLA);
@@ -3232,7 +3197,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_RemoveChild_TwoLevel_Direct)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    LogicalAddress testLA(4);
+    LogicalAddress testLA = LogicalAddress(4);
     PhysicalAddress devicePA(2, 2, 3, 0); // Two level
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[1].update(testLA);
@@ -3250,7 +3215,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_RemoveChild_ThreeLevel_Direct
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    LogicalAddress testLA(4);
+    LogicalAddress testLA = LogicalAddress(4);
     PhysicalAddress devicePA(1, 1, 2, 5); // Three level
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].update(testLA);
@@ -3268,7 +3233,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_GetRoute_SingleLevel_Direct)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    LogicalAddress rootLA(4);
+    LogicalAddress rootLA = LogicalAddress(4);
     PhysicalAddress devicePA(1, 2, 0, 0);
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].update(rootLA);
@@ -3288,7 +3253,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_GetRoute_TwoLevel_Direct)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    LogicalAddress rootLA(4);
+    LogicalAddress rootLA = LogicalAddress(4);
     PhysicalAddress devicePA(2, 1, 2, 0);
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[1].update(rootLA);
@@ -3307,7 +3272,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_GetRoute_ThreeLevel_Direct)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    LogicalAddress rootLA(4);
+    LogicalAddress rootLA = LogicalAddress(4);
     PhysicalAddress devicePA(1, 1, 2, 3);
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].update(rootLA);
@@ -3326,7 +3291,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_GetRoute_NonMatchingPort_Dire
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    LogicalAddress rootLA(4);
+    LogicalAddress rootLA = LogicalAddress(4);
     PhysicalAddress devicePA(3, 0, 0, 0); // PA doesn't match port (port 0 is 1.x.x.x)
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].update(rootLA);
@@ -3373,7 +3338,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_AddChild_SameLogicalAddress_D
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    LogicalAddress testLA(4);
+    LogicalAddress testLA = LogicalAddress(4);
     PhysicalAddress devicePA(1, 1, 0, 0);
     
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].update(testLA);
@@ -3381,15 +3346,16 @@ TEST_F(HdmiCecSinkFrameProcessingTest, HdmiPortMap_AddChild_SameLogicalAddress_D
     // Try to add child with same LA as port - should not add to device chain
     Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].addChild(testLA, devicePA);
     
-    // The first if condition fails, so device chain shouldn't be modified
-    // This tests the condition: m_logicalAddr.toInt() != logical_addr.toInt()
+    // The first if condition fails, so device chain shouldn't be modified.
+    // Verify that no child logical address was registered.
+    for (const auto& chainEntry : Plugin::HdmiCecSinkImplementation::_instance->hdmiInputs[0].m_deviceChain) {
+        for (const auto& childLA : chainEntry.m_childsLogicalAddr) {
+            EXPECT_EQ(childLA, LogicalAddress::UNREGISTERED);
+        }
+    }
 }
 
-//=============================================================================
-// Additional Coverage Tests for Uncovered Lines in HdmiCecSinkImplementation.cpp
-//=============================================================================
-
-// Test fixture description: CECVersion 2.0 response - covers line 206
+// Test fixture description: CECVersion 2.0 response
 TEST_F(HdmiCecSinkFrameProcessingTest, GetCECVersion_RespondsWith_V2_0)
 {
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
@@ -3403,7 +3369,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, GetCECVersion_RespondsWith_V2_0)
     
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     
-    // Set the device's CEC version to 2.0 to trigger the line 206 condition
+    // Set the device's CEC version to 2.0
     Plugin::HdmiCecSinkImplementation::_instance->deviceList[4].update(Version(Version::V_2_0));
     
     // Now send GetCECVersion from this device - should respond with V_2_0
@@ -3412,7 +3378,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, GetCECVersion_RespondsWith_V2_0)
     EXPECT_NO_THROW(InjectCECFrame(getCECVersionFrame, sizeof(getCECVersionFrame)));
 }
 
-// Test fixture description: SetOSDName with request retry logic - covers lines 300-301
+// Test fixture description: SetOSDName with request retry logic
 TEST_F(HdmiCecSinkFrameProcessingTest, SetOSDName_WithRequestRetry)
 {
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
@@ -3441,7 +3407,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, SetOSDName_WithRequestRetry)
     EXPECT_EQ(Plugin::HdmiCecSinkImplementation::_instance->deviceList[4].m_isRequestRetry, 0);
 }
 
-// Test fixture description: ReportPhysicalAddress with PA change detection - covers line 347
+// Test fixture description: ReportPhysicalAddress with PA change detection
 TEST_F(HdmiCecSinkFrameProcessingTest, ReportPhysicalAddress_WithPAChange)
 {
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
@@ -3459,17 +3425,17 @@ TEST_F(HdmiCecSinkFrameProcessingTest, ReportPhysicalAddress_WithPAChange)
     EXPECT_TRUE(Plugin::HdmiCecSinkImplementation::_instance->deviceList[4].m_isDevicePresent);
     EXPECT_TRUE(Plugin::HdmiCecSinkImplementation::_instance->deviceList[4].m_isPAUpdated);
     
-    // Now send ReportPhysicalAddress with DIFFERENT PA - should trigger line 347 (PA change detection)
+    // Now send ReportPhysicalAddress with DIFFERENT PA - should trigger PA change detection
     uint8_t reportPA2[] = { 0x4F, 0x84, 0x20, 0x00, 0x04 }; // LA=4, PA=2.0.0.0 (changed!)
     EXPECT_NO_THROW(InjectCECFrame(reportPA2, sizeof(reportPA2)));
     
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     
-    // Verify PA update was processed (line 347 covered)
+    // Verify PA update was processed
     EXPECT_TRUE(Plugin::HdmiCecSinkImplementation::_instance->deviceList[4].m_isPAUpdated);
 }
 
-// Test fixture description: ReportPhysicalAddress with request retry logic - covers lines 352-353
+// Test fixture description: ReportPhysicalAddress with request retry logic
 TEST_F(HdmiCecSinkFrameProcessingTest, ReportPhysicalAddress_WithRequestRetry)
 {
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
@@ -3501,7 +3467,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, ReportPhysicalAddress_WithRequestRetry)
 // API Getter Tests with Device Population - covers GetActiveSource and GetDeviceList
 //=============================================================================
 
-// Test fixture description: getActiveSource with actual active source present - covers lines 1308-1327
+// Test fixture description: getActiveSource with actual active source present
 TEST_F(HdmiCecSinkFrameProcessingTest, GetActiveSource_WithActiveDevice)
 {
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
@@ -3524,7 +3490,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, GetActiveSource_WithActiveDevice)
     // Verify device is now the active source
     EXPECT_EQ(Plugin::HdmiCecSinkImplementation::_instance->m_currentActiveSource, 4);
     
-    // Now call getActiveSource API which should execute lines 1308-1327
+    // Now call getActiveSource API which should execute
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSource"), _T("{}"), response));
     
     // Verify response contains device information
@@ -3540,7 +3506,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, GetActiveSource_WithActiveDevice)
     EXPECT_THAT(response, ::testing::ContainsRegex("\"success\":true"));
 }
 
-// Test fixture description: getDeviceList with multiple devices present - covers lines 1355-1375
+// Test fixture description: getDeviceList with multiple devices present
 TEST_F(HdmiCecSinkFrameProcessingTest, GetDeviceList_WithMultipleDevices)
 {
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
@@ -3572,11 +3538,14 @@ TEST_F(HdmiCecSinkFrameProcessingTest, GetDeviceList_WithMultipleDevices)
     EXPECT_TRUE(Plugin::HdmiCecSinkImplementation::_instance->deviceList[5].m_isDevicePresent);
     EXPECT_GE(Plugin::HdmiCecSinkImplementation::_instance->m_numberOfDevices, 3);
     
-    // Now call getDeviceList API which should execute lines 1355-1375
+    // Now call getDeviceList API
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getDeviceList"), _T("{}"), response));
     
     // Verify response contains device list with populated data
-    EXPECT_THAT(response, ::testing::ContainsRegex("\"numberofdevices\":[1-9]")); // At least 1 device
+    const std::string expectedNumberDevices =
+        "\"numberofdevices\":" +
+        std::to_string(Plugin::HdmiCecSinkImplementation::_instance->m_numberOfDevices);
+    EXPECT_THAT(response, ::testing::HasSubstr(expectedNumberDevices));
     EXPECT_THAT(response, ::testing::ContainsRegex("\"deviceList\":"));
     EXPECT_THAT(response, ::testing::ContainsRegex("\"logicalAddress\":"));
     EXPECT_THAT(response, ::testing::ContainsRegex("\"physicalAddress\":"));
@@ -3588,7 +3557,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, GetDeviceList_WithMultipleDevices)
     EXPECT_THAT(response, ::testing::ContainsRegex("\"success\":true"));
 }
 
-// Test fixture description: getActiveSource port mapping with PA byte 0 != 0 - covers line 1317-1320
+// Test fixture description: getActiveSource port mapping with PA byte 0 != 0
 TEST_F(HdmiCecSinkFrameProcessingTest, GetActiveSource_PortMapping_HDMIPort)
 {
     EXPECT_CALL(*p_connectionImplMock, sendTo(::testing::_, ::testing::_, ::testing::_))
@@ -3608,7 +3577,7 @@ TEST_F(HdmiCecSinkFrameProcessingTest, GetActiveSource_PortMapping_HDMIPort)
     
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     
-    // Call getActiveSource - should format port as "HDMI0" (line 1319)
+    // Call getActiveSource - should format port as "HDMI0"
     EXPECT_EQ(Core::ERROR_NONE, handler.Invoke(connection, _T("getActiveSource"), _T("{}"), response));
     
     EXPECT_THAT(response, ::testing::ContainsRegex("\"available\":true"));
