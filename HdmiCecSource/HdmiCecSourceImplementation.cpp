@@ -972,9 +972,6 @@ namespace WPEFramework
             getLogicalAddress();
 
             smConnection = new Connection(logicalAddress.toInt(),false,"ServiceManager::Connection::");
-            // Coverity fix: Check smConnection before dereferencing
-            if(smConnection)
-            {
             smConnection->open();
             msgProcessor = new HdmiCecSourceProcessor(*smConnection);
             msgFrameListener = new HdmiCecSourceFrameListener(*msgProcessor);
@@ -982,6 +979,8 @@ namespace WPEFramework
 
             cecEnableStatus = true;
 
+            if(smConnection)
+            {
                 LOGINFO("Command: sending GiveDevicePowerStatus \r\n");
                 smConnection->sendTo(LogicalAddress::TV, MessageEncoder().encode(GiveDevicePowerStatus()));
                 LOGINFO("Command: sending request active Source isDeviceActiveSource is set to false\r\n");
