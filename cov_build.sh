@@ -23,9 +23,6 @@ cmake -G Ninja -S "$GITHUB_WORKSPACE" -B build/entservices-inputoutput \
 -DRDK_SERVICES_COVERITY=ON \
 -DRDK_SERVICES_L1_TEST=ON \
 -DDS_FOUND=ON \
--DPLUGIN_HDMICECSOURCE=ON \
--DPLUGIN_HDCPPROFILE=ON \
--DPLUGIN_HDMICECSINK=ON \
 -DCMAKE_CXX_FLAGS="-DEXCEPTIONS_ENABLE=ON \
 -I ${GITHUB_WORKSPACE}/entservices-testframework/Tests/headers \
 -I ${GITHUB_WORKSPACE}/entservices-testframework/Tests/headers/audiocapturemgr \
