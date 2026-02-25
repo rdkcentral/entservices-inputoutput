@@ -39,13 +39,9 @@
 #include "UtilsBIT.h"
 #include "UtilsThreadRAII.h"
 
-#include <interfaces/IPowerManager.h>
-#include "PowerManagerInterface.h"
 #include <interfaces/IHdmiCecSource.h>
 
 using namespace WPEFramework;
-using PowerState = WPEFramework::Exchange::IPowerManager::PowerState;
-using ThermalTemperature = WPEFramework::Exchange::IPowerManager::ThermalTemperature;
 
 namespace WPEFramework {
 
@@ -196,7 +192,6 @@ namespace WPEFramework {
         public:
             HdmiCecSourceImplementation();
             virtual ~HdmiCecSourceImplementation();
-            void onPowerModeChanged(const PowerState currentState, const PowerState newState);
             void registerEventHandlers();
             static HdmiCecSourceImplementation* _instance;
             CECDeviceInfo_2 deviceList[16];
@@ -221,49 +216,14 @@ namespace WPEFramework {
                    int keyCode;
                 }SendKeyInfo;
             BEGIN_INTERFACE_MAP(HdmiCecSourceImplementation)
-                INTERFACE_ENTRY(Exchange::IHdmiCecSource)
+            INTERFACE_ENTRY(Exchange::IHdmiCecSource)
             END_INTERFACE_MAP
-
-
-        private:
-            class PowerManagerNotification : public Exchange::IPowerManager::IModeChangedNotification {
+          
+ 
             private:
-                PowerManagerNotification(const PowerManagerNotification&) = delete;
-                PowerManagerNotification& operator=(const PowerManagerNotification&) = delete;
-            
-            public:
-                explicit PowerManagerNotification(HdmiCecSourceImplementation& parent)
-                    : _parent(parent)
-                {
-                }
-                ~PowerManagerNotification() override = default;
-            
-            public:
-                void OnPowerModeChanged(const PowerState currentState, const PowerState newState) override
-                {
-                    _parent.onPowerModeChanged(currentState, newState);
-                }
-
-                template <typename T>
-                T* baseInterface()
-                {
-                    static_assert(std::is_base_of<T, PowerManagerNotification>(), "base type mismatch");
-                    return static_cast<T*>(this);
-                }
-
-                BEGIN_INTERFACE_MAP(PowerManagerNotification)
-                INTERFACE_ENTRY(Exchange::IPowerManager::IModeChangedNotification)
-                END_INTERFACE_MAP
-
-            private:
-                HdmiCecSourceImplementation& _parent;
-        
-            };
             // We do not allow this plugin to be copied !!
             HdmiCecSourceImplementation(const HdmiCecSourceImplementation&) = delete;
             HdmiCecSourceImplementation& operator=(const HdmiCecSourceImplementation&) = delete;
-
-            
 		
             //End methods
             std::string logicalAddressDeviceType;
@@ -284,10 +244,10 @@ namespace WPEFramework {
 		
             HdmiCecSourceProcessor *msgProcessor;
             HdmiCecSourceFrameListener *msgFrameListener;
-            void InitializePowerManager(PluginHost::IShell *service);
             const void InitializeIARM();
             void DeinitializeIARM();
             static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void pwrMgrModeChangeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
             void onHdmiHotPlug(int connectStatus);
             bool loadSettings();
             void persistSettings(bool enableStatus);
@@ -311,9 +271,7 @@ namespace WPEFramework {
             static void threadCecDaemonInitHandler();
             static void threadCecStatusUpdateHandler(int data);
             uint32_t sendKeyPressEvent(const int logicalAddress, int keyCode);
-            PowerManagerInterfaceRef _powerManagerPlugin;
-            Core::Sink<PowerManagerNotification> _pwrMgrNotification;
-            bool _registeredEventHandlers;
+
             private:
                 mutable Core::CriticalSection _adminLock;
                 std::list<Exchange::IHdmiCecSource::INotification*> _hdmiCecSourceNotifications;
