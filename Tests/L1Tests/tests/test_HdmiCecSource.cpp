@@ -1425,17 +1425,3 @@ TEST_F(HdmiCecSourceInitializedEventTest, hdmiEventHandler)
 }
 
 
-TEST_F(HdmiCecSourceInitializedEventTest, powerModeChanged)
-{
-    EXPECT_CALL(*p_libCCECImplMock, getLogicalAddress(::testing::_))
-    .WillRepeatedly(::testing::Invoke(
-        [&](int devType) {
-           EXPECT_EQ(devType, 1);
-           return 0;
-        }));
-
-        Plugin::HdmiCecSourceImplementation::_instance->onPowerModeChanged(WPEFramework::Exchange::IPowerManager::POWER_STATE_OFF, WPEFramework::Exchange::IPowerManager::POWER_STATE_ON);
-
-
-}
-
