@@ -567,6 +567,16 @@ namespace WPEFramework
              return;
          }
        }
+       void HdmiCecSinkProcessor::process (const UserControlPressed &msg, const Header &header)
+       {
+             LOGINFO("Command: UserControlPressed message received from:%s command : %d \n",header.from.toString().c_str(),msg.uiCommand.toInt());
+             HdmiCecSinkImplementation::_instance->SendKeyPressMsgEvent(header.from.toInt(),msg.uiCommand.toInt());
+       }
+       void HdmiCecSinkProcessor::process (const UserControlReleased &msg, const Header &header)
+       {
+             LOGINFO("Command: UserControlReleased message received from:%s \n",header.from.toString().c_str());
+             HdmiCecSinkImplementation::_instance->SendKeyReleaseMsgEvent(header.from.toInt());
+       }
 //=========================================== HdmiCecSinkImplementation =========================================
 
        HdmiCecSinkImplementation::HdmiCecSinkImplementation()
@@ -3596,6 +3606,24 @@ namespace WPEFramework
          LOGINFO("Error while fetching CEC Version from RFC ");
       }
       }
+
+      void HdmiCecSinkImplementation::SendKeyReleaseMsgEvent(const int logicalAddress)
+       {
+           std::list<Exchange::IHdmiCecSink::INotification*>::const_iterator index(_hdmiCecSinkNotifications.begin());
+           while (index != _hdmiCecSinkNotifications.end()) {
+               (*index)->OnKeyReleaseEvent(logicalAddress);
+               index++;
+           }
+       }
+
+       void HdmiCecSinkImplementation::SendKeyPressMsgEvent(const int logicalAddress,const int keyCode)
+       {
+           std::list<Exchange::IHdmiCecSink::INotification*>::const_iterator index(_hdmiCecSinkNotifications.begin());
+              while (index != _hdmiCecSinkNotifications.end()) {
+                (*index)->OnKeyPressEvent(logicalAddress,keyCode);
+                index++;
+              }
+       }
 
     } // namespace Plugin
 } // namespace WPEFramework
