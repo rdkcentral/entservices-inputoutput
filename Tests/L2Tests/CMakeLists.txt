@@ -32,6 +32,10 @@ if(PLUGIN_HDCPPROFILE)
     set(SRC_FILES ${SRC_FILES} tests/HdcpProfile_L2Test.cpp)
 endif()
 
+if(PLUGIN_HDMICECSOURCE)
+    set(SRC_FILES ${SRC_FILES} tests/HdmiCecSource_L2Test.cpp)
+endif()
+
 if(PLUGIN_AVOUTPUT)
     set(SRC_FILES ${SRC_FILES} tests/AVOutputTV_L2Test.cpp)
 endif()
