@@ -912,17 +912,7 @@ namespace WPEFramework
             else
             {
                     powerState = DEVICE_POWER_STATE_OFF;
-                    // Coverity fix: Check arc routing state, then release mutex before calling stopArc()
-                    // to avoid double lock. stopArc() acquires the same mutex internally.
-                    bool shouldStopArc = false;
-                    {
-                        std::lock_guard<std::mutex> lock(_instance->m_arcRoutingStateMutex);
-                        if((_instance->m_currentArcRoutingState == ARC_STATE_REQUEST_ARC_INITIATION) || (_instance->m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
-                        {
-                            shouldStopArc = true;
-                        }
-                    }
-                    if (shouldStopArc)
+                    if((_instance->m_currentArcRoutingState == ARC_STATE_REQUEST_ARC_INITIATION) || (_instance->m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
                     {
                         LOGINFO("%s: Stop ARC \n",__FUNCTION__);
                         _instance->stopArc();
@@ -1108,17 +1098,7 @@ namespace WPEFramework
                  return;
             }
 
-        // Coverity fix: Check arc routing state, then release mutex before calling stopArc()
-        // to avoid double lock. stopArc() acquires the same mutex internally.
-        bool shouldStopArc = false;
-        {
-            std::lock_guard<std::mutex> lock(m_arcRoutingStateMutex);
-            if ( (msg.status.toInt() == SYSTEM_AUDIO_MODE_OFF) && (m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
-            {
-                shouldStopArc = true;
-            }
-        }
-        if (shouldStopArc)
+        if ( (msg.status.toInt() == SYSTEM_AUDIO_MODE_OFF) && (m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
         {
                 /* ie system audio mode off -> amplifier goign to standby but still ARC is in initiated state,stop ARC and 
                  bring the ARC state machine to terminated state*/
@@ -3062,22 +3042,12 @@ namespace WPEFramework
                 return;
             }
 
-            // Check and wait for ARC termination with proper locking
-            bool needsArcStop = false;
-            {
-                std::lock_guard<std::mutex> arcLock(m_arcRoutingStateMutex);
-                needsArcStop = (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED);
-            }
-
-            if(needsArcStop)
+            if(m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED)
             {
                 stopArc();
                 /* coverity[sleep : FALSE] */
-                bool arcTerminated = false;
-                while (!arcTerminated) {
+                while (m_currentArcRoutingState != ARC_STATE_ARC_TERMINATED) {
                     usleep(500000);
-                    std::lock_guard<std::mutex> arcLock(m_arcRoutingStateMutex);
-                    arcTerminated = (m_currentArcRoutingState == ARC_STATE_ARC_TERMINATED);
                 }
             }
 
