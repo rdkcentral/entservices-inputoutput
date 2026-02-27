@@ -3087,12 +3087,7 @@ namespace WPEFramework
             }
 
             m_logicalAddressAllocated = LogicalAddress::UNREGISTERED;
-            // Coverity fix: Protect m_currentArcRoutingState write with mutex to prevent data race
-            // The mutex ensures thread-safe modification of the shared arc routing state variable
-            {
-                std::lock_guard<std::mutex> lock(m_arcRoutingStateMutex);
-                m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
-            }
+            m_currentArcRoutingState = ARC_STATE_ARC_TERMINATED;
             if (m_audioStatusDetectionTimer.isActive()){
                     m_audioStatusDetectionTimer.stop();
             }
@@ -3235,9 +3230,9 @@ namespace WPEFramework
                LOGINFO("ARC is either Termination  in progress or already Terminated");
                return;
             }
+			_instance->requestArcTermination();
         }
 
-           _instance->requestArcTermination();
            /* start a timer for 3 sec to get the desired ARC_STATE_ARC_TERMINATED */
            if (m_arcStartStopTimer.isActive())
             {
