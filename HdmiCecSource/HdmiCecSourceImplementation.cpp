@@ -321,7 +321,17 @@ namespace WPEFramework
 //=========================================== HdmiCecSourceImplementation =========================================
 
     HdmiCecSourceImplementation::HdmiCecSourceImplementation()
-    : cecEnableStatus(false),smConnection(nullptr), m_sendKeyEventThreadRun(false)
+    : cecEnableStatus(false)
+    , cecSettingEnabled(false)
+    , cecOTPSettingEnabled(false)
+    , smConnection(nullptr)
+    , m_numberOfDevices(0)
+    , m_pollThreadExit(false)
+    , m_updateThreadExit(false)
+    , m_sendKeyEventThreadExit(false)
+    , m_sendKeyEventThreadRun(false)
+    , msgProcessor(nullptr)
+    , msgFrameListener(nullptr)
     , _pwrMgrNotification(*this)
     , _registeredEventHandlers(false)
     {
@@ -1128,8 +1138,8 @@ namespace WPEFramework
 
                 if (logicalAddress.toInt() != addr.toInt() || logicalAddressDeviceType != logicalAddrDeviceType)
                 {
-                    logicalAddress = addr;
-                    logicalAddressDeviceType = logicalAddrDeviceType;
+                    logicalAddress = std::move(addr);
+                    logicalAddressDeviceType = std::move(logicalAddrDeviceType);
                     if(smConnection)
                         smConnection->setSource(logicalAddress); //update initiator LA
                 }
