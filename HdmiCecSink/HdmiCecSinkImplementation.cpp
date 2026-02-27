@@ -1104,6 +1104,7 @@ namespace WPEFramework
                  bring the ARC state machine to terminated state*/
                 LOGINFO("system audio mode off message but arc is not in terminated state so stopping ARC");
                 stopArc();
+
             }
 
         if (msg.status.toInt() == SYSTEM_AUDIO_MODE_ON) {
