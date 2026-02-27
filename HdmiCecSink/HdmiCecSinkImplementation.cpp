@@ -3230,7 +3230,7 @@ namespace WPEFramework
                LOGINFO("ARC is either Termination  in progress or already Terminated");
                return;
             }
-			_instance->requestArcTermination();
+            _instance->requestArcTermination();
         }
 
            /* start a timer for 3 sec to get the desired ARC_STATE_ARC_TERMINATED */
