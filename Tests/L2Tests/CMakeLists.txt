@@ -28,6 +28,10 @@ if(PLUGIN_HDMICECSINK)
     set(SRC_FILES ${SRC_FILES} tests/HdmiCecSink_L2Test.cpp)
 endif()
 
+if(PLUGIN_HDMICECSOURCE)
+    set(SRC_FILES ${SRC_FILES} tests/HdmiCecSource_L2Test.cpp)
+endif()
+
 if(PLUGIN_AVOUTPUT)
     set(SRC_FILES ${SRC_FILES} tests/AVOutputTV_L2Test.cpp)
 endif()
