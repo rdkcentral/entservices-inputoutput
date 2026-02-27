@@ -47,7 +47,7 @@
          
          
          HdcpProfileImplementation::HdcpProfileImplementation()
-         : _adminLock(), mShell(nullptr)
+         : _adminLock(), mShell(nullptr), _service(nullptr)
          {
              LOGINFO("Create HdcpProfileImplementation Instance");
              HdcpProfileImplementation::_instance = this;
