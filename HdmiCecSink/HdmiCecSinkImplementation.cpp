@@ -917,7 +917,7 @@ namespace WPEFramework
                         LOGINFO("%s: Stop ARC \n",__FUNCTION__);
                         _instance->stopArc();
                     }
-                }
+            }
                 if (_instance->cecEnableStatus)
             {
             if ( _instance->m_logicalAddressAllocated != LogicalAddress::UNREGISTERED )
@@ -1099,12 +1099,12 @@ namespace WPEFramework
             }
 
         if ( (msg.status.toInt() == SYSTEM_AUDIO_MODE_OFF) && (m_currentArcRoutingState == ARC_STATE_ARC_INITIATED))
-        {
+            {
                 /* ie system audio mode off -> amplifier goign to standby but still ARC is in initiated state,stop ARC and 
                  bring the ARC state machine to terminated state*/
                 LOGINFO("system audio mode off message but arc is not in terminated state so stopping ARC");
                 stopArc();
-        }
+            }
 
         if (msg.status.toInt() == SYSTEM_AUDIO_MODE_ON) {
             LOGINFO("panel power state is %s", powerState ? "Off" : "On");
@@ -1126,7 +1126,7 @@ namespace WPEFramework
                 index++;
             }
         }
-        }
+         }
          void HdmiCecSinkImplementation::Process_ReportAudioStatus_msg(const ReportAudioStatus msg)
          {
             if(!HdmiCecSinkImplementation::_instance)
