@@ -631,6 +631,7 @@ jobs:
           /tmp/persistent
           /tmp/persistent/rdkservicestore
           /opt/logs
+          /opt/panel
           /lib/rdk
           /run/media/sda1/logs/PreviousLogs
           /run/media/sda2/logs/PreviousLogs
@@ -656,6 +657,7 @@ jobs:
           /opt/tmtryoptout
           /opt/fwdnldstatus.txt
           /opt/dcm.properties
+          /opt/panel/AVOutput.ini
           /etc/device.properties
           /etc/dcm.properties
           /etc/authService.conf
@@ -686,6 +688,7 @@ jobs:
           /opt/tmtryoptout
           /opt/fwdnldstatus.txt
           /opt/dcm.properties
+          /opt/panel/AVOutput.ini
           /etc/device.properties
           /etc/dcm.properties
           /etc/authService.conf
