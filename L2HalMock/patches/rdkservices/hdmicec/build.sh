@@ -1,3 +1,4 @@
+#!/bin/bash
 ##########################################################################
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
@@ -17,28 +18,23 @@
 # limitations under the License.
 ##########################################################################
 #
-# List of Libraries
-install_dir := ../install/bin
-install_lib_dir := ../install/lib
+set -x
 
-exe_ds              := dsmgr
+source $PWD/../../../../env.sh
 
-executable := $(exe_ds)
 
-.PHONY: clean all $(executable) install
 
-all: clean $(executable) install 
+export CXX=g++
+export CXXFLAGS="-std=c++14 -Wall -Wextra -fPIC"
 
-$(executable):
-	$(MAKE) -C $@
+export LDFLAGS="-L$IARM_PATH/install -lIARMBus"
+make CXX="$CXX" CXXFLAGS="$CXXFLAGS"
 
-install:
-	echo "Creating directory.."
-	mkdir -p $(install_dir)
-	mkdir -p $(install_lib_dir)
-	echo "Copying files now.."	
-	cp $(exe_ds)/*Main $(install_dir)
+if [ $? -ne 0 ]; then
+  echo "IarmBus Build Failed"
+  exit 1
+else
+  echo "IarmBus Build Success"
+  exit 0
+fi
 
-clean:
-	rm -rf $(install_dir)
-	rm -rf $(install_lib_dir)

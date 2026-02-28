@@ -20,64 +20,46 @@
 # *
 #* ******************************************************************************
 
-# Testcase ID : TCID028
-# Testcase Description : Invalid curl command - getVendorId
+# Testcase ID : TCID034
+# Testcase Description : Set the cec enable status to true and verify that cec enable
+# status is true in output response
 
-import json
-import requests
-import time
-import Config
 from Utilities import Utils, ReportGenerator
 from HdmiCecSource import HdmiCecSourceApis
 
-# store the expected output response
-expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"vendorid":"019fb","success":true}}'
-
-print("Invalid curl command - getVendorId")
+print("TC Description - Set the cec enable status to true and verify that cec enable status is true in output response")
 Utils.initiliaze_flask_for_HdmiCecSource()
-time.sleep(3)
-# send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.set_vendor_id)
-if curl_response:
-     Utils.warning_log("set vendor id  curl command sent from the test runner")
+print("---------------------------------------------------------------------------------------------------------------------------")
+# send the curl command to set the cec enable status to true
+set_response = Utils.send_curl_command(HdmiCecSourceApis.set_enabled_true)
+if set_response:
+    Utils.info_log("curl command sent for setting the cec enable status to true")
 else:
-     Utils.error_log("set vendor id  curl command failed")
+    Utils.error_log("curl command failed for setting the cec enable status to true")
+print("")
 
-# send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.get_vendor_id)
+# store the expected output response
+expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"enabled":true,"success":true}}'
+
+# send the curl command to get enable status of cec and fetch the output json response
+curl_response = Utils.send_curl_command(HdmiCecSourceApis.get_enabled)
 if curl_response:
-     Utils.warning_log("get vendor id  curl command sent from the test runner")
+    Utils.info_log("curl command send for get_enabled")
 else:
-     Utils.error_log("get vendor id  curl command failed")
-
-# send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.set_vendor_id_invalid_2)
-if curl_response:
-     Utils.warning_log("set vendor id invalid curl command sent from the test runner")
-else:
-     Utils.error_log("set vendor id invalid curl command failed")
-
-# send the curl command and fetch the output json response
-curl_response = Utils.send_curl_command(HdmiCecSourceApis.get_vendor_id)
-if curl_response:
-     Utils.warning_log("get vendor id curl command sent from the test runner")
-else:
-     Utils.error_log("get vendor id curl command failed")
-
-post_condition = Utils.send_curl_command(HdmiCecSourceApis.set_vendor_id)
+    Utils.error_log("curl command send failed for get_enabled")
 
 print("---------------------------------------------------------------------------------------------------------------------------")
-
 # compare both expected and received output responses
 if str(curl_response) == str(expected_output_response):
     status = 'Pass'
-    message = 'Output response is matching with expected one.'
+    message = 'Output response is matching with expected one. The cec enabled status is obtained ' \
+              'as true in output response'
 else:
     status = 'Fail'
-    message = 'Output response is different from expected one.'
+    message = 'Output response is different from expected one'
 
 # generate logs in terminal
-tc_id = 'TCID028_getVendorId - Invalid curl command'
+tc_id = 'TCID034_setEnabled_CEC_True'
 print("Testcase ID : " + tc_id)
 print("Testcase Output Response : " + curl_response)
 print("Testcase Status : " + status)
@@ -91,3 +73,4 @@ else:
 Utils.initiliaze_flask_for_HdmiCecSource()
 # push the testcase execution details to report file
 ReportGenerator.append_test_results_to_csv(tc_id, curl_response, status, message)
+

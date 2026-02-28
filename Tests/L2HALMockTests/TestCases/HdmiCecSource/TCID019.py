@@ -42,7 +42,7 @@ print("")
 
 print("---------------------------------------------------------------------------------------------------------------------------")
 # store the expected output response
-expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"numberofdevices":0,"deviceList":[],"success":true}}'
+expected_output_response = '{"jsonrpc":"2.0","id":42,"result":{"numberofdevices":0,"success":true}}'
 
 # send the curl command and fetch the output json response
 curl_response = Utils.send_curl_command(HdmiCecSourceApis.get_device_list)
