@@ -18,7 +18,6 @@
 **/
 
 #include "HdmiCecSource.h"
-
 #include "UtilsIarm.h"
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
@@ -53,6 +52,7 @@ namespace WPEFramework
 
         const string HdmiCecSource::Initialize(PluginHost::IShell *service)
         {
+		 Core::hresult res = Core::ERROR_GENERAL;
            LOGWARN("Initlaizing HdmiCecSource plugin \n");
 
            profileType = searchRdkProfile();
@@ -78,7 +78,14 @@ namespace WPEFramework
 
            if(nullptr != _hdmiCecSource)
             {
-                _hdmiCecSource->Configure(service);
+                res = _hdmiCecSource->Configure(service);
+		if (res==Core::ERROR_GENERAL)
+		{
+			 LOGERR("HdmiCecSource plugin cannot initialize due to configure error \r\n");
+			 msg = "HdmiCecSource plugin is not available due to configure function failure";
+			 Deinitialize(service);
+			 return msg;
+		}
                 _hdmiCecSource->Register(&_notification);
                 Exchange::JHdmiCecSource::Register(*this, _hdmiCecSource);
                 LOGINFO("HdmiCecSource plugin is available. Successfully activated HdmiCecSource Plugin");

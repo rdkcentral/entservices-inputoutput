@@ -716,7 +716,8 @@ namespace WPEFramework
            }
            catch(const device::Exception& err)
            {
-                LOGINFO("HdmiCecSink plugin device::Manager::Initialize failed");
+                LOGINFO("Aishwarya HdmiCecSink plugin device::Manager::Initialize failed");
+		return Core::ERROR_GENERAL;
                 LOG_DEVICE_EXCEPTION0();
                 HdmiCecSinkImplementation::_instance = nullptr;
                 return Core::ERROR_GENERAL;
@@ -784,6 +785,7 @@ namespace WPEFramework
                catch(...)
                {
                    LOGWARN("Exception while enabling CEC settings .\r\n");
+		   return Core::ERROR_GENERAL;
                }
             }
             getCecVersion();
