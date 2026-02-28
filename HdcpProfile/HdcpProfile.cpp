@@ -45,7 +45,8 @@ namespace WPEFramework
         SERVICE_REGISTRATION(HdcpProfile, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 
 		HdcpProfile::HdcpProfile()
-            : _service(nullptr)
+            : PluginHost::JSONRPCErrorAssessor<PluginHost::JSONRPCErrorAssessorTypes::FunctionCallbackType>(HdcpProfile::OnJSONRPCError) 
+			,_service(nullptr)
             , _connectionId(0)
             , _hdcpProfile(nullptr)
             , _hdcpProfileNotification(this)
@@ -164,6 +165,16 @@ namespace WPEFramework
 	    string HdcpProfile::Information() const
         {
             return ("This HdcpProfile Plugin facilitates to persist event data for monitoring applications");
+        }
+
+		uint32_t HdcpProfile::OnJSONRPCError(const Core::JSONRPC::Context&, const string& method, const string& parameters, const uint32_t errorcode, string& errormessage) {
+            LOGINFO("DBG:OnJSONRPCERROR");
+            if(method == _T("getHDCPStatus") && (errorcode >= static_cast<uint32_t>(ERROR_BASE) && errorcode  < static_cast<uint32_t>(MAX_ERROR_CODE) ))
+            {
+                LOGINFO("DBG-Inside If");
+                errormessage = ERROR_MESSAGE(errorcode);
+            }
+            return errorcode;
         }
 
         void HdcpProfile::Deactivated(RPC::IRemoteConnection *connection)

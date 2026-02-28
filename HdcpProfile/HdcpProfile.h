@@ -32,7 +32,7 @@ namespace WPEFramework {
 
     namespace Plugin {
 		
-		class HdcpProfile : public PluginHost::IPlugin, public PluginHost::JSONRPC
+		class HdcpProfile : public PluginHost::IPlugin, public PluginHost::JSONRPCErrorAssessor<PluginHost::JSONRPCErrorAssessorTypes::FunctionCallbackType>
 		{
 			private:
             	class Notification : public RPC::IRemoteConnection::INotification, public Exchange::IHdcpProfile::INotification
@@ -97,6 +97,7 @@ namespace WPEFramework {
 				const string Initialize(PluginHost::IShell* service) override;
 				void Deinitialize(PluginHost::IShell* service) override;
 				string Information() const override;
+				static uint32_t OnJSONRPCError(const Core::JSONRPC::Context& context, const string& method, const string& parameters, const uint32_t errorcode, string& errormessage);
 				
 				private:
                 	void Deactivated(RPC::IRemoteConnection* connection);

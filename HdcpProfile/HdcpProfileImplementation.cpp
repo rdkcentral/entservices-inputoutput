@@ -328,6 +328,23 @@
          Core::hresult HdcpProfileImplementation::GetHDCPStatus(HDCPStatus& hdcpstatus,bool& success)
          {
              success = GetHDCPStatusInternal(hdcpstatus);
+             if(fopen("/opt/check1.txt","r")!=NULL)
+             {
+                 return ERROR_FILE_IO;
+             }
+             else if(fopen("/opt/check2.txt","r")!=NULL)
+             {
+                 return ERROR_PERMISSION_DENIED;
+             }
+             else if(fopen("/opt/check3.txt","r")!=NULL)
+             {
+                 return ERROR_BASE;
+             }
+             else if(fopen("/opt/check4.txt","r")!=NULL)
+             {
+                 return MAX_ERROR_CODE;
+             }
+            return Core::ERROR_NONE;
              return Core::ERROR_NONE;
          }
  
