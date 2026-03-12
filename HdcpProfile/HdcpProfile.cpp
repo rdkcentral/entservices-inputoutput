@@ -137,6 +137,9 @@ namespace WPEFramework
                 // so it should endup in a DESTRUCTION_SUCCEEDED, if not we
                 // are leaking...
                 ASSERT(result == Core::ERROR_DESTRUCTION_SUCCEEDED);
+                if (result != Core::ERROR_DESTRUCTION_SUCCEEDED) {
+                    LOGWARN("HdcpProfile Release did not return DESTRUCTION_SUCCEEDED, potential leak detected (result=%u)", result);
+                }
 
                 // If this was running in a (container) process...
                 if (nullptr != connection)

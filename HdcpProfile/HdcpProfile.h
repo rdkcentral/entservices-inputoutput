@@ -106,7 +106,7 @@ namespace WPEFramework {
 					uint32_t _connectionId{};
 					Exchange::IHdcpProfile *_hdcpProfile{};
 					Core::Sink<Notification> _hdcpProfileNotification;
-					Exchange::IConfiguration* configure;
+					Exchange::IConfiguration* configure{};
         };
 
     } // namespace Plugin
