@@ -125,6 +125,8 @@ enum {
 	HDMICECSINK_EVENT_CEC_ENABLED,
         HDMICECSINK_EVENT_AUDIO_DEVICE_POWER_STATUS,
 	HDMICECSINK_EVENT_FEATURE_ABORT_EVENT,
+	HDMICECSINK_SEND_KEY_PRESS_MSG_EVENT,
+	HDMICECSINK_SEND_KEY_RELEASE_MSG_EVENT
 };
 
 static const char *eventString[] = {
@@ -146,7 +148,9 @@ static const char *eventString[] = {
 	"reportAudioDeviceConnectedStatus",
 	"reportCecEnabledEvent",
         "reportAudioDevicePowerStatus",
-	"reportFeatureAbortEvent"
+	"reportFeatureAbortEvent",
+	"OnKeyPressEvent",
+	"OnKeyReleaseEvent"
 };
 
 
@@ -643,6 +647,18 @@ namespace WPEFramework
 		     LOGINFO("Physical Address does not match with TV's physical address");
 		     return;
 	     }
+       }
+
+	void HdmiCecSinkProcessor::process (const UserControlPressed &msg, const Header &header)
+       {
+             LOGINFO("Command: UserControlPressed message received from:%s command : %d \n",header.from.toString().c_str(),msg.uiCommand.toInt());
+             HdmiCecSink::_instance->SendKeyPressMsgEventWrapper(header.from.toInt(),msg.uiCommand.toInt());
+       }
+
+    void HdmiCecSinkProcessor::process (const UserControlReleased &msg, const Header &header)
+       {
+             LOGINFO("Command: UserControlReleased message received from:%s \n",header.from.toString().c_str());
+             HdmiCecSink::_instance->SendKeyReleaseMsgEventWrapper(header.from.toInt());
        }
 //=========================================== HdmiCecSink =========================================
 
@@ -3544,6 +3560,21 @@ namespace WPEFramework
 	     LOGINFO("Error while fetching CEC Version from RFC ");
 	  }
       }
+
+	void HdmiCecSink::SendKeyReleaseMsgEventWrapper(const int logicalAddress)
+	{
+			JsonObject params;
+			params["LogicalAddress"] = logicalAddress;
+			sendNotify(eventString[HDMICECSINK_SEND_KEY_RELEASE_MSG_EVENT], params);
+	}
+
+	void HdmiCecSink::SendKeyPressMsgEventWrapper(const int logicalAddress,const int keyCode)
+	{
+			JsonObject params;
+			params["LogicalAddress"] = logicalAddress;
+			params["keyCode"] = keyCode;
+			sendNotify(eventString[HDMICECSINK_SEND_KEY_PRESS_MSG_EVENT], params);
+	}
 
     } // namespace Plugin
 } // namespace WPEFrameworklk
