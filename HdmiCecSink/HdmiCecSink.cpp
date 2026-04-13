@@ -125,8 +125,8 @@ enum {
 	HDMICECSINK_EVENT_CEC_ENABLED,
         HDMICECSINK_EVENT_AUDIO_DEVICE_POWER_STATUS,
 	HDMICECSINK_EVENT_FEATURE_ABORT_EVENT,
-	HDMICECSINK_SEND_KEY_PRESS_MSG_EVENT,
-	HDMICECSINK_SEND_KEY_RELEASE_MSG_EVENT
+	HDMICECSINK_EVENT_SEND_KEY_PRESS_MSG,
+	HDMICECSINK_EVENT_SEND_KEY_RELEASE_MSG
 };
 
 static const char *eventString[] = {
@@ -3565,7 +3565,7 @@ namespace WPEFramework
 	{
 			JsonObject params;
 			params["logicalAddress"] = logicalAddress;
-			sendNotify(eventString[HDMICECSINK_SEND_KEY_RELEASE_MSG_EVENT], params);
+			sendNotify(eventString[HDMICECSINK_EVENT_SEND_KEY_RELEASE_MSG], params);
 	}
 
 	void HdmiCecSink::SendKeyPressMsgEventWrapper(const int logicalAddress,const int keyCode)
@@ -3573,7 +3573,7 @@ namespace WPEFramework
 			JsonObject params;
 			params["logicalAddress"] = logicalAddress;
 			params["keyCode"] = keyCode;
-			sendNotify(eventString[HDMICECSINK_SEND_KEY_PRESS_MSG_EVENT], params);
+			sendNotify(eventString[HDMICECSINK_EVENT_SEND_KEY_PRESS_MSG], params);
 	}
 
     } // namespace Plugin
