@@ -48,6 +48,7 @@ namespace {
 		if (std::remove(fileName) != 0)
 		{
 			printf("File %s failed to remove\n", fileName);
+			printf("File %s failed to remove\n", fileName);
 			perror("Error deleting file");
 		}
 		else
