@@ -165,7 +165,6 @@ static VendorID appVendorId = {defaultVendorId.at(0),defaultVendorId.at(1),defau
 static VendorID lgVendorId = {0x00,0xE0,0x91};
 static PhysicalAddress physical_addr = {0x0F,0x0F,0x0F,0x0F};
 static LogicalAddress logicalAddress = 0xF;
-static Language defaultLanguage = "eng";
 static OSDName osdName = "TV Box";
 static int32_t powerState = DEVICE_POWER_STATE_OFF;
 static std::vector<uint8_t> formatid = {0,0};
@@ -664,6 +663,8 @@ namespace WPEFramework
 
        HdmiCecSink::HdmiCecSink()
        : PluginHost::JSONRPC()
+	, _userSettingsPlugin(nullptr)
+	, _userSettingsNotification(*this)
         , _pwrMgrNotification(*this)
         , _registeredEventHandlers(false)
        {
@@ -799,6 +800,29 @@ namespace WPEFramework
                }
             }
             getCecVersion();
+
+	    _userSettingsPlugin = service->QueryInterfaceByCallsign<Exchange::IUserSettings>("org.rdk.UserSettings");
+            if (nullptr == _userSettingsPlugin) {
+                LOGERR("Failed to get UserSettings interface");
+            }
+           else
+           {
+		   _userSettingsPlugin->Register(&_userSettingsNotification);
+                   LOGINFO("Successfully registered for UserSettings notifications");
+
+                   string presentationLanguage, isoLang;
+                   uint32_t status = _userSettingsPlugin->GetPresentationLanguage(presentationLanguage);
+                   if (status == Core::ERROR_NONE) {
+					   isoLang = mapToIso639_2(presentationLanguage);
+					   LOGINFO("Successfully retrieved the Presentation language from the userSettings plugin - BCP47: %s, ISO 639-2: %s", presentationLanguage.c_str(), isoLang.c_str());
+					   setCurrentLanguage(Language(isoLang.data()));
+					   sendMenuLanguage();
+                   }
+                   else {
+                           LOGERR("Failed to get presentation language: %u", status);
+                   }
+           }
+
 	   LOGINFO(" HdmiCecSink plugin Initialize completed \n");
            return (std::string());
 
@@ -812,6 +836,13 @@ namespace WPEFramework
                _powerManagerPlugin.Reset();
            }
            _registeredEventHandlers = false;
+
+	   if(_userSettingsPlugin)
+           {
+                   _userSettingsPlugin->Unregister(&_userSettingsNotification);
+                   _userSettingsPlugin->Release();
+                   _userSettingsPlugin = nullptr;
+           }
 
 		profileType = searchRdkProfile();
 
@@ -916,6 +947,17 @@ namespace WPEFramework
                 LOGINFO("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG event port: %d data:%d \r\n",portId,  isHdmiConnected);
                 HdmiCecSink::_instance->onHdmiHotPlug(portId,isHdmiConnected);
             }
+       }
+
+       void HdmiCecSink::onPresentationLanguageChanged(const string& presentationLanguage)
+       {
+           if(!HdmiCecSink::_instance)
+               return;
+	   
+	   string isoLang = mapToIso639_2(presentationLanguage);
+	   LOGINFO("OnPresentationLanguageChanged - language BCP47: %s, ISO 639-2: %s", presentationLanguage.c_str(), isoLang.c_str());
+	   setCurrentLanguage(Language(isoLang.data()));
+           sendMenuLanguage();
        }
 
        void HdmiCecSink::onPowerModeChanged(const PowerState currentState, const PowerState newState)
@@ -1920,6 +1962,46 @@ namespace WPEFramework
             return cecSettingEnabled;
         }
 
+       std::string HdmiCecSink::mapToIso639_2(const string& lang_BCP47)
+       {
+               if (lang_BCP47.empty())
+		       return "eng";
+	       
+	       std::string lang = lang_BCP47.substr(0, lang_BCP47.find('-'));
+               std::transform(lang.begin(), lang.end(), lang.begin(), ::tolower);
+
+               if (lang.length() == 3)
+		       return lang;
+	       
+	       static const std::unordered_map<std::string, std::string> iso639_1_to_2 = {
+               {"en", "eng"},
+               {"fr", "fra"},
+               {"de", "deu"},
+               {"es", "spa"},
+               {"it", "ita"},
+               {"pt", "por"},
+               {"ru", "rus"},
+               {"zh", "zho"},
+               {"ja", "jpn"},
+               {"ko", "kor"},
+               {"ar", "ara"},
+               {"hi", "hin"},
+               {"nl", "nld"},
+               {"sv", "swe"},
+               {"fi", "fin"},
+               {"no", "nor"},
+               {"da", "dan"},
+               {"pl", "pol"},
+               {"tr", "tur"}
+               };
+
+               auto it = iso639_1_to_2.find(lang);
+               if (it != iso639_1_to_2.end())
+                       return it->second;
+
+               return "eng";
+       }
+
         void HdmiCecSink::setEnabled(bool enabled)
         {
            LOGINFO("Entered setEnabled: %d  cecSettingEnabled :%d ",enabled, cecSettingEnabled);
@@ -2748,7 +2830,6 @@ namespace WPEFramework
 						    _instance->deviceList[_instance->m_logicalAddressAllocated].m_cecVersion = Version::V_1_4;
 						    _instance->deviceList[_instance->m_logicalAddressAllocated].m_vendorID = appVendorId;
 						    _instance->deviceList[_instance->m_logicalAddressAllocated].m_powerStatus = PowerStatus(powerState);
-						    _instance->deviceList[_instance->m_logicalAddressAllocated].m_currentLanguage = defaultLanguage;
 						    _instance->deviceList[_instance->m_logicalAddressAllocated].m_osdName = osdName.toString().c_str();
 						    if(cecVersion == 2.0) {
 						        _instance->deviceList[_instance->m_logicalAddressAllocated].m_cecVersion = Version::V_2_0;
