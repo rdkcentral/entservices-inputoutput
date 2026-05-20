@@ -29,7 +29,7 @@
 #define TEST_LOG(x, ...) fprintf(stderr, "\033[1;32m[%s:%d](%s)<PID:%d><TID:%d>" x "\n\033[0m", __FILE__, __LINE__, __FUNCTION__, getpid(), gettid(), ##__VA_ARGS__); fflush(stderr);
 #define AVOUTPUT_CALLSIGN  _T("org.rdk.AVOutput.1")
 #define AVOUTPUT_CALLSIGNL2TEST_CALLSIGN _T("L2tests.1")
-
+//tests
 using ::testing::NiceMock;
 using namespace WPEFramework;
 using testing::StrictMock;
