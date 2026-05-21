@@ -36,7 +36,7 @@
 #include "UtilsJsonRpc.h"
 #include "UtilssyncPersistFile.h"
 #include "UtilsSearchRDKProfile.h"
-
+//test
 #define HDMICECSINK_METHOD_SET_ENABLED 			"setEnabled"
 #define HDMICECSINK_METHOD_GET_ENABLED 			"getEnabled"
 #define HDMICECSINK_METHOD_OTP_SET_ENABLED 		"setOTPEnabled"
