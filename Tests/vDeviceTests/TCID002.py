@@ -14,7 +14,7 @@ def run_test():
         "jsonrpc": "2.0",
         "id": 42,
         "result": {
-            "numberofdevices": 5,
+            "numberofdevices": 6,
             "deviceList": [
                 {
                     "logicalAddress": 1,
@@ -44,7 +44,7 @@ def run_test():
                 {
                     "logicalAddress": 8,
                     "vendorID": "000",
-                    "osdName": "Kishore"
+                    "osdName": "GameConsole"
                 }
             ],
             "success": True

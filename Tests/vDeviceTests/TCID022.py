@@ -4,6 +4,8 @@ import subprocess
 import json
 from utils import (
     send_curl_command,
+    send_vcomponent_command,
+    HDMICEC_CMD_BASE,
     log_info,
     log_success,
     log_error,
@@ -12,35 +14,22 @@ from utils import (
 import HdmiCecSourceApis
 
 
+
+def _post_hdmicec(yaml_file):
+    """Post a HdmiCec vComponent YAML command using the new curl API."""
+    http_code, body = send_vcomponent_command(f"{HDMICEC_CMD_BASE}/{yaml_file}")
+    log_info(f"  vComponent POST {yaml_file}: HTTP {http_code}  {body}")
+    return http_code == 200
+
 def run_test():
     #base_dir = "/tmp/vcomponent_configurations/commands"
     base_dir = "/tmp"
-
-
-    base_dir = "/tmp"
-
-    commands = [
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_get_menu_language.yaml 8080",
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_set_menu_language.yaml 8080",
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_get_cec_version.yaml 8080",
-    ]
-
-    for command in commands:
-        log_info("querying the get menu language and set menu language emulation throughvComponent")
-        time.sleep(3)
-        log_info(f"Running command: {command} in directory: {base_dir}")
-        result = subprocess.run(
-            command,
-            shell=True,
-            check=False,
-            text=True,
-            cwd=base_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        log_info(f"Command output: {result.stdout.strip()}")
-        log_info(f"Command error (if any): {result.stderr.strip()}")
-        log_success(result.stdout.strip())
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_get_menu_language.yaml")
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_set_menu_language.yaml")
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_get_cec_version.yaml")
 
     for i in range(2):
         time.sleep(1)
@@ -58,26 +47,8 @@ def run_test():
     log_success("✔ curl command sent")
     log_warning(f"Response: {curl_response}")
 
-    commands = [
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_remove.yaml 8080",
-    ]
-
-    for command in commands:
-        log_info("Removing a new Device from the CEC Network")
-        time.sleep(2)
-        log_info(f"Running command: {command} in directory: {base_dir}")
-        result = subprocess.run(
-            command,
-            shell=True,
-            check=False,
-            text=True,
-            cwd=base_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        log_info(f"Command output: {result.stdout.strip()}")
-        log_info(f"Command error (if any): {result.stderr.strip()}")
-        log_success(result.stdout.strip())
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_remove.yaml")
 
     for i in range(2):
         time.sleep(1)

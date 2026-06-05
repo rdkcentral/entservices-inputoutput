@@ -4,6 +4,8 @@ import subprocess
 import json
 from utils import (
     send_curl_command,
+    send_vcomponent_command,
+    HDMICEC_CMD_BASE,
     log_info,
     log_success,
     log_error,
@@ -11,6 +13,13 @@ from utils import (
 )
 import HdmiCecSourceApis
 
+
+
+def _post_hdmicec(yaml_file):
+    """Post a HdmiCec vComponent YAML command using the new curl API."""
+    http_code, body = send_vcomponent_command(f"{HDMICEC_CMD_BASE}/{yaml_file}")
+    log_info(f"  vComponent POST {yaml_file}: HTTP {http_code}  {body}")
+    return http_code == 200
 
 def run_test():
     log_info(" Set the devices to standby mode and hit the sendStandbyMessage curl command again. Then wake up the remote device using otp feature.First, set the device to standby mode via emulation. Next, hit the curl command for sendStandbyMessage and send corresponding cec messages using sendMessage API to hal. Then hit the curl command for perform OTP Action and send corresponding cec messages to hal.Verify the thunder logs for more info")
@@ -30,31 +39,10 @@ def run_test():
 
 
     base_dir = "/tmp"
-
-
-    base_dir = "/tmp"
-
-    commands = [
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_get_power_status.yaml 8080",
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_report_power_status.yaml 8080",
-    ]
-
-    for command in commands:
-        log_info("get power status and report power status emulation throughvComponent")
-        time.sleep(3)
-        log_info(f"Running command: {command} in directory: {base_dir}")
-        result = subprocess.run(
-            command,
-            shell=True,
-            check=False,
-            text=True,
-            cwd=base_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        log_info(f"Command output: {result.stdout.strip()}")
-        log_info(f"Command error (if any): {result.stderr.strip()}")
-        log_success(result.stdout.strip())
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_get_power_status.yaml")
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_report_power_status.yaml")
 
 
     time.sleep(3)
@@ -74,31 +62,10 @@ def run_test():
     log_warning(f"Response: {curl_response}")
 
     base_dir = "/tmp"
-
-
-    base_dir = "/tmp"
-
-    commands = [
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_get_power_status.yaml 8080",
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_report_power_status.yaml 8080",
-    ]
-
-    for command in commands:
-        log_info("inactive and active source emulation throughvComponent after making the device PowerON")
-        time.sleep(3)
-        log_info(f"Running command: {command} in directory: {base_dir}")
-        result = subprocess.run(
-            command,
-            shell=True,
-            check=False,
-            text=True,
-            cwd=base_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        log_info(f"Command output: {result.stdout.strip()}")
-        log_info(f"Command error (if any): {result.stderr.strip()}")
-        log_success(result.stdout.strip())
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_get_power_status.yaml")
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_report_power_status.yaml")
     
     log_success("All commands executed successfully")
     return True

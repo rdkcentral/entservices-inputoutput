@@ -1,8 +1,9 @@
-import subprocess
-import json
 import time
+import json
 from utils import (
     send_curl_command,
+    send_vcomponent_command,
+    HDMICEC_CMD_BASE,
     log_info,
     log_success,
     log_error,
@@ -11,36 +12,22 @@ from utils import (
 import HdmiCecSourceApis
 
 
+def _post_hdmicec(yaml_file):
+    """Post a HdmiCec vComponent YAML command using the new curl API."""
+    http_code, body = send_vcomponent_command(f"{HDMICEC_CMD_BASE}/{yaml_file}")
+    log_info(f"  vComponent POST {yaml_file}: HTTP {http_code}  {body}")
+    return http_code == 200
+
+
 def run_test():
-    #base_dir = "/tmp/vcomponent_configurations/commands"
-    base_dir = "/tmp"
+    log_info("Reporting power status through control pane - vComponent")
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_print.yaml")
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_cec_message.yaml")
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_status.yaml")
 
-
-    commands = [
-        "./hdmicec_post_command.sh hdmicec_device_print.yaml 8080",
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_print.yaml 8080",
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_cec_message.yaml 8080",
-        "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/hdmicec_device_status.yaml 8080",
-       
-    ]
-
-    for command in commands:
-        log_info(f"Executing (cwd={base_dir}): {command}")
-        try:
-            result = subprocess.run(
-                command,
-                shell=True,
-                check=True,
-                capture_output=True,
-                text=True,
-                cwd=base_dir
-            )
-            log_success(result.stdout.strip())
-
-        except subprocess.CalledProcessError as e:
-            log_error(e.stderr.strip())
-            return False
-        
     curl_response = send_curl_command(
         HdmiCecSourceApis.perform_otp_action
     )

@@ -1,8 +1,13 @@
 import json
-import subprocess
 import time
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 from utils import (
     send_curl_command,
+    send_vcomponent_command,
+    INDICATOR_CMD_BASE,
     log_info,
     log_success,
     log_error,
@@ -11,63 +16,72 @@ from utils import (
 import ledIndicatorApis
 
 
-def run_test():
-    expected_output_response = {
-    "jsonrpc": 2.0,
-    "id": 2,
-    "result": {
-        "success": True
-    }
+# Maps vComponent YAML state -> expected MW LEDControlState string returned by getLEDState
+# (AIDL states IP_ACQUIRED, OFF, DEEP_SLEEP map to ACTIVE/STANDBY per implementation)
+VCOMP_TO_MW_STATE = {
+    "active":        "ACTIVE",
+    "standby":       "STANDBY",
+    "usb_upgrade":   "USB_UPGRADE",
+    "wps_connected": "WPS_CONNECTED",
 }
 
-    base_dir = "/tmp"
 
-    log_info("Executing the curl command get supported let states - Returns the list of LED states that are actually supported by the platform at runtime. Possible values include NONE, ACTIVE, STANDBY, WPS_CONNECTING, WPS_CONNECTED, WPS_ERROR, FACTORY_RESET, USB_UPGRADE and DOWNLOAD_ERROR")
+def _post_indicator_state(yaml_name):
+    '''Post an indicator state YAML command via the new vComponent API.'''
+    yaml_path = f"{INDICATOR_CMD_BASE}/{yaml_name}"
+    log_info(f"  vComponent POST: {yaml_path}")
+    http_code, body = send_vcomponent_command(yaml_path)
+    log_info(f"  HTTP {http_code}  body: {body}")
+    return http_code == 200
 
-    commands = [
-            "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/indicator_vcomponent_setstates_active.yaml 8080",
-            "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/indicator_vcomponent_setstates_standby.yaml 8080",
-            "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/indicator_vcomponent_setstates_usbcontrol.yaml 8080",
-            "./hdmicec_post_command.sh /tmp/vcomponent_configurations/commands/indicator_vcomponent_setstates_wpsconnected.yaml 8080",
-        ]
 
-    for command in commands:
-        log_info("setting LED states throughvComponent")
-        time.sleep(3)
-        log_info(f"Running command: {command} in directory: {base_dir}")
-        result = subprocess.run(
-            command,
-            shell=True,
-            check=False,
-            text=True,
-            cwd=base_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        log_info(f"Command output: {result.stdout.strip()}")
-        log_info(f"Command error (if any): {result.stderr.strip()}")
-        log_success(result.stdout.strip())
+def run_test():
+    log_info("TCID004 - Set LED states via vComponent and verify via MW getLEDState")
+    log_info("Scenario: Cycle through ACTIVE -> STANDBY -> USB_UPGRADE -> WPS_CONNECTED")
 
-        curl_response = send_curl_command(
-            ledIndicatorApis.set_led_state
-        )
+    # Each entry: (yaml_filename, expected_mw_state)
+    steps = [
+        ("indicator_set_state_active.yaml",       "ACTIVE"),
+        ("indicator_set_state_standby.yaml",       "STANDBY"),
+        ("indicator_set_state_usb_upgrade.yaml",   "USB_UPGRADE"),
+        ("indicator_set_state_wps_connected.yaml", "WPS_CONNECTED"),
+    ]
 
-        if not curl_response:
-            log_error("✖ curl command not sent")
-            return False
-        time.sleep(3)
+    overall_pass = True
 
-    log_success("✔ curl command sent")
-    log_warning(f"Response: {curl_response}")
+    for yaml_file, expected_state in steps:
+        log_info(f"\n-- Setting indicator to {expected_state} via vComponent --")
 
-    try:
-        if json.loads(curl_response) == expected_output_response:
-            log_success("TCID003 Passed ✅")
-            return True
-        else:
-            log_error("TCID003 Failed ❌")
-            return False
-    except json.JSONDecodeError:
-        log_error("Invalid JSON response")
-        log_error("TCID003 Failed ❌")
-        return False
+        if not _post_indicator_state(yaml_file):
+            log_error(f"  vComponent POST failed for {yaml_file}")
+            overall_pass = False
+            continue
+
+        log_success(f"  vComponent POST OK for {yaml_file}")
+        time.sleep(2)
+
+        curl_response = send_curl_command(ledIndicatorApis.get_led_state)
+        if not curl_response or curl_response == "< No response from WPEFramework >":
+            log_error("  getLEDState: no response from WPEFramework")
+            overall_pass = False
+            continue
+
+        log_warning(f"  getLEDState response: {curl_response}")
+        try:
+            resp_json = json.loads(curl_response)
+            actual_state = resp_json.get("result", {}).get("state", "")
+            if actual_state == expected_state:
+                log_success(f"  State verified: {actual_state} == {expected_state} ✔")
+            else:
+                log_error(f"  State mismatch: got '{actual_state}', expected '{expected_state}' ✖")
+                overall_pass = False
+        except json.JSONDecodeError:
+            log_error("  Invalid JSON in getLEDState response")
+            overall_pass = False
+
+    if overall_pass:
+        log_success("TCID004 Passed ✅")
+    else:
+        log_error("TCID004 Failed ❌")
+
+    return overall_pass
