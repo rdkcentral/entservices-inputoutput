@@ -56,7 +56,11 @@ def run_test():
             continue
         try:
             set_json = json.loads(set_resp)
-            if not set_json.get("result", {}).get("success", False):
+            result = set_json.get("result")
+            set_ok = (result is True) or (
+                isinstance(result, dict) and result.get("success", False)
+            )
+            if not set_ok:
                 log_error(f"  setLEDState({expected}) returned success=false")
                 overall_pass = False
                 continue

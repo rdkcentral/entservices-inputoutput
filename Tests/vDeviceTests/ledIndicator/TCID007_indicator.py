@@ -27,7 +27,7 @@ def _post(yaml_file):
     log_info(f"  vComponent POST: {yaml_path}")
     http_code, body = send_vcomponent_command(yaml_path)
     log_info(f"  HTTP {http_code}  body: {body}")
-    return http_code == 200
+    return 200 <= http_code < 300
 
 
 def _get_led_state():

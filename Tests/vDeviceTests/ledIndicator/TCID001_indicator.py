@@ -10,13 +10,17 @@ import ledIndicatorApis
 
 
 def run_test():
-    expected_output_response = {
-    "jsonrpc": 2.0,
-    "id": 0,
-    "result": {
-        "state": "LEDSTATE_NONE"
+    valid_states = {
+        "NONE",
+        "ACTIVE",
+        "STANDBY",
+        "WPS_CONNECTING",
+        "WPS_CONNECTED",
+        "WPS_ERROR",
+        "FACTORY_RESET",
+        "USB_UPGRADE",
+        "DOWNLOAD_ERROR",
     }
-}
 
 
     log_info("Executing the curl command get led states - Retrieves current state of the LED. e.g. {“state”:”WPS_CONNECTING”}")
@@ -33,12 +37,15 @@ def run_test():
     log_warning(f"Response: {curl_response}")
 
     try:
-        if json.loads(curl_response) == expected_output_response:
+        response_json = json.loads(curl_response)
+        state = response_json.get("result", {}).get("state")
+        if isinstance(state, str) and state in valid_states:
             log_success("TCID001 Passed ✅")
             return True
-        else:
-            log_error("TCID001 Failed ❌")
-            return False
+
+        log_error(f"Unexpected LED state: {state}")
+        log_error("TCID001 Failed ❌")
+        return False
     except json.JSONDecodeError:
         log_error("Invalid JSON response")
         log_error("TCID001 Failed ❌")

@@ -1,25 +1,43 @@
+import json
+import os
+
+
+_TARGET_HOST = os.environ.get("TARGET_HOST", "127.0.0.1")
+_JSONRPC_PORT = os.environ.get("JSONRPC_PORT", "9998")
+JSONRPC_URL = (
+    os.environ.get("WPEFRAMEWORK_JSONRPC_URL")
+    or os.environ.get("JSONRPC_URL")
+    or f"http://{_TARGET_HOST}:{_JSONRPC_PORT}/jsonrpc"
+)
+
+
+def _build_jsonrpc_curl(method, request_id, params=None):
+    payload = {"jsonrpc": 2.0, "id": request_id, "method": method}
+    if params is not None:
+        payload["params"] = params
+    return (
+        'curl --max-time 5 '
+        '--header "Content-Type: text/plain;" '
+        '--request POST '
+        f"--data-binary '{json.dumps(payload)}' "
+        f"{JSONRPC_URL}"
+    )
+
+
 get_led_state = (
-    'curl --max-time 5 '
-    '--header "Content-Type: text/plain;" '
-    '--request POST '
-    '--data-binary \'{"jsonrpc": 2.0, "id": 0, "method": "org.rdk.LEDControl.getLEDState"}\' '
-    'http://127.0.0.1:9998/jsonrpc'
+    _build_jsonrpc_curl("org.rdk.LEDControl.getLEDState", 0)
 )
 
 get_supported_led_states = (
-    'curl --max-time 5 '
-    '--header "Content-Type: text/plain;" '
-    '--request POST '
-    '--data-binary \'{"jsonrpc": 2.0, "id": 1, "method": "org.rdk.LEDControl.getSupportedLEDStates"}\' '
-    'http://127.0.0.1:9998/jsonrpc'
+    _build_jsonrpc_curl("org.rdk.LEDControl.getSupportedLEDStates", 1)
 )
 
 set_led_state = (
-    'curl --max-time 5 '
-    '--header "Content-Type: text/plain;" '
-    '--request POST '
-    '--data-binary \'{"jsonrpc": 2.0, "id": 2, "method": "org.rdk.LEDControl.setLEDState", "params": {"state": "FACTORY_RESET"}}\' '
-    'http://127.0.0.1:9998/jsonrpc'
+    _build_jsonrpc_curl(
+        "org.rdk.LEDControl.setLEDState",
+        2,
+        params={"state": "FACTORY_RESET"},
+    )
 )
 
 
@@ -28,12 +46,10 @@ def make_set_led_state(state_name):
     Valid state_name values: ACTIVE, STANDBY, WPS_CONNECTING, WPS_CONNECTED,
     WPS_ERROR, FACTORY_RESET, USB_UPGRADE, DOWNLOAD_ERROR
     '''
-    return (
-        'curl --max-time 5 '
-        '--header "Content-Type: text/plain;" '
-        '--request POST '
-        f'--data-binary \'{{"jsonrpc": 2.0, "id": 2, "method": "org.rdk.LEDControl.setLEDState", "params": {{"state": "{state_name}"}}}}\' '
-        'http://127.0.0.1:9998/jsonrpc'
+    return _build_jsonrpc_curl(
+        "org.rdk.LEDControl.setLEDState",
+        2,
+        params={"state": state_name},
     )
 
 

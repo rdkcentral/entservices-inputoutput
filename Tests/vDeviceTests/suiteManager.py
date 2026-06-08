@@ -3,8 +3,9 @@ import io
 import sys
 import time
 from pathlib import Path
+import os
 
-from utils import log_error, log_info, log_success
+from utils import log_error, log_info, log_success, activate_plugin, WPEFRAMEWORK_JSONRPC_URL
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -58,6 +59,11 @@ SUITES = {
     },
 }
 
+SUITE_PLUGIN_CALLSIGNS = {
+    "hdmicecsource": "org.rdk.HdmiCecSource",
+    "ledindicator": "org.rdk.LEDControl",
+}
+
 
 def normalize_suite_name(raw_name):
     return raw_name.strip().replace("_", "").replace("-", "").lower()
@@ -81,6 +87,17 @@ def load_test_cases(suite_name):
 def run_suite(suite_name):
     banner, test_cases = load_test_cases(suite_name)
     print(banner)
+
+    auto_activate = os.environ.get("AUTO_ACTIVATE_PLUGINS", "1").lower() not in ("0", "false", "no")
+    callsign = SUITE_PLUGIN_CALLSIGNS.get(suite_name)
+    if auto_activate and callsign:
+        log_info(f"Auto-activating plugin '{callsign}' via {WPEFRAMEWORK_JSONRPC_URL}")
+        if activate_plugin(callsign):
+            log_success(f"Plugin activated: {callsign}")
+        else:
+            log_error(f"Plugin activation failed: {callsign}")
+            log_error("Check JSON-RPC endpoint reachability and plugin availability before running tests.")
+            return False
 
     passed = 0
     failed = 0
