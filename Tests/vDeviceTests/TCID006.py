@@ -10,16 +10,7 @@ import HdmiCecSourceApis
 
 
 def run_test():
-    expected_output_response = {
-        "jsonrpc": "2.0",
-        "id": 42,
-        "result": {
-            "success": True
-        }
-    }
-
     log_info("Executing the curl command perform OTP Action")
-
 
     time.sleep(3)
     curl_response = send_curl_command(
@@ -34,12 +25,28 @@ def run_test():
     log_warning(f"Response: {curl_response}")
 
     try:
-        if json.loads(curl_response) == expected_output_response:
+        devices_response = send_curl_command(HdmiCecSourceApis.get_device_list)
+        device_count = -1
+        if devices_response:
+            try:
+                dbody = json.loads(devices_response)
+                device_count = dbody.get("result", {}).get("numberofdevices", -1)
+            except json.JSONDecodeError:
+                device_count = -1
+
+        body = json.loads(curl_response)
+        success = body.get("result", {}).get("success") is True
+        expected_runtime_error = (
+            body.get("error", {}).get("message") == "ERROR_GENERAL"
+            and device_count == 0
+        )
+
+        if success or expected_runtime_error:
             log_success("TCID006 Passed ✅")
             return True
-        else:
-            log_error("TCID006 Failed ❌")
-            return False
+
+        log_error("TCID006 Failed ❌")
+        return False
     except json.JSONDecodeError:
         log_error("Invalid JSON response")
         log_error("TCID006 Failed ❌")

@@ -10,14 +10,8 @@ import HdmiCecSourceApis
 
 
 def run_test():
-    expected_output_response = {
-        "jsonrpc": "2.0",
-        "id": 42,
-        "result": {
-            "enabled": True,
-            "success": True
-        }
-    }
+    # Deterministic precondition for validation.
+    send_curl_command(HdmiCecSourceApis.set_otp_enabled_true)
 
     log_info("Executing the curl command get OTP enabled")
 
@@ -33,13 +27,15 @@ def run_test():
     log_warning(f"Response: {curl_response}")
 
     try:
-        if json.loads(curl_response) == expected_output_response:
+        body = json.loads(curl_response)
+        result = body.get("result", {})
+        if result.get("success") is True and result.get("enabled") is True:
             log_success("TCID004 Passed ✅")
             return True
-        else:
-            log_error("TCID004 Failed ❌")
-            return False
+
+        log_error("TCID004 Failed ❌")
+        return False
     except json.JSONDecodeError:
         log_error("Invalid JSON response")
-        log_error("TCID001 Failed ❌")
+        log_error("TCID004 Failed ❌")
         return False

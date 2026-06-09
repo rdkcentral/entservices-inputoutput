@@ -136,3 +136,46 @@ set_otp_enabled_false = (
     '"params":{"enabled":false}}\' '
     'http://127.0.0.1:9998/jsonrpc'
 )
+
+
+get_active_source_status = (
+    'curl --max-time 5 '
+    '--header "Content-Type: application/json" '
+    '--request POST '
+    '-d \'{"jsonrpc":"2.0","id":42,'
+    '"method":"org.rdk.HdmiCecSource.getActiveSourceStatus"}\' '
+    'http://127.0.0.1:9998/jsonrpc'
+)
+
+
+set_vendor_id_invalid = (
+    'curl --max-time 5 '
+    '--header "Content-Type: application/json" '
+    '--request POST '
+    '-d \'{"jsonrpc":"2.0","id":42,'
+    '"method":"org.rdk.HdmiCecSource.setVendorId",'
+    '"params":{"vllendorid":"0x0019FB"}}\' '
+    'http://127.0.0.1:9998/jsonrpc'
+)
+
+
+set_otp_enabled_invalid = (
+    'curl --max-time 5 '
+    '--header "Content-Type: application/json" '
+    '--request POST '
+    '-d \'{"jsonrpc":"2.0","id":42,'
+    '"method":"org.rdk.HdmiCecSource.setOTPEnabled",'
+    '"params":{"ennable":true}}\' '
+    'http://127.0.0.1:9998/jsonrpc'
+)
+
+
+set_osd_name_invalid = (
+    'curl --max-time 5 '
+    '--header "Content-Type: application/json" '
+    '--request POST '
+    '-d \'{"jsonrpc":"2.0","id":42,'
+    '"method":"org.rdk.HdmiCecSource.setOSDName",'
+    '"params":{"nnamme":"Sky TV"}}\' '
+    'http://127.0.0.1:9998/jsonrpc'
+)
