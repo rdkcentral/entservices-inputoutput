@@ -25,43 +25,50 @@ def run_test():
     #base_dir = "/tmp/vcomponent_configurations/commands"
     base_dir = "/tmp"
     time.sleep(2)
-    _post_hdmicec("hdmicec_device_get_menu_language.yaml")
+    _post_hdmicec("hdmicec_device_request_inactive_source.yaml")
     time.sleep(2)
-    _post_hdmicec("hdmicec_device_set_menu_language.yaml")
-    time.sleep(2)
-    _post_hdmicec("hdmicec_device_get_cec_version.yaml")
+    _post_hdmicec("hdmicec_device_request_active_source.yaml")
 
-    for i in range(2):
-        time.sleep(1)
-        curl_response = send_curl_command(
-            HdmiCecSourceApis.get_device_list
-        )
+    time.sleep(1)
+    log_info("Send standby curl request being made to source device")
+    curl_response = send_curl_command(
+        HdmiCecSourceApis.send_standby_message
+    )
 
-        if not curl_response:
-            log_error("✖ curl command not sent")
-            return False
-        else:
-            log_warning(f"Response: {curl_response}")
+    if not curl_response:
+        log_error("✖ curl command not sent")
+        return False
+    else:
+        log_warning(f"Response: {curl_response}")
+
+    time.sleep(1)
+    log_info("Send perform OTP Action curl request being made to source device")
+    curl_response = send_curl_command(
+        HdmiCecSourceApis.perform_otp_action
+    )
+
+    if not curl_response:
+        log_error("✖ curl command not sent")
+        return False
+    else:
+        log_warning(f"Response: {curl_response}")
 
 
     log_success("✔ curl command sent")
     log_warning(f"Response: {curl_response}")
 
     time.sleep(2)
-    _post_hdmicec("hdmicec_device_remove.yaml")
+    _post_hdmicec("hdmicec_device_routing_change.yaml")
 
-    for i in range(2):
-        time.sleep(1)
-        curl_response = send_curl_command(
-                HdmiCecSourceApis.get_device_list
-            )
+    time.sleep(3)
+    log_info("Emulations after routing change, and device power on from standby for image view on and text view on")
 
-        if not curl_response:
-            log_error("✖ curl command not sent")
-            return False
-        else:
-            log_warning(f"Response: {curl_response}")
-
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_image_view_on.yaml")
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_text_view_on.yaml")
+    time.sleep(2)
+    _post_hdmicec("hdmicec_device_set_osd_string.yaml")
     
     log_success("All commands executed successfully")
     return True

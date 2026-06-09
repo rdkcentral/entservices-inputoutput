@@ -22,9 +22,9 @@ def _post_hdmicec(yaml_file):
 
 def run_test():
     #base_dir = "/tmp/vcomponent_configurations/commands"
-    log_success("Negative scenario - Making the setEnabled driver status as FALSE")
+    log_success("Negative scenario - calling getEnabled with driver status TRUE")
     curl_response = send_curl_command(
-            HdmiCecSourceApis.set_enabled_false
+            HdmiCecSourceApis.get_enabled
         )
 
     if not curl_response:
@@ -34,9 +34,9 @@ def run_test():
         log_warning(f"Response: {curl_response}")
 
     time.sleep(2)
-    log_success("Negative scenario - verifying the driver status with getEnabled")
+    log_success("Negative scenario - calling getDeviceList")
     curl_response = send_curl_command(
-            HdmiCecSourceApis.get_enabled
+            HdmiCecSourceApis.get_device_list
         )
 
     if not curl_response:
@@ -48,6 +48,7 @@ def run_test():
     log_error("Overriding the HAL API HdmICecOpen return value as negative")
     time.sleep(3)
     _post_hdmicec("hdmicec_setapi_open_fail.yaml")
+    _post_hdmicec("hdmicec_setapi_logical_fail.yaml")
     time.sleep(2)
     try:
         log_success("Negative scenario - making the driver status as TRUE using setEnabled")
@@ -60,12 +61,19 @@ def run_test():
             return False
         else:
             log_warning(f"Response: {curl_response}")
+        log_success("Negative scenario - calling getDeviceList After setting the HdmiCecLogical address and HdmiCecOpen HAL APIs return value error")
+        time.sleep(2)
+        curl_response = send_curl_command(
+                HdmiCecSourceApis.get_device_list
+            )
+
+        if not curl_response:
+            log_error("✖ curl command not sent")
+            return False
+        else:
+            log_warning(f"Response: {curl_response}")
     except:
-        log_warning("WPEFramework crashed , check Thunder logs for futher details")
-    
-    log_error("Overriding the HAL API HdmICecOpen return value as POSITIVE as post condition")
-    time.sleep(3)
-    _post_hdmicec("hdmicec_setapi_open_pass.yaml")
+        log_warning("Driver FAILED") 
     return True
 
 

@@ -28,6 +28,8 @@ SUITES = {
             "TCID012",
             "TCID013",
             "TCID014",
+            "TCID015",
+            "TCID016",
             "TCID022",
             "TCID023",
             "TCID024",

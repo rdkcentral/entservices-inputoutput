@@ -25,11 +25,11 @@ def run_test():
     #base_dir = "/tmp/vcomponent_configurations/commands"
     base_dir = "/tmp"
     time.sleep(2)
-    _post_hdmicec("hdmicec_device_get_menu_language.yaml")
+    _post_hdmicec("hdmicec_device_add.yaml")
     time.sleep(2)
-    _post_hdmicec("hdmicec_device_set_menu_language.yaml")
+    _post_hdmicec("hdmicec_device_cec_message.yaml")
     time.sleep(2)
-    _post_hdmicec("hdmicec_device_get_cec_version.yaml")
+    _post_hdmicec("hdmicec_device_status.yaml")
 
     for i in range(2):
         time.sleep(1)

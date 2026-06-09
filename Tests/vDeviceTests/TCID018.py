@@ -1,6 +1,5 @@
 
 import time
-import subprocess
 import json
 from utils import (
     send_curl_command,
@@ -23,18 +22,37 @@ def _post_hdmicec(yaml_file):
 
 def run_test():
     #base_dir = "/tmp/vcomponent_configurations/commands"
-    base_dir = "/tmp"
-    time.sleep(2)
-    _post_hdmicec("hdmicec_device_add.yaml")
-    time.sleep(2)
-    _post_hdmicec("hdmicec_device_cec_message.yaml")
-    time.sleep(2)
-    _post_hdmicec("hdmicec_device_status.yaml")
+    log_success("Negative scenario - Making the setEnabled driver status as FALSE")
+    curl_response = send_curl_command(
+            HdmiCecSourceApis.set_enabled_false
+        )
 
-    for i in range(2):
-        time.sleep(1)
+    if not curl_response:
+        log_error("✖ curl command not sent")
+        return False
+    else:
+        log_warning(f"Response: {curl_response}")
+
+    time.sleep(2)
+    log_success("Negative scenario - verifying the driver status with getEnabled")
+    curl_response = send_curl_command(
+            HdmiCecSourceApis.get_enabled
+        )
+
+    if not curl_response:
+        log_error("✖ curl command not sent")
+        return False
+    else:
+        log_warning(f"Response: {curl_response}")
+
+    log_error("Overriding the HAL API HdmICecOpen return value as negative")
+    time.sleep(3)
+    _post_hdmicec("hdmicec_setapi_open_fail.yaml")
+    time.sleep(2)
+    try:
+        log_success("Negative scenario - making the driver status as TRUE using setEnabled")
         curl_response = send_curl_command(
-            HdmiCecSourceApis.get_device_list
+            HdmiCecSourceApis.set_enabled_true
         )
 
         if not curl_response:
@@ -42,26 +60,13 @@ def run_test():
             return False
         else:
             log_warning(f"Response: {curl_response}")
-
-
-    log_success("✔ curl command sent")
-    log_warning(f"Response: {curl_response}")
-
-    time.sleep(2)
-    _post_hdmicec("hdmicec_device_remove.yaml")
-
-    for i in range(2):
-        time.sleep(1)
-        curl_response = send_curl_command(
-                HdmiCecSourceApis.get_device_list
-            )
-
-        if not curl_response:
-            log_error("✖ curl command not sent")
-            return False
-        else:
-            log_warning(f"Response: {curl_response}")
-
+    except:
+        log_warning("WPEFramework crashed , check Thunder logs for futher details")
     
-    log_success("All commands executed successfully")
+    log_error("Overriding the HAL API HdmICecOpen return value as POSITIVE as post condition")
+    time.sleep(3)
+    _post_hdmicec("hdmicec_setapi_open_pass.yaml")
     return True
+
+
+   
