@@ -31,7 +31,7 @@ HdmiCec:
       power_status: "on"
       port_id: 0
       fault: no
-      number_of_ports: 4
+      number_of_ports: 7
       active_source: false
     device_map:
       - device:
@@ -42,7 +42,7 @@ HdmiCec:
         power_status: "on"
         fault: no
         port_id: 0
-        number_of_ports: 4
+        number_of_ports: 7
         active_source: false
         children:
           - device:
@@ -111,3 +111,58 @@ HdmiCec:
                 number_of_ports: 0
                 active_source: false
                 children: []
+          - device:
+            name: "SAMSUNG"
+            language: "eng"
+            cec_version: "1.4"
+            device_type: "Tuner"
+            power_status: "on"
+            fault: no
+            port_id: 1
+            number_of_ports: 0
+            active_source: false
+            children: []
+          - device:
+            name: "SONY"
+            language: "eng"
+            cec_version: "1.4"
+            device_type: "PlaybackDevice"
+            power_status: "on"
+            fault: no
+            port_id: 4
+            number_of_ports: 0
+            active_source: false
+            children: []
+          - device:
+            name: "LG"
+            language: "eng"
+            cec_version: "1.4"
+            device_type: "AudioSystem"
+            power_status: "on"
+            fault: no
+            port_id: 5
+            number_of_ports: 0
+            active_source: false
+            children: []
+          - device:
+            name: "PANASONIC"
+            language: "eng"
+            cec_version: "1.4"
+            device_type: "Tuner"
+            power_status: "on"
+            fault: no
+            port_id: 6
+            number_of_ports: 0
+            active_source: false
+            children: []
+          - device:
+            name: "DENON"
+            language: "eng"
+            cec_version: "1.4"
+            device_type: "RecordingDevice"
+            power_status: "on"
+            fault: no
+            port_id: 7
+            number_of_ports: 0
+            active_source: false
+            children: []

@@ -14,6 +14,7 @@ SUITES = {
         "banner": "******************** L2 SUITE - RDK - HDMI CEC SOURCE ****************************",
         "module_dir": BASE_DIR,
         "tests": [
+            "TCID034",
             "TCID001",
             "TCID002",
             "TCID003",
@@ -46,6 +47,7 @@ SUITES = {
             "TCID030",
             "TCID031",
             "TCID032",
+            "TCID033",
         ],
     },
     "ledindicator": {
@@ -105,6 +107,8 @@ def run_suite(suite_name):
         log_info(f"Auto-activating plugin '{callsign}' via {WPEFRAMEWORK_JSONRPC_URL}")
         if activate_plugin(callsign):
             log_success(f"Plugin activated: {callsign}")
+            log_info("Waiting 6s for plugin to fully initialise...")
+            time.sleep(6)
         else:
             log_error(f"Plugin activation failed: {callsign}")
             log_error("Check JSON-RPC endpoint reachability and plugin availability before running tests.")

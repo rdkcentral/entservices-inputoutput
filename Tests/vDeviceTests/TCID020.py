@@ -24,7 +24,14 @@ def run_test():
 
     log_success("Reporting power status through control pane - vComponent")
     time.sleep(2)
-    _post_hdmicec("hdmicec_device_print.yaml")
+    # Populate device list via CEC messages instead of topology dump file.
+    # ReportPhysicalAddress triggers addDevice(); SetOSDName and DeviceVendorID
+    # fill in device details through the middleware's normal CEC processing path.
+    _post_hdmicec("hdmicec_process_report_physical_address.yaml")
+    time.sleep(1)
+    _post_hdmicec("hdmicec_process_set_osd_name.yaml")
+    time.sleep(1)
+    _post_hdmicec("hdmicec_process_device_vendor_id.yaml")
     time.sleep(2)
     _post_hdmicec("hdmicec_device_cec_message_userdef.yaml")
     time.sleep(2)

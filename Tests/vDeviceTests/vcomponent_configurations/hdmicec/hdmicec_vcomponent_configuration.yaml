@@ -29,4 +29,3 @@ HdmiCec:
 
   controllers:
     ut_controller_port: 8080
-    device_list_info_path: "/tmp/hdmi_cec_device_list_info.txt"

@@ -1,0 +1,8 @@
+HdmiCec:
+  command: cec_message
+  description: Trigger process(SetOSDName) from DENON (LA=2) - name "DENON"
+  message:
+    user_defined: true
+    # Header 0x2F: initiator=2, destination=0xF (broadcast)
+    # Opcode 0x47: SetOSDName  "DENON" = 0x44 0x45 0x4E 0x4F 0x4E
+    payload: ["0x2F", "0x47", "0x44", "0x45", "0x4E", "0x4F", "0x4E"]
