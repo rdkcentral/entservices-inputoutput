@@ -187,27 +187,13 @@ def run_test():
         log_error("TCID034 Failed ❌: configure command rejected")
         return False
 
-    # Diagnostic: check whether this vcomponent writes a topology file (old-style).
-    import subprocess as _sp
-    _topo_file = "/tmp/hdmi_cec_device_list_info.txt"
-    _topo_check = _sp.run(["test", "-f", _topo_file], capture_output=True)
-    if _topo_check.returncode == 0:
-        log_info(f"  Diagnostic: topology file {_topo_file} EXISTS (old-style vcomponent, topology-file discovery)")
-        # Force a discovery cycle: toggle enable so middleware re-polls with topology in place.
-        log_info("  Triggering re-discovery: setEnabled(false) → setEnabled(true) cycle")
+    # Ensure middleware CEC processing is active before injecting payloads.
+    if not _set_enabled_true():
+        log_warning("TCID034 Note ⚠: setEnabled(true) did not report success; attempting toggle")
         _set_enabled_false()
-        time.sleep(2)
-        _set_enabled_true()
-        time.sleep(3)
-    else:
-        log_info(f"  Diagnostic: topology file {_topo_file} NOT found (payload-driven discovery)")
-        # Ensure middleware poll/discovery threads are enabled in this runtime.
+        time.sleep(1)
         if not _set_enabled_true():
-            log_warning("TCID034 Note ⚠: setEnabled(true) did not report success; attempting toggle")
-            _set_enabled_false()
-            time.sleep(1)
-            if not _set_enabled_true():
-                log_warning("TCID034 Note ⚠: toggle enable sequence did not report success")
+            log_warning("TCID034 Note ⚠: toggle enable sequence did not report success")
 
     enabled_state = _get_enabled_state()
     log_info(f"  HdmiCecSource enabled={enabled_state}")
