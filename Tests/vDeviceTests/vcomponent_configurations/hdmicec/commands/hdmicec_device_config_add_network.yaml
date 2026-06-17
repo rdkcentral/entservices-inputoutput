@@ -31,7 +31,7 @@ HdmiCec:
       power_status: "on"
       port_id: 0
       fault: no
-      number_of_ports: 7
+      number_of_ports: 8
       active_source: false
     device_map:
       - device:
@@ -42,7 +42,7 @@ HdmiCec:
         power_status: "on"
         fault: no
         port_id: 0
-        number_of_ports: 7
+        number_of_ports: 8
         active_source: false
         children:
           - device:

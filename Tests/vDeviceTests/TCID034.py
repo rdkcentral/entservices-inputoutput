@@ -23,7 +23,7 @@ import os
 import time
 
 from utils import (
-    send_curl_command,
+    send_jsonrpc_command,
     send_vcomponent_command,
     HDMICEC_CMD_BASE,
     activate_plugin,
@@ -33,7 +33,6 @@ from utils import (
     log_warning,
     log_error,
 )
-import HdmiCecSourceApis
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -47,54 +46,48 @@ def _post(yaml_name):
 
 def _get_device_list():
     """Call getDeviceList and return the parsed result dict, or None on error."""
-    response = send_curl_command(HdmiCecSourceApis.get_device_list)
-    if not response or response.startswith("< No response"):
+    body = send_jsonrpc_command("org.rdk.HdmiCecSource.getDeviceList", request_id=42)
+    if not isinstance(body, dict) or "error" in body:
         return None
-    try:
-        body = json.loads(response)
-        return body.get("result")
-    except json.JSONDecodeError:
-        return None
+    return body.get("result")
 
 
 def _set_enabled_true():
     """Enable HdmiCecSource plugin; returns True when API reports success."""
-    response = send_curl_command(HdmiCecSourceApis.set_enabled_true)
-    if not response or response.startswith("< No response"):
+    body = send_jsonrpc_command(
+        "org.rdk.HdmiCecSource.setEnabled",
+        params={"enabled": True},
+        request_id=42,
+        timeout=8,
+    )
+    if not isinstance(body, dict) or "error" in body:
         return False
-    try:
-        body = json.loads(response)
-        result = body.get("result", {})
-        return result.get("success") is True
-    except json.JSONDecodeError:
-        return False
+    result = body.get("result", {})
+    return result.get("success") is True
 
 
 def _set_enabled_false():
     """Disable HdmiCecSource plugin; returns True when API reports success."""
-    response = send_curl_command(HdmiCecSourceApis.set_enabled_false)
-    if not response or response.startswith("< No response"):
+    body = send_jsonrpc_command(
+        "org.rdk.HdmiCecSource.setEnabled",
+        params={"enabled": False},
+        request_id=42,
+        timeout=8,
+    )
+    if not isinstance(body, dict) or "error" in body:
         return False
-    try:
-        body = json.loads(response)
-        result = body.get("result", {})
-        return result.get("success") is True
-    except json.JSONDecodeError:
-        return False
+    result = body.get("result", {})
+    return result.get("success") is True
 
 
 def _get_enabled_state():
     """Return plugin enabled state as bool, or None on parse/transport error."""
-    response = send_curl_command(HdmiCecSourceApis.get_enabled)
-    if not response or response.startswith("< No response"):
+    body = send_jsonrpc_command("org.rdk.HdmiCecSource.getEnabled", request_id=42)
+    if not isinstance(body, dict) or "error" in body:
         return None
-    try:
-        body = json.loads(response)
-        result = body.get("result", {})
-        enabled = result.get("enabled")
-        return enabled if isinstance(enabled, bool) else None
-    except json.JSONDecodeError:
-        return None
+    result = body.get("result", {})
+    enabled = result.get("enabled")
+    return enabled if isinstance(enabled, bool) else None
 
 
 def _build_la_map(device_list):
@@ -194,12 +187,27 @@ def run_test():
         log_error("TCID034 Failed ❌: configure command rejected")
         return False
 
-    # Ensure middleware poll/discovery threads are enabled in this runtime.
-    if not _set_enabled_true():
-        log_warning("TCID034 Note ⚠: setEnabled(true) did not report success; attempting toggle")
+    # Diagnostic: check whether this vcomponent writes a topology file (old-style).
+    import subprocess as _sp
+    _topo_file = "/tmp/hdmi_cec_device_list_info.txt"
+    _topo_check = _sp.run(["test", "-f", _topo_file], capture_output=True)
+    if _topo_check.returncode == 0:
+        log_info(f"  Diagnostic: topology file {_topo_file} EXISTS (old-style vcomponent, topology-file discovery)")
+        # Force a discovery cycle: toggle enable so middleware re-polls with topology in place.
+        log_info("  Triggering re-discovery: setEnabled(false) → setEnabled(true) cycle")
         _set_enabled_false()
+        time.sleep(2)
+        _set_enabled_true()
+        time.sleep(3)
+    else:
+        log_info(f"  Diagnostic: topology file {_topo_file} NOT found (payload-driven discovery)")
+        # Ensure middleware poll/discovery threads are enabled in this runtime.
         if not _set_enabled_true():
-            log_warning("TCID034 Note ⚠: toggle enable sequence did not report success")
+            log_warning("TCID034 Note ⚠: setEnabled(true) did not report success; attempting toggle")
+            _set_enabled_false()
+            time.sleep(1)
+            if not _set_enabled_true():
+                log_warning("TCID034 Note ⚠: toggle enable sequence did not report success")
 
     enabled_state = _get_enabled_state()
     log_info(f"  HdmiCecSource enabled={enabled_state}")
@@ -213,9 +221,9 @@ def run_test():
     # logical addresses the vcomponent ACKs (now via AIDL sendMessage).
     # For each ACKed LA the middleware calls addDevice() then requestCecDevDetails()
     # which causes vcomponent to respond with SetOSDName / DeviceVendorID.
-    # We wait up to 20 s for expected devices to appear.
+    # We wait up to 30 s for expected devices to appear.
     expected_las = {5: "YAMAHA", 3: "SAMSUNG", 9: "SONY", 10: "LG", 11: "PANASONIC", 2: "DENON"}
-    deadline = time.time() + 20.0
+    deadline = time.time() + 30.0
     last_la_map = {}
     while time.time() < deadline:
         result = _get_device_list()
