@@ -573,7 +573,7 @@ uint32_t AVInput::getInputDevicesWrapper(const JsonObject& parameters, JsonObjec
     }
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 
-    printf("[wrapper] Exit  : %ld.%06ld\n",
+    printf("RDKEVD-8305 [wrapper] Exit  : %ld.%06ld\n",
            ts.tv_sec,
            ts.tv_nsec / 1000);
     returnResponse(true);
