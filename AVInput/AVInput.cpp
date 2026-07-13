@@ -29,6 +29,7 @@
 #include "exception.hpp"
 #include <vector>
 #include <algorithm>
+#include <time.h>
 
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 7
@@ -543,6 +544,13 @@ bool AVInput::setVideoRectangle(int x, int y, int width, int height, int type)
 uint32_t AVInput::getInputDevicesWrapper(const JsonObject& parameters, JsonObject& response)
 {
     LOGINFOMETHOD();
+		struct timespec ts;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+   LOGERR("RDKEVD-8305 [Wrapper] Entry : %ld.%06ld\n",
+           ts.tv_sec,
+           ts.tv_nsec / 1000);
 
     if (parameters.HasLabel("typeOfInput")) {
         string sType = parameters["typeOfInput"].String();
@@ -563,6 +571,11 @@ uint32_t AVInput::getInputDevicesWrapper(const JsonObject& parameters, JsonObjec
         }
         response["devices"] = listHdmi;
     }
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    printf("RDKEVD-8305 [wrapper] Exit  : %ld.%06ld\n",
+           ts.tv_sec,
+           ts.tv_nsec / 1000);
     returnResponse(true);
 }
 
@@ -613,6 +626,14 @@ uint32_t AVInput::readEDIDWrapper(const JsonObject& parameters, JsonObject& resp
 JsonArray AVInput::getInputDevices(int iType)
 {
     JsonArray list;
+	struct timespec ts;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+   LOGERR("RDKEVD-8305 [THUNDER] Entry : %ld.%06ld\n",
+           ts.tv_sec,
+           ts.tv_nsec / 1000);
+
     try
     {
         int num = 0;
@@ -631,14 +652,34 @@ JsonArray AVInput::getInputDevices(int iType)
                 std::stringstream locator;
                 if (iType == HDMI) {
                     locator << "hdmiin://localhost/deviceid/" << i;
+					clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    		LOGERR("RDKEVD-8305 [HDMI port : %d] Entry  : %d %ld.%06ld\n",i,
+           ts.tv_sec,
+           ts.tv_nsec / 1000);
                     hash["connected"] = device::HdmiInput::getInstance().isPortConnected(i);
+										clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    		LOGERR("RDKEVD-8305 [HDMI port : %d] Exit  : %d %ld.%06ld\n",i,
+           ts.tv_sec,
+           ts.tv_nsec / 1000);
                 }
                 else if (iType == COMPOSITE) {
                     locator << "cvbsin://localhost/deviceid/" << i;
+					clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    			LOGERR("RDKEVD-8305 [HDMI port : %d] Entry  : %d %ld.%06ld\n",i,
+           ts.tv_sec,
+           ts.tv_nsec / 1000);
                     hash["connected"] = device::CompositeInput::getInstance().isPortConnected(i);
+					clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    		LOGERR("RDKEVD-8305 [composite port : %d] Exit  : %d %ld.%06ld\n",i,
+           ts.tv_sec,
+           ts.tv_nsec / 1000);
                 }
                 hash["locator"] = locator.str();
-                LOGWARN("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, hash["locator"].String().c_str(), hash["connected"].Boolean());
+                LOGERR("AVInputService::getInputDevices id %d, locator=[%s], connected=[%d]", i, hash["locator"].String().c_str(), hash["connected"].Boolean());
                 list.Add(hash);
             }
         }
@@ -646,6 +687,11 @@ JsonArray AVInput::getInputDevices(int iType)
     catch (const std::exception &e) {
         LOGWARN("AVInputService::getInputDevices Failed");
     }
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    printf("RDKEVD-8305 [THUNDER] Exit  : %ld.%06ld\n",
+           ts.tv_sec,
+           ts.tv_nsec / 1000);
     return list;
 }
 
