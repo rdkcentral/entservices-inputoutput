@@ -80,6 +80,8 @@ namespace WPEFramework {
 	        void process (const SetStreamPath &msg, const Header &header);
 	        void process (const ReportPhysicalAddress &msg, const Header &header);
             void process (const DeviceVendorID &msg, const Header &header);
+            void process (const VendorCommand &msg, const Header &header);
+            void process (const VendorCommandWithID &msg, const Header &header);
 	        void process (const GiveDevicePowerStatus &msg, const Header &header);
 	        void process (const ReportPowerStatus &msg, const Header &header);
             void process (const UserControlPressed &msg, const Header &header);

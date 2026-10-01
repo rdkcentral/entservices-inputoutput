@@ -77,6 +77,65 @@ static PowerStatus tvPowerState(PowerStatus::POWER_STATUS_NOT_KNOWN);
 static bool isDeviceActiveSource = false;
 static bool isLGTvConnected = false;
 
+static constexpr uint8_t LG_SIMPLINK_INIT = 0x01;
+static constexpr uint8_t LG_SIMPLINK_ACK_INIT = 0x02;
+static constexpr uint8_t LG_SIMPLINK_CONNECT_REQUEST = 0x04;
+static constexpr uint8_t LG_SIMPLINK_SET_DEVICE_MODE = 0x05;
+static constexpr uint8_t LG_SIMPLINK_REQUEST_RECONNECT = 0x0B;
+static constexpr uint8_t LG_SIMPLINK_REQUEST_POWER_STATUS = 0xA0;
+static constexpr uint8_t LG_SIMPLINK_DVD_PLAYER_PROFILE = 0x03;
+
+static void sendLgSimplinkVendorCommand(Connection& connection, const LogicalAddress& destination,
+                                        const uint8_t* data, size_t length)
+{
+    try {
+        connection.sendTo(destination, MessageEncoder().encode(VendorCommand(CECFrame(data, length))));
+    } catch (...) {
+        LOGWARN("Exception while sending LG SIMPLINK VendorCommand");
+    }
+}
+
+static void handleLgSimplinkCommand(Connection& connection, const CECFrame& vendorData, const Header& header)
+{
+    if (!(header.from == LogicalAddress(LogicalAddress::TV))) {
+        LOGWARN("Ignoring LG SIMPLINK command from non-TV device %s", header.from.toString().c_str());
+        return;
+    }
+
+    const uint8_t* data = nullptr;
+    size_t length = 0;
+    vendorData.getBuffer(&data, &length);
+
+    if ((length == 1) && (data[0] == LG_SIMPLINK_INIT)) {
+        const uint8_t response[] = {
+            LG_SIMPLINK_ACK_INIT,
+            LG_SIMPLINK_DVD_PLAYER_PROFILE
+        };
+        LOGINFO("LG SIMPLINK init received; sending handshake acknowledgement");
+        sendLgSimplinkVendorCommand(connection, header.from, response, sizeof(response));
+    } else if ((length == 2) && (data[0] == LG_SIMPLINK_CONNECT_REQUEST)) {
+        const uint8_t response[] = {
+            LG_SIMPLINK_SET_DEVICE_MODE,
+            static_cast<uint8_t>(LogicalAddress(logicalAddress.toInt()).getType())
+        };
+        LOGINFO("LG SIMPLINK connect request received; sending device mode");
+        sendLgSimplinkVendorCommand(connection, header.from, response, sizeof(response));
+    } else if ((length == 1) &&
+               ((data[0] == LG_SIMPLINK_REQUEST_RECONNECT) ||
+                (data[0] == LG_SIMPLINK_REQUEST_POWER_STATUS))) {
+        try {
+            LOGINFO("LG SIMPLINK power status requested");
+            connection.sendTo(header.from,
+                              MessageEncoder().encode(ReportPowerStatus(PowerStatus(powerState))));
+        } catch (...) {
+            LOGWARN("Exception while sending LG SIMPLINK power status");
+        }
+    } else {
+        LOGINFO("Unsupported LG SIMPLINK VendorCommand");
+        vendorData.hexDump(LOG_INFO);
+    }
+}
+
 #define KEY_UNSUPPORTED 0xFF
 
 using namespace WPEFramework;
@@ -265,6 +324,30 @@ namespace WPEFramework
              }
 
        }
+
+     void HdmiCecSourceProcessor::process (const VendorCommand &msg, const Header &header)
+     {
+         LOGINFO("Command: VendorCommand from %s\n", header.from.toString().c_str());
+         if (isLGTvConnected) {
+             handleLgSimplinkCommand(conn, msg.vendorData, header);
+         } else {
+             LOGINFO("Ignoring VendorCommand because the connected TV is not LG");
+             msg.vendorData.hexDump(LOG_INFO);
+         }
+     }
+
+     void HdmiCecSourceProcessor::process (const VendorCommandWithID &msg, const Header &header)
+     {
+         LOGINFO("Command: VendorCommandWithID from %s VendorID: %s\n",
+               header.from.toString().c_str(), msg.vendorId.toString().c_str());
+         if (msg.vendorId == lgVendorId) {
+             isLGTvConnected = true;
+             handleLgSimplinkCommand(conn, msg.vendorData, header);
+         } else {
+             LOGINFO("Ignoring VendorCommandWithID for a non-LG vendor");
+             msg.vendorData.hexDump(LOG_INFO);
+         }
+     }
        void HdmiCecSourceProcessor::process (const GiveDevicePowerStatus &msg, const Header &header)
        {
              try
