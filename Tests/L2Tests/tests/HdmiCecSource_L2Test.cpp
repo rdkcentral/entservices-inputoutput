@@ -261,7 +261,6 @@ protected:
     Exchange::IHdmiCecSource* m_cecSourcePlugin = nullptr;
     PluginHost::IShell* m_controller_cecSource = nullptr;
     Core::Sink<HdmiCecSourceNotificationHandler> m_notificationHandler;
-    IARM_EventHandler_t dsHdmiEventHandler = nullptr;
     IARM_EventHandler_t powerEventHandler = nullptr;
     FrameListener* registeredListener = nullptr;
     std::vector<FrameListener*> listeners;
@@ -303,12 +302,7 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
         .Times(::testing::AnyNumber())
         .WillRepeatedly(::testing::Invoke(
             [this](const char* ownerName, IARM_EventId_t eventId, IARM_EventHandler_t handler) {
-                if (strcmp(ownerName, IARM_BUS_DSMGR_NAME) == 0) {
-                    if (eventId == IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG) {
-                        dsHdmiEventHandler = handler;
-                        TEST_LOG("Captured HDMI HotPlug Event Handler");
-                    }
-                } else if (strcmp(ownerName, IARM_BUS_PWRMGR_NAME) == 0) {
+                if (strcmp(ownerName, IARM_BUS_PWRMGR_NAME) == 0) {
                     if (eventId == IARM_BUS_PWRMGR_EVENT_MODECHANGED) {
                         powerEventHandler = handler;
                         TEST_LOG("Captured Power Manager Event Handler");
@@ -335,32 +329,44 @@ HdmiCecSource_L2Test::HdmiCecSource_L2Test()
                 return result;
             });
 
-    // Mock device settings Manager
-    ON_CALL(*p_managerImplMock, Initialize())
-        .WillByDefault(::testing::Return());
-
-    // Mock Host methods
-    ON_CALL(*p_hostImplMock, getDefaultVideoPortName())
-        .WillByDefault(::testing::Return(std::string("HDMI0")));
-
-    ON_CALL(*p_hostImplMock, getVideoOutputPort(::testing::_))
-        .WillByDefault(::testing::ReturnRef(device::VideoOutputPort::getInstance()));
-
-    // Mock VideoOutputPort methods
-    ON_CALL(*p_videoOutputPortMock, isDisplayConnected())
-        .WillByDefault(::testing::Return(true));
-
-    ON_CALL(*p_videoOutputPortMock, getDisplay())
-        .WillByDefault(::testing::ReturnRef(device::Display::getInstance()));
-
-    // Mock Display methods - getEDIDBytes is void and takes a reference parameter
-    ON_CALL(*p_displayMock, getEDIDBytes(::testing::_))
+    ON_CALL(*p_dsVideoPortHalMock, dsGetVideoPort(::testing::_, ::testing::_, ::testing::_))
         .WillByDefault(::testing::Invoke(
-            [](std::vector<uint8_t>& edid) {
-                edid = {
+            [](dsVideoPortType_t, int, intptr_t* handle) {
+                if (handle != nullptr) {
+                    *handle = 1;
+                }
+                return dsERR_NONE;
+            }));
+    ON_CALL(*p_dsVideoPortHalMock, dsIsDisplayConnected(::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [](intptr_t, bool* connected) {
+                if (connected != nullptr) {
+                    *connected = true;
+                }
+                return dsERR_NONE;
+            }));
+    ON_CALL(*p_dsDisplayHalMock, dsGetDisplay(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [](dsVideoPortType_t, int, intptr_t* handle) {
+                if (handle != nullptr) {
+                    *handle = 1;
+                }
+                return dsERR_NONE;
+            }));
+    ON_CALL(*p_dsDisplayHalMock, dsGetEDIDBytes(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke(
+            [](intptr_t, unsigned char* edid, int* length) {
+                const unsigned char edidBytes[] = {
                     0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
                     0x4C, 0x2D, 0xFE, 0x08, 0x00, 0x00, 0x00, 0x00
                 };
+                if (edid != nullptr && length != nullptr) {
+                    for (unsigned int index = 0; index < sizeof(edidBytes); ++index) {
+                        edid[index] = edidBytes[index];
+                    }
+                    *length = sizeof(edidBytes);
+                }
+                return dsERR_NONE;
             }));
 
     // Mock HDMI CEC Connection - capture frame listeners for event injection
